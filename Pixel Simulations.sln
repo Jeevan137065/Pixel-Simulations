@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Simulations", "Pixel Simulations.csproj", "{0BD50E54-AEF5-4239-8D72-3C795D6A1167}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Light Simulation", "..\Light Simulation\Light Simulation.csproj", "{0901FC25-27DC-48F2-B056-F773D5641379}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Bones", "..\Pixel Bones\Pixel Bones.csproj", "{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wind Simulation", "..\Wind Simulation\Wind Simulation.csproj", "{90A46838-8836-4546-B582-F3E1079E5AE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Shaders", "..\Pixel Shaders\Pixel Shaders.csproj", "{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0BD50E54-AEF5-4239-8D72-3C795D6A1167}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BD50E54-AEF5-4239-8D72-3C795D6A1167}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BD50E54-AEF5-4239-8D72-3C795D6A1167}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BD50E54-AEF5-4239-8D72-3C795D6A1167}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0901FC25-27DC-48F2-B056-F773D5641379}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0901FC25-27DC-48F2-B056-F773D5641379}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0901FC25-27DC-48F2-B056-F773D5641379}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0901FC25-27DC-48F2-B056-F773D5641379}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90A46838-8836-4546-B582-F3E1079E5AE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90A46838-8836-4546-B582-F3E1079E5AE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90A46838-8836-4546-B582-F3E1079E5AE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90A46838-8836-4546-B582-F3E1079E5AE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
