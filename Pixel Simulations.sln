@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wind Simulation", "..\Wind 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Shaders", "..\Pixel Shaders\Pixel Shaders.csproj", "{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldRendering", "..\WorldRendering\WorldRendering.csproj", "{FC161575-C58B-4F40-ADAF-DA83B009CC49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Editor", "..\Pixel Editor\Pixel Editor.csproj", "{92F9DDDA-6DDB-492B-9A09-0F7B86084A6E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,8 +43,19 @@ Global
 		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91BC2D28-C0DB-4E60-96EE-9D0EE3D05C8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC161575-C58B-4F40-ADAF-DA83B009CC49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC161575-C58B-4F40-ADAF-DA83B009CC49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC161575-C58B-4F40-ADAF-DA83B009CC49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC161575-C58B-4F40-ADAF-DA83B009CC49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92F9DDDA-6DDB-492B-9A09-0F7B86084A6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92F9DDDA-6DDB-492B-9A09-0F7B86084A6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92F9DDDA-6DDB-492B-9A09-0F7B86084A6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92F9DDDA-6DDB-492B-9A09-0F7B86084A6E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F7BC1664-B64C-449C-82E6-6B7624584107}
 	EndGlobalSection
 EndGlobal

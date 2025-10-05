@@ -1,13 +1,17 @@
-﻿using Microsoft.Xna.Framework;
+﻿// No "using Pixel_Simulations.Components;", etc. as they are now in the same namespace
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended.Entities;
+using System;
 
-namespace Pixel_Simulations
+namespace Pixel_Simulations // Consolidated namespace
 {
     public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+
 
         public Game1()
         {
@@ -18,16 +22,12 @@ namespace Pixel_Simulations
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
@@ -35,17 +35,15 @@ namespace Pixel_Simulations
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            
 
             base.Update(gameTime);
         }
+        private KeyboardState _previousKeyboardState;
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
-
+            GraphicsDevice.Clear(Color.DarkSlateGray); // Changed background color
             base.Draw(gameTime);
         }
     }

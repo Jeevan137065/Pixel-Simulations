@@ -1,0 +1,623 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
+using MonoGame.Extended.Graphics;
+using MonoGame.Extended.Tiled.Renderers;
+using Pixel_Simulations;
+using System;
+using System.Collections.Generic;
+
+namespace Pixel_Simulations
+{
+    public class Canvas
+    {
+        public Rectangle Bounds { get; private set; }
+        public int CellSize { get; private set; }
+        public int WidthInCells { get; private set; }
+        public int HeightInCells { get; private set; }
+        public Dictionary<Point, int> CanvasGrid;
+
+        public Canvas(int width, int height, int cellSize)
+        {
+            WidthInCells = width;
+            HeightInCells = height;
+            CellSize = cellSize;
+            Bounds = new Rectangle(0, 0, WidthInCells * CellSize, HeightInCells * CellSize);
+        }
+
+        public void CenterCanvas(Viewport viewport)
+        {
+            int screenWidth = viewport.Width;
+            int screenHeight = viewport.Height;
+
+            Bounds = new Rectangle(
+                (screenWidth - Bounds.Width) / 2, (screenHeight - Bounds.Height) / 2,
+                Bounds.Width, Bounds.Height
+            );
+        }
+        public void DrawCanvasBorder(SpriteBatch spriteBatch, Texture2D WhiteTexture, Color borderColor, int thickness = 4)
+        {
+            spriteBatch.Draw(WhiteTexture, new Rectangle(Bounds.X, Bounds.Y, Bounds.Width, thickness), borderColor); // Top
+            spriteBatch.Draw(WhiteTexture, new Rectangle(Bounds.X, Bounds.Y, thickness, Bounds.Height), borderColor); // Left
+            spriteBatch.Draw(WhiteTexture, new Rectangle(Bounds.X, Bounds.Y + Bounds.Height - thickness, Bounds.Width, thickness), borderColor); // Bottom
+            spriteBatch.Draw(WhiteTexture, new Rectangle(Bounds.X + Bounds.Width - thickness, Bounds.Y, thickness, Bounds.Height), borderColor); // Right
+        }
+
+        public Point GetCellAtMousePosition(Vector2 mousePosition, Matrix transformMatrix)
+        {
+            Vector2 transformedMouse = Vector2.Transform(mousePosition, Matrix.Invert(transformMatrix));
+            if (!Bounds.Contains(transformedMouse))
+                return Point.Zero; // Mouse outside canvas
+
+            int cellX = (int)((transformedMouse.X - Bounds.X) / CellSize);
+            int cellY = (int)((transformedMouse.Y - Bounds.Y) / CellSize);
+
+            return new Point(cellX, cellY);
+        }
+
+    }
+    public class AbsoluteCanvas
+    {
+        public Rectangle Bounds { get; private set; }
+        public int CellSize { get; private set; }
+        public Point offset,Size,WorldSize;
+        public Dictionary<Point, int> WorldGrid;
+
+        public AbsoluteCanvas(Canvas canvas, int N, int M)
+        {
+            CellSize = canvas.CellSize;
+            offset = Point.Zero;
+            Size = new Point(N, M);
+            WorldGrid = new Dictionary<Point, int>();
+            WorldSize = new Point(N * CellSize, M * CellSize);
+            Bounds = new Rectangle(offset, WorldSize);
+        }
+
+
+        public void PlaceTile(Point CanvasCell, int tileID)
+        {
+            if (!WorldGrid.ContainsKey(CanvasCell+offset))
+                WorldGrid[CanvasCell+offset] = tileID;
+        }
+
+        public void RemoveTile(Point cell)
+        {
+            if (WorldGrid.ContainsKey(cell+offset))
+                WorldGrid.Remove(cell+offset);
+        }
+
+        // Returns the underlying grid data for debug/info purposes.
+        public Dictionary<Point, int> GetTileGrid()
+        {
+            return WorldGrid;
+        }
+
+        public void Update(KeyboardState ks)
+        {
+            if (ks.IsKeyDown(Keys.Right)) { offset.X++; }
+            if (ks.IsKeyDown(Keys.Left)) { offset.X--; }
+            if (ks.IsKeyDown(Keys.Up)) { offset.Y++; }
+            if (ks.IsKeyDown(Keys.Down)) { offset.Y--; }
+
+            // Clamp the offset so the view window doesn't go outside the world bounds
+            offset.X = Math.Clamp(offset.X, 0, Size.X);
+            offset.Y = Math.Clamp(offset.Y, 0, Size.Y);
+        }
+
+
+    }
+    public class Tile
+    {
+        public int TileID { get; set; } = -1;
+        public Texture2D Texture { get; set; }
+        public Tile(int tileID, Texture2D texture)
+        {
+            TileID = tileID;
+            Texture = texture;
+        }
+    }
+    public class TileSet
+    {
+        private GraphicsDevice GraphicsDevice;
+        //public Texture2D TileTexture;
+        public Dictionary<int, Texture2D> Atlas { get; private set; }
+        public int tileSize = 0;
+        private int tileCount => Atlas.Count;
+
+        public TileSet(GraphicsDevice graphicsDevice, int cellSize)
+        {
+            GraphicsDevice = graphicsDevice;
+            tileSize = cellSize;
+            Atlas = new Dictionary<int, Texture2D>();
+        }
+        
+
+        public void SliceIntoAtlas(Texture2D TileTexture)
+{
+    if (TileTexture == null)
+    {
+        throw new Exception("Error: Attempted to slice an uninitialized tileset texture.");
+    }
+    int tileX = TileTexture.Width / tileSize;
+    int tileY = TileTexture.Height / tileSize;
+    int CurrentID = 0;
+
+    for (int y = 0; y < tileY; y++)
+    {
+        for (int x = 0; x < tileX; x++)
+        {
+            Rectangle sourceRect = new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
+            Texture2D tileTexture = new Texture2D(GraphicsDevice, tileSize, tileSize);
+            Color[] data = new Color[tileSize * tileSize];
+            TileTexture.GetData(0, sourceRect, data, 0, data.Length);
+            bool isEmpty = true;
+            foreach (var pixel in data)
+            {
+                if (pixel.A > 0)
+                {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            if (!isEmpty)
+            {
+                tileTexture.SetData(data);
+                Atlas[CurrentID++] = tileTexture;
+            }
+        }
+    }
+}
+        public Texture2D GetTile(int tileID)
+        {
+            return Atlas.ContainsKey(tileID) ? Atlas[tileID] : null;
+        }
+
+        public void DrawTileSet(SpriteBatch spriteBatch, Vector2 position)
+        {
+            int xOffset = (int)position.X, yOffset = (int)position.Y;
+            int index = 0;
+            foreach (var tile in Atlas.Values)
+            {
+                spriteBatch.Draw(tile, new Vector2(xOffset, yOffset * (tileSize + 5)), Color.White);
+                index++;
+            }
+
+        }
+    }
+    public class Palette
+    {
+        private List<int> paletteBox;
+        private List<int> tileBar;
+
+        private TileSet _tileSet;
+        private int _selectedTileID = 0;
+        private int _displayTileSize = 32; // We will draw tiles at 32x32
+        private float _scrollOffset = 0;
+        private int _maxScroll = 0;
+        private int _margin = 5;
+        public Rectangle tileBarBounds;
+        public Palette(Rectangle _CanvasBound)
+        {
+            paletteBox = new List<int> { -1, -1, -1, -1 };
+            tileBarBounds = new Rectangle(0, _CanvasBound.Y, _CanvasBound.X, _CanvasBound.Height);
+        }
+        public void LoadTileSet(TileSet tileSet)
+        {
+            _tileSet = tileSet;
+            tileBar = new List<int>(tileSet.Atlas.Keys);
+            if (_tileSet.tileSize > 0)
+                _selectedTileID = 0; // Select the first tile by default
+            //InitializePalette();
+        }
+        public void InitializePalette()
+        {
+            for (int i = 0; i < paletteBox.Count; i++)
+            {
+                paletteBox[i] = i;
+            }
+        }
+        public void Update(MouseState mouseState, MouseState prevMouseState)
+        {
+            if (!tileBarBounds.Contains(mouseState.Position)) return;
+
+            // Handle Scrolling
+            int scrollDelta = mouseState.ScrollWheelValue - prevMouseState.ScrollWheelValue;
+            if (scrollDelta != 0)
+            {
+                _scrollOffset -= scrollDelta * 0.1f; // Adjust sensitivity
+            }
+
+            // Recalculate max scroll height based on content
+            int tilesPerRow = (tileBarBounds.Width - _margin * 2) / _displayTileSize;
+            if (tilesPerRow > 0)
+            {
+                int numRows = (int)Math.Ceiling((double)_tileSet.tileSize / tilesPerRow);
+                int totalContentHeight = numRows * _displayTileSize + (numRows - 1) * _margin;
+                _maxScroll = Math.Max(0, totalContentHeight - tileBarBounds.Height + _margin * 2);
+            }
+
+            _scrollOffset = MathHelper.Clamp(_scrollOffset, 0, _maxScroll);
+
+            // Handle Tile Selection
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                if (tilesPerRow == 0) return;
+
+                int relativeX = mouseState.X - tileBarBounds.X - _margin;
+                int relativeY = mouseState.Y - tileBarBounds.Y - _margin + (int)_scrollOffset;
+
+                int col = relativeX / _displayTileSize;
+                int row = relativeY / _displayTileSize;
+                int index = row * tilesPerRow + col;
+
+                if (col >= 0 && col < tilesPerRow && index >= 0 && index < _tileSet.tileSize)
+                {
+                    _selectedTileID = index;
+                }
+            }
+        }
+        public int selectTileFromPalette(Point mousePosition)
+        {
+            int index = (mousePosition.X - tileBarBounds.X) / _tileSet.tileSize;
+            return (index >= 0 && index < paletteBox.Count ? paletteBox[index] : -1);
+        }
+        public bool isMouseOverPalette(Point mousePosition)
+        { return tileBarBounds.Contains(mousePosition); }
+        public int GetSelectedTileID() { return _selectedTileID; }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.FillRectangle(tileBarBounds, Color.DarkSlateGray);
+            spriteBatch.DrawRectangle(tileBarBounds, Color.Black, 2);
+
+            if (_tileSet == null) return;
+
+            // Use a ScissorRectangle to prevent drawing outside the palette bounds
+            var originalScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            spriteBatch.GraphicsDevice.ScissorRectangle = tileBarBounds;
+
+            // Begin a new SpriteBatch with the RasterizerState for scissoring
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, new RasterizerState { ScissorTestEnable = true });
+
+            int tilesPerRow = (tileBarBounds.Width - _margin * 2) / _displayTileSize;
+            if (tilesPerRow == 0) return;
+
+            for (int i = 0; i < _tileSet.tileSize; i++)
+            {
+                int col = i % tilesPerRow;
+                int row = i / tilesPerRow;
+
+                var destRect = new Rectangle(
+                    tileBarBounds.X + _margin + col * _displayTileSize,
+                    tileBarBounds.Y + _margin + row * _displayTileSize - (int)_scrollOffset,
+                    _displayTileSize,
+                    _displayTileSize
+                );
+
+                // Draw the tile, upscaling it from 16x16 to 32x32
+                spriteBatch.Draw(_tileSet.GetTile(i), destRect, Color.White);
+
+                if (i == _selectedTileID)
+                {
+                    spriteBatch.DrawRectangle(destRect, Color.Yellow, 2);
+                }
+            }
+
+            // End the scissored batch and restore the original state
+            spriteBatch.End();
+            spriteBatch.GraphicsDevice.ScissorRectangle = originalScissorRect;
+            spriteBatch.Begin();
+        }
+
+    }
+    public class ColorSelector
+    {
+        public List<Color> Colors { get; private set; }
+        private int _selectedColorIndex;
+        private Texture2D whiteTexture;
+        private bool isVisible = false;
+
+        public void Toggle() { isVisible = !isVisible; }
+        public ColorSelector(GraphicsDevice graphicsDevice)
+        {
+            Colors = new List<Color>
+        {
+            Color.Red, Color.Green, Color.Blue, Color.Yellow,
+            Color.Cyan, Color.Magenta, Color.White, Color.Black
+        };
+            _selectedColorIndex = 0;
+            whiteTexture = new Texture2D(graphicsDevice, 1, 1);
+            whiteTexture.SetData(new[] { Color.White });
+
+        }
+
+        public Color GetSelectedColor()
+        {
+            return Colors[_selectedColorIndex];
+        }
+
+        public void CycleColors()
+        {
+            _selectedColorIndex = (_selectedColorIndex + 1) % Colors.Count;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Rectangle position)
+        {
+            for (int i = 0; i < Colors.Count; i++)
+            {
+                spriteBatch.Draw(
+                    whiteTexture,
+                    new Rectangle(position.X + i * 20, position.Y, 20, 20),
+                    Colors[i]
+                );
+
+                if (i == _selectedColorIndex)
+                {
+                    spriteBatch.Draw(whiteTexture, new Rectangle(position.X + i * 20, position.Y, 20, 20), Color.Black * 0.5f);
+                }
+            }
+        }
+    }
+
+    public class TileManager
+    {
+        private Dictionary<Point, int> grid;
+        private TileSet TileSet;
+        private int CellSize;
+        public TileLayer CurrentLayer { get; set; }
+        public TileManager(int cellSize)
+        {
+            CellSize = cellSize;
+        }
+        public void LoadTileSet(TileSet tileSet) { TileSet = tileSet; }
+        public void PlaceTile(Point cell, int tileID)
+        {
+            if (CurrentLayer != null && !CurrentLayer.IsLocked)
+            {
+                CurrentLayer.PlaceTile(cell, tileID);
+                // Potentially add to Undo/Redo stack here
+            }
+
+            if (!grid.ContainsKey(cell))
+                grid[cell] = tileID;
+        }
+        public void RemoveTile(Point cell)
+        {
+            if (CurrentLayer != null && !CurrentLayer.IsLocked)
+            {
+                CurrentLayer.RemoveTile(cell);
+                // Potentially add to Undo/Redo stack here
+            }
+        }
+        public Point GetCell(Point mousePosition, EditorCamera camera)
+        {
+            Vector2 worldPos = Vector2.Transform(mousePosition.ToVector2(), Matrix.Invert(camera.GetTransformMatrix()));
+            return new Point((int)worldPos.X / CellSize, (int)worldPos.Y / CellSize);
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            foreach (var tile in grid)
+            {
+                Texture2D tileTexture = TileSet.GetTile(tile.Value);
+                if (tileTexture != null)
+                {
+                    spriteBatch.Draw(tileTexture, new Rectangle(tile.Key.X * CellSize, tile.Key.Y * CellSize, CellSize, CellSize), Color.White);
+                }
+            }
+        }
+    }
+
+        public abstract class Layer
+    {
+        public string Name { get; set; }
+        public bool IsVisible { get; set; } = true;
+        public bool IsLocked { get; set; } = false;
+
+        public Layer(string name)
+        {
+            Name = name;
+        }
+
+        public abstract void Update(GameTime gameTime);
+        public abstract void Draw(SpriteBatch spriteBatch);
+    }
+
+    public class TileLayer : Layer
+    {
+        private Dictionary<Point, int> grid;
+        private TileSet tileSet;
+        private int cellSize;
+
+        public TileLayer(string name, int cellSize, TileSet tileSet) : base(name)
+        {
+            this.cellSize = cellSize;
+            this.tileSet = tileSet;
+            grid = new Dictionary<Point, int>();
+        }
+
+        public void PlaceTile(Point cell, int tileID)
+        {
+            if (!grid.ContainsKey(cell))
+                grid[cell] = tileID;
+        }
+
+        public void RemoveTile(Point cell)
+        {
+            if (grid.ContainsKey(cell))
+                grid.Remove(cell);
+        }
+
+        // Returns the underlying grid data for debug/info purposes.
+        public Dictionary<Point, int> GetTileGrid()
+        {
+            return grid;
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            // For now, nothing to update inside a tile layer.
+        }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            foreach (var tile in grid)
+            {
+                Texture2D tileTexture = tileSet.GetTile(tile.Value);
+                if (tileTexture != null)
+                {
+                    Rectangle dest = new Rectangle(tile.Key.X * cellSize, tile.Key.Y * cellSize, cellSize, cellSize);
+                    spriteBatch.Draw(tileTexture, dest, Color.White);
+                }
+            }
+        }
+    }
+    public class LayerTab
+    {
+        private LayerManager layerManager;
+        private TileManager tileManager;
+        private SpriteFont font;
+        private Texture2D background;
+        public Rectangle tabArea;
+        private int tabHeight = 30;
+        private int tabWidth = 150;
+        private int margin = 5;
+        private GraphicsDevice graphicsDevice;
+
+        public LayerTab(GraphicsDevice graphicsDevice, LayerManager layerManager, TileManager tileManager)
+        {
+            this.graphicsDevice = graphicsDevice;
+            this.layerManager = layerManager;
+            this.tileManager = tileManager;
+
+            // Create a simple background texture for the tabs.
+            background = new Texture2D(graphicsDevice, 1, 1);
+            background.SetData(new[] { Color.DarkGray });
+
+            // Initially update the tab area position.
+            UpdateTabArea();
+        }
+
+        public void LoadTabArea(SpriteFont font)
+        {
+            this.font = font;
+        }
+
+        // Update tab area based on the current viewport and number of layers.
+        private void UpdateTabArea()
+        {
+            int totalHeight = layerManager.Layers.Count * tabHeight;
+            tabArea = new Rectangle(
+                graphicsDevice.Viewport.Width - tabWidth - margin,
+                graphicsDevice.Viewport.Height - totalHeight - margin,
+                tabWidth,
+                totalHeight
+            );
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            UpdateTabArea(); // Adjust if window size changes.
+            MouseState mouseState = Mouse.GetState();
+
+            // Check if any layer tab is clicked.
+            for (int i = 0; i < layerManager.Layers.Count; i++)
+            {
+                Rectangle layerRect = new Rectangle(tabArea.X, tabArea.Y + i * tabHeight, tabWidth, tabHeight);
+                if (layerRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
+                {
+                    // Update current layer in TileManager and active index in LayerManager.
+                    tileManager.CurrentLayer = layerManager.Layers[i] as TileLayer;
+                    layerManager.ActiveLayerIndex = i;
+                }
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            // Draw the background for the entire tab area.
+            spriteBatch.Draw(background, tabArea, Color.Gray * 0.5f);
+
+            // Draw each individual layer tab.
+            for (int i = 0; i < layerManager.Layers.Count; i++)
+            {
+                Layer layer = layerManager.Layers[i];
+                Rectangle layerRect = new Rectangle(tabArea.X, tabArea.Y + i * tabHeight, tabWidth, tabHeight);
+
+                // Highlight the currently selected layer.
+                Color textColor = (tileManager.CurrentLayer == layer) ? Color.Yellow : Color.White;
+                //spriteBatch.DrawString(font, layer.Name, new Vector2(layerRect.X + margin, layerRect.Y + margin), textColor);
+
+                // Optionally draw a border for each tab.
+                spriteBatch.DrawRectangle(layerRect, Color.Black, 1);
+            }
+        }
+    }
+    public class LayerManager
+    {
+        public List<Layer> Layers { get; private set; }
+        public int ActiveLayerIndex { get; set; } = 0;
+
+        public LayerManager(TileSet tileSet, int cellSize)
+        {
+            Layers = new List<Layer>();
+
+
+            // Default layers:
+            // 1. Diffuse layer (main visuals)
+            Layers.Add(new TileLayer("Diffuse", cellSize, tileSet));
+            // 2. Normal layer (for lighting effects)
+            Layers.Add(new TileLayer("Normal", cellSize, tileSet));
+            // 3. Other layer (collision, triggers, etc.)
+            Layers.Add(new TileLayer("Other", cellSize, tileSet));
+        }
+        public TileLayer GetActiveTileLayer()
+        {
+            return Layers[ActiveLayerIndex] as TileLayer;
+        }
+        public void AddDiffuseLayer(TileSet tileSet, int cellSize)
+        {
+            // When adding a diffuse layer, you might want to automatically create a matching normal layer.
+            Layers.Add(new TileLayer("Diffuse", cellSize, tileSet));
+            Layers.Add(new TileLayer("Normal", cellSize, tileSet));
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            foreach (var layer in Layers)
+            {
+                if (layer.IsVisible && !layer.IsLocked)
+                {
+                    layer.Update(gameTime);
+                }
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            foreach (var layer in Layers)
+            {
+                if (layer.IsVisible)
+                {
+                    layer.Draw(spriteBatch);
+                }
+            }
+        }
+
+        public string GetLayerDebugInfo()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Layer Info:");
+            for (int i = 0; i < Layers.Count; i++)
+            {
+                var layer = Layers[i];
+                sb.AppendLine($"[{i}] {layer.Name} - Visible: {layer.IsVisible}, Locked: {layer.IsLocked}");
+            }
+            return sb.ToString();
+        }
+    }
+
+}
