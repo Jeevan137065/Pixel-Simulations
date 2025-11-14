@@ -7,8 +7,9 @@ namespace Pixel_Simulations
     public class Upscaler
     {
         private readonly GraphicsDevice _graphicsDevice;
-        private RenderTarget2D _renderTarget;
-
+        private RenderTarget2D _renderTarget; // The primary, internal canvas
+        private RenderTarget2D _postProcessTarget;
+        private readonly Rectangle _destinationRect;
         public int NativeWidth { get; }
         public int NativeHeight { get; }
         public int Scale { get; }
@@ -16,65 +17,75 @@ namespace Pixel_Simulations
         public RenderTarget2D RenderTarget => _renderTarget;
 
         public Rectangle DestinationRectangle { get; private set; }
-        public Upscaler(GraphicsDevice graphicsDevice, int nativeWidth, int nativeHeight, int scale)
+        public Upscaler(GraphicsDevice graphicsDevice, int windowWidth, int windowHeight, int scale)
         {
             _graphicsDevice = graphicsDevice;
-            NativeWidth = nativeWidth;
-            NativeHeight = nativeHeight;
+            NativeWidth = windowWidth;
+            NativeHeight = windowHeight;
             Scale = scale;
-        }
 
-        public void LoadContent()
-        {
-            // Create the RenderTarget2D. This is the "canvas" we'll draw our low-res game to.
-            _renderTarget = new RenderTarget2D(
-                _graphicsDevice,
-                NativeWidth,
-                NativeHeight,
-                false, // Mipmap
-                _graphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.Depth24);
-        }
+            // Create the main render target for the upscaler's final low-res image
+            _renderTarget = new RenderTarget2D(graphicsDevice, windowWidth, windowHeight);
 
-        //public void SetWindowResolution(GraphicsDeviceManager graphics)
-        //{
-        //    int finalWidth = NativeWidth * Scale;
-        //    int finalHeight = NativeHeight * Scale;
+            // Create the intermediate target, same size
+            _postProcessTarget = new RenderTarget2D(graphicsDevice, windowWidth, windowHeight);
 
-        //    graphics.PreferredBackBufferWidth = finalWidth;
-        //    graphics.PreferredBackBufferHeight = finalHeight;
-        //    graphics.IsFullScreen = true;
-        //    graphics.ApplyChanges();
-
-        //    DestinationRectangle = new Rectangle(0, 0, finalWidth, finalHeight);
-        //}
-        // NOTE: We will NOT use SetWindowResolution for the editor, as it's for fullscreen games.
-
-
-        public void BeginRender()
-        {
-            _graphicsDevice.SetRenderTarget(_renderTarget);
+            int finalWidth = windowWidth * scale;
+            int finalHeight = windowHeight * scale;
+            _destinationRect = new Rectangle(0, 0, finalWidth, finalHeight);
         }
 
 
-        public void Present(SpriteBatch spriteBatch)
+        public void SetWindowResolution(GraphicsDeviceManager graphicsManager)
         {
-            // 1. Reset the render target from our low-res canvas back to the screen (the back buffer)
+            graphicsManager.PreferredBackBufferWidth = _destinationRect.Width;
+            graphicsManager.PreferredBackBufferHeight = _destinationRect.Height;
+            graphicsManager.IsFullScreen = true;
+            graphicsManager.ApplyChanges();
+        }
+        //NOTE: We will NOT use SetWindowResolution for the editor, as it's for fullscreen games.
+
+
+
+
+        public void Present(SpriteBatch spriteBatch, RenderTarget2D sourceTexture, params Effect[] effects)
+        {
+            RenderTarget2D currentSource = sourceTexture;
+
+            if (effects != null && effects.Length > 0)
+            {
+                // We will ping-pong between our two internal render targets.
+                RenderTarget2D[] targets = { _postProcessTarget, _renderTarget };
+
+                for (int i = 0; i < effects.Length; i++)
+                {
+                    Effect effect = effects[i];
+                    if (effect == null) continue; // Skip null effects
+
+                    // Determine the destination for this pass
+                    RenderTarget2D destination = targets[i % 2];
+
+                    _graphicsDevice.SetRenderTarget(destination);
+                    _graphicsDevice.Clear(Color.Transparent);
+
+                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, effect);
+                    spriteBatch.Draw(currentSource, Vector2.Zero, Color.White);
+                    spriteBatch.End();
+
+                    // The output of this pass is the input for the next
+                    currentSource = destination;
+                }
+            }
+
+            // --- Final Draw to the Back Buffer ---
             _graphicsDevice.SetRenderTarget(null);
-            _graphicsDevice.Clear(Color.Black); // Clear the screen to black for letterboxing if needed
+            _graphicsDevice.Clear(Color.Black);
 
-            // 2. Draw our low-res canvas to the screen, upscaled.
-            spriteBatch.Begin(
-                sortMode: SpriteSortMode.Immediate,
-                blendState: BlendState.Opaque,
-                samplerState: SamplerState.PointClamp, // IMPORTANT: This prevents blurring!
-                depthStencilState: null,
-                rasterizerState: null);
-
-            // Draw the contents of the render target to the whole screen
-            spriteBatch.Draw(_renderTarget, DestinationRectangle, Color.White);
-
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
+            // Draw the final result (which is now in 'currentSource') to the screen
+            spriteBatch.Draw(currentSource, _destinationRect, Color.White);
             spriteBatch.End();
         }
+
     }
 }

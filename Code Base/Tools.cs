@@ -13,7 +13,7 @@ namespace Pixel_Simulations
         {
             if (activeLayer != null && activeBrush.HasValue)
             {
-                activeLayer.PlaceTile(cell, activeBrush.Value);
+                activeLayer.PlaceTile(cell, activeBrush);
             }
         }
 
@@ -59,7 +59,7 @@ namespace Pixel_Simulations
                 return;
             }
 
-            if (targetTile.Equals(activeBrush.Value)) return; // Already filled with the brush color
+            if (targetTile.Equals(activeBrush)) return; // Already filled with the brush color
 
             var pixels = new Queue<Point>();
             pixels.Enqueue(cell);
@@ -71,7 +71,7 @@ namespace Pixel_Simulations
 
                 if (activeLayer.Grid.TryGetValue(current, out var currentTile) && currentTile.Equals(targetTile))
                 {
-                    activeLayer.PlaceTile(current, activeBrush.Value);
+                    activeLayer.PlaceTile(current, activeBrush);
                     pixels.Enqueue(new Point(current.X + 1, current.Y));
                     pixels.Enqueue(new Point(current.X - 1, current.Y));
                     pixels.Enqueue(new Point(current.X, current.Y + 1));
@@ -115,7 +115,7 @@ namespace Pixel_Simulations
             {
                 for (int x = minX; x <= maxX; x++)
                 {
-                    activeLayer.PlaceTile(new Point(x, y), activeBrush.Value);
+                    activeLayer.PlaceTile(new Point(x, y), activeBrush);
                 }
             }
             _isDrawing = false;

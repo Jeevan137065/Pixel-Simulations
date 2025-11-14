@@ -2,13 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Pixel_Simulations
 {
     public class EditorState
     {
-        public Map ActiveMap { get; private set; }
+        public Map ActiveMap { get;  set; }
         public int ActiveLayerIndex { get; set; }
+
+        [JsonConverter(typeof(LayerConverter))]
+        public List<Layer> Layers { get;  set; }
 
         public EditorState(int mapWidth, int mapHeight)
         {
@@ -53,6 +58,50 @@ namespace Pixel_Simulations
         {
             ActiveMap.MoveLayerDown(ActiveLayerIndex);
             if (ActiveLayerIndex < ActiveMap.Layers.Count - 1) ActiveLayerIndex++;
+        }
+
+        public void SaveToFile(string filePath)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented, // Makes the JSON file readable
+                                                  // This tells JSON.NET how to handle polymorphism (abstract types)
+                TypeNameHandling = TypeNameHandling.Auto
+            };
+
+            // We might need to be more explicit with our converter for specific types if Auto doesn't work well.
+            // settings.Converters.Add(new LayerConverter()); 
+
+            string json = JsonConvert.SerializeObject(this, settings);
+            System.IO.File.WriteAllText(filePath, json);
+        }
+
+        public void LoadFromFile(string filePath)
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                // Handle error or just start with a new map
+                return;
+            }
+
+            string json = System.IO.File.ReadAllText(filePath);
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto, // Crucial for polymorphism
+                                                          // If Auto doesn't work, we'll need our custom converter here too.
+                                                          // settings.Converters.Add(new LayerConverter());
+            };
+
+            // Deserialize the JSON back into our editor state.
+            // We need to be careful here, as this replaces the entire current state.
+            var loadedState = JsonConvert.DeserializeObject<EditorState>(json, settings);
+
+            if (loadedState != null)
+            {
+                this.ActiveMap = loadedState.ActiveMap;
+                this.ActiveLayerIndex = loadedState.ActiveLayerIndex;
+                // The TileSetManager will need to be re-populated/re-linked after loading.
+            }
         }
     }
 }

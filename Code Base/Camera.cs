@@ -12,18 +12,33 @@ namespace Pixel_Simulations
         private Matrix _transform;
         public Matrix Transform => _transform;
 
+        // NEW: A separate transform for parallax effects that has NO translation.
+        public Matrix ParallaxTransform { get; private set; }
+
+        // NEW: A public property to get the camera's top-left position.
+        // This is what our GPU simulation needs.
+        public Vector2 Position { get; private set; }
+
+
         public void Follow(Player target, int windowWidth, int windowHeight, int worldWidth, int worldHeight)
         {
-            // Center the camera on the player
-            var cameraPosition = target.Position - new Vector2(windowWidth / 2, windowHeight / 2);
+            // Calculate the desired top-left position of the camera.
+            var cameraPosition = target.Position - new Vector2(windowWidth / 2f, windowHeight / 2f);
 
-            // Clamp the camera's position to the world boundaries so we don't see "outside" the world
+            // Clamp the camera's position to the world boundaries.
             float clampedX = MathHelper.Clamp(cameraPosition.X, 0, worldWidth - windowWidth);
             float clampedY = MathHelper.Clamp(cameraPosition.Y, 0, worldHeight - windowHeight);
 
-            // Create a transform matrix that translates the world opposite to the camera's clamped position
-            // This makes it look like the camera is moving.
-            _transform = Matrix.CreateTranslation(-clampedX, -clampedY, 0);
+            // Store the final, clamped position.
+            Position = new Vector2(clampedX, clampedY);
+
+            // Create the main transform matrix that moves the world.
+            _transform = Matrix.CreateTranslation(-Position.X, -Position.Y, 0);
+
+            // Create the parallax transform matrix. Since there is no zoom in this camera,
+            // the parallax transform is just the Identity matrix (it does nothing).
+            // If you were to add zoom later, the scale matrix would go here.
+            ParallaxTransform = Matrix.Identity;
         }
     }
 

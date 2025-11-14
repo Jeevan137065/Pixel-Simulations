@@ -37,7 +37,7 @@ namespace Pixel_Simulations
 
             if (perlinNoiseTexture != null)
             {
-                sb.Draw(perlinNoiseTexture, new Vector2(0, 0), Color.White);
+                //sb.Draw(perlinNoiseTexture, new Vector2(0, 0), Color.White);
             }
 
         }

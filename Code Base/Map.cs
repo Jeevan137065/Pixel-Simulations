@@ -2,21 +2,14 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGame.Extended;
-using MonoGame.Extended.Collisions.Layers;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Pixel_Simulations
 {
-    public enum TilesetType
-    {
-        Terrain, // 100-piece organic set
-        Normal,  // 16-piece structured set
-        Object,  // Chunk/prefab set
-        Animated // Future use
-    }
+    
     public class Map
     {
         public int WidthInCells { get; private set; }
@@ -75,44 +68,7 @@ namespace Pixel_Simulations
 
     }
 
-    public abstract class Layer
-    {
-        public string Name { get; set; }
-        public bool IsVisible { get; set; } = true;
-        public bool IsLocked { get; set; } = false;
-
-        protected Layer(string name)
-        {
-            Name = name;
-        }
-    }
-
-    public class TileLayer : Layer
-    {
-        // Stores tile data sparsely. Only grid cells that have a tile are in the dictionary.
-        public Dictionary<Point, TileInfo> Grid { get; private set; }
-
-        public TileLayer(string name) : base(name)
-        {
-            Grid = new Dictionary<Point, TileInfo>();
-        }
-
-        public void PlaceTile(Point cell, TileInfo tileInfo)
-        {
-            if (IsLocked) return;
-            Grid[cell] = tileInfo;
-        }
-
-        public void RemoveTile(Point cell)
-        {
-            if (IsLocked) return;
-            if (Grid.ContainsKey(cell))
-            {
-                Grid.Remove(cell);
-            }
-        }
-    }
-
+   
     public class TileSet
     {
         public string Name { get; private set; }
@@ -178,19 +134,45 @@ namespace Pixel_Simulations
             return Atlas.TryGetValue(tileId, out var texture) ? texture : null;
         }
     }
-    public struct TileInfo
+
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class TileInfo
     {
-        // The unique name of the tileset this tile belongs to (e.g., "NaturalLandmass")
-        public string TilesetName;
+        [JsonProperty("TilesetName")]
+        public string TilesetName { get; set; }
+        [JsonProperty("TileID")]
+        public int TileID { get; set; }
 
-        // The local ID of the tile within its own tileset (e.g., 42)
-        public int TileID;
-
+        public bool HasValue = true;
         public TileInfo(string tilesetName, int tileId)
         {
             TilesetName = tilesetName;
             TileID = tileId;
         }
+
+        // Implement Equals for comparison
+        public override bool Equals(object obj) => obj is TileInfo other && TilesetName == other.TilesetName && TileID == other.TileID;
+        public override int GetHashCode() => System.HashCode.Combine(TilesetName, TileID);
+        public override string ToString() => $"Tileset: {TilesetName}, ID: {TileID}";
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public abstract class MapObject
+    {
+        [JsonProperty("Position")]
+        public Vector2 Position { get; set; }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class RectangleObject : MapObject
+    {
+        [JsonProperty("Size")]
+        public Vector2 Size { get; set; }
+        [JsonProperty("DebugColor")]
+        public Color DebugColor { get; set; } // Color might need custom serialization
+        [JsonProperty("TriggerType")]
+        public string TriggerType { get; set; }
     }
 
     public class TilesetManager
@@ -209,12 +191,14 @@ namespace Pixel_Simulations
             // For now, we'll manually load our two types of tilesets.
             var terrainAtlas = content.Load<Texture2D>("TerrainTiles"); // Your 100-piece atlas
             var normalAtlas = content.Load<Texture2D>("NormalTiles");   // A standard 16-tile atlas
-
+            var TempAtlas = content.Load<Texture2D>("BasiR");
             var terrainSet = new TileSet("Terrain", TilesetType.Terrain, terrainAtlas, 16, graphicsDevice, sliceVertically: false);
             var normalSet = new TileSet("Normal", TilesetType.Normal, normalAtlas, 16, graphicsDevice);
+            var tempSet = new TileSet("Temp", TilesetType.Layout, TempAtlas, 16, graphicsDevice, sliceVertically: false);
 
             TileSets[terrainSet.Name] = terrainSet;
             TileSets[normalSet.Name] = normalSet;
+            TileSets[tempSet.Name] = tempSet;
         }
 
         public TileSet GetTileset(string name)

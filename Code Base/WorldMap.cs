@@ -3,28 +3,40 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Pixel_Simulations
-{ 
+{
+    
+
+    public enum TileType { Grass, Dirt, Tilled }
+
+    public struct Tile
+    {
+        public TileType Type;
+        public int Variant;
+        public Rectangle SourceRect;
+    }
     public class WorldMap
     {
         // Textures
         private Texture2D _grassTilesTexture;
-        private Texture2D _grassPlantsTexture;
-        private Texture2D _treeTrunkTexture;
-
+        private Texture2D _cropsGrowthTexture;
         // Source Rectangles
-        private readonly Rectangle[] _grassTileSources = new Rectangle[4];
-        private readonly Rectangle[] _grassPlantSources = new Rectangle[4];
-        private readonly Rectangle[] _treeSources = new Rectangle[2];
+        private readonly Rectangle[] _grassSources = new Rectangle[8]; // 2 varieties * 4 shades
+        private readonly Rectangle[] _dirtSources = new Rectangle[2];
+        private readonly Rectangle[] _tilledSources = new Rectangle[2];
 
         // Map Data
-        private Rectangle[,] _tileGrid;
-        private bool[,] _isTileOccupied; // To prevent spawning plants/trees on top of each other
+        private Tile[,] _tileGrid;
+        private bool[,] _isTileOccupied;
 
         // Public lists of all dynamic, renderable objects on the map
-        public List<Tree> Trees { get; private set; }
-        public List<Decoration> Decorations { get; private set; }
+        public List<Crop> Crops { get; } = new();
+        public Dictionary<Tool, CropData> CropData { get; private set; }
 
         // World Properties
         private readonly int _worldWidth, _worldHeight, _tileSize;
@@ -44,36 +56,72 @@ namespace Pixel_Simulations
         {
             // Load textures
             _grassTilesTexture = content.Load<Texture2D>("Grass1");
-            _grassPlantsTexture = content.Load<Texture2D>("GrassBlade");
-            _treeTrunkTexture = content.Load<Texture2D>("Trunk1");
-
-            // Initialize lists
-            Trees = new List<Tree>();
-            Decorations = new List<Decoration>();
+            _cropsGrowthTexture = content.Load<Texture2D>("crops_growth");
 
             // Pre-calculate source rectangles
-            for (int i = 0; i < 4; i++) _grassTileSources[i] = new Rectangle(0, i * 16, 16, 16);
-            for (int i = 0; i < 4; i++) _grassPlantSources[i] = new Rectangle(0, i * 24, 24, 24);
-            for (int i = 0; i < 2; i++) _treeSources[i] = new Rectangle(i * 64, 0, 64, 320); // 2 trunks in a 128x320 image
-
+            for (int i = 0; i < 2; i++) for (int j = 0; j < 4; j++)
+                { _grassSources[i * 4 + j] = new Rectangle(i * 16, (j) * 16, 16, 16); }
+            _dirtSources[0] = new Rectangle(0, 4 * 16, 16, 16);
+            _dirtSources[1] = new Rectangle(16, 4 * 16, 16, 16);
+            _tilledSources[0] = new Rectangle(0, 5 * 16, 16, 16); // Alone
+            _tilledSources[1] = new Rectangle(16, 5 * 16, 16, 16);
+            LoadCropData();
             GenerateWorld();
+        }
+
+        private void LoadCropData()
+        {
+            CropData = new Dictionary<Tool, CropData>();
+            string path = Path.Combine(AppContext.BaseDirectory, "Content", "crop_data.json");
+            string jsonString = File.ReadAllText(path);
+
+            // --- START OF FIX ---
+
+            // 1. Create a new options object to configure the deserializer.
+            var options = new JsonSerializerOptions
+            {
+                // This is a helpful option that makes your JSON case-insensitive.
+                // For example, "seedTool" would work just as well as "SeedTool".
+                PropertyNameCaseInsensitive = true
+            };
+
+            // 2. Add the crucial converter that allows strings to be parsed as enums.
+            options.Converters.Add(new JsonStringEnumConverter());
+
+            // 3. Pass the options object to the Deserialize method.
+            var data = JsonSerializer.Deserialize<List<CropData>>(jsonString, options);
+
+            // --- END OF FIX ---
+
+            foreach (var crop in data)
+            {
+                CropData.Add(crop.SeedTool, crop);
+            }
+        }
+
+        public void SubscribeToTimeManager(TimeManager timeManager)
+        {
+            timeManager.OnDayChanged -= HandleDayChanged;
+
+            // Then, add it. Now it will only ever be subscribed once.
+            timeManager.OnDayChanged += HandleDayChanged;
+        }
+
+        private void HandleDayChanged()
+        {
+            foreach (var crop in Crops)
+            {
+                crop.AdvanceDay();
+            }
         }
 
         private void GenerateWorld()
         {
-            _tileGrid = new Rectangle[_worldWidthInTiles, _worldHeightInTiles];
+            _tileGrid = new Tile[_worldWidthInTiles, _worldHeightInTiles];
             _isTileOccupied = new bool[_worldWidthInTiles, _worldHeightInTiles];
             const float noiseScale = 0.1f;
 
-            // --- PASS 1: Place large objects like trees ---
-            var acceptedTreePositions = GenerateTreePositions();
-            foreach (var treeHotspot in acceptedTreePositions)
-            {
-                PlaceTree(treeHotspot);
-            }
 
-
-            // --- PASS 2: Place ground tiles and small decorations ---
             for (int y = 0; y < _worldHeightInTiles; y++)
             {
                 for (int x = 0; x < _worldWidthInTiles; x++)
@@ -81,109 +129,36 @@ namespace Pixel_Simulations
                     // Place ground tile everywhere
                     double noiseValue = Perlin.Noise(x * noiseScale, y * noiseScale);
                     int greennessIndex = Math.Min(3, (int)(noiseValue * 4));
-                    _tileGrid[x, y] = _grassTileSources[greennessIndex];
-
-                    // Place decorations only on non-occupied tiles
-                    if (!_isTileOccupied[x, y] && _random.NextDouble() < 0.15) // 15% chance
-                    {
-                        var plantPos = new Vector2(x * _tileSize - 4, y * _tileSize - 4);
-                        var newDeco = new Decoration(_grassPlantsTexture, plantPos, _grassPlantSources[_random.Next(0, 4)]);
-                        Decorations.Add(newDeco);
-                    }
+                    _tileGrid[x, y].Type = TileType.Grass;
+                    _tileGrid[x, y].Variant = _random.Next(0, 2); // Variety, not greenness
+                    UpdateTileSourceRect(x, y);
                 }
             }
         }
 
-        private void PlaceTree(Vector2 treeHotspot)
+        private void UpdateTileSourceRect(int x, int y)
         {
-            Rectangle treeSource = _treeSources[_random.Next(0, 2)];
+            if (x < 0 || x >= _worldWidthInTiles || y < 0 || y >= _worldHeightInTiles) return;
 
-            // Position the tree's top-left corner based on its hotspot
-            var treePos = new Vector2(
-                treeHotspot.X - (treeSource.Width / 2f),
-                treeHotspot.Y - treeSource.Height
-            );
-
-            Trees.Add(new Tree(_treeTrunkTexture, treePos, treeSource));
-
-            // Mark the tile(s) under the tree trunk base as occupied
-            int tileX = (int)(treeHotspot.X / _tileSize);
-            int tileY = (int)(treeHotspot.Y / _tileSize);
-            int tilesUnderTree = (int)Math.Ceiling(treeSource.Width / (float)_tileSize);
-            int startX = tileX - tilesUnderTree / 2;
-
-            for (int i = 0; i < tilesUnderTree; i++)
+            switch (_tileGrid[x, y].Type)
             {
-                int currentX = startX + i;
-                if (currentX >= 0 && currentX < _worldWidthInTiles && tileY >= 0 && tileY < _worldHeightInTiles)
-                {
-                    _isTileOccupied[currentX, tileY] = true;
-                }
+                case TileType.Grass:
+                    double noiseValue = Perlin.Noise(x * 0.1f, y * 0.1f);
+                    int greenness = Math.Min(3, (int)(noiseValue * 4));
+                    _tileGrid[x, y].SourceRect = _grassSources[_tileGrid[x, y].Variant * 4 + greenness];
+                    break;
+                case TileType.Dirt:
+                    _tileGrid[x, y].SourceRect = _dirtSources[_tileGrid[x, y].Variant];
+                    break;
+                case TileType.Tilled:
+                    bool leftIsTilled = (x > 0 && _tileGrid[x - 1, y].Type == TileType.Tilled);
+                    bool rightIsTilled = (x < _worldWidthInTiles - 1 && _tileGrid[x + 1, y].Type == TileType.Tilled);
+                    int tilledVariant = (leftIsTilled || rightIsTilled) ? 1 : 0;
+                    _tileGrid[x, y].SourceRect = _tilledSources[tilledVariant];
+                    break;
             }
         }
 
-        private List<Vector2> GenerateTreePositions()
-        {
-            var candidatePositions = new List<Vector2>();
-
-            // 1. Generate a list of all possible candidate positions
-            for (int y = 0; y < _worldHeightInTiles; y++)
-            {
-                for (int x = 0; x < _worldWidthInTiles; x++)
-                {
-                    // Use a higher chance here because we will filter most of them out
-                    if (_random.NextDouble() < 0.10) // 10% chance per tile to be a candidate
-                    {
-                        var hotspot = new Vector2(
-                            x * _tileSize + (_tileSize / 2f),
-                            y * _tileSize + (_tileSize / 2f)
-                        );
-                        candidatePositions.Add(hotspot);
-                    }
-                }
-            }
-
-            // 2. Shuffle the candidates to ensure random, non-biased placement
-            candidatePositions.Shuffle();
-
-            var acceptedPositions = new List<Vector2>();
-            var minHorizontalDist = 64; // Minimum horizontal gap between tree centers
-            var minVerticalDist = 360; // Minimum vertical distance if in the same "column"
-
-            // 3. Filter the candidates based on our spacing rules
-            foreach (var candidate in candidatePositions)
-            {
-                bool isValid = true;
-                foreach (var accepted in acceptedPositions)
-                {
-                    float dx = Math.Abs(candidate.X - accepted.X);
-                    float dy = Math.Abs(candidate.Y - accepted.Y);
-
-                    // Rule 1: No tree can be too close horizontally.
-                    // This is the primary rule for creating paths.
-                    if (dx < minHorizontalDist)
-                    {
-                        isValid = false;
-                        break;
-                    }
-
-                    // Rule 2: If trees are in the same rough vertical "column", they must be very far apart.
-                    // This prevents trees from spawning directly behind one another.
-                    // We consider them in the same column if the horizontal distance is less than double the minimum.
-                    if (dx < minHorizontalDist * 2 && dy < minVerticalDist)
-                    {
-                        isValid = false;
-                        break;
-                    }
-                }
-
-                if (isValid)
-                {
-                    acceptedPositions.Add(candidate);
-                }
-            }
-            return acceptedPositions;
-        }
         public void DrawGround(SpriteBatch spriteBatch, Rectangle cameraView)
         {
             int startX = Math.Max(0, cameraView.X / _tileSize);
@@ -196,9 +171,90 @@ namespace Pixel_Simulations
                 for (int x = startX; x <= endX; x++)
                 {
                     var destRect = new Rectangle(x * _tileSize, y * _tileSize, _tileSize, _tileSize);
-                    spriteBatch.Draw(_grassTilesTexture, destRect, _tileGrid[x, y], Color.White);
+                    spriteBatch.Draw(_grassTilesTexture, destRect, _tileGrid[x, y].SourceRect, Color.White);
                 }
             }
+        }
+
+        public void DigTile(int x, int y)
+        {
+            if (x < 0 || x >= _worldWidthInTiles || y < 0 || y >= _worldHeightInTiles) return;
+            if (_tileGrid[x, y].Type == TileType.Grass)
+            {
+                _tileGrid[x, y].Type = TileType.Dirt;
+                _tileGrid[x, y].Variant = _random.Next(0, 2);
+                UpdateTileSourceRect(x, y);
+
+            }
+        }
+
+        public void TillTile(int x, int y)
+        {
+            if (x < 0 || x >= _worldWidthInTiles || y < 0 || y >= _worldHeightInTiles) return;
+            if (_tileGrid[x, y].Type == TileType.Dirt)
+            {
+                _tileGrid[x, y].Type = TileType.Tilled;
+                _tileGrid[x, y].Variant = 0;
+                UpdateTileSourceRect(x, y);
+
+                // Update neighbors to connect to this new tilled tile
+                UpdateTileSourceRect(x - 1, y);
+                UpdateTileSourceRect(x + 1, y);
+            }
+        }
+
+        public void PlantCrop(int x, int y, CropData cropData)
+        {
+            if (IsTileValidForPlanting(x, y))
+            {
+                var position = new Vector2(x * _tileSize + _tileSize / 2f, y * _tileSize + _tileSize / 2f);
+                var newCrop = new Crop(cropData, position, _cropsGrowthTexture);
+                Crops.Add(newCrop);
+            }
+        }
+
+        public void HarvestCrop(int x, int y)
+        {
+            // Find crop at this tile
+            Crop cropToHarvest = null;
+            foreach (var crop in Crops)
+            {
+                int cropTileX = (int)Math.Floor(crop.Position.X / _tileSize);
+                int cropTileY = (int)Math.Floor(crop.Position.Y / _tileSize);
+                if (cropTileX == x && cropTileY == y)
+                {
+                    cropToHarvest = crop;
+                    break;
+                }
+            }
+
+            if (cropToHarvest != null && cropToHarvest.IsHarvestable)
+            {
+                // For now, we just remove it. In the future, this would add to inventory.
+                Crops.Remove(cropToHarvest);
+            }
+        }
+        private bool IsTileValidForPlanting(int x, int y)
+        {
+            if (x < 0 || x >= _worldWidthInTiles || y < 0 || y >= _worldHeightInTiles)
+                return false;
+
+            // Rule 1: Must be a tilled tile.
+            if (_tileGrid[x, y].Type != TileType.Tilled)
+                return false;
+
+            // Rule 2: Must not already have a crop on it.
+            foreach (var crop in Crops)
+            {
+                int cropTileX = (int)Math.Floor(crop.Position.X / _tileSize);
+                int cropTileY = (int)Math.Floor(crop.Position.Y / _tileSize);
+                if (cropTileX == x && cropTileY == y)
+                {
+                    return false; // Found a crop here, so it's not valid.
+                }
+            }
+
+            return true; // All checks passed.
         }
     }
 }

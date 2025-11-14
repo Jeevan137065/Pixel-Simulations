@@ -30,8 +30,8 @@ namespace Pixel_Simulations
 
         // Constants for drawing
         private const int MARGIN = 10;
-        private const int DISPLAY_TILE_SIZE = 32;
-        private const int TILESET_LIST_ITEM_HEIGHT = 20;
+        private const int DISPLAY_TILE_SIZE = 24;
+        private const int TILESET_LIST_ITEM_HEIGHT = 10;
 
         public TilesetPanel(Rectangle area)
         {
