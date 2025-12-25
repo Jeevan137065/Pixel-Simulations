@@ -1,113 +1,135 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
+using Pixel_Simulations.Editor;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Serialization;
 
 namespace Pixel_Simulations
 { // <-- Make sure this matches your project's namespace
 
     public class Camera
     {
-        private Matrix _transform;
-        public Matrix Transform => _transform;
-
-        // NEW: A separate transform for parallax effects that has NO translation.
-        public Matrix ParallaxTransform { get; private set; }
-
-        // NEW: A public property to get the camera's top-left position.
-        // This is what our GPU simulation needs.
         public Vector2 Position { get; private set; }
 
+        // Matrix for drawing to Low-Res Targets (Albedo/Ground)
+        // Coordinates: 0 to 480
+        public Matrix SimulationMatrix { get; private set; }
 
-        public void Follow(Player target, int windowWidth, int windowHeight, int worldWidth, int worldHeight)
+        // Matrix for drawing to High-Res Targets (Dynamic, Depth, Normal)
+        // Coordinates: 0 to 1920 (Scaled up)
+        public Matrix RenderMatrix { get; private set; }
+        private Vector3 lowResCenter, highResCenter;
+
+        public void Setcamera(Rectangle nativeRect, Rectangle highResRect)
         {
-            // Calculate the desired top-left position of the camera.
-            var cameraPosition = target.Position - new Vector2(windowWidth / 2f, windowHeight / 2f);
+            // 1. Calculate Center Offsets
+             lowResCenter = new Vector3(nativeRect.Width / 2f, nativeRect.Height / 2f, 0);
+             highResCenter = new Vector3(highResRect.Width / 2f, highResRect.Height / 2f, 0);
 
-            // Clamp the camera's position to the world boundaries.
-            float clampedX = MathHelper.Clamp(cameraPosition.X, 0, worldWidth - windowWidth);
-            float clampedY = MathHelper.Clamp(cameraPosition.Y, 0, worldHeight - windowHeight);
+            
+        }
 
-            // Store the final, clamped position.
-            Position = new Vector2(clampedX, clampedY);
+        public void Follow(Player player, float scale)
+        {
+            Position = player.Position;
 
-            // Create the main transform matrix that moves the world.
-            _transform = Matrix.CreateTranslation(-Position.X, -Position.Y, 0);
+            // 2. Base View (Move world so player is at 0,0)
+            // We round the position to prevent sub-pixel jitter in the low-res art
+            var view = Matrix.CreateTranslation(
+                -MathF.Round(Position.X),
+                -MathF.Round(Position.Y),
+                0);
 
-            // Create the parallax transform matrix. Since there is no zoom in this camera,
-            // the parallax transform is just the Identity matrix (it does nothing).
-            // If you were to add zoom later, the scale matrix would go here.
-            ParallaxTransform = Matrix.Identity;
+            // 3. Create Simulation Matrix (Low Res)
+            // Just centering the view in the small window
+            SimulationMatrix = view * Matrix.CreateTranslation(lowResCenter);
+
+            // 4. Create Render Matrix (High Res)
+            // Move World -> Scale Up -> Center in Big Window
+            RenderMatrix = view * Matrix.CreateScale(scale) * Matrix.CreateTranslation(highResCenter);
+
         }
     }
-
 
     public class EditorCamera
     {
         public Vector2 Position { get; private set; }
         public float Zoom { get; private set; }
+        public Matrix Transform { get; private set; }
 
         private const float MIN_ZOOM = 0.5f;
-        private const float MAX_ZOOM = 3.0f;
-
-        public Matrix Transform { get; private set; }
+        private const float MAX_ZOOM = 4.0f;
+        private const float STEP_ZOOM = 0.5f;
 
         public EditorCamera()
         {
-            Zoom = 1.0f;
             Position = Vector2.Zero;
+            Zoom = 1.0f;
             UpdateTransform();
         }
 
-        public void Pan(Vector2 delta)
+        public void Update(InputState input, Rectangle viewportBounds)
         {
-            Position -= delta / Zoom;
-        }
+            // --- Panning ---
+            if (input.CurrentMouse.MiddleButton == ButtonState.Pressed && viewportBounds.Contains(input.MouseWindowPosition))
+            {
+                Vector2 delta = input.CurrentMouse.Position.ToVector2() - input.PreviousMouse.Position.ToVector2();
+                Position -= delta / Zoom;
+            }
 
-        public void AdjustZoom(float zoomAdjustment, Vector2 mousePositionInNativeSpace)
-        {
-            Vector2 mouseWorldPosBeforeZoom = ScreenToWorld(mousePositionInNativeSpace);
+            // --- STEPPED ZOOMING ---
+            int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+            if (scrollDelta != 0 && viewportBounds.Contains(input.MouseWindowPosition))
+            {
+                Vector2 mouseRelative = input.MouseWindowPosition - viewportBounds.Location.ToVector2();
+                Vector2 mouseWorldPosBeforeZoom = ScreenToWorld(mouseRelative);
 
-            Zoom = MathHelper.Clamp(Zoom + zoomAdjustment, MIN_ZOOM, MAX_ZOOM);
+                // Calculate the new zoom level
+                float newZoom = Zoom;
+                if (scrollDelta > 0)
+                {
+                    // Zooming In
+                    if (Zoom < 1.0f) newZoom += STEP_ZOOM;
+                    else newZoom += 1.0f; // Jump by whole numbers at 1x zoom and above
+                }
+                else
+                {
+                    // Zooming Out
+                    if (Zoom <= 1.0f) newZoom -= STEP_ZOOM;
+                    else newZoom -= 1.0f;
+                }
+
+                // Clamp to predefined min/max
+                Zoom = MathHelper.Clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
+
+                UpdateTransform();
+
+                Vector2 mouseWorldPosAfterZoom = ScreenToWorld(mouseRelative);
+                Position += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
+            }
 
             UpdateTransform();
-
-            Vector2 mouseWorldPosAfterZoom = ScreenToWorld(mousePositionInNativeSpace);
-
-            Position += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
         }
 
-        public void UpdateTransform()
+        private void UpdateTransform()
         {
-            // *** THE FIX ***
-            // This is a much simpler, standard 2D camera transform.
-            // It no longer tries to center the view, which was causing the offset.
             Transform = Matrix.CreateTranslation(-Position.X, -Position.Y, 0) *
                         Matrix.CreateScale(Zoom, Zoom, 1);
         }
 
-        public Vector2 WorldToScreen(Vector2 worldPosition)
-        {
-            return Vector2.Transform(worldPosition, Transform);
-        }
-
+        // --- Coordinate Conversion Methods ---
+        /// Converts a screen position (relative to the viewport) to a world position.
         public Vector2 ScreenToWorld(Vector2 screenPosition)
         {
             return Vector2.Transform(screenPosition, Matrix.Invert(Transform));
         }
-
-        public Rectangle GetVisibleWorldBounds(int nativeViewportWidth, int nativeViewportHeight)
+        /// Gets the visible area of the world in world coordinates.
+        public RectangleF GetVisibleWorldBounds(Rectangle viewportBounds)
         {
             Vector2 worldTopLeft = ScreenToWorld(Vector2.Zero);
-            Vector2 worldBottomRight = ScreenToWorld(new Vector2(nativeViewportWidth, nativeViewportHeight));
+            Vector2 worldBottomRight = ScreenToWorld(viewportBounds.Size.ToVector2());
 
-            return new Rectangle(
-                (int)worldTopLeft.X,
-                (int)worldTopLeft.Y,
-                (int)(worldBottomRight.X - worldTopLeft.X),
-                (int)(worldBottomRight.Y - worldTopLeft.Y)
-            );
+            return new RectangleF(worldTopLeft, worldBottomRight - worldTopLeft);
         }
     }
 }

@@ -86,11 +86,16 @@ namespace Pixel_Simulations
     public class Player : IRenderable
     {
         private Texture2D _texture;
+        private Texture2D _normalTexture;
         public Vector2 _position;
-        private float _speed = 150f; // Pixels per second
+        private int _speed = 160;
+        public Vector2 Velocity { get; private set; }
+        public Rectangle Bounds => new Rectangle((int)_position.X, (int)_position.Y, _texture.Width, _texture.Height);
+        public Rectangle FootBounds => new Rectangle((int)_position.X + 4, (int)_position.Y + _texture.Height - 8, _texture.Width - 8, 8);
 
         // Public property to allow the Camera to get the player's position
         public Vector2 Position => _position;
+
         public float Depth => _position.Y + _texture.Height;
         public Inventory Inventory { get; }
         public Vector2 InteractionCenter;
@@ -109,6 +114,7 @@ namespace Pixel_Simulations
         public void LoadContent(ContentManager content)
         {
             _texture = content.Load<Texture2D>("Player");
+            _normalTexture = content.Load<Texture2D>("Player_n");
         }
 
         public void Update(GameTime gameTime)
@@ -136,8 +142,17 @@ namespace Pixel_Simulations
                 moveDirection.Normalize();
             }
 
-            // Apply movement based on speed and elapsed time
-            _position += moveDirection * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (moveDirection != Vector2.Zero)
+            {
+                moveDirection.Normalize();
+                Velocity = moveDirection * _speed;
+            }
+            else
+            {
+                Velocity = Vector2.Zero;
+            }
+
+            _position += Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             // Clamp the player's position to stay within the world boundaries
             _position.X = MathHelper.Clamp(_position.X, 0, _worldWidth - _texture.Width);
@@ -145,11 +160,101 @@ namespace Pixel_Simulations
             InteractionCenter = new Vector2(_position.X + _texture.Width / 2f, _position.Y + _texture.Height / 2f);
         }
 
-        public void Draw(SpriteBatch spriteBatch)
-        {
+        public void Draw(SpriteBatch spriteBatch) 
+            {
             var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
             spriteBatch.Draw(_texture, drawPosition, Color.White);
         }
+
+        public void Draw(SpriteBatch spriteBatch,Matrix hiResProj)
+        {
+
+            var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
+            spriteBatch.Begin(transformMatrix: hiResProj, samplerState: SamplerState.PointClamp);
+            spriteBatch.Draw(_texture, drawPosition, Color.White);
+            spriteBatch.End();
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Color color)
+        {
+            // Calculate position logic...
+            // (Assuming you aren't using the matrix in Pass 2, but you ARE)
+            // Since Pass 2/3 uses a scaled matrix, draw at standard position.
+
+            // NOTE: Check your Pass 2 player logic. 
+            // If you draw using a matrix, draw at _position.
+
+            var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
+            spriteBatch.Draw(_texture, drawPosition, color);
+        }
+
+        public void DrawNormal(SpriteBatch spriteBatch)
+        {
+            // Set the specific normal map for this object
+            var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
+            spriteBatch.Draw(_normalTexture, drawPosition, Color.White);
+        }
+        public void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer)
+        {
+            // For SpriteBatch, we need a different approach because SpriteBatch usually 
+            // binds the texture for us. With a custom shader in SpriteBatch, 
+            // we usually pass the texture via the Draw call, and the shader uses it.
+
+            // TRICK: We use SpriteBatch to draw the _normalTexture instead of _texture!
+            // We don't even strictly need a custom shader if the normal map is just a texture.
+            // But to be consistent with the pipeline, we can draw it plainly.
+
+            var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
+            spriteBatch.Draw(_normalTexture, drawPosition, Color.White);
+        }
+
+        public void DrawDepth(SpriteBatch spriteBatch, Effect depthEffect)
+        {
+            // We draw at the standard position.
+            // The Shader will read the Y position and calculate the depth color automatically.
+            var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
+
+            // Draw white, because the shader ignores vertex color and outputs depth instead.
+            spriteBatch.Draw(_texture, drawPosition, Color.White);
+        }
+
+        public void DrawDebug(GraphicsDevice device, BasicEffect effect)
+        {
+            // Create vertices for Main Bounds (Cyan) and FootBounds (Red)
+            var vertices = new VertexPositionColor[10];
+
+            Rectangle b = Bounds;
+            Rectangle f = FootBounds;
+
+            // Helper to create line strip loop (TL -> TR -> BR -> BL -> TL)
+            // Main Bounds (Cyan)
+            vertices[0] = new VertexPositionColor(new Vector3(b.Left, b.Top, 0), Color.Cyan);
+            vertices[1] = new VertexPositionColor(new Vector3(b.Right, b.Top, 0), Color.Cyan);
+            vertices[2] = new VertexPositionColor(new Vector3(b.Right, b.Bottom, 0), Color.Cyan);
+            vertices[3] = new VertexPositionColor(new Vector3(b.Left, b.Bottom, 0), Color.Cyan);
+            vertices[4] = new VertexPositionColor(new Vector3(b.Left, b.Top, 0), Color.Cyan);
+
+            // Foot Bounds (Red)
+            vertices[5] = new VertexPositionColor(new Vector3(f.Left, f.Top, 0), Color.Red);
+            vertices[6] = new VertexPositionColor(new Vector3(f.Right, f.Top, 0), Color.Red);
+            vertices[7] = new VertexPositionColor(new Vector3(f.Right, f.Bottom, 0), Color.Red);
+            vertices[8] = new VertexPositionColor(new Vector3(f.Left, f.Bottom, 0), Color.Red);
+            vertices[9] = new VertexPositionColor(new Vector3(f.Left, f.Top, 0), Color.Red);
+
+            // Draw lines
+            effect.TextureEnabled = false;
+            effect.VertexColorEnabled = true;
+
+            foreach (var pass in effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                // Draw Main Bounds (0-4)
+                device.DrawUserPrimitives(PrimitiveType.LineStrip, vertices, 0, 4);
+                // Draw Foot Bounds (5-9)
+                device.DrawUserPrimitives(PrimitiveType.LineStrip, vertices, 5, 4);
+            }
+        }
+
     }
 
     public class Inventory

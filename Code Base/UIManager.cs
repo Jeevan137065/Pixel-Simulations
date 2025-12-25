@@ -1,13 +1,15 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
 using System;
 using System.Collections.Generic;
 
 
 namespace Pixel_Simulations
 {
-    
+
     public class UIManager
     {
         private Texture2D _hotbarSlotTexture;

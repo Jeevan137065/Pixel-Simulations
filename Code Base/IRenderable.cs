@@ -15,9 +15,14 @@ namespace Pixel_Simulations
 
         // The method to draw the object to the screen.
         void Draw(SpriteBatch spriteBatch);
+        void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer);
     }
 
-
+    public enum SwayType
+    {
+        PhysicsSpring, // The elastic, spring-based movement
+        TriangleWave   // The decaying linear movement (Stardew style)
+    }
 
     public class Decoration : IRenderable
     {
@@ -39,14 +44,29 @@ namespace Pixel_Simulations
             var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
             spriteBatch.Draw(_texture, drawPosition, _sourceRect, Color.White);
         }
+
+        public void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer) { }
     }
 
-    public struct PlantDefinition
+    public interface ISwayable : IRenderable
     {
-        public Tool SeedType; // What tool plants this?
-        public bool CanSpawnNaturally;
-        public Rectangle SourceRect;
-        public Vector2 Origin;
+        // The collision area of the object, usually at its base.
+        Rectangle Bounds { get; }
+
+        // The current horizontal sway value. Negative is left, positive is right.
+        float _swayValue { get; }
+        void UpdateVertices(float totalTime, float windAmount, float windSpeed);
+
+        // Apply a force to the object, causing it to sway.
+        void Push(Vector2 direction, float force);
+
+        // Update the sway physics (like damping/decay) each frame.
+        void UpdateSway(GameTime gameTime);
+
+        void Draw(BasicEffect effect, IndexBuffer indexBuffer);
+        void DrawDepth(SpriteBatch spriteBatch, Effect depthEffect, IndexBuffer indexBuffer);
+        void DrawDebugOutline( BasicEffect effect);
+
     }
 }
 

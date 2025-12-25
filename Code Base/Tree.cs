@@ -34,5 +34,7 @@ namespace Pixel_Simulations
             var drawPosition = new Vector2((int)Math.Round(_position.X), (int)Math.Round(_position.Y));
             spriteBatch.Draw(_texture, drawPosition, _sourceRect, Color.White);
         }
+
+        public void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer) { }
     }
 }
