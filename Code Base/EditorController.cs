@@ -12,330 +12,367 @@ using System.Linq;
 
 namespace Pixel_Simulations.Editor
 {
+
     public class EditorController
     {
         public readonly EditorState _editorState;
         private readonly EditorUI _uiManager;
-        private readonly TilesetPanel _tilesetPanel;
-        //private LayerPanel _layerPanel;
-        private readonly ToolPanel _toolPanel;
-        private readonly GraphicsDevice _graphicsDevice;
+        private readonly EventBus _eventBus;
+
+        public readonly HistoryController _historyController;
+        public readonly ToolController _toolController;
+        public  LayerController _layerController { get; }
+        public readonly TilesetController _tilesetController;
+
         public bool ShouldExit { get; private set; }
 
-        public EditorController(EditorUI uiManager)
+        public EditorController(EditorUI uiManager, EventBus eventBus)
         {
+            _eventBus = eventBus;
             _editorState = uiManager._editorState;
-            _graphicsDevice = uiManager.gd;
             _uiManager = uiManager;
-            _toolPanel = uiManager.ToolPanel;
-            _tilesetPanel = uiManager.TilesetPanel;
-            UIEvents.MenuActionClicked += HandleMenuAction;
-            UIEvents.ToolButtonClicked += HandleToolChange;
-            UIEvents.CreateTilesetFromAtlas += HandleCreateTileset;
-            UIEvents.TileSelected += HandleTileSelected;
-            UIEvents.LayerSelected += HandleLayerSelection;
-            UIEvents.LayerVisibilityToggled += HandleLayerVisibilityToggle;
-            UIEvents.LayerLockToggled += HandleLayerLockToggle;
-            UIEvents.LayerActionRequested += HandleLayerAction;
-            UIEvents.CommandCreated += HandleCommandCreated;
-            UIEvents.MenuActionClicked += HandleMenuAction;
 
-        }
-        private void HandleCommandCreated(ICommand command)
-        {
-            // Execute the command immediately
-            command.Execute();
-            // Add it to the undo stack
-            _editorState.History.UndoStack.Push(command);
-            // Clear the redo stack, since we've made a new action
-            _editorState.History.RedoStack.Clear();
-        }
-        private void HandleMenuAction(string actionName)
-        {
-            // This is where the logic happens!
-            System.Diagnostics.Debug.WriteLine($"Menu Action received: {actionName}");
-            switch (actionName)
-            {
-                case "SaveMap": 
-                    //_editorState.SaveMap("Content/Maps/level1.map"); break;
-                case "LoadMap":
-                //_editorState.LoadMap("Content/Maps/level1.map"); break;
-                case "Undo":
-                    Undo();
-                    break;
-                case "Redo":
-                    Redo();
-                    break;
-            }
-        }
-        private void Undo()
-        {
-            var history = _editorState.History;
-            if (history.UndoStack.TryPop(out ICommand command))
-            {
-                command.Undo();
-                history.RedoStack.Push(command);
-            }
-        }
-        private void Redo()
-        {
-            var history = _editorState.History;
-            if (history.RedoStack.TryPop(out ICommand command))
-            {
-                command.Execute();
-                history.UndoStack.Push(command);
-            }
-        }
-        private void HandleToolChange(string toolName)
-        {
-            System.Diagnostics.Debug.WriteLine($"Tool change requested: {toolName}");
-            //_editorState.Tools.SetActiveTool(toolName);
-        }
-        private void HandleCreateTileset(string atlasName)
-        {
-            // For now, assume all new tilesets are 16x16 and row-first.
-            // This could be passed from the UI in the future.
-            CreateNewTileset(atlasName, 16, SliceMode.RowFirst);
-        }
-        private void UpdateTilesetPanelState()
-        {
-            var state = _editorState.TilesetPanel;
-            var activeNames = _editorState.ActiveTileSets.Select(ts => ts.Name).ToList();
-
-            // Find atlases that haven't been used to create a tileset yet
-            state.UnusedAtlasNames = _editorState.AvailableAtlasTextures.Keys
-                .Where(name => !activeNames.Contains(name)).ToList();
-        }
-        public void CreateNewTileset(string atlasName, int tileSize, SliceMode sliceMode)
-        {
-            if (_editorState.AvailableAtlasTextures.TryGetValue(atlasName, out var texture))
-            {
-                // Check if a tileset with this name already exists
-                if (_editorState.ActiveTileSets.Any(ts => ts.Name == atlasName)) return;
-
-                var newTileset = new TileSet(atlasName, texture, tileSize, _graphicsDevice, sliceMode);
-                _editorState.ActiveTileSets.Add(newTileset);
-
-                // If this is the first tileset, make it active
-                if (_editorState.ActiveTileSets.Count == 1)
-                {
-                    _editorState.TilesetPanel.ActiveTilesetName = atlasName;
-                    // Also select the first tile
-                    int firstId = newTileset.SlicedAtlas.Keys.FirstOrDefault(-1);
-                    _editorState.TilesetPanel.SelectedTileID = firstId;
-                    _editorState.Selection.ActiveTileBrush = new TileInfo(atlasName, firstId);
-                }
-            }
-        }
-        private void HandleTileSelected(string tilesetName, int tileId)
-        {
-            _editorState.TilesetPanel.ActiveTilesetName = tilesetName;
-            _editorState.TilesetPanel.SelectedTileID = tileId;
-            // Update the active brush for painting tools
-            _editorState.Selection.ActiveTileBrush = new TileInfo(tilesetName, tileId);
-        }
-        public ToolInput GetCurrentToolInput()
-        {
-            var mouseState = Mouse.GetState();
-            var keyboardState = Keyboard.GetState();
-            var layoutManager = _editorState._layoutmanager; 
-            // Calculate mouse positions relative to the world and the native canvas
-            Vector2 mouseWindowPos = mouseState.Position.ToVector2();
-            Vector2 mouseCanvasNative = (mouseWindowPos - layoutManager.ViewportPanel.Location.ToVector2()) / 2;
-            Vector2 worldPos = _editorState.camera.ScreenToWorld(mouseCanvasNative);
-            Point gridCell = new Point((int)System.Math.Floor(worldPos.X / 16), (int)System.Math.Floor(worldPos.Y / 16)); // Use CELL_SIZE from somewhere
-
-            return new ToolInput
-            {
-                CurrentMouse = mouseState,
-                //PreviousMouse = _previousMouseState, // Need to store this in Controller
-                CurrentKeyboard = keyboardState,
-                WorldPosition = worldPos,
-                ActiveLayer = _editorState.Layers.GetActiveLayer(),
-                ActiveBrush = _editorState.Selection.ActiveTileBrush,
-                // Add other context like mouse button states, keyboard modifiers, etc.
-            };
-        }
-        private void HandleLayerSelection(int layerIndex)
-        {
-            if (layerIndex >= 0 && layerIndex < _editorState.Layers.Layers.Count)
-            {
-                _editorState.Layers.ActiveLayerIndex = layerIndex;
-            }
-        }
-        private void HandleLayerVisibilityToggle(int layerIndex)
-        {
-            if (layerIndex >= 0 && layerIndex < _editorState.Layers.Layers.Count)
-            {
-                var layer = _editorState.Layers.Layers[layerIndex];
-                layer.IsVisible = !layer.IsVisible;
-            }
-        }
-        private void HandleLayerAction(string actionName)
-        {
-            var activeIndex = _editorState.Layers.ActiveLayerIndex;
-
-            // Handle actions that include an index, like MoveUp:5
-            if (actionName.Contains(':'))
-            {
-                var parts = actionName.Split(':');
-                var name = parts[0];
-                var index = int.Parse(parts[1]);
-
-                switch (name)
-                {
-                    case "MoveUp":
-                        _editorState.ActiveMap.MoveLayerUp(index);
-                        // If we moved the active layer, update its index
-                        if (activeIndex == index && index > 0) _editorState.Layers.ActiveLayerIndex--;
-                        break;
-                    case "MoveDown":
-                        _editorState.ActiveMap.MoveLayerDown(index);
-                        if (activeIndex == index && index < _editorState.Layers.Layers.Count - 1) _editorState.Layers.ActiveLayerIndex++;
-                        break;
-                }
-                return;
-            }
-
-            // Handle global actions
-            switch (actionName)
-            {
-                case "AddUp":
-                    _editorState.ActiveMap.AddLayerAbove(activeIndex, new TileLayer($"Layer {_editorState.ActiveMap.Layers.Count + 1}"));
-                    break;
-                case "AddDown":
-                    _editorState.ActiveMap.AddLayerBelow(activeIndex, new TileLayer($"Layer {_editorState.ActiveMap.Layers.Count + 1}"));
-                    // When adding below, the active layer's index increases
-                    _editorState.Layers.ActiveLayerIndex++;
-                    break;
-                case "Delete":
-                    _editorState.ActiveMap.DeleteLayer(activeIndex);
-                    // Clamp active index after deletion
-                    _editorState.Layers.ActiveLayerIndex = MathHelper.Clamp(activeIndex, 0, _editorState.ActiveMap.Layers.Count - 1);
-                    break;
-            }
-        }
-        private void HandleLayerLockToggle(int layerIndex)
-        {
-            if (layerIndex >= 0 && layerIndex < _editorState.Layers.Layers.Count)
-            {
-                var layer = _editorState.Layers.Layers[layerIndex];
-                layer.IsLocked = !layer.IsLocked;
-            }
+            _historyController = new HistoryController(_eventBus, _editorState.History);
+            _toolController = new ToolController(_eventBus, _editorState.ToolState);
+            _layerController = new LayerController(_eventBus, _editorState);
+            _tilesetController = new TilesetController(_eventBus, _editorState, _uiManager.gd);
         }
         public void Update(GameTime gameTime, KeyboardState keyboardState, MouseState mouseState)
         {
             // --- 1. ACTIVATE AND UPDATE THE INPUTSTATE ---
             UpdateInputState(keyboardState, mouseState);
             var input = _editorState.Input;
-            var layout = _editorState._layoutmanager;
-
-            // Update raw input states
-            input.CurrentMouse = mouseState;
-            input.CurrentKeyboard = keyboardState;
-            input.MouseWindowPosition = mouseState.Position.ToVector2();
-            if (layout.ViewportPanel.Contains(input.CurrentMouse.Position)) 
-            {
-                //_editorState.camera.ScreenToWorld(mouseState.Position.ToVector2() - _editorState._layoutmanager.ViewportPanel.Location.ToVector2() / _editorState._layoutmanager.UpscaleFactor);
-                input.MouseWorldPosition =  _editorState.camera.ScreenToWorld(new Vector2((int)Math.Floor((input.MouseWindowPosition.X - layout.ViewportPanel.X)/layout.UpscaleFactor), (int)Math.Floor((input.MouseWindowPosition.Y - layout.ViewportPanel.Y) /layout.UpscaleFactor)));// Corrected to use camera and viewport offset
-                input.MouseGridCell = new Point((int)Math.Floor(input.MouseWorldPosition.X / 16), (int)Math.Floor(input.MouseWorldPosition.Y / 16));
-            }
+             
+            
             // --- 2. Handle Global Editor Controls ---
             if (input.CurrentKeyboard.IsKeyDown(Keys.Escape)) { ShouldExit = true; }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L))
-            {
-                _editorState.ShowDebug = !_editorState.ShowDebug;
-            }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.I))    { _editorState.x++; }
+            if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L)) { _editorState.ShowDebug = !_editorState.ShowDebug; }            
+            if (input.CurrentKeyboard.IsKeyDown(Keys.I))    { }
             // --- 3. Handle Camera Updates ---
-            _editorState.camera.Update(input, layout.ViewportPanel);
-            // --- 4. Process Tool and UI Interactions ---
-            // (This logic will be added in future steps, but the InputState is now ready for it)
-            string activePanelName = layout.GetPanelAt(input.MouseWindowPosition.ToPoint());
-            _editorState.UI.ActivePanelName = activePanelName;
+            _editorState.camera.Update(input, _editorState._layoutmanager.ViewportPanel,true);
 
-            if (activePanelName == "Viewport")
+            UpdateUI(input, _eventBus);
+            //HandleKeyboardCameraMovement( input, gameTime);
+            // --- 4. Process Viewport/Tool Interaction ---
+            if (_editorState.UI.ActivePanelName == "Viewport")
             {
-                var activeTool = _editorState.Tools.ActiveTool;
-                var activeLayer = _editorState.Layers.GetActiveLayer();
-                var activeBrush = _editorState.Selection.ActiveTileBrush;
-
-                // Package the context into a ToolInput struct
-                var toolInput = new ToolInput
+                var activeTool = _editorState.ToolState.ActiveTool;
+                if (activeTool != null)
                 {
-                    CurrentMouse = input.CurrentMouse,
-                    PreviousMouse = input.PreviousMouse,
-                    CurrentKeyboard = input.CurrentKeyboard,
-                    WorldPosition = input.MouseWorldPosition,
-                    ActiveLayer = activeLayer,
-                    ActiveBrush = activeBrush
-                };
-
-                if (activeTool != null && activeLayer != null && !activeLayer.IsLocked)
-                {
-                    // The tool's Update method contains all its own logic for clicks, drags, etc.
-                    activeTool.Update(toolInput);
+                    // The tool receives the EventBus so it can publish undoable commands
+                    activeTool.Update(GetCurrentToolInput(), _eventBus);
                 }
             }
-            if (activePanelName == "Tileset")
-            {
-                _uiManager.TilesetPanel.Update(input);
-            }
-            if (activePanelName == "Top")
-            {
-                _uiManager.TopPanel.Update(input);
-            }
-            else if (activePanelName == "Tool")
-            {
-                _uiManager.ToolPanel.Update(input);
-            }
-            else if(activePanelName == "Layer")
-            {
-                _uiManager.LayerPanel.Update(input);
-            }
-
-            input.PreviousMouse = input.CurrentMouse;
-            input.PreviousKeyboard = input.CurrentKeyboard;
 
         }
+
         private void UpdateInputState(KeyboardState kbs, MouseState ms)
         {
-            // Store previous states before updating the new ones
-            _editorState.Input.PreviousKeyboard = _editorState.Input.CurrentKeyboard;
-            _editorState.Input.PreviousMouse = _editorState.Input.CurrentMouse;
+            var input = _editorState.Input;
+            var layout = _editorState._layoutmanager;
 
-            // Store current raw states
-            _editorState.Input.CurrentKeyboard = kbs;
-            _editorState.Input.CurrentMouse = ms;
+            input.PreviousKeyboard = input.CurrentKeyboard;
+            input.PreviousMouse = input.CurrentMouse;
+            input.CurrentKeyboard = kbs;
+            input.CurrentMouse = ms;
+            input.MouseWindowPosition = ms.Position.ToVector2();
 
-            // --- Calculate Processed, Contextual Data ---
-
-            _editorState.Input.MouseWindowPosition = ms.Position.ToVector2();
-
-            // Calculate world position only if the mouse is inside the viewport
-            if (_editorState._layoutmanager.ViewportPanel.Contains(ms.Position))
+            if (layout.ViewportPanel.Contains(ms.Position))
             {
-                // Convert mouse position from window-space to viewport-relative screen-space
-                Vector2 mouseInViewport = _editorState.Input.MouseWindowPosition - _editorState._layoutmanager.ViewportPanel.Location.ToVector2();
+                Vector2 mouseInViewport = input.MouseWindowPosition - layout.ViewportPanel.Location.ToVector2();
+                // We need to divide by the upscale factor to get native coordinates for the camera
+                Vector2 mouseNative = mouseInViewport / 2f; // Assuming 2x upscale factor
 
-                // Use the camera to convert that to world-space
-                _editorState.Input.MouseWorldPosition = _editorState.camera.ScreenToWorld(mouseInViewport);
-
-                // Calculate the grid cell based on the world position
-                _editorState.Input.MouseGridCell = new Point(
-                    (int)System.Math.Floor(_editorState.Input.MouseWorldPosition.X / 16), // Assuming 16 is cell size
-                    (int)System.Math.Floor(_editorState.Input.MouseWorldPosition.Y / 16)
+                input.MouseWorldPosition = _editorState.camera .ScreenToWorld(mouseNative);
+                input.MouseGridCell = new Point(
+                    (int)System.Math.Floor(input.MouseWorldPosition.X / 16),
+                    (int)System.Math.Floor(input.MouseWorldPosition.Y / 16)
+                );
+                input.MouseChunkCell = new Point(
+                    (int)System.Math.Floor((double)input.MouseGridCell.X / Chunk.CHUNK_SIZE),
+                    (int)System.Math.Floor((double)input.MouseGridCell.Y / Chunk.CHUNK_SIZE)
                 );
             }
             else
             {
-                // If the mouse is outside the viewport, world/grid coordinates are not applicable
-                _editorState.Input.MouseWorldPosition = Vector2.Zero;
-                _editorState.Input.MouseGridCell = Point.Zero;
+                input.MouseWorldPosition = Vector2.Zero;
+                input.MouseGridCell = Point.Zero;
+                input.MouseChunkCell = Point.Zero;
+            }
+        }
+        public ToolInput GetCurrentToolInput()
+        {
+            return new ToolInput
+            {
+                CurrentMouse = _editorState.Input.CurrentMouse,
+                PreviousMouse = _editorState.Input.PreviousMouse,
+                CurrentKeyboard = _editorState.Input.CurrentKeyboard,
+                WorldPosition = _editorState.Input.MouseWorldPosition,
+                ActiveLayer = _editorState.Layers.GetActiveLayer(),
+                ActiveBrush = _editorState.Selection.ActiveTileBrush
+            };
+        }
+        public void UpdateUI(InputState input, EventBus bus)
+        {
+            _uiManager.TopPanel.Update(input, bus);
+            _uiManager.ToolPanel.Update(input, bus);
+            _uiManager.TilesetPanel.Update(input, bus);
+            _uiManager.LayerPanel.Update(input, bus);
+
+        }
+        private void HandleKeyboardCameraMovement(InputState input, GameTime gameTime)
+        {
+            // The amount to move, in world pixels per second.
+            // We scale it by the zoom level so navigation feels consistent.
+            float moveSpeed = 400f / _editorState.camera.Zoom;
+            Vector2 moveDirection = Vector2.Zero;
+
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Up))
+                moveDirection.Y -= 1;
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Down))
+                moveDirection.Y += 1;
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Left))
+                moveDirection.X -= 1;
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Right))
+                moveDirection.X += 1;
+
+            if (moveDirection != Vector2.Zero)
+            {
+                // Normalize to prevent faster diagonal movement
+                moveDirection.Normalize();
+
+                // Calculate the final movement vector based on speed and frame time
+                Vector2 movement = moveDirection * moveSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                // Tell the camera to pan. The camera's Pan method is additive.
+                //_editorState.camera.Pan(-movement); // Pan is inverted, so we negate the movement
             }
         }
 
-
     }
 
+    public class HistoryController
+    {
+        private readonly HistoryState _historyState;
+        public int counter = 0;
+        public HistoryController(EventBus eventBus, HistoryState historyState)
+        {
+            _historyState = historyState;
+
+            // Subscribe to any command that is undoable
+            eventBus.Subscribe<IUndoableCommand>(HandleUndoableCommand);
+
+
+            // Also subscribe to specific menu actions
+            eventBus.Subscribe<MenuActionCommand>(HandleMenuAction);
+        }
+
+        private void HandleUndoableCommand(IUndoableCommand command)
+        {
+            counter++;
+            command.Execute();
+            _historyState.UndoStack.Push(command);
+            _historyState.RedoStack.Clear();
+        }
+
+        private void HandleMenuAction(MenuActionCommand command)
+        {
+            counter++;
+            if (command.ActionName == "Undo")
+            {
+                if (_historyState.UndoStack.TryPop(out IUndoableCommand undoCommand))
+                {
+                    undoCommand.Undo();
+                    _historyState.RedoStack.Push(undoCommand);
+                }
+            }
+            else if (command.ActionName == "Redo")
+            {
+                if (_historyState.RedoStack.TryPop(out IUndoableCommand redoCommand))
+                {
+                    redoCommand.Execute();
+                    _historyState.UndoStack.Push(redoCommand);
+                }
+            }
+        }
+    }
+    public class ToolController
+    {
+        private readonly ToolState _toolState;
+        public int counter = 0;
+        public ToolController(EventBus eventBus, ToolState toolState)
+        {
+            _toolState = toolState;
+            eventBus.Subscribe<ChangeToolCommand>(HandleToolChange);
+        }
+
+        private void HandleToolChange(ChangeToolCommand command)
+        {
+            counter++;
+            var newTool = _toolState.Tools.FirstOrDefault(t => t.Name == command.ToolName);
+            if (newTool != null)
+            {
+                _toolState.ActiveTool = newTool;
+                _toolState.ActiveToolName = newTool.Name;
+            }
+        }
+    }
+
+    public class LayerController
+    {
+        private readonly EditorState _editorState;
+        public int counter = 0;
+        public LayerController(EventBus eventBus, EditorState editorState)
+        {
+            _editorState = editorState;
+            eventBus.Subscribe<SelectLayerCommand>(HandleLayerSelection);
+            eventBus.Subscribe<ToggleLayerVisibilityCommand>(HandleLayerVisibility);
+            eventBus.Subscribe<ToggleLayerLockCommand>(HandleLayerLock);
+            eventBus.Subscribe<MoveLayerCommand>(HandleMoveLayer);
+            eventBus.Subscribe<AddLayerCommand>(HandleAddLayer);
+            eventBus.Subscribe<DeleteActiveLayerCommand>(HandleDeleteLayer);
+        }
+
+        private void HandleLayerSelection(SelectLayerCommand cmd)
+        {
+            if (cmd.LayerIndex >= 0 && cmd.LayerIndex < _editorState.ActiveMap.Layers.Count)
+            {
+                _editorState.Layers.ActiveLayerIndex = cmd.LayerIndex;
+            }
+        }
+        private void HandleLayerVisibility(ToggleLayerVisibilityCommand cmd)
+        {
+            counter++;
+            if (cmd.LayerIndex >= 0 && cmd.LayerIndex < _editorState.ActiveMap.Layers.Count)
+            {
+                var layer = _editorState.ActiveMap.Layers[cmd.LayerIndex];
+                layer.IsVisible = !layer.IsVisible;
+            }
+        }
+        private void HandleLayerLock(ToggleLayerLockCommand cmd)
+        {
+            counter++;
+            if (cmd.LayerIndex >= 0 && cmd.LayerIndex < _editorState.ActiveMap.Layers.Count)
+            {
+                var layer = _editorState.ActiveMap.Layers[cmd.LayerIndex];
+                layer.IsLocked = !layer.IsLocked;
+            }
+        }
+        private void HandleMoveLayer(MoveLayerCommand cmd)
+        {
+            var activeIndex = _editorState.Layers.ActiveLayerIndex;
+            counter++;
+            if (cmd.Direction) // Move Up
+            {
+                _editorState.ActiveMap.MoveLayerUp(cmd.LayerIndex);
+                if (activeIndex == cmd.LayerIndex) _editorState.Layers.ActiveLayerIndex--;
+            }
+            else
+            {
+                _editorState.ActiveMap.MoveLayerDown(cmd.LayerIndex);
+                if (activeIndex == cmd.LayerIndex) _editorState.Layers.ActiveLayerIndex++;
+            }
+        }
+        private void HandleAddLayer(AddLayerCommand cmd)
+        {
+            counter++;
+            var activeIndex = _editorState.Layers.ActiveLayerIndex;
+            var newLayer = new TileLayer($"Layer {_editorState.ActiveMap.Layers.Count + 1}");
+
+            if (cmd.Direction) // Add Above
+            {
+                _editorState.ActiveMap.AddLayerAbove(activeIndex, newLayer);
+            }
+            else // Add Below
+            {
+                _editorState.ActiveMap.AddLayerBelow(activeIndex, newLayer);
+                _editorState.Layers.ActiveLayerIndex++; // Keep selection on the original layer
+            }
+        }
+        private void HandleDeleteLayer(DeleteActiveLayerCommand cmd)
+        {
+            counter--;
+            var activeIndex = _editorState.Layers.ActiveLayerIndex;
+            _editorState.ActiveMap.DeleteLayer(activeIndex);
+            _editorState.Layers.ActiveLayerIndex = MathHelper.Clamp(activeIndex, 0, _editorState.ActiveMap.Layers.Count - 1);
+        }
+    }
+
+    public class TilesetController
+    {
+        private readonly EditorState _editorState;
+        private readonly GraphicsDevice _graphicsDevice;
+        public int counter = 0;
+        public TilesetController(EventBus eventBus, EditorState editorState, GraphicsDevice graphicsDevice)
+        {
+            _editorState = editorState;
+            _graphicsDevice = graphicsDevice;
+
+            eventBus.Subscribe<CreateTilesetCommand>(HandleCreateTileset);
+            eventBus.Subscribe<SelectTilesetCommand>(HandleSelectTileset);
+            eventBus.Subscribe<SelectTileCommand>(HandleSelectTile);
+        }
+
+        private void HandleCreateTileset(CreateTilesetCommand cmd)
+        {
+            counter++;
+            if (_editorState.AvailableAtlasTextures.TryGetValue(cmd.AtlasName, out var texture))
+            {
+                if (_editorState.ActiveTileSets.Any(ts => ts.Name == cmd.AtlasName)) return;
+
+                // For now, assume 16x16 and row-first. This could be data-driven later.
+                var newTileset = new TileSet(cmd.AtlasName, texture, 16, _graphicsDevice, SliceMode.RowFirst);
+                _editorState.ActiveTileSets.Add(newTileset);
+
+                // If this is the first tileset, make it active
+                if (_editorState.ActiveTileSets.Count == 1)
+                {
+                    SelectInitialTileset(newTileset);
+                }
+            }
+        }
+
+        private void HandleSelectTileset(SelectTilesetCommand cmd)
+        {
+            var panelState = _editorState.TilesetPanel;
+            if (panelState.ActiveTilesetName != cmd.TilesetName)
+            {
+                var tileset = _editorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == cmd.TilesetName);
+                if (tileset != null)
+                {
+                    SelectInitialTileset(tileset);
+                }
+            }
+        }
+
+        private void HandleSelectTile(SelectTileCommand cmd)
+        {
+            counter++;
+            var panelState = _editorState.TilesetPanel;
+            var selectionState = _editorState.Selection;
+
+            panelState.ActiveTilesetName = cmd.TilesetName;
+            panelState.SelectedTileID = cmd.TileID;
+            selectionState.ActiveTileBrush = new TileInfo(cmd.TilesetName, cmd.TileID);
+        }
+
+        private void SelectInitialTileset(TileSet tileset)
+        {
+            var panelState = _editorState.TilesetPanel;
+            var selectionState = _editorState.Selection;
+
+            panelState.ActiveTilesetName = tileset.Name;
+            int firstId = tileset.SlicedAtlas.Any() ? tileset.SlicedAtlas.Keys.First() : -1;
+            panelState.SelectedTileID = firstId;
+
+            if (firstId != -1)
+            {
+                selectionState.ActiveTileBrush = new TileInfo(tileset.Name, firstId);
+            }
+            else
+            {
+                selectionState.ActiveTileBrush = null;
+            }
+        }
+    }
 }

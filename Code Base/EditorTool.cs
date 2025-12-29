@@ -5,31 +5,24 @@ using Pixel_Simulations.UI;
 
 namespace Pixel_Simulations.Data
 {
-    public interface ICommand
+    public interface ICommand   {}
+    public interface IUndoableCommand : ICommand
     {
         void Execute();
         void Undo();
     }
-    // A powerful, flexible tool interface
-    public interface ITool
+    public struct MenuActionCommand : ICommand
     {
-        string Name { get; }
-        void Update(ToolInput input);
-        void DrawPreview(SpriteBatch spriteBatch, ToolInput input);
+        public string ActionName; // "Save", "Load", "Undo", "Redo"
     }
-
-    // A struct to pass all context to the tool
-    public struct ToolInput
+    public class ChangeToolCommand : ICommand { public string ToolName; }
+    public struct CreateTilesetCommand : ICommand
     {
-        public MouseState CurrentMouse;
-        public MouseState PreviousMouse;
-        public KeyboardState CurrentKeyboard;
-        public Vector2 WorldPosition;
-        public Layer ActiveLayer;
-        public TileInfo ActiveBrush;
-        // ... and more context as needed
+        public string AtlasName;
     }
-    public class PlaceTileCommand : ICommand
+    public class SelectTilesetCommand : ICommand { public string TilesetName; }
+    public class SelectTileCommand : ICommand { public string TilesetName; public int TileID; }
+    public class PlaceTileCommand : IUndoableCommand
     {
         private readonly TileLayer _targetLayer;
         private readonly Point _cell;
@@ -64,7 +57,7 @@ namespace Pixel_Simulations.Data
             }
         }
     }
-    public class EraseTileCommand : ICommand
+    public class EraseTileCommand : IUndoableCommand
     {
         private readonly TileLayer _targetLayer;
         private readonly Point _cell;
@@ -95,25 +88,50 @@ namespace Pixel_Simulations.Data
             }
         }
     }
+    public struct SelectLayerCommand : ICommand { public int LayerIndex; }
+    public struct ToggleLayerVisibilityCommand : ICommand { public int LayerIndex; }
+    public struct ToggleLayerLockCommand : ICommand { public int LayerIndex; }
+    public struct MoveLayerCommand : ICommand { public int LayerIndex; public bool Direction; } // -1 for Up, 1 for Down
+    public struct AddLayerCommand : ICommand { public bool Direction; } // 1 for Above, -1 for Below
+    public struct DeleteActiveLayerCommand : ICommand { }
+
+
+    public interface ITool
+    {
+        string Name { get; }
+        void Update(ToolInput input, EventBus bus);
+        void DrawPreview(SpriteBatch spriteBatch, ToolInput input);
+    }
+
+    // A struct to pass all context to the tool
+    public struct ToolInput
+    {
+        public MouseState CurrentMouse;
+        public MouseState PreviousMouse;
+        public KeyboardState CurrentKeyboard;
+        public Vector2 WorldPosition;
+        public Layer ActiveLayer;
+        public TileInfo ActiveBrush;
+        // ... and more context as needed
+    }
+
     public class BrushTool : ITool
     {
         public string Name => "Brush";
-
-        public void Update(ToolInput input)
+        public void Update(ToolInput input, EventBus eventBus) // Add EventBus parameter
         {
             if (input.CurrentMouse.LeftButton == ButtonState.Pressed)
             {
-                // Use the safe 'is' type pattern here as well.
-                if (input.ActiveLayer is TileLayer tileLayer)
+                if (input.ActiveLayer is TileLayer tileLayer && input.ActiveBrush != null)
                 {
                     var cell = new Point((int)System.Math.Floor(input.WorldPosition.X / 16), (int)System.Math.Floor(input.WorldPosition.Y / 16));
 
-                    // We only need to create a command if there is actually a tile to erase.
-                    if (tileLayer.GetTileAt(cell) != null)
-                    {
-                        var command = new EraseTileCommand(tileLayer, cell);
-                        UIEvents.OnCommandCreated(command);
-                    }
+                    // ... (check if tile is already present) ...
+                    var existingTile = tileLayer.GetTileAt(cell);
+                    if (existingTile != null && existingTile.Equals(input.ActiveBrush)) return;
+                    // Create the command and publish it to the bus
+                    var command = new PlaceTileCommand(tileLayer, cell, input.ActiveBrush);
+                    eventBus.Publish(command);
                 }
             }
         }
@@ -128,18 +146,18 @@ namespace Pixel_Simulations.Data
     public class EraserTool : ITool
     {
         public string Name => "Eraser";
-
-        public void Update(ToolInput input)
+        public void Update(ToolInput input, EventBus eventBus)
         {
             if (input.CurrentMouse.LeftButton == ButtonState.Pressed)
             {
                 if (input.ActiveLayer is TileLayer tileLayer)
                 {
                     var cell = new Point((int)System.Math.Floor(input.WorldPosition.X / 16), (int)System.Math.Floor(input.WorldPosition.Y / 16));
-
-                    // Create a command and ask the controller to execute it.
-                    var command = new EraseTileCommand(tileLayer, cell);
-                    UIEvents.OnCommandCreated(command);
+                    if (tileLayer.GetTileAt(cell) != null)
+                    {
+                        var command = new EraseTileCommand(tileLayer, cell);
+                        eventBus.Publish(command);
+                    }
                 }
             }
         }

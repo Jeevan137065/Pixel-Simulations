@@ -90,13 +90,15 @@ namespace Pixel_Simulations
                 {
                     // Zooming In
                     if (Zoom < 1.0f) newZoom += STEP_ZOOM;
-                    else newZoom += 1.0f; // Jump by whole numbers at 1x zoom and above
+                    else if(Zoom == 1) { newZoom += 1.0f; }
+                    else newZoom += 2.0f; // Jump by whole numbers at 1x zoom and above
                 }
                 else
                 {
                     // Zooming Out
                     if (Zoom <= 1.0f) newZoom -= STEP_ZOOM;
-                    else newZoom -= 1.0f;
+                    else if (Zoom == 2) { newZoom -= 1.0f; }
+                    else newZoom -= 2.0f;
                 }
 
                 // Clamp to predefined min/max
@@ -105,6 +107,61 @@ namespace Pixel_Simulations
                 UpdateTransform();
 
                 Vector2 mouseWorldPosAfterZoom = ScreenToWorld(mouseRelative);
+                Position += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
+            }
+
+            UpdateTransform();
+        }
+
+        public void Update(InputState input, Rectangle viewportBounds,bool x)
+        {
+            // --- Panning ---
+            if (input.CurrentMouse.MiddleButton == ButtonState.Pressed && viewportBounds.Contains(input.MouseWindowPosition))
+            {
+                // Panning logic is correct, but we need to account for the upscale factor.
+                // The delta is in screen pixels, but the camera moves in world pixels.
+                Vector2 delta = input.CurrentMouse.Position.ToVector2() - input.PreviousMouse.Position.ToVector2();
+
+                // Let's assume a hardcoded scale factor of 2 for the editor viewport for now.
+                // A better solution would be to pass this from the LayoutManager.
+                float upscaleFactor = 2.0f;
+
+                Position -= delta / (Zoom * upscaleFactor);
+            }
+
+            // --- STEPPED ZOOMING ---
+            int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+            if (scrollDelta != 0 && viewportBounds.Contains(input.MouseWindowPosition))
+            {
+                // *** THE FIX IS HERE ***
+                // We need the mouse position relative to the NATIVE (low-res) canvas, not the final window.
+                Vector2 mouseInViewport = input.MouseWindowPosition - viewportBounds.Location.ToVector2();
+                Vector2 mouseNative = mouseInViewport / 2f; // Divide by the upscale factor
+
+                Vector2 mouseWorldPosBeforeZoom = ScreenToWorld(mouseNative);
+
+                float newZoom = Zoom;
+                if (scrollDelta > 0)
+                {
+                    // Zooming In
+                    if (Zoom < 1.0f) newZoom += STEP_ZOOM;
+                    else if (Zoom == 1) { newZoom += 1.0f; }
+                    else newZoom += 2.0f; // Jump by whole numbers at 1x zoom and above
+                }
+                else
+                {
+                    // Zooming Out
+                    if (Zoom <= 1.0f) newZoom -= STEP_ZOOM;
+                    else if (Zoom == 2) { newZoom -= 1.0f; }
+                    else newZoom -= 2.0f;
+                }
+
+                Zoom = MathHelper.Clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
+
+                UpdateTransform();
+
+                Vector2 mouseWorldPosAfterZoom = ScreenToWorld(mouseNative);
+
                 Position += mouseWorldPosBeforeZoom - mouseWorldPosAfterZoom;
             }
 

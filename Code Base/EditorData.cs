@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using Newtonsoft.Json;
-using System;
+using Pixel_Simulations.Editor;
+using Pixel_Simulations.UI;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,123 +12,7 @@ namespace Pixel_Simulations.Data
     public enum LayerType { Tile, Object, Collision, Pathing }
     public enum ObjectType { Prop, Rectangle, Point }
     public enum SliceMode { RowFirst, ColumnFirst }
-    [JsonObject(MemberSerialization.OptIn)]
-    public class TileInfo : IEquatable<TileInfo>
-    {
-        [JsonProperty]
-        public string TilesetName { get; private set; }
-
-        [JsonProperty]
-        public int TileID { get; private set; }
-
-        // Parameterless constructor for JSON deserialization
-        private TileInfo() { }
-
-        public TileInfo(string tilesetName, int tileId)
-        {
-            TilesetName = tilesetName;
-            TileID = tileId;
-        }
-
-        // --- IEquatable Implementation for correct comparisons ---
-
-        public bool Equals(TileInfo other)
-        {
-            if (other is null) return false;
-            // Two TileInfo objects are the same if they come from the same tileset and have the same ID.
-            return TilesetName == other.TilesetName && TileID == other.TileID;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as TileInfo);
-        }
-
-        public override int GetHashCode()
-        {
-            // A good hash code combines the hash codes of its members.
-            return HashCode.Combine(TilesetName, TileID);
-        }
-
-        public static bool operator ==(TileInfo left, TileInfo right)
-        {
-            if (left is null)
-                return right is null;
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(TileInfo left, TileInfo right)
-        {
-            return !(left == right);
-        }
-    }
-
-    public class TileSet
-    {
-        public string Name { get; }
-        public int TileSize { get; }
-        public SliceMode SlicingMode { get; }
-
-        // The sliced textures, indexed by a simple integer ID (0, 1, 2...).
-        public IReadOnlyDictionary<int, Texture2D> SlicedAtlas => _slicedAtlas;
-        private readonly Dictionary<int, Texture2D> _slicedAtlas;
-
-        public TileSet(string name, Texture2D sourceTexture, int tileSize, GraphicsDevice graphicsDevice, SliceMode sliceMode = SliceMode.RowFirst)
-        {
-            Name = name;
-            TileSize = tileSize;
-            SlicingMode = sliceMode;
-            _slicedAtlas = new Dictionary<int, Texture2D>();
-
-            SliceFromTexture(sourceTexture, graphicsDevice);
-        }
-
-        private void SliceFromTexture(Texture2D sourceTexture, GraphicsDevice graphicsDevice)
-        {
-            int id = 0;
-            int columns = sourceTexture.Width / TileSize;
-            int rows = sourceTexture.Height / TileSize;
-
-            if (SlicingMode == SliceMode.ColumnFirst)
-            {
-                for (int x = 0; x < columns; x++)
-                {
-                    for (int y = 0; y < rows; y++)
-                    {
-                        ProcessTile(x, y, id++, sourceTexture, graphicsDevice);
-                    }
-                }
-            }
-            else // RowFirst
-            {
-                for (int y = 0; y < rows; y++)
-                {
-                    for (int x = 0; x < columns; x++)
-                    {
-                        ProcessTile(x, y, id++, sourceTexture, graphicsDevice);
-                    }
-                }
-            }
-        }
-
-        private void ProcessTile(int x, int y, int id, Texture2D sourceTexture, GraphicsDevice graphicsDevice)
-        {
-            var rect = new Rectangle(x * TileSize, y * TileSize, TileSize, TileSize);
-            var data = new Color[TileSize * TileSize];
-            sourceTexture.GetData(0, rect, data, 0, data.Length);
-
-            if (data.All(c => c.A == 0)) return; // Skip empty tiles
-
-            var tileTexture = new Texture2D(graphicsDevice, TileSize, TileSize);
-            tileTexture.SetData(data);
-            _slicedAtlas[id] = tileTexture;
-        }
-
-        public Texture2D GetTileTexture(int tileId)
-        {
-            return _slicedAtlas.TryGetValue(tileId, out var texture) ? texture : null;
-        }
-    }
+    
 
     [JsonObject(MemberSerialization.OptIn)]
     public abstract class Layer
@@ -151,39 +37,55 @@ namespace Pixel_Simulations.Data
         public override LayerType Type => LayerType.Tile;
 
         [JsonProperty]
-        public Dictionary<Point, TileInfo> Grid { get; set; }
+        public Dictionary<Point, Chunk> Chunks { get; set; }
 
         public TileLayer(string name) : base(name)
         {
-            Grid = new Dictionary<Point, TileInfo>();
+            Chunks = new Dictionary<Point, Chunk>();
         }
         public TileLayer() : base() { } // For deserialization
 
-        /// <summary>
         /// Places or replaces a tile at a specific grid coordinate.
-        /// </summary>
-        public void PlaceTile(Point cell, TileInfo tileInfo)
+        public void PlaceTile(Point globalCell, TileInfo tileInfo)
         {
             if (IsLocked) return;
-            Grid[cell] = tileInfo;
+
+            Point chunkCoord = new Point(
+                (int)System.Math.Floor((double)globalCell.X / Chunk.CHUNK_SIZE),
+                (int)System.Math.Floor((double)globalCell.Y / Chunk.CHUNK_SIZE)
+            );
+            if (!Chunks.TryGetValue(chunkCoord, out var chunk))
+            {
+                // If the chunk doesn't exist, create it on-demand.
+                chunk = new Chunk(chunkCoord);
+                Chunks[chunkCoord] = chunk;
+            }
+            int localX = globalCell.X - chunkCoord.X * Chunk.CHUNK_SIZE;
+            int localY = globalCell.Y - chunkCoord.Y * Chunk.CHUNK_SIZE;
+
+            chunk.PlaceTile(localX, localY, tileInfo);
         }
 
-        /// <summary>
         /// Removes a tile from a specific grid coordinate.
-        /// </summary>
         public void RemoveTile(Point cell)
         {
             if (IsLocked) return;
-            Grid.Remove(cell);
+            Chunks.Remove(cell);
         }
 
-        /// <summary>
         /// Gets the TileInfo at a specific cell, if one exists.
-        /// </summary>
-        public TileInfo GetTileAt(Point cell)
+        public TileInfo GetTileAt(Point globalCell)
         {
-            return Grid.TryGetValue(cell, out var tileInfo) ? tileInfo : null;
+            Point chunkCoord = new Point(globalCell.X / Chunk.CHUNK_SIZE, globalCell.Y / Chunk.CHUNK_SIZE);
+            if (Chunks.TryGetValue(chunkCoord, out var chunk))
+            {
+                int localX = globalCell.X % Chunk.CHUNK_SIZE;
+                int localY = globalCell.Y % Chunk.CHUNK_SIZE;
+                return chunk.GetTileAt(localX, localY);
+            }
+            return null;
         }
+
     }
 
     // Placeholder for future implementation
@@ -195,65 +97,6 @@ namespace Pixel_Simulations.Data
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public class Map
-    {
-        [JsonProperty]
-        public int WidthInCells { get; private set; }
-
-        [JsonProperty]
-        public int HeightInCells { get; private set; }
-
-        [JsonProperty]
-        public List<Layer> Layers { get; set; }
-
-        public Map(int width, int height)
-        {
-            WidthInCells = width;
-            HeightInCells = height;
-            Layers = new List<Layer>();
-            // Every new map starts with a default, unlocked Ground layer.
-            Layers.Add(new TileLayer("Ground"));
-        }
-
-        // Json.NET requires a parameterless constructor for deserialization
-        public Map() { }
-
-        // Methods for manipulating layers. The EditorController will call these.
-        public void AddLayerAbove(int index, Layer newLayer)
-        {
-            if (index < Layers.Count - 1)
-                Layers.Insert(index + 1, newLayer);
-            else
-                Layers.Add(newLayer);
-        }
-
-        public void AddLayerBelow(int index, Layer newLayer)
-        {
-            if (index < Layers.Count - 1)
-                Layers.Insert(index - 1, newLayer);
-            else
-                Layers.Add(newLayer);
-        }
-
-        public void DeleteLayer(int index)
-        {
-            if (Layers.Count > 1 && index >= 0 && index < Layers.Count)
-                Layers.RemoveAt(index);
-        }
-
-        public void MoveLayerUp(int index)
-        {
-            if (index > 0)
-                (Layers[index], Layers[index - 1]) = (Layers[index - 1], Layers[index]);
-        }
-
-        public void MoveLayerDown(int index)
-        {
-            if (index < Layers.Count - 1)
-                (Layers[index], Layers[index + 1]) = (Layers[index + 1], Layers[index]);
-        }
-    }
-
     public abstract class MapObject
     {
         public Vector2 Position { get; set; }
@@ -271,6 +114,155 @@ namespace Pixel_Simulations.Data
         public override ObjectType Type => ObjectType.Rectangle;
         public Vector2 Size { get; set; }
         public string Tag { get; set; } // e.g., "Collision", "Trigger"
+    }
+
+    public class IconDefinition { public int x { get; set; } public int y { get; set; } }
+    public interface IPanel
+    {
+        void Update(InputState input, EventBus bus);
+        void Draw(SpriteBatch spriteBatch);
+    }
+    public class Button
+    {
+        public Rectangle Bounds { get; }
+        public ICommand CommandToPublish { get; }
+        public string IconName { get; }
+        public bool IsHovered { get; private set; }
+
+        public Button(Rectangle bounds, ICommand command, string iconName)
+        {
+            Bounds = bounds;
+            CommandToPublish = command;
+            IconName = iconName;
+        }
+
+        public bool Update(InputState input, EventBus eventBus)
+        {
+            return IsHovered = Bounds.Contains(input.MouseWindowPosition);
+        }
+
+        public void Draw(SpriteBatch sb, EditorUI editorUI)
+        {
+            Color tint = IsHovered ? Color.Yellow : Color.White;
+            if (IsHovered) sb.FillRectangle(Bounds, Color.White * 0.2f);
+            sb.DrawRectangle(Bounds, tint);
+            editorUI.DrawIcon(sb, Bounds, IconName, tint);
+        }
+
+
+    }
+    public class PopupWindow
+    {
+        public Rectangle Bounds { get; }
+        public string Title { get; }
+        public List<string> Items { get; }
+        public string SelectedItem { get; private set; }
+
+        public PopupWindow(string title, List<string> items, LayoutManager layout)
+        {
+            Title = title;
+            Items = items;
+
+            // Center the popup in the main viewport
+            int width = 300;
+            int height = 200;
+            Bounds = new Rectangle(
+                layout.ViewportPanel.X + (layout.ViewportPanel.Width - width) / 2,
+                layout.ViewportPanel.Y + (layout.ViewportPanel.Height - height) / 2,
+                width, height);
+        }
+
+        public void Update(InputState input)
+        {
+            SelectedItem = null;
+            if (!Bounds.Contains(input.MouseWindowPosition)) return;
+
+            if (input.IsNewLeftClick())
+            {
+                int index = (int)((input.MouseWindowPosition.Y - Bounds.Y - 30) / 20); // 30px for title
+                if (index >= 0 && index < Items.Count)
+                {
+                    SelectedItem = Items[index];
+                }
+            }
+        }
+
+        public void Draw(SpriteBatch sb, SpriteFont font)
+        {
+            // Draw a semi-transparent overlay behind the popup
+            sb.FillRectangle(new Rectangle(0, 0, 2000, 2000), Color.Black * 0.5f);
+
+            // Draw the popup window
+            sb.FillRectangle(Bounds, Color.DarkSlateGray);
+            sb.DrawRectangle(Bounds, Color.Black, 2);
+            sb.DrawString(font, Title, Bounds.Location.ToVector2() + new Vector2(5, 5), Color.White);
+
+            // Draw the list of items
+            int yOffset = 30;
+            foreach (var item in Items)
+            {
+                var pos = new Vector2(Bounds.X + 10, Bounds.Y + yOffset);
+                sb.DrawString(font, item, pos, Color.White);
+                yOffset += 20;
+            }
+        }
+    }
+    public abstract class BasePanel : IPanel
+    {
+        protected Rectangle Area { get; }
+        protected EditorUI EditorUI { get; }
+        protected EditorState EditorState { get; }
+
+        protected BasePanel(Rectangle area, EditorUI editorUI, EditorState editorState)
+        {
+            Area = area;
+            EditorUI = editorUI;
+            EditorState = editorState;
+        }
+
+        public abstract void Update(InputState input, EventBus bus);
+        public abstract void Draw(SpriteBatch spriteBatch);
+    }
+
+    public class LayerRow
+    {
+        private readonly Rectangle _bounds;
+        private readonly int _layerIndex;
+        private readonly Layer _layer;
+        public  List<Button> _buttons = new List<Button>();
+
+        public LayerRow(Layer layer, int index, Rectangle bounds, EditorUI editorUI)
+        {
+            _layer = layer;
+            _layerIndex = index;
+            _bounds = bounds;
+
+            // Create this row's per-layer control buttons
+            _buttons.Add(new Button(new Rectangle(bounds.X + 5, bounds.Y + 4, 32, 32), new ToggleLayerVisibilityCommand { LayerIndex = index }, layer.IsVisible ? "Visible" : "Hidden"));
+            _buttons.Add(new Button(new Rectangle(bounds.X + 40, bounds.Y + 4, 32, 32), new ToggleLayerLockCommand { LayerIndex = index }, layer.IsLocked ? "Locked" : "Unlocked"));
+            _buttons.Add(new Button(new Rectangle(bounds.Right - 70, bounds.Y + 4, 32, 32), new MoveLayerCommand { LayerIndex = index, Direction = true }, "MoveUp"));
+            _buttons.Add(new Button(new Rectangle(bounds.Right - 38, bounds.Y + 4, 32, 32), new MoveLayerCommand {  LayerIndex = index, Direction = false}, "MoveDown"));
+        }
+
+        public void Update(InputState input, EventBus eventBus)
+        {
+            foreach (var button in _buttons)
+            {
+                button.Update(input, eventBus);
+            }
+        }
+
+        public void Draw(SpriteBatch sb, EditorUI editorUI, bool isActive)
+        {
+            if (isActive)   sb.FillRectangle(_bounds, Color.CornflowerBlue * 0.3f);
+            else            sb.DrawRectangle(_bounds, Color.Gray * 0.3f);
+
+                foreach (var button in _buttons)
+                {
+                    button.Draw(sb, editorUI);
+                }
+            sb.DrawString(editorUI.DebugFont, _layer.Name, new Vector2(_bounds.X + 80, _bounds.Y + 10), Color.White);
+        }
     }
 
 }

@@ -1,0 +1,182 @@
+﻿public class TilesetPanel : BasePanel
+    {
+        private readonly PopupWindow _atlasPickerPopup;
+        private readonly Button _addTilesetButton;
+        private const int MARGIN = 8;
+        private const int DISPLAY_TILE_SIZE = 32;
+        private const int TILESET_LIST_ITEM_HEIGHT = 20;
+        private const int TILESET_LIST_ITEM_WIDTH = 40;
+        private const int TILE_DISPLAY_MARGIN = 8;
+        private const int TILE_DISPLAY_SIZE = 32;
+        public enum Tab { Tiles, Objects } // Enum for managing the tab state
+        private Tab _activeTab = Tab.Tiles; // The currently active tab
+
+        private Rectangle _tilesetListArea; // Area for listing the tileset names
+        private Rectangle _tileDisplayArea; // Area for displaying the tiles of the selected tileset
+        private float _scrollOffset = 0;
+        public int SelectedTileID { get; private set; } = -1;
+        public Point HoveredTileCell { get; private set; } = new Point(-1, -1); // For debug info
+
+        // Constants for layout
+        
+        public TilesetPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
+            : base(area, editorUI, editorState)
+        {
+            _tileDisplayArea = new Rectangle(Area.X + MARGIN, Area.Y + MARGIN, Area.Width - 2* MARGIN, Area.Height - TILE_DISPLAY_SIZE - 2* MARGIN);
+            _tilesetListArea = new Rectangle(Area.X + MARGIN + TILE_DISPLAY_SIZE, Area.Height - MARGIN - 32 , Area.Width - 2*TILE_DISPLAY_MARGIN - DISPLAY_TILE_SIZE , DISPLAY_TILE_SIZE);
+            _addTilesetButton = new Button(new Rectangle(_tilesetListArea.X - TILE_DISPLAY_SIZE, _tilesetListArea.Y, _tilesetListArea.Height, _tilesetListArea.Height),new CreateTilesetCommand { AtlasName = "ShowAtlasPicker" }, "New");
+        }
+
+
+        public override void Update(InputState input, EventBus bus)
+        {
+            // Reset hover state for this frame.
+            HoveredTileCell = new Point(-1, -1);
+            var panelState = EditorState.TilesetPanel; // Get the relevant state object
+
+            if (!Area.Contains(input.MouseWindowPosition)) return;
+
+            // --- Tab Interaction ---
+            if (_tileDisplayArea.Contains(input.MouseWindowPosition))   { _activeTab = Tab.Tiles;}
+            else    { _activeTab = Tab.Objects;}
+
+            if (_activeTab == Tab.Tiles)
+            {
+                // Handle Scrolling in the tile display area
+                if (_tileDisplayArea.Contains(input.MouseWindowPosition))
+                {
+                    int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+                    if (scrollDelta != 0)
+                    {
+                        _scrollOffset -= scrollDelta * 0.5f;
+                        // Clamp scroll offset later with _maxScroll
+                    }
+               
+                    var activeTileset = EditorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
+                    if (activeTileset != null)
+                    {
+                        int tilesPerRow = _tileDisplayArea.Width / TILE_DISPLAY_SIZE;
+                        if (tilesPerRow > 0)
+                        {
+                            int relX = (int)input.MouseWindowPosition.X - _tileDisplayArea.X;
+                            int relY = (int)input.MouseWindowPosition.Y - _tileDisplayArea.Y + (int)_scrollOffset;
+                            int col = relX / TILE_DISPLAY_SIZE;
+                            int row = relY / TILE_DISPLAY_SIZE;
+                            HoveredTileCell = new Point(col, row);
+
+                            if (input.IsNewLeftClick())
+                            {
+                                int tileIndex = row * tilesPerRow + col;
+                                if (relX >= 0 && col < tilesPerRow && tileIndex >= 0 && tileIndex < activeTileset.SlicedAtlas.Count)
+                                {
+                                    // Fire an event to tell the controller to change the selected tile
+                                    int tileId = activeTileset.SlicedAtlas.Keys.ElementAt(tileIndex);
+                                    UIEvents.OnTileSelected(activeTileset.Name, tileId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if(_activeTab == Tab.Objects)
+            {
+                _addTilesetButton.Update(input, bus);
+                // Handle Hovering and Clicking
+                if (_tilesetListArea.Contains(input.MouseWindowPosition))
+                {
+                    if (input.IsNewLeftClick())
+                    {
+                        int index = (int)((input.MouseWindowPosition.Y - _tilesetListArea.Y) / TILESET_LIST_ITEM_HEIGHT);
+                        if (index >= 0 && index < EditorState.ActiveTileSets.Count)
+                        {
+                            // Fire an event to tell the controller to change the active tileset
+                            UIEvents.OnTilesetSelected(EditorState.ActiveTileSets[index].Name);
+                        }
+                    }
+                }
+            }
+        }
+
+        public override void Draw(SpriteBatch sb)
+        {
+            sb.FillRectangle(Area, Color.DarkSlateGray);
+            _addTilesetButton.Draw(sb, EditorUI);
+            if (EditorState.ShowDebug) 
+            { 
+                sb.DrawRectangle(_tilesetListArea, Color.Black);
+                sb.DrawRectangle(_tileDisplayArea, Color.White);
+            }
+
+            var panelState = EditorState.TilesetPanel;
+            var font = EditorUI.DebugFont; // Assuming EditorUI has the font
+
+            // Draw list of active tilesets
+            int xOffset = 40;
+            foreach (var tileset in EditorState.ActiveTileSets)
+            {
+                Color color = (tileset.Name == panelState.ActiveTilesetName) ? Color.Yellow : Color.White;
+                sb.DrawString(font, tileset.Name, new Vector2(_addTilesetButton.Bounds.X + xOffset, _addTilesetButton.Bounds.Y), color);
+                xOffset += TILESET_LIST_ITEM_WIDTH;
+            }
+
+            // Draw the divider
+            int dividerY = Area.Y; // Fixed position for the divider
+            sb.DrawLine(Area.X, dividerY, Area.Right, dividerY, Color.Black);
+
+            // Draw the tiles from the active tileset
+            var activeTileset = EditorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
+            if (activeTileset != null)
+            {
+                // Scissor rect logic here to clip the tile display
+                // ...
+
+                int tilesPerRow = _tileDisplayArea.Width / TILE_DISPLAY_SIZE;
+                int index = 0;
+                foreach (var tilePair in activeTileset.SlicedAtlas.OrderBy(p => p.Key))
+                {
+                    int col = index % tilesPerRow;
+                    int row = index / tilesPerRow;
+                    var destRect = new Rectangle(
+                        _tileDisplayArea.X + col * TILE_DISPLAY_SIZE,
+                        _tileDisplayArea.Y + row * TILE_DISPLAY_SIZE, // - (int)_scrollOffset,
+                        TILE_DISPLAY_SIZE, TILE_DISPLAY_SIZE);
+
+                    sb.Draw(tilePair.Value, destRect, Color.White);
+                    sb.DrawRectangle(destRect, Color.Black * 0.5f, 1);
+
+                    if (tilePair.Key == panelState.SelectedTileID)
+                        sb.DrawRectangle(destRect, Color.Yellow, 2);
+
+                    index++;
+                }
+            }
+
+            // Draw popup if it's active
+            if (panelState.IsAtlasPickerVisible)
+            {
+                _atlasPickerPopup?.Draw(sb, font);
+            }
+        }
+        private void HandleTileSelection(string tilesetName, int tileId)
+        {
+            var panelState = EditorState.TilesetPanel;
+            panelState.ActiveTilesetName = tilesetName;
+            panelState.SelectedTileID = tileId;
+
+            // The selection state's brush is now just a new TileInfo object.
+            EditorState.Selection.ActiveTileBrush = new TileInfo(tilesetName, tileId);
+        }
+        private void UpdateActiveBrush()
+        {
+            var _selectedTileID = EditorState.TilesetPanel.SelectedTileID;
+            var _selectedTileset = EditorState.TilesetPanel.TilesetNames;
+            if (_selectedTileset != null && _selectedTileID != -1)
+            {
+                EditorState.Selection.ActiveTileBrush = new TileInfo(_selectedTileset[SelectedTileID], _selectedTileID);
+            }
+            else
+            {
+                EditorState.Selection.ActiveTileBrush = null; // Set to null if nothing is selected
+            }
+        }
+    }
