@@ -2,8 +2,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using Newtonsoft.Json;
-using Pixel_Simulations.Editor;
+
 using System.Collections.Generic;
+using System.IO;
 
 namespace Pixel_Simulations.Data
 {
@@ -37,6 +38,14 @@ namespace Pixel_Simulations.Data
                 return;
             Tiles[localX, localY] = tileInfo;
         }
+
+        public void RemoveTile(int localX, int localY)
+        {
+            if (localX < 0 || localX >= CHUNK_SIZE || localY < 0 || localY >= CHUNK_SIZE)
+                return;
+            Tiles[localX, localY] = null;
+            
+        }
     }
 
     public class Map
@@ -50,6 +59,7 @@ namespace Pixel_Simulations.Data
             Layers = new List<Layer>();
             // Every new map starts with a default, unlocked Ground layer.
             Layers.Add(new TileLayer("Ground"));
+            
         }
 
         // Json.NET requires a parameterless constructor for deserialization
@@ -92,83 +102,247 @@ namespace Pixel_Simulations.Data
             }
         }
     }
-
-    public class MapRenderer
+    public static class MapSerializer
     {
+        private static readonly JsonSerializerSettings _jsonSettings;
 
-        public int CELL_SIZE;
-        private readonly EditorState _editorState;
-        private TilesetManager _tilesetManager { get; set; }
-
-        public MapRenderer(EditorState editorState)
+        static MapSerializer()
         {
-            _editorState = editorState;
-            _tilesetManager = _editorState.TilesetManager;
-            CELL_SIZE = _editorState.CELL_SIZE;
-        }
-
-        public void Draw(SpriteBatch sb)
-        {
-            var _map = _editorState.ActiveMap;
-            if (_map == null) return;
-            DrawTileLayer(sb, _map);
-        }
-
-        private void DrawTileLayer(SpriteBatch sb, Map map)
-        {
-            // Get the visible area from the camera
-            RectangleF visibleWorld = _editorState.camera.GetVisibleWorldBounds(_editorState._layoutmanager.ViewportPanel);
-
-            // Determine which chunk coordinates are visible
-            int minChunkX = (int)System.Math.Floor(visibleWorld.Left / (Chunk.CHUNK_SIZE * CELL_SIZE));
-            int maxChunkX = (int)System.Math.Floor(visibleWorld.Right / (Chunk.CHUNK_SIZE * CELL_SIZE));
-            int minChunkY = (int)System.Math.Floor(visibleWorld.Top / (Chunk.CHUNK_SIZE * CELL_SIZE));
-            int maxChunkY = (int)System.Math.Floor(visibleWorld.Bottom / (Chunk.CHUNK_SIZE * CELL_SIZE));
-
-            // Loop through layers, then visible chunks, then tiles
-            foreach (var layer in map.Layers)
+            _jsonSettings = new JsonSerializerSettings
             {
-                if (!layer.IsVisible || !(layer is TileLayer tileLayer)) continue;
+                Formatting = Formatting.Indented,
+                Converters = { new LayerConverter(), new MapObjectConverter(), new Vector2Converter(), new ColorConverter() }
+            };
+        }
+        #region Editor JSON Workflow
+        public static void Save(Map map, string filePath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            string json = JsonConvert.SerializeObject(map, _jsonSettings);
+            File.WriteAllText(filePath, json);
+        }
+        public static Map Load(string filePath)
+        {
+            if (!File.Exists(filePath)) return null;
+            string json = File.ReadAllText(filePath);
+            return JsonConvert.DeserializeObject<Map>(json, _jsonSettings);
+        }
+        #endregion
 
-                for (int y = minChunkY; y <= maxChunkY; y++)
+        #region Game Binary Workflow
+        public static void Export(Map map, string filePath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            using (var stream = File.Open(filePath, FileMode.Create))
+            using (var writer = new BinaryWriter(stream))
+            {
+                // --- FILE HEADER ---
+                writer.Write("PMAP".ToCharArray()); // 4-byte magic string to identify our file type
+                writer.Write(1);      // Version number
+
+                // --- LAYER DATA ---
+                writer.Write(map.Layers.Count);
+                foreach (var layer in map.Layers)
                 {
-                    for (int x = minChunkX; x <= maxChunkX; x++)
+                    writer.Write((int)layer.Type);
+                    writer.Write(layer.Name ?? " ");
+                    writer.Write(layer.IsVisible);
+                    writer.Write(layer.IsLocked);
+
+                    // Write type-specific data
+                    switch (layer.Type)
                     {
-                        if (tileLayer.Chunks.TryGetValue(new Point(x, y), out var chunk))
+                        case LayerType.Tile:
+                            WriteTileLayer(writer, layer as TileLayer);
+                            break;
+                        case LayerType.Object:
+                            //WriteObjectLayer(writer, layer as ObjectLayer); // Placeholder for future
+                            break;
+                        case LayerType.Collision:
+                            WriteCollisionLayer(writer, layer as CollisionLayer);
+                            break;
+                        case LayerType.Navigation:
+                            WriteNavigationLayer(writer, layer as NavigationLayer);
+                            break;
+                        case LayerType.Trigger:
+                            //WriteTriggerLayer(writer, layer as TriggerLayer);
+                            break;
+                    }
+                }
+            }
+        }
+        public static Map Read(string filePath)
+        {
+            if (!File.Exists(filePath)) return null;
+            var map = new Map();
+            map.Layers.Clear(); // Clear the default "Ground" layer
+
+            using (var stream = File.Open(filePath, FileMode.Open))
+            using (var reader = new BinaryReader(stream))
+            {
+                // --- FILE HEADER ---
+                string magic = new string(reader.ReadChars(4));
+                if (magic != "PMAP") throw new System.Exception("Invalid map file format.");
+                int version = reader.ReadInt32();
+
+                // --- LAYER DATA ---
+                int layerCount = reader.ReadInt32();
+                for (int i = 0; i < layerCount; i++)
+                {
+                    LayerType type = (LayerType)reader.ReadInt32();
+                    string name = reader.ReadString();
+                    bool isVisible = reader.ReadBoolean();
+                    bool isLocked = reader.ReadBoolean();
+
+                    Layer newLayer = null;
+                    switch (type)
+                    {
+                        case LayerType.Tile:
+                            newLayer = ReadTileLayer(reader, name);
+                            break;
+                        case LayerType.Collision:
+                            newLayer = ReadCollisionLayer(reader, name);
+                            break;
+                        case LayerType.Navigation:
+                            newLayer = ReadNavigationLayer(reader, name);
+                            break;
+                            // Add cases for other layer types
+                    }
+                    if (newLayer != null)
+                    {
+                        newLayer.IsVisible = isVisible;
+                        newLayer.IsLocked = isLocked;
+                        map.Layers.Add(newLayer);
+                    }
+                }
+            }
+            return map;
+        }
+
+        #endregion
+
+        #region Binary Helper Methods
+        private static void WriteTileLayer(BinaryWriter writer, TileLayer layer)
+        {
+            writer.Write(layer.Chunks.Count);
+            foreach (var chunkPair in layer.Chunks)
+            {
+                writer.Write(chunkPair.Key.X);
+                writer.Write(chunkPair.Key.Y);
+                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                {
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                    {
+                        var tile = chunkPair.Value.Tiles[x, y];
+                        if (tile == null)
                         {
-                            DrawChunk(sb, chunk);
+                            writer.Write(false); // Indicates no tile here
+                        }
+                        else
+                        {
+                            writer.Write(true); // Indicates a tile follows
+                            writer.Write(tile.TilesetName);
+                            writer.Write(tile.TileID);
                         }
                     }
                 }
             }
         }
-
-        private void DrawChunk(SpriteBatch sb, Chunk chunk)
+        private static TileLayer ReadTileLayer(BinaryReader reader, string name)
         {
-            // Calculate the top-left world position of the chunk
-            float chunkWorldX = chunk.ChunkCoordinate.X * Chunk.CHUNK_SIZE * CELL_SIZE;
-            float chunkWorldY = chunk.ChunkCoordinate.Y * Chunk.CHUNK_SIZE * CELL_SIZE;
-
-            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            var layer = new TileLayer(name);
+            int chunkCount = reader.ReadInt32();
+            for (int i = 0; i < chunkCount; i++)
             {
-                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                var chunkCoord = new Point(reader.ReadInt32(), reader.ReadInt32());
+                var chunk = new Chunk(chunkCoord);
+                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                 {
-                    var tileInfo = chunk.Tiles[x, y];
-                    if (tileInfo != null)
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                     {
-                        var texture = _tilesetManager.GetTileTexture(tileInfo);
-                        if (texture != null)
+                        if (reader.ReadBoolean()) // Check if a tile exists
                         {
-                            var position = new Vector2(
-                                chunkWorldX + x * CELL_SIZE,
-                                chunkWorldY + y * CELL_SIZE
-                            );
-                            sb.Draw(texture, position, Color.White);
+                            string tilesetName = reader.ReadString();
+                            int tileId = reader.ReadInt32();
+                            chunk.Tiles[x, y] = new TileInfo(tilesetName, tileId);
                         }
                     }
                 }
+                layer.Chunks[chunkCoord] = chunk;
+            }
+            return layer;
+        }
+        private static void WriteObjectLayer(BinaryWriter writer, ObjectLayer layer)
+        {
+            writer.Write(layer.Objects.Count);
+            foreach (var rect in layer.Objects)
+            {
+                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
+                //writer.Write(rect.Type); writer.Write(rect.Size.Y);
             }
         }
+        private static void WriteCollisionLayer(BinaryWriter writer, CollisionLayer layer)
+        {
+            writer.Write(layer.CollisionMesh.Count);
+            foreach (var rect in layer.CollisionMesh)
+            {
+                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
+                writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
+            }
+        }
+        private static void WriteNavigationLayer(BinaryWriter writer, NavigationLayer layer)
+        {
+            writer.Write(layer.NavigationMesh.Count);
+            foreach (var rect in layer.NavigationMesh)
+            {
+                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
+                writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
+            }
+        }
+        private static void WriteTriggerLayer(BinaryWriter writer, TriggerLayer layer)
+        {
+            writer.Write(layer.TriggerMesh.Count);
+            foreach (var rect in layer.TriggerMesh)
+            {
+                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
+                writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
+            }
+            writer.Write(layer.PointTriggers.Count);
+            foreach (var rect in layer.PointTriggers)
+            {
+                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
+                writer.Write(rect.Radius); writer.Write(rect.Label);
+            }
+        }
+        private static CollisionLayer ReadCollisionLayer(BinaryReader reader, string name)
+        {
+            var layer = new CollisionLayer(name);
+            int rectCount = reader.ReadInt32();
+            for (int i = 0; i < rectCount; i++)
+            {
+                var rect = new RectangleObject();
+                rect.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                rect.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                layer.CollisionMesh.Add(rect);
+            }
+            return layer;
+        }
+        private static NavigationLayer ReadNavigationLayer(BinaryReader reader, string name)
+        {
+            var layer = new NavigationLayer(name);
+            int rectCount = reader.ReadInt32();
+            for (int i = 0; i < rectCount; i++)
+            {
+                var rect = new RectangleObject();
+                rect.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                rect.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                layer.NavigationMesh.Add(rect);
+            }
+            return layer;
+        }
+
+        #endregion
     }
+
 }
 

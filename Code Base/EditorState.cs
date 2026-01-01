@@ -27,6 +27,8 @@ namespace Pixel_Simulations.Editor
         public Point MouseGridCell { get; set; }
         public Point MouseChunkCell { get; set; }
         public int ClickCounter = 0;
+        public float Zoom;
+        public bool Drawing = false;
         public bool IsNewLeftClick()
         {
             ClickCounter++; 
@@ -53,6 +55,7 @@ namespace Pixel_Simulations.Editor
         public string ActiveToolName { get; set; }
         public string HoveredButtonName { get; set; }
         public List<ITool> Tools { get; }
+        public bool IsToolDrawing { get; set; } = false;
         //public List<string> ButtonNames { get; set; } = new List<string> { "Brush", "Eraser", "Fill", "Rectangle", "CollisionBrush", "Line", "Eyedropper", "Path", "ObjectPlacer", "PointPlacer", "PointLight", "SpotLight", "SpriteLight", "ReflectionPlane" };
         public ToolState()
         {
@@ -61,6 +64,10 @@ namespace Pixel_Simulations.Editor
             {
                 new BrushTool(),
                 new EraserTool(),
+                new FreeRectangleTool(),
+                new GridRectangleTool(),
+                new SelectionTool(),
+                new PointPlacerTool()
                 // new RectangleTool(this) // Some tools might need a reference back to the state
             };
             //ActiveTool = null;
@@ -109,36 +116,33 @@ namespace Pixel_Simulations.Editor
             }
             return null;
         }
+        public LayerType NewLayerType { get; set; } = LayerType.Tile;
     }
     public class EditorState
     {
         // General Application State
-        public bool ShowDebug { get; set; } = true;
-        public bool IsRunning { get; set; } = true;
+        [JsonIgnore] public bool ShowDebug { get; set; } = true;
+        [JsonIgnore] public bool ShowGrid { get; set; } = true;
+        [JsonIgnore] public bool IsRunning { get; set; } = true;
 
-        public int CELL_SIZE = 16;
-        public GraphicsDevice _graphics;
-        public string CurrentMapFile { get; set; }
-        // Core Data
-        public Map ActiveMap { get; set; }
-        public readonly LayoutManager _layoutmanager;
+        [JsonIgnore] public int CELL_SIZE = 16;
+        [JsonIgnore] public GraphicsDevice _graphics;
+        [JsonIgnore] public string CurrentMapFile { get; set; }
+        [JsonIgnore] public Map ActiveMap { get; set; }
+        [JsonIgnore] public readonly LayoutManager _layoutmanager;
         // Sub-States for Organization
-        public EditorCamera camera { get; set; }
-        public InputState Input { get; }
-        public UIState UI { get; }
-        public TopPanelState TopState { get; }
-        public LayerPanelState Layers { get; }
-        public ToolState ToolState { get; }
-        public SelectionState Selection { get; }
-        public HistoryState History { get; }
-        //public ToolPanelState ToolStack { get; } = new ToolPanelState();
-        public TilesetPanelState TilesetPanel { get; } = new TilesetPanelState();
-
-        public Dictionary<string, Texture2D> AvailableAtlasTextures { get; } = new Dictionary<string, Texture2D>();
-
-        // 2. Stores the active, user-created TileSet instances.
-        public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
-        public TilesetManager TilesetManager { get; }
+        [JsonIgnore] public EditorCamera camera { get; set; }
+        [JsonIgnore] public InputState Input { get; }
+        [JsonIgnore] public UIState UI { get; }
+        [JsonIgnore] public TopPanelState TopState { get; }
+        [JsonIgnore] public LayerPanelState Layers { get; }
+        [JsonIgnore] public ToolState ToolState { get; }
+        [JsonIgnore] public SelectionState Selection { get; }
+        [JsonIgnore] public HistoryState History { get; }
+        [JsonIgnore] public TilesetPanelState TilesetPanel { get; } = new TilesetPanelState();
+        [JsonIgnore] public Dictionary<string, Texture2D> AvailableAtlasTextures { get; } = new Dictionary<string, Texture2D>();
+        [JsonIgnore] public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
+        [JsonIgnore] public TilesetManager TilesetManager { get; }
 
         public EditorState(LayoutManager layoutManager, GraphicsDevice graphicsDevice)
         {
@@ -187,11 +191,11 @@ namespace Pixel_Simulations.Editor
 
         public void refresh()
         {
+            Input.Zoom = camera.Zoom;
             Layers.Layers = ActiveMap.Layers;
             UI.ActivePanelName = _layoutmanager.GetPanelAt(Input.MouseWindowPosition.ToPoint());
         }
 
     }
 
-    
 }

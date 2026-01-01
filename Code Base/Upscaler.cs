@@ -68,6 +68,20 @@ namespace Pixel_Simulations
             //_graphicsDevice.Clear(Color.Transparent);
         }
 
+        public void BeginRender()
+        {
+            _graphicsDevice.SetRenderTarget(_renderTarget);
+            _graphicsDevice.Clear(Color.Transparent);
+        }
+
+        public void Present( SpriteBatch spriteBatch)
+        {
+            _graphicsDevice.SetRenderTarget(null);
+            _graphicsDevice.Clear(Color.Black);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
+            spriteBatch.Draw(_renderTarget, _destinationRect, Color.White);
+            spriteBatch.End();
+        }
 
 
         public void Present(SpriteBatch spriteBatch, RenderTarget2D sourceTexture, params Effect[] effects)

@@ -49,12 +49,33 @@ namespace Pixel_Simulations
             RenderMatrix = view * Matrix.CreateScale(scale) * Matrix.CreateTranslation(highResCenter);
 
         }
+
+        public void Follow(TestPlayer player, float scale)
+        {
+            Position = player.Position;
+
+            // 2. Base View (Move world so player is at 0,0)
+            // We round the position to prevent sub-pixel jitter in the low-res art
+            var view = Matrix.CreateTranslation(
+                -MathF.Round(Position.X),
+                -MathF.Round(Position.Y),
+                0);
+
+            // 3. Create Simulation Matrix (Low Res)
+            // Just centering the view in the small window
+            SimulationMatrix = view * Matrix.CreateTranslation(lowResCenter);
+
+            // 4. Create Render Matrix (High Res)
+            // Move World -> Scale Up -> Center in Big Window
+            RenderMatrix = view * Matrix.CreateScale(scale) * Matrix.CreateTranslation(highResCenter);
+
+        }
     }
 
     public class EditorCamera
     {
-        public Vector2 Position { get; private set; }
-        public float Zoom { get; private set; }
+        public Vector2 Position { get; set; }
+        public float Zoom { get; set; }
         public Matrix Transform { get; private set; }
 
         private const float MIN_ZOOM = 0.5f;
@@ -172,6 +193,11 @@ namespace Pixel_Simulations
         {
             Transform = Matrix.CreateTranslation(-Position.X, -Position.Y, 0) *
                         Matrix.CreateScale(Zoom, Zoom, 1);
+        }
+
+        public void Pan(Vector2 delta)
+        {
+            Position += delta;
         }
 
         // --- Coordinate Conversion Methods ---

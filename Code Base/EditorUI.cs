@@ -28,11 +28,13 @@ namespace Pixel_Simulations.UI
             _buttons.Add(new Button(new Rectangle(Area.X + 75, Area.Y + 4, 32, 32), new MenuActionCommand { ActionName = "Load" }, "Load"));
             _buttons.Add(new Button(new Rectangle(Area.X + 110, Area.Y + 4, 32, 32), new MenuActionCommand { ActionName = "Undo" }, "Undo"));
             _buttons.Add(new Button(new Rectangle(Area.X + 145, Area.Y + 4, 32, 32), new MenuActionCommand { ActionName = "Redo" }, "Redo"));
+            _buttons.Add(new Button(new Rectangle(Area.X + 180, Area.Y + 4, 32, 32), new MenuActionCommand { ActionName = "Capture" }, "Capture"));
+            _buttons.Add(new Button(new Rectangle(Area.X + 215, Area.Y + 4, 32, 32), new MenuActionCommand { ActionName = "Export" }, "Export"));
         }
 
         public override void Update(InputState input, EventBus bus)
         {
-            var panelState = EditorState.TopState;
+            var panelState = _editorState.TopState;
             panelState.HoveredButtonName = null;
             if (!Area.Contains(input.MouseWindowPosition))
             {
@@ -45,6 +47,10 @@ namespace Pixel_Simulations.UI
                 if (button.Update(input, bus))
                 {
                     panelState.HoveredButtonName = button.IconName.ToString();
+                    if (input.IsNewLeftClick())
+                    {
+                        bus.Publish(button.CommandToPublish);
+                    }
                 }
             }
         }
@@ -55,7 +61,7 @@ namespace Pixel_Simulations.UI
             foreach (var button in _buttons)
             {
                 // The button's internal state (IsHovered) now drives its drawing
-                button.Draw(spriteBatch, EditorUI);
+                button.Draw(spriteBatch, _editorUI);
             }
         }
     }
@@ -71,17 +77,16 @@ namespace Pixel_Simulations.UI
         private readonly Rectangle _tilesetListArea;
         private readonly Rectangle _tileDisplayArea;
         private readonly Button _addTilesetButton;
-
+        private List<Button> tileSets = new List<Button>();
         // --- State for "Tiles" Tab ---
         private float _scrollOffset = 0;
         private float _maxScroll = 0;
 
         // --- Constants ---
         private const int TAB_HEIGHT = 30;
-        private const int TILESET_LIST_HEIGHT = 120;
         private const int MARGIN = 8;
         private const int TILE_DISPLAY_SIZE = 32;
-        private const int TILESET_LIST_ITEM_WIDTH = 40;
+        private const int TILESET_LIST_ITEM_WIDTH = 80;
         private const int TILESET_LIST_ITEM_HEIGHT = 40;
 
 
@@ -92,18 +97,27 @@ namespace Pixel_Simulations.UI
         {
             _tabArea = new Rectangle(Area.X, Area.Y, Area.Width, TAB_HEIGHT);
             _contentArea = new Rectangle(Area.X, Area.Y + TAB_HEIGHT, Area.Width, Area.Height - TAB_HEIGHT);
-            //_tilesetListArea = new Rectangle(_contentArea.X, _contentArea.Y, _contentArea.Width, TILESET_LIST_HEIGHT);
-            //_tileDisplayArea = new Rectangle(_contentArea.X, _contentArea.Y + TILESET_LIST_HEIGHT, _contentArea.Width, _contentArea.Height - TILESET_LIST_HEIGHT);
             _tileDisplayArea = new Rectangle(_contentArea.X + MARGIN, _contentArea.Y + MARGIN, _contentArea.Width - 2 * MARGIN, _contentArea.Height - TILE_DISPLAY_SIZE - MARGIN);
             _tilesetListArea = new Rectangle(_contentArea.X + MARGIN, _contentArea.Height - MARGIN - TILE_DISPLAY_SIZE, Area.Width - 2 * MARGIN - TILE_DISPLAY_SIZE, TILE_DISPLAY_SIZE);
             _addTilesetButton = new Button(new Rectangle(_tilesetListArea.X, _tilesetListArea.Y, _tilesetListArea.Height, _tilesetListArea.Height), new CreateTilesetCommand { AtlasName = "ShowAtlasPicker" }, "New");
-            //_addTilesetButton = new Button(new Rectangle(_tilesetListArea.X + 5, _tilesetListArea.Y + 5, 32, 32),new MenuActionCommand { ActionName = "ShowAtlasPicker" },"New");
+        }
+
+        private void Create_Buttons(EditorState editorState)
+        {
+            if (tileSets.Count > 1) {tileSets.Clear(); }
+            for (int i=0; i < editorState.ActiveTileSets.Count; i++)
+            {
+                Rectangle bound = new Rectangle(_tilesetListArea.X + _addTilesetButton.Bounds.Width + i* TILESET_LIST_ITEM_WIDTH, _tilesetListArea.Y, TILESET_LIST_ITEM_WIDTH, _tilesetListArea.Height);
+                Button button = new Button(bound,new SelectTilesetCommand(), _editorState.ActiveTileSets[i].Name); 
+                tileSets.Add(button);
+            }
         }
 
         public override void Update(InputState input, EventBus eventBus)
         {
-            if (!Area.Contains(input.MouseWindowPosition)) return;
 
+            Create_Buttons(_editorState);
+            if (!Area.Contains(input.MouseWindowPosition)) return;
             // --- 1. Handle Tab Switching ---
             if (_tabArea.Contains(input.MouseWindowPosition) && input.IsNewLeftClick())
             {
@@ -125,27 +139,31 @@ namespace Pixel_Simulations.UI
         }
         private void UpdateTilesTab(InputState input, EventBus eventBus)
         {
-            var panelState = EditorState.TilesetPanel;
+            var panelState = _editorState.TilesetPanel;
+            var TileSets = _editorState.ActiveTileSets;
             panelState.HoveredTileCell = new Point(-1, -1);
             panelState.HoveredTilesetName = null;
-            _addTilesetButton.Update(input, eventBus);
 
             if (_tilesetListArea.Contains(input.MouseWindowPosition))
             {
-                // Find which tileset name was clicked (offset by the button)
-                int index = (int)((input.MouseWindowPosition.Y - _tilesetListArea.Y - 40) / TILESET_LIST_ITEM_HEIGHT);
-                if (index >= 0 && index < EditorState.ActiveTileSets.Count)
+                 if( _addTilesetButton.Update(input, eventBus))
                 {
-                    panelState.HoveredTilesetName = EditorState.ActiveTileSets[index].Name;
                     if (input.IsNewLeftClick())
+                    { eventBus.Publish(new CreateTilesetCommand { AtlasName = "Wild" }); }
+                }
+                foreach(var tile in tileSets)
+                {
+                    if (tile.Update(input,eventBus))
                     {
-                        eventBus.Publish(new SelectTilesetCommand { TilesetName = panelState.HoveredTilesetName });
+                        panelState.HoveredTilesetName = tile.IconName;
+                        if (input.IsNewLeftClick()) { eventBus.Publish(tile.CommandToPublish); }
                     }
                 }
+
             }
             else if (_tileDisplayArea.Contains(input.MouseWindowPosition))
             {
-                var activeTileset = EditorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
+                var activeTileset = TileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
                 if (activeTileset != null)
                 {
                     int tilesPerRow = (_tileDisplayArea.Width) / TILE_DISPLAY_SIZE;
@@ -187,7 +205,7 @@ namespace Pixel_Simulations.UI
             sb.FillRectangle(Area, Color.DarkSlateGray);
             sb.DrawRectangle(_tileDisplayArea, Color.White * 0.3f);
             sb.DrawRectangle(_tilesetListArea, Color.Blue * 0.3f);
-            var font = EditorUI.DebugFont;
+            var font = _editorUI.DebugFont;
 
             // --- Draw Tabs ---
             var tilesTabRect = new Rectangle(_tabArea.X, _tabArea.Y, _tabArea.Width / 2, _tabArea.Height);
@@ -214,23 +232,19 @@ namespace Pixel_Simulations.UI
 
         private void DrawTilesTabContent(SpriteBatch sb, SpriteFont font)
         {
-            var panelState = EditorState.TilesetPanel;
-
+            var panelState = _editorState.TilesetPanel;
+            var TileSets = _editorState.ActiveTileSets;
             // Draw the '+' button and the list of active tilesets
-            _addTilesetButton.Draw(sb, EditorUI);
-            int xOffset = 10;
-            foreach (var tileset in EditorState.ActiveTileSets)
+            _addTilesetButton.Draw(sb, _editorUI);
+            foreach (var tile in tileSets)
             {
-                Color color = (tileset.Name == panelState.ActiveTilesetName) ? Color.Yellow : Color.White;
-                sb.DrawString(font, tileset.Name, new Vector2(_tilesetListArea.X + xOffset, _tilesetListArea.Y), color);
-                xOffset += TILESET_LIST_ITEM_HEIGHT;
+                Color color; 
+                tile.Draw(sb,_editorUI);
+                if (tile.IsHovered) color = Color.Yellow; else color = Color.White; 
+                    sb.DrawString(font, tile.IconName, tile.Bounds.Center.ToVector2(), color);
             }
 
-            // Draw the divider
-            sb.DrawLine(_tileDisplayArea.X, _tileDisplayArea.Y, _tileDisplayArea.Right, _tileDisplayArea.Y, Color.Black);
-
-            // Draw the tiles from the active tileset
-            var activeTileset = EditorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
+            var activeTileset = TileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
             if (activeTileset != null)
             {
                 // Use a scissor rectangle to clip the scrolling tile grid
@@ -293,6 +307,8 @@ namespace Pixel_Simulations.UI
 
             ToolStack.HoveredButtonName = null; // Reset hover state for this frame.
 
+            
+
             if (!Area.Contains(input.MouseWindowPosition)) return;
 
             foreach (var button in _buttons)
@@ -331,7 +347,7 @@ namespace Pixel_Simulations.UI
                     sb.FillRectangle(button.Bounds, Color.White * 0.2f);
                 }
 
-                EditorUI.DrawIcon(sb, button.Bounds, button.IconName, Color.White);
+                _editorUI.DrawIcon(sb, button.Bounds, button.IconName, Color.White);
             }
         }
     }
@@ -357,7 +373,8 @@ namespace Pixel_Simulations.UI
 
             _globalControlButtons.Add(new Button(new Rectangle(_controlsArea.X + 5, _controlsArea.Y + 4, 32, 32), new AddLayerCommand { Direction = true }, "AddUp"));
             _globalControlButtons.Add(new Button(new Rectangle(_controlsArea.X + 40, _controlsArea.Y + 4, 32, 32), new AddLayerCommand { Direction = false }, "AddDown"));
-            _globalControlButtons.Add(new Button(new Rectangle(_controlsArea.X + 75, _controlsArea.Y + 4, 32, 32), new DeleteActiveLayerCommand { }, "Delete"));
+            _globalControlButtons.Add(new Button(new Rectangle(_controlsArea.X + 75, _controlsArea.Y + 4, 32, 32), new CycleNewLayerTypeCommand(), "CycleLayerType"));
+            _globalControlButtons.Add(new Button(new Rectangle(_controlsArea.X + 110, _controlsArea.Y + 4, 32, 32), new DeleteActiveLayerCommand{ }, "Delete"));
         }
 
         public override void Update(InputState input, EventBus eventBus)
@@ -369,9 +386,6 @@ namespace Pixel_Simulations.UI
             LayerStack.HoveredLayerIconName = null;
             //LayerStack.HoveredLayerIndex = -1;
             if (!Area.Contains(input.MouseWindowPosition)) return;
-
-            // Rebuild the rows each frame to ensure they are in sync with the model
-
             // --- Update Global Control Buttons ---
             if (_controlsArea.Contains(input.MouseWindowPosition))
             {
@@ -393,17 +407,22 @@ namespace Pixel_Simulations.UI
                 // Handle Scrolling
                 int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
                 if (scrollDelta != 0) _scrollOffset -= scrollDelta * 0.2f;
-                _scrollOffset = MathHelper.Clamp(_scrollOffset, 0, System.Math.Max(0, EditorState.Layers.Layers.Count * ROW_HEIGHT - _layerListArea.Height));
+                _scrollOffset = MathHelper.Clamp(_scrollOffset, 0, System.Math.Max(0, _editorState.Layers.Layers.Count * ROW_HEIGHT - _layerListArea.Height));
 
                 // Update each individual row's buttons
                 foreach (var row in _layerRows)
                 {
+                    if (row._bounds.Contains(input.MouseWindowPosition))
+                    {
+                        _editorState.Layers.HoveredLayerIndex = row._layerIndex;
+                        if (input.IsNewLeftClick()) _editorState.Layers.ActiveLayerIndex = row._layerIndex;
                     foreach(var item in row._buttons) 
                     { 
                         if (item.Update(input, eventBus)) 
                         {
                             HandleLayerListClick(input.MouseWindowPosition.ToPoint(), eventBus, input.IsNewLeftClick(), item);
                         }
+                    }
                     }
                 }
 
@@ -414,17 +433,17 @@ namespace Pixel_Simulations.UI
         private void BuildLayerRows()
         {
             _layerRows.Clear();
-            for (int i = 0; i < EditorState.Layers.Layers.Count; i++)
+            for (int i = 0; i < _editorState.Layers.Layers.Count; i++)
             {
-                var layer = EditorState.Layers.Layers[i];
+                var layer = _editorState.Layers.Layers[i];
                 var rowBounds = new Rectangle(Area.X, Area.Y + i * ROW_HEIGHT - (int)_scrollOffset, Area.Width, ROW_HEIGHT);
-                _layerRows.Add(new LayerRow(layer, i, rowBounds, EditorUI));
+                _layerRows.Add(new LayerRow(layer, i, rowBounds, _editorUI));
             }
         }
         private void HandleLayerListClick(Point mousePos, EventBus bus, bool click, Button item)
         {
             int index = (int)((mousePos.Y - _layerListArea.Y + _scrollOffset) / ROW_HEIGHT);
-            if (index < 0 || index >= EditorState.Layers.Layers.Count) return;
+            if (index < 0 || index >= _editorState.Layers.Layers.Count) return;
 
             // Define clickable hitboxes for the per-layer icons
             var rowArea = new Rectangle(Area.X, Area.Y + index * ROW_HEIGHT - (int)_scrollOffset, Area.Width, ROW_HEIGHT);
@@ -470,7 +489,7 @@ namespace Pixel_Simulations.UI
             // Draw each row
             for (int i = 0; i < _layerRows.Count; i++)
             {
-                _layerRows[i].Draw(sb, EditorUI ,i == EditorState.Layers.ActiveLayerIndex);
+                _layerRows[i].Draw(sb, _editorUI ,i == _editorState.Layers.ActiveLayerIndex);
             }
 
             sb.End();
@@ -481,7 +500,17 @@ namespace Pixel_Simulations.UI
             sb.FillRectangle(_controlsArea, Color.Black * 0.5f);
             foreach (var button in _globalControlButtons)
             {
-                button.Draw(sb, EditorUI);
+                if (button.IconName == "CycleLayerType")
+                {
+                    // Get the current NewLayerType from the state and draw the corresponding icon.
+                    string iconName = _editorState.Layers.NewLayerType.ToString() + "Layer"; // e.g., "TileLayer", "ObjectLayer"
+                    Color tint = button.IsHovered ? Color.Yellow : Color.White;
+                    _editorUI.DrawIcon(sb, button.Bounds, iconName, tint);
+                }
+                else
+                {
+                    button.Draw(sb, _editorUI);
+                }
             }
         }
     }
@@ -529,7 +558,7 @@ namespace Pixel_Simulations.UI
 
         public void PreDraw(SpriteBatch spriteBatch)
         {
-            if (_editorState.ShowDebug == true)
+            if (_editorState.ShowGrid == true)
             {
                 gridRenderer.Draw(spriteBatch, _editorState.camera, _editorState._layoutmanager.ViewportPanel);
             }

@@ -4,15 +4,15 @@ using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using Newtonsoft.Json.Converters;
 using Pixel_Simulations.Data;
-using Pixel_Simulations.Editor;
 using Pixel_Simulations.UI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace Pixel_Simulations.Editor
 {
-
     public class EditorController
     {
         public readonly EditorState _editorState;
@@ -21,11 +21,10 @@ namespace Pixel_Simulations.Editor
 
         public readonly HistoryController _historyController;
         public readonly ToolController _toolController;
-        public  LayerController _layerController { get; }
+        public LayerController _layerController { get; }
         public readonly TilesetController _tilesetController;
-
+        public MapController _mapController {get; }
         public bool ShouldExit { get; private set; }
-
         public EditorController(EditorUI uiManager, EventBus eventBus)
         {
             _eventBus = eventBus;
@@ -36,36 +35,101 @@ namespace Pixel_Simulations.Editor
             _toolController = new ToolController(_eventBus, _editorState.ToolState);
             _layerController = new LayerController(_eventBus, _editorState);
             _tilesetController = new TilesetController(_eventBus, _editorState, _uiManager.gd);
+            _mapController = new MapController(_eventBus, _editorState);
         }
         public void Update(GameTime gameTime, KeyboardState keyboardState, MouseState mouseState)
         {
             // --- 1. ACTIVATE AND UPDATE THE INPUTSTATE ---
             UpdateInputState(keyboardState, mouseState);
             var input = _editorState.Input;
-             
-            
+
             // --- 2. Handle Global Editor Controls ---
             if (input.CurrentKeyboard.IsKeyDown(Keys.Escape)) { ShouldExit = true; }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L)) { _editorState.ShowDebug = !_editorState.ShowDebug; }            
-            if (input.CurrentKeyboard.IsKeyDown(Keys.I))    { }
+            if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L)) { _editorState.ShowDebug = !_editorState.ShowDebug; }
+            if (input.CurrentKeyboard.IsKeyDown(Keys.K) && input.PreviousKeyboard.IsKeyUp(Keys.K)) { _editorState.ShowGrid = !_editorState.ShowGrid; }
+            if (input.CurrentKeyboard.IsKeyDown(Keys.I)) { }
             // --- 3. Handle Camera Updates ---
-            _editorState.camera.Update(input, _editorState._layoutmanager.ViewportPanel,true);
+            _editorState.camera.Update(input, _editorState._layoutmanager.ViewportPanel, true);
 
             UpdateUI(input, _eventBus);
-            //HandleKeyboardCameraMovement( input, gameTime);
+            HandleGlobalShortcuts(input, _eventBus);
+            HandleKeyboardCameraMovement( input, gameTime);
             // --- 4. Process Viewport/Tool Interaction ---
             if (_editorState.UI.ActivePanelName == "Viewport")
             {
                 var activeTool = _editorState.ToolState.ActiveTool;
+
                 if (activeTool != null)
                 {
                     // The tool receives the EventBus so it can publish undoable commands
-                    activeTool.Update(GetCurrentToolInput(), _eventBus);
+                    activeTool.Update(GetCurrentToolInput(), input, _eventBus);
                 }
             }
 
         }
+        private void HandleGlobalShortcuts(InputState input, EventBus eventBus)
+        {
+            var kbs = input.CurrentKeyboard;
+            var prevKbs = input.PreviousKeyboard;
 
+            // --- Tool Selection Shortcuts ---
+            // We check for IsKeyUp -> IsKeyDown to ensure the action only fires once per key press.
+            if (kbs.IsKeyDown(Keys.B) && prevKbs.IsKeyUp(Keys.B))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "Brush" });
+
+            if (kbs.IsKeyDown(Keys.E) && prevKbs.IsKeyUp(Keys.E))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "Eraser" });
+
+            if (kbs.IsKeyDown(Keys.R) && prevKbs.IsKeyUp(Keys.R))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "FreeRectangle" });
+
+            if (kbs.IsKeyDown(Keys.T) && prevKbs.IsKeyUp(Keys.T))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "GridRectangle" });
+
+            if (kbs.IsKeyDown(Keys.P) && prevKbs.IsKeyUp(Keys.P))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "PointPlacer" });
+
+            // --- Other Tool Shortcuts (Commented out for now) ---
+            // if (kbs.IsKeyDown(Keys.F) && prevKbs.IsKeyUp(Keys.F)) eventBus.Publish(new ChangeToolCommand { ToolName = "Fill" });
+            // if (kbs.IsKeyDown(Keys.L) && prevKbs.IsKeyUp(Keys.L)) eventBus.Publish(new ChangeToolCommand { ToolName = "Line" });
+            // if (kbs.IsKeyDown(Keys.I) && prevKbs.IsKeyUp(Keys.I)) eventBus.Publish(new ChangeToolCommand { ToolName = "Eyedropper" });
+            // if (kbs.IsKeyDown(Keys.M) && prevKbs.IsKeyUp(Keys.M)) eventBus.Publish(new ChangeToolCommand { ToolName = "Selection" });
+
+
+            // --- File Menu Shortcuts ---
+            bool isCtrlDown = kbs.IsKeyDown(Keys.LeftControl) || kbs.IsKeyDown(Keys.RightControl);
+            bool isShiftDown = kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift);
+
+            // Ctrl + S = Save
+            if (isCtrlDown && kbs.IsKeyDown(Keys.S) && prevKbs.IsKeyUp(Keys.S))
+            {
+                eventBus.Publish(new MenuActionCommand { ActionName = "Save" });
+            }
+
+            // Shift + S = Export (using a different action name)
+            if (isShiftDown && kbs.IsKeyDown(Keys.S) && prevKbs.IsKeyUp(Keys.S))
+            {
+                eventBus.Publish(new MenuActionCommand { ActionName = "Export" });
+            }
+
+            // Ctrl + O = Load (Using 'O' for Open is more standard than 'A')
+            if (isCtrlDown && kbs.IsKeyDown(Keys.O) && prevKbs.IsKeyUp(Keys.O))
+            {
+                eventBus.Publish(new MenuActionCommand { ActionName = "Load" });
+            }
+
+            // Ctrl + Z = Undo
+            if (isCtrlDown && kbs.IsKeyDown(Keys.Z) && prevKbs.IsKeyUp(Keys.Z))
+            {
+                eventBus.Publish(new MenuActionCommand { ActionName = "Undo" });
+            }
+
+            // Ctrl + Y = Redo
+            if (isCtrlDown && kbs.IsKeyDown(Keys.Y) && prevKbs.IsKeyUp(Keys.Y))
+            {
+                eventBus.Publish(new MenuActionCommand { ActionName = "Redo" });
+            }
+        }
         private void UpdateInputState(KeyboardState kbs, MouseState ms)
         {
             var input = _editorState.Input;
@@ -83,7 +147,7 @@ namespace Pixel_Simulations.Editor
                 // We need to divide by the upscale factor to get native coordinates for the camera
                 Vector2 mouseNative = mouseInViewport / 2f; // Assuming 2x upscale factor
 
-                input.MouseWorldPosition = _editorState.camera .ScreenToWorld(mouseNative);
+                input.MouseWorldPosition = _editorState.camera.ScreenToWorld(mouseNative);
                 input.MouseGridCell = new Point(
                     (int)System.Math.Floor(input.MouseWorldPosition.X / 16),
                     (int)System.Math.Floor(input.MouseWorldPosition.Y / 16)
@@ -128,13 +192,13 @@ namespace Pixel_Simulations.Editor
             Vector2 moveDirection = Vector2.Zero;
 
             if (input.CurrentKeyboard.IsKeyDown(Keys.Up))
-                moveDirection.Y -= 1;
-            if (input.CurrentKeyboard.IsKeyDown(Keys.Down))
                 moveDirection.Y += 1;
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Down))
+                moveDirection.Y -= 1;
             if (input.CurrentKeyboard.IsKeyDown(Keys.Left))
-                moveDirection.X -= 1;
-            if (input.CurrentKeyboard.IsKeyDown(Keys.Right))
                 moveDirection.X += 1;
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Right))
+                moveDirection.X -= 1;
 
             if (moveDirection != Vector2.Zero)
             {
@@ -145,12 +209,10 @@ namespace Pixel_Simulations.Editor
                 Vector2 movement = moveDirection * moveSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
                 // Tell the camera to pan. The camera's Pan method is additive.
-                //_editorState.camera.Pan(-movement); // Pan is inverted, so we negate the movement
+                _editorState.camera.Pan(-movement); // Pan is inverted, so we negate the movement
             }
         }
-
     }
-
     public class HistoryController
     {
         private readonly HistoryState _historyState;
@@ -164,7 +226,7 @@ namespace Pixel_Simulations.Editor
 
 
             // Also subscribe to specific menu actions
-            eventBus.Subscribe<MenuActionCommand>(HandleMenuAction);
+           eventBus.Subscribe<MenuActionCommand>(HandleMenuAction);
         }
 
         private void HandleUndoableCommand(IUndoableCommand command)
@@ -217,7 +279,6 @@ namespace Pixel_Simulations.Editor
             }
         }
     }
-
     public class LayerController
     {
         private readonly EditorState _editorState;
@@ -231,6 +292,7 @@ namespace Pixel_Simulations.Editor
             eventBus.Subscribe<MoveLayerCommand>(HandleMoveLayer);
             eventBus.Subscribe<AddLayerCommand>(HandleAddLayer);
             eventBus.Subscribe<DeleteActiveLayerCommand>(HandleDeleteLayer);
+            eventBus.Subscribe<CycleNewLayerTypeCommand>(HandleCycleNewLayerType);
         }
 
         private void HandleLayerSelection(SelectLayerCommand cmd)
@@ -277,8 +339,32 @@ namespace Pixel_Simulations.Editor
         {
             counter++;
             var activeIndex = _editorState.Layers.ActiveLayerIndex;
-            var newLayer = new TileLayer($"Layer {_editorState.ActiveMap.Layers.Count + 1}");
+            var newLayerType = _editorState.Layers.NewLayerType;
+            Layer newLayer;
 
+            // Create the correct type of layer based on the state
+            string name = $"{newLayerType}{_editorState.ActiveMap.Layers.Count + 1}";
+            switch (newLayerType)
+            {
+                case LayerType.Tile:
+                    newLayer = new TileLayer(name);
+                    break;
+                case LayerType.Object:
+                    newLayer = new ObjectLayer(name);
+                    break;
+                case LayerType.Collision:
+                    newLayer = new CollisionLayer(name);
+                    break;
+                case LayerType.Navigation:
+                    newLayer = new NavigationLayer(name);
+                    break;
+                case LayerType.Trigger:
+                    newLayer = new TriggerLayer(name);
+                    break;
+                default:
+                    newLayer = new TileLayer(name);
+                    break;
+            }
             if (cmd.Direction) // Add Above
             {
                 _editorState.ActiveMap.AddLayerAbove(activeIndex, newLayer);
@@ -296,8 +382,24 @@ namespace Pixel_Simulations.Editor
             _editorState.ActiveMap.DeleteLayer(activeIndex);
             _editorState.Layers.ActiveLayerIndex = MathHelper.Clamp(activeIndex, 0, _editorState.ActiveMap.Layers.Count - 1);
         }
-    }
 
+        private void HandleCycleNewLayerType(CycleNewLayerTypeCommand cmd)
+        {
+            var panelState = _editorState.Layers;
+
+            // Get all values of the LayerType enum
+            var layerTypes = System.Enum.GetValues(typeof(LayerType)).Cast<LayerType>().ToList();
+
+            // Find the index of the current type
+            int currentIndex = layerTypes.IndexOf(panelState.NewLayerType);
+
+            // Get the next index, wrapping around if necessary
+            int nextIndex = (currentIndex + 1) % layerTypes.Count;
+
+            // Update the state
+            panelState.NewLayerType = layerTypes[nextIndex];
+        }
+    }
     public class TilesetController
     {
         private readonly EditorState _editorState;
@@ -373,6 +475,86 @@ namespace Pixel_Simulations.Editor
             {
                 selectionState.ActiveTileBrush = null;
             }
+        }
+    }
+    public class MapController
+    {
+        private readonly EditorState _editorState;
+        public string savedPath;
+        public MapController(EventBus eventBus, EditorState editorState)
+        {
+            _editorState = editorState;
+            eventBus.Subscribe<MenuActionCommand>(HandleMenuAction);
+            savedPath = PathHelper.GetSolutionRoot();
+        }
+
+        private void HandleMenuAction(MenuActionCommand cmd)
+        {
+            string assetsPath = PathHelper.GetAssetsPath();
+            if (string.IsNullOrEmpty(assetsPath)) return;
+
+            // Define the paths once
+            string jsonPath = Path.Combine(assetsPath, "Maps", "level1.json");
+            string gameMapPath = Path.Combine(assetsPath, "Maps", "level1.map"); // Adjust
+
+            switch (cmd.ActionName)
+            {
+                case "Save":
+                    // "Save" now saves the .json working file
+                    MapSerializer.Save(_editorState.ActiveMap, jsonPath);
+                    _editorState.CurrentMapFile = jsonPath;
+                    System.Diagnostics.Debug.WriteLine($"Working map SAVED to: {jsonPath}");
+                    break;
+
+                case "Load":
+                    // "Load" now loads the .json working file
+                    var loadedMap = MapSerializer.Load(jsonPath);
+                    if (loadedMap != null)
+                    {
+                        LoadNewMap(loadedMap, jsonPath);
+                    }
+                    break;
+
+                case "Export":
+                    // "Export" creates the binary .map file for the game
+                    MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
+                    System.Diagnostics.Debug.WriteLine($"Map EXPORTED for game to: {gameMapPath}");
+                    break;
+            }
+        }
+        private void LoadNewMap(Map newMap, string filePath)
+        {
+            // --- 1. REPLACE THE CORE DATA ---
+            _editorState.ActiveMap = newMap;
+            _editorState.CurrentMapFile = filePath;
+
+            // --- 2. CLEAR ALL RUNTIME STATE ---
+            // This is critical to prevent data from the old map from "leaking."
+            _editorState.History.UndoStack.Clear();
+            _editorState.History.RedoStack.Clear();
+            _editorState.ToolState.IsToolDrawing = false; // Stop any active tool drawing
+
+            // --- 3. RE-WIRE STATE DEPENDENCIES ---
+            // Explicitly tell the LayerState to use the NEW list of layers from the NEW map.
+            _editorState.Layers.Layers = newMap.Layers;
+
+            // --- 4. RESET UI AND SELECTION TO SAFE DEFAULTS ---
+            // If the new map has layers, select the first one. Otherwise, select nothing.
+            _editorState.Layers.ActiveLayerIndex = (newMap.Layers != null && newMap.Layers.Count > 0) ? 0 : -1;
+
+            // Deselect any active brush or object.
+            _editorState.Selection.ActiveTileBrush = null;
+            _editorState.Selection.ActiveObjectAssetName = null;
+
+            // Reset the TilesetPanel's view to the first available tileset and deselect any tile.
+            _editorState.TilesetPanel.ActiveTilesetName = _editorState.ActiveTileSets.FirstOrDefault()?.Name;
+            _editorState.TilesetPanel.SelectedTileID = -1;
+
+            // Optional: Reset the camera to the origin to view the newly loaded map from the start.
+            _editorState.camera.Position = Vector2.Zero;
+            _editorState.camera.Zoom = 1.0f;
+
+            System.Diagnostics.Debug.WriteLine($"Map LOADED into editor from: {filePath}");
         }
     }
 }

@@ -1,0 +1,640 @@
+{
+  "Layers": [
+    {
+      "$type": "Collision",
+      "Name": "Collision3",
+      "IsVisible": true,
+      "IsLocked": false,
+      "CollisionMesh": [
+        {
+          "Type": 1,
+          "Size": {
+            "X": 32.0,
+            "Y": 160.0
+          },
+          "TriggerType": "Collision",
+          "DebugColor": "255,0,0,255",
+          "Position": {
+            "X": 128.0,
+            "Y": 48.0
+          }
+        },
+        {
+          "Type": 1,
+          "Size": {
+            "X": 32.0,
+            "Y": 160.0
+          },
+          "TriggerType": "Collision",
+          "DebugColor": "255,0,0,255",
+          "Position": {
+            "X": 208.0,
+            "Y": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "$type": "Tile",
+      "Name": "Tile2",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Chunks": [
+        {
+          "Key": {
+            "X": 1,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 206
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "Tile",
+      "Name": "Ground",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Chunks": [
+        {
+          "Key": {
+            "X": 1,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                {
+                  "TilesetName": "Basic",
+                  "TileID": 205
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

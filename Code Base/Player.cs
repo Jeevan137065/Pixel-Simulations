@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
 using System;
 
 
@@ -82,7 +83,47 @@ namespace Pixel_Simulations
         }
 
     }
+    public class TestPlayer
+    {
+        public Vector2 Position { get; set; }
+        public Rectangle BoundingBox { get; private set; }
 
+        private Texture2D _texture;
+        private float _speed = 120f;
+
+        public TestPlayer(Texture2D texture, Vector2 startPosition)
+        {
+            _texture = texture;
+            Position = startPosition;
+            BoundingBox = new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            var keyboard = Keyboard.GetState();
+            Vector2 moveDirection = Vector2.Zero;
+
+            if (keyboard.IsKeyDown(Keys.W)) moveDirection.Y -= 1;
+            if (keyboard.IsKeyDown(Keys.S)) moveDirection.Y += 1;
+            if (keyboard.IsKeyDown(Keys.A)) moveDirection.X -= 1;
+            if (keyboard.IsKeyDown(Keys.D)) moveDirection.X += 1;
+
+            if (moveDirection != Vector2.Zero)
+            {
+                moveDirection.Normalize();
+                Position += moveDirection * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+
+            // Update bounding box to follow the player
+            BoundingBox = new Rectangle((int)Position.X, (int)Position.Y, BoundingBox.Width, BoundingBox.Height);
+        }
+
+        public void Draw(SpriteBatch sb)
+        { 
+            sb.FillRectangle(BoundingBox, Color.White);
+            sb.Draw(_texture, Position, Color.White);
+        }
+    }
     public class Player : IRenderable
     {
         private Texture2D _texture;
