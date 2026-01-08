@@ -1,186 +1,214 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
-namespace Pixel_Simulations.Code_Base
+
+namespace Pixel_Simulations
 {
-    public class Grass : IRenderable, ISwayable
+    public class GrassSystem
     {
-        private readonly Texture2D _texture;
-        private readonly Texture2D _normalTexture;
-        private Vector2 _position;
-        private VertexPositionTexture[] _vertices = new VertexPositionTexture[4];
+        // --- Inner Structures for Organization ---
+
+        private GraphicsDevice _device;
+        private Effect _effect;
         private VertexBuffer _vertexBuffer;
-        private Rectangle _sourceRect;
-        private Vector2 _drawPosition;
-        private GraphicsDevice _gd;
-        // Physics Fields
-        public float _swayValue { get; private set; }
-        private float _maxShake;
-        private bool _shakeLeft;
-        private double _lastPushTime;
-        // Properties
-        public float Depth => _position.Y; // Sort by Y
-        public Rectangle Bounds => new Rectangle((int)_position.X - 4, (int)_position.Y - 4, 8, 8);
-        public SwayType SwayMode { get; set; } = SwayType.TriangleWave; // Default to Triangle
+        public int _bladeCount = 0;
+        private Texture2D _noiseMap;
 
-        public Grass(Vector2 tilePosition, Texture2D texture, Texture2D normalTexture, GraphicsDevice graphicsDevice, Random random)
+        public GrassSettings Settings;
+        public Vector2 PlayerPosition;
+        public float Time;
+
+        private Color[] noiseData;
+        int noiseWidth, noiseHeight;
+        public GrassSystem(GraphicsDevice device, GrassSettings initialSettings)
         {
-            _texture = texture;
-            _normalTexture = normalTexture;
-            _gd = graphicsDevice;
-            // Pick one of the 4 variants (0, 1, 2, 3)
-            // Texture is 24x96, so each sprite is 24x24.
-            int variant = random.Next(0, 4);
-            _sourceRect = new Rectangle(0, variant * 24, 24, 24);
-
-            // Center the grass on the tile
-            // Tile is 16px wide. Grass is 24px wide.
-            // Tile Center = 8. Grass Center = 12. Offset = -4.
-            // We add some randomness to the position so it looks natural.
-            float randomOffsetX = random.Next(-4, 5);
-            float randomOffsetY = random.Next(-4, 5);
-
-            _position = new Vector2(
-                tilePosition.X + 8 + randomOffsetX,
-                tilePosition.Y + 16 + randomOffsetY // Bottom of the tile
-            );
-
-            // Calculate draw pos (Top-Left of the sprite)
-            Vector2 origin = new Vector2(12, 24); // Bottom-Center of grass
-            _drawPosition = _position - origin;
-
-            // Setup Vertices
-            _vertexBuffer = new VertexBuffer(graphicsDevice, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
-            SetupQuad();
+            _device = device;
+            Settings = initialSettings;
         }
 
-        private void SetupQuad()
+        public void LoadContent(ContentManager content,  int mapWidth, int mapHeight)
         {
-            float left = _drawPosition.X;
-            float right = _drawPosition.X + 24;
-            float top = _drawPosition.Y;
-            float bottom = _drawPosition.Y + 24;
-
-            // UVs
-            Vector2 tl = new Vector2(0, (float)_sourceRect.Y / _texture.Height);
-            Vector2 br = new Vector2(1, (float)_sourceRect.Bottom / _texture.Height);
-
-            _vertices[0] = new VertexPositionTexture(new Vector3(left, top, 0), tl);
-            _vertices[1] = new VertexPositionTexture(new Vector3(right, top, 0), new Vector2(br.X, tl.Y));
-            _vertices[2] = new VertexPositionTexture(new Vector3(left, bottom, 0), new Vector2(tl.X, br.Y));
-            _vertices[3] = new VertexPositionTexture(new Vector3(right, bottom, 0), br);
-
-            _vertexBuffer.SetData(_vertices);
+            _effect = content.Load<Effect>("grass");
+            _noiseMap = content.Load<Texture2D>("noise");
+            LoadNoiseMap(_noiseMap);
+            InitializeField(mapWidth, mapHeight);
         }
 
-        // --- ISwayable Implementation (Triangle Wave Logic) ---
-        public void Push(Vector2 direction, float force)
+        private void InitializeField(int mapWidth, int mapHeight)
         {
-            if (Math.Abs(_maxShake) > 1.0f) return;
-            _shakeLeft = direction.X < 0;
-            _maxShake = Math.Min(10f, force); // Grass is lighter, maybe less force needed
-        }
+            List<BladeData> blades = new List<BladeData>();
+            Random rand = new Random();
 
-        public void UpdateSway(GameTime gameTime)
-        {
-            // Simple Triangle Wave Logic duplicated here for independence
-            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (_maxShake > 0)
+            // We use a fixed step but vary spawn chance based on settings
+            float step = Settings.DensityStep;
+
+            for (float x = 0; x < mapWidth; x += step)
             {
-                float rate = _maxShake * 15f * elapsed; // Faster sway for grass
-                if (_shakeLeft) { _swayValue -= rate; if (_swayValue <= -_maxShake) _shakeLeft = false; }
-                else { _swayValue += rate; if (_swayValue >= _maxShake) _shakeLeft = true; }
-                _maxShake = Math.Max(0f, _maxShake - (1.0f * elapsed));
+                for (float y = 0; y < mapHeight; y += step)
+                {
+                    float noise = GetNoiseValue(x, y);
+
+                    // TIER 0: Empty
+                    if (noise < Settings.MinThreshold) continue;
+
+                    int spawnCount = 0;
+                    float heightMod = 1.0f;
+
+                    // TIER 1: Sparse
+                    if (noise < Settings.MidThreshold)
+                    {
+                        if (rand.NextDouble() < Settings.SparseDensity)
+                        {
+                            spawnCount = 1;
+                            heightMod = 0.2f; // Young/Short grass
+                        }
+                    }
+                    // TIER 2: Mid
+                    else if (noise < Settings.MaxThreshold)
+                    {
+                        spawnCount = 1;
+                        heightMod = 0.6f;
+                    }
+                    // TIER 3: Lush
+                    else
+                    {
+                        spawnCount = 2;
+                        heightMod = 1.0f; // Overgrown
+                    }
+
+                    for (int i = 0; i < spawnCount; i++)
+                    {
+                        float jitter = step;
+                        blades.Add(new BladeData
+                        {
+                            Pos = new Vector2(x + (float)(rand.NextDouble() - 0.5) * jitter,
+                                            y + (float)(rand.NextDouble() - 0.5) * jitter),
+                            Wind = (float)rand.NextDouble() * 10f,
+                            Height = Settings.GlobalHeightBase * heightMod,
+                            Var = (float)rand.NextDouble(),
+                            Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature * 2.0f
+                        });
+                    }
+                }
             }
-            else { _swayValue = 0; }
+
+            // Sort by Y for proper 2D Depth
+            blades.Sort((a, b) => a.Pos.Y.CompareTo(b.Pos.Y));
+
+            var vertices = new List<GrassVertex>();
+            foreach (var b in blades)
+            {
+                AddBlade(vertices, b);
+            }
+
+            _bladeCount = blades.Count;
+            _vertexBuffer = new VertexBuffer(_device, GrassVertex.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
+            _vertexBuffer.SetData(vertices.ToArray());
         }
 
-        public void UpdateVertices(float totalTime, float windAmount, float windSpeed)
+        private void AddBlade(List<GrassVertex> vertices, BladeData b)
         {
-            // Grass creates a "ripple" effect, so we offset wind by position
-            float windSway = (float)Math.Sin(totalTime * windSpeed + _position.X * 0.2f) * windAmount;
-            float totalSway = _swayValue + windSway;
+            Random rand = new Random((int)(b.Pos.X * b.Pos.Y));
+            int tuftSize = Settings.TuftSize;
+            int segCount = Settings.Segments;
 
-            // Apply Bend
-            float topOffset = totalSway; // 100% at top
+            for (int n = 0; n < tuftSize; n++)
+            {
+                // Unique personality for each blade in the clump
+                float individualLean = b.Lean + (float)(rand.NextDouble() - 0.5) * Settings.TuftSpread;
+                float individualHeight = b.Height * (0.8f + (float)rand.NextDouble() * 0.4f);
+                float individualWind = b.Wind + (float)rand.NextDouble();
+                float individualVar = (float)rand.NextDouble();
 
-            _vertices[0].Position.X = _drawPosition.X + topOffset;
-            _vertices[1].Position.X = _drawPosition.X + 24 + topOffset;
+                for (int i = 0; i < segCount; i++)
+                {
+                    float t0 = i / (float)segCount;
+                    float t1 = (i + 1) / (float)segCount;
 
-            _vertexBuffer.SetData(_vertices);
+                    // Goal C: Smoothly transition colors between segments
+                    Color c0 = Color.Lerp(Settings.RootColor, Settings.TipColor, t0);
+                    Color c1 = Color.Lerp(Settings.RootColor, Settings.TipColor, t1);
+
+                    AddSegmentVertices(vertices, b.Pos, t0, t1, individualWind, individualHeight, individualVar, individualLean, c0, c1);
+                }
+            }
+        }
+        private void AddSegmentVertices(List<GrassVertex> verts, Vector2 root, float t0, float t1, float wind, float height, float var, float lean, Color c0, Color c1)
+        {
+            // A segment is a quad made of two triangles (6 vertices)
+            // Triangle 1
+            verts.Add(new GrassVertex(root, t0, -1.0f, wind, height, var, lean, c0));
+            verts.Add(new GrassVertex(root, t1, -1.0f, wind, height, var, lean, c1));
+            verts.Add(new GrassVertex(root, t0, 1.0f, wind, height, var, lean, c0));
+
+            // Triangle 2
+            verts.Add(new GrassVertex(root, t0, 1.0f, wind, height, var, lean, c0));
+            verts.Add(new GrassVertex(root, t1, -1.0f, wind, height, var, lean, c1));
+            verts.Add(new GrassVertex(root, t1, 1.0f, wind, height, var, lean, c1));
+        }
+        void LoadNoiseMap(Texture2D noiseTexture)
+        {
+            noiseWidth = noiseTexture.Width;
+            noiseHeight = noiseTexture.Height;
+            noiseData = new Color[noiseWidth * noiseHeight];
+            noiseTexture.GetData(noiseData);
         }
 
-        public void Draw(BasicEffect effect, IndexBuffer indexBuffer)
+        float GetNoiseValue(float x, float y)
         {
-            effect.Texture = _texture;
-            _gd.SetVertexBuffer(_vertexBuffer);
-            _gd.Indices = indexBuffer;
-            foreach (var pass in effect.CurrentTechnique.Passes)
+            // Scale world coords to noise texture coords (tiling)
+            int nx = (int)(x / 2.0f) % noiseWidth;
+            int ny = (int)(y / 2.0f) % noiseHeight;
+            if (nx < 0) nx += noiseWidth;
+            if (ny < 0) ny += noiseHeight;
+
+            return noiseData[nx + ny * noiseWidth].R / 255.0f;
+        }
+
+
+        public void Update(GameTime gameTime, Vector2 playerWorldPos)
+        {
+            Time = (float)gameTime.TotalGameTime.TotalSeconds;
+            PlayerPosition = playerWorldPos;
+        }
+
+        public void Draw(Matrix worldViewProjection)
+        {
+            _device.SetVertexBuffer(_vertexBuffer);
+            _device.DepthStencilState = DepthStencilState.None;
+
+            // 1. Core Transform & Time
+            _effect.Parameters["WorldViewProjection"]?.SetValue(worldViewProjection);
+            _effect.Parameters["Time"]?.SetValue(Time);
+            _effect.Parameters["PlayerPos"]?.SetValue(PlayerPosition);
+
+            // 2. Physics Parameters from Settings
+            _effect.Parameters["WindSpeed"]?.SetValue(Settings.WindSpeed);
+            _effect.Parameters["WindIntensity"]?.SetValue(Settings.WindIntensity);
+            _effect.Parameters["Stiffness"]?.SetValue(Settings.Stiffness);
+            _effect.Parameters["PlayerPushRadius"]?.SetValue(Settings.PlayerPushRadius);
+            _effect.Parameters["PlayerPushStrength"]?.SetValue(Settings.PlayerPushStrength);
+
+            // 3. Artistic Volume Parameters (The "Look")
+            _effect.Parameters["Segments"]?.SetValue((float)Settings.Segments);
+            _effect.Parameters["RestingCurvature"]?.SetValue(Settings.RestingCurvature);
+            _effect.Parameters["BladeThickness"]?.SetValue(Settings.BladeThickness);
+            _effect.Parameters["BladeTaper"]?.SetValue(Settings.BladeTaper);
+            // Pass 0: Shadows
+            //_effect.Parameters["PassFlag"].SetValue(0.0f);
+            foreach (var pass in _effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                _gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+                _device.DrawPrimitives(PrimitiveType.TriangleList, 0, _vertexBuffer.VertexCount / 3);
             }
+
+            // Pass 1: Blades
+            //_effect.Parameters["PassFlag"].SetValue(1.0f);
+            
         }
-
-        public void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer)
-        {
-            // Set the specific normal map for this object
-            normalEffect.Parameters["NormalTexture"].SetValue(_normalTexture);
-
-            // Vertices are already updated, just draw
-            // Note: We use a custom Effect, not BasicEffect here
-            _gd.SetVertexBuffer(_vertexBuffer);
-            _gd.Indices = indexBuffer;
-
-            foreach (var pass in normalEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                _gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
-            }
-        }
-
-        public void DrawDebugOutline(BasicEffect effect) {
-            var debugVertices = new VertexPositionColor[5]; // 5 points to close the loop
-
-            // Use the actual _vertices positions that are updated by physics
-            debugVertices[0] = new VertexPositionColor(_vertices[0].Position, Color.Magenta); // TL
-            debugVertices[1] = new VertexPositionColor(_vertices[1].Position, Color.Magenta); // TR
-            debugVertices[2] = new VertexPositionColor(_vertices[3].Position, Color.Magenta); // BR
-            debugVertices[3] = new VertexPositionColor(_vertices[2].Position, Color.Magenta); // BL
-            debugVertices[4] = new VertexPositionColor(_vertices[0].Position, Color.Magenta); // Back to TL to close loop
-
-            effect.TextureEnabled = false;
-            effect.VertexColorEnabled = true;
-
-            foreach (var pass in effect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                // Draw the line strip
-                _gd.DrawUserPrimitives(PrimitiveType.LineStrip, debugVertices, 0, 4);
-            }
-        }
-
-        public void DrawDepth(SpriteBatch spriteBatch,  Effect depthEffect, IndexBuffer indexBuffer)
-        {
-            // 1. Set Texture
-            depthEffect.Parameters["SpriteTexture"].SetValue(_texture);
-
-            // 2. Set Buffers
-            _gd.SetVertexBuffer(_vertexBuffer);
-            _gd.Indices = indexBuffer;
-
-            // 3. Draw Quad
-            foreach (var pass in depthEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-                _gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
-            }
-        }
-        public void Draw(SpriteBatch sb) { } // Unused
     }
 }

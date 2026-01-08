@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
+using MonoGame.Extended.Timers;
 using Pixel_Simulations.Code_Base;
 using System;
 using System.Collections.Generic;
@@ -24,7 +26,7 @@ namespace Pixel_Simulations
     public class WorldMap
     {
         // Textures
-        private Texture2D _grassTilesTexture;
+        private Texture2D _grassTilesTexture1, _grassTilesTexture2;
         private readonly Rectangle[] _grassSources = new Rectangle[8];
         private readonly Rectangle[] _dirtSources = new Rectangle[2];
         private readonly Rectangle[] _tilledSources = new Rectangle[2];
@@ -33,12 +35,11 @@ namespace Pixel_Simulations
         private Tile[,] _tileGrid;
         private readonly Random _random = new();
         GraphicsDevice _graphics;
-
         // World Properties & Child Systems
         public int _worldWidth, _worldHeight, _tileSize;
         private readonly int _worldWidthInTiles, _worldHeightInTiles;
         public CropManager CropManager { get; } // The WorldMap OWNS the CropManager
-        public List<Grass> Grasses { get; } = new();
+        public List<OldGrass> Grasses { get; } = new();
 
         public WorldMap(int worldWidth, int worldHeight, int tileSize, GraphicsDevice graphics)
         {
@@ -53,7 +54,8 @@ namespace Pixel_Simulations
         public void LoadContent(ContentManager content)
         {
             // Load textures
-            _grassTilesTexture = content.Load<Texture2D>("Grass1");
+            _grassTilesTexture1 = content.Load<Texture2D>("Grass1");
+            _grassTilesTexture2 = content.Load<Texture2D>("Grass2");
             _grassBladeTexture = content.Load<Texture2D>("GrassBlade");
             _grassBladeNormal = content.Load<Texture2D>("GrassBlade_n");
             // Pre-calculate source rectangles
@@ -64,6 +66,8 @@ namespace Pixel_Simulations
             _tilledSources[0] = new Rectangle(0, 5 * 16, 16, 16); // Alone
             _tilledSources[1] = new Rectangle(16, 5 * 16, 16, 16);
             //CropManager.LoadContent(content);
+
+
             GenerateWorld();
         }
 
@@ -92,7 +96,7 @@ namespace Pixel_Simulations
                         {
                             var tilePos = new Vector2(x * _tileSize, y * _tileSize);
                             // Create the grass object
-                            var grass = new Grass(tilePos, _grassBladeTexture, _grassBladeNormal, _graphics, _random);
+                            var grass = new OldGrass(tilePos, _grassBladeTexture, _grassBladeNormal, _graphics, _random);
                             Grasses.Add(grass);
                         }
                     }
@@ -123,7 +127,7 @@ namespace Pixel_Simulations
             }
         }
 
-        public void DrawGround(SpriteBatch spriteBatch, Rectangle cameraView)
+        public void DrawGround(SpriteBatch spriteBatch, Rectangle cameraView, bool rain)
         {
             int startX = Math.Max(0, cameraView.X / _tileSize);
             int startY = Math.Max(0, cameraView.Y / _tileSize);
@@ -135,9 +139,15 @@ namespace Pixel_Simulations
                 for (int x = startX; x <= endX; x++)
                 {
                     var destRect = new Rectangle(x * _tileSize, y * _tileSize, _tileSize, _tileSize);
-                    spriteBatch.Draw(_grassTilesTexture, destRect, _tileGrid[x, y].SourceRect, Color.White);
+                    if (rain) { spriteBatch.Draw(_grassTilesTexture1, destRect, _tileGrid[x, y].SourceRect, Color.White); }
+                    else { spriteBatch.Draw(_grassTilesTexture2, destRect, _tileGrid[x, y].SourceRect, Color.White); }
+                    
                 }
             }
+        }
+        public void DrawGrass( Matrix SimulationMatrix, GameTime gameTime)
+        {
+
         }
 
         public void DigTile(int x, int y)

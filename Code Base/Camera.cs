@@ -10,66 +10,67 @@ namespace Pixel_Simulations
     public class Camera
     {
         public Vector2 Position { get; private set; }
+        public float Zoom { get; private set; }
 
-        // Matrix for drawing to Low-Res Targets (Albedo/Ground)
-        // Coordinates: 0 to 480
-        public Matrix SimulationMatrix { get; private set; }
+        // --- 1. MATRICES FOR SPRITEBATCH (View only) ---
+        // Use these in _spriteBatch.Begin(transformMatrix: ...)
+        public Matrix SimulationView { get; private set; }
+        public Matrix RenderView { get; private set; }
 
-        // Matrix for drawing to High-Res Targets (Dynamic, Depth, Normal)
-        // Coordinates: 0 to 1920 (Scaled up)
-        public Matrix RenderMatrix { get; private set; }
-        private Vector3 lowResCenter, highResCenter;
+        // --- 2. MATRICES FOR SHADERS (View * Projection) ---
+        // Use these in shader.Parameters["WorldViewProjection"].SetValue(...)
+        public Matrix SimulationFinal { get; private set; }
+        public Matrix RenderFinal { get; private set; }
 
+        // --- 3. BOUNDS FOR GROUND SAMPLING ---
+        public Rectangle CameraView { get; private set; }
+
+        private Rectangle _nativeRect;
+        private Rectangle _highResRect;
         public void Setcamera(Rectangle nativeRect, Rectangle highResRect)
         {
-            // 1. Calculate Center Offsets
-             lowResCenter = new Vector3(nativeRect.Width / 2f, nativeRect.Height / 2f, 0);
-             highResCenter = new Vector3(highResRect.Width / 2f, highResRect.Height / 2f, 0);
-
-            
+            _nativeRect = nativeRect;
+            _highResRect = highResRect;
         }
 
-        public void Follow(Player player, float scale)
+        public void Follow(Vector2 target, float scale)
         {
-            Position = player.Position;
+            Position = target;
+            Zoom = scale;
 
-            // 2. Base View (Move world so player is at 0,0)
-            // We round the position to prevent sub-pixel jitter in the low-res art
-            var view = Matrix.CreateTranslation(
-                -MathF.Round(Position.X),
-                -MathF.Round(Position.Y),
-                0);
+            // Common World-to-Local translation
+            // Rounding is essential for pixel art stability
+            Matrix view = Matrix.CreateTranslation(-MathF.Round(Position.X), -MathF.Round(Position.Y), 0);
 
-            // 3. Create Simulation Matrix (Low Res)
-            // Just centering the view in the small window
-            SimulationMatrix = view * Matrix.CreateTranslation(lowResCenter);
+            // --- A. SIMULATION (LOW-RES 480x270) ---
+            Matrix lowCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
+            SimulationView = view * lowCenter;
 
-            // 4. Create Render Matrix (High Res)
-            // Move World -> Scale Up -> Center in Big Window
-            RenderMatrix = view * Matrix.CreateScale(scale) * Matrix.CreateTranslation(highResCenter);
+            Matrix lowProj = Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, 0, 1);
+            SimulationFinal = SimulationView * lowProj;
 
+            // --- B. RENDER (HIGH-RES 1920x1080) ---
+            Matrix zoom = Matrix.CreateScale(Zoom);
+            Matrix highCenter = Matrix.CreateTranslation(_highResRect.Width / 2f, _highResRect.Height / 2f, 0);
+            RenderView = view * zoom * highCenter;
+
+            Matrix highProj = Matrix.CreateOrthographicOffCenter(0, _highResRect.Width, _highResRect.Height, 0, 0, 1);
+            RenderFinal = RenderView * highProj;
+
+            // --- C. CAMERA VIEW (For Ground Culling) ---
+            // Represents the rectangle of the world visible in the 480x270 native res
+            CameraView = new Rectangle(
+                (int)(Position.X - _nativeRect.Width / 2f),
+                (int)(Position.Y - _nativeRect.Height / 2f),
+                _nativeRect.Width,
+                _nativeRect.Height
+            );
         }
+        
 
-        public void Follow(TestPlayer player, float scale)
-        {
-            Position = player.Position;
+        public void Follow(Player player, float scale) => Follow(player._position, scale);
 
-            // 2. Base View (Move world so player is at 0,0)
-            // We round the position to prevent sub-pixel jitter in the low-res art
-            var view = Matrix.CreateTranslation(
-                -MathF.Round(Position.X),
-                -MathF.Round(Position.Y),
-                0);
-
-            // 3. Create Simulation Matrix (Low Res)
-            // Just centering the view in the small window
-            SimulationMatrix = view * Matrix.CreateTranslation(lowResCenter);
-
-            // 4. Create Render Matrix (High Res)
-            // Move World -> Scale Up -> Center in Big Window
-            RenderMatrix = view * Matrix.CreateScale(scale) * Matrix.CreateTranslation(highResCenter);
-
-        }
+        public void Follow(TestPlayer player, float scale) => Follow(player.Position, scale);
     }
 
     public class EditorCamera

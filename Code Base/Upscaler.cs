@@ -43,6 +43,8 @@ namespace Pixel_Simulations
             int finalHeight = windowHeight * scale;
             _motionTarget = new RenderTarget2D(graphicsDevice, finalWidth, finalHeight);
             _destinationRect = new Rectangle(0, 0, finalWidth, finalHeight);
+
+            
         }
 
 
@@ -258,7 +260,6 @@ namespace Pixel_Simulations
             // 2. HIGH RES TARGETS (Dynamic World)
             // IMPORTANT: Dynamic layer needs DepthFormat.Depth24 for proper Z-Sorting of crops/player!
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height, false, SurfaceFormat.Color, DepthFormat.Depth24);
-
             // Visualization targets
             _targets[RenderLayer.Depth] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height, false, SurfaceFormat.Color, DepthFormat.Depth24);
             _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height);
@@ -285,7 +286,15 @@ namespace Pixel_Simulations
         public void Begin(RenderLayer layer, Color clearColor)
         {
             _graphicsDevice.SetRenderTarget(_targets[layer]);
-            _graphicsDevice.Clear(clearColor);
+            if (_targets[layer].DepthStencilFormat != DepthFormat.None)
+            {
+                // Clear Color, Depth (1.0f is farthest), and Stencil (0)
+                _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, clearColor, 1.0f, 0);
+            }
+            else
+            {
+                _graphicsDevice.Clear(clearColor);
+            }
         }
         /// Sets the target WITHOUT clearing. Useful for multi-pass rendering to the same layer.
         public void Continue(RenderLayer layer)
