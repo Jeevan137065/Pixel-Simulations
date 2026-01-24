@@ -12,25 +12,22 @@ namespace Pixel_Simulations
         public Vector2 Position { get; private set; }
         public float Zoom { get; private set; }
 
-        // --- 1. MATRICES FOR SPRITEBATCH (View only) ---
-        // Use these in _spriteBatch.Begin(transformMatrix: ...)
-        public Matrix SimulationView { get; private set; }
-        public Matrix RenderView { get; private set; }
+        // 1. For Ground Pass (480x270)
+        public Matrix NativeFinal { get; private set; }
+        public Matrix NativeView { get; private set; }
 
-        // --- 2. MATRICES FOR SHADERS (View * Projection) ---
-        // Use these in shader.Parameters["WorldViewProjection"].SetValue(...)
-        public Matrix SimulationFinal { get; private set; }
-        public Matrix RenderFinal { get; private set; }
+        // 2. For Simulation Pass (960x540)
+        // Used by Grass Shader and Player Draw
+        public Matrix SimFinal { get; private set; }
+        public Matrix SimView { get; private set; }
 
-        // --- 3. BOUNDS FOR GROUND SAMPLING ---
+        private Rectangle _nativeRect; // 480x270
+        private Rectangle _simRect;    // 960x540
         public Rectangle CameraView { get; private set; }
-
-        private Rectangle _nativeRect;
-        private Rectangle _highResRect;
         public void Setcamera(Rectangle nativeRect, Rectangle highResRect)
         {
             _nativeRect = nativeRect;
-            _highResRect = highResRect;
+            _simRect = highResRect;
         }
 
         public void Follow(Vector2 target, float scale)
@@ -38,27 +35,26 @@ namespace Pixel_Simulations
             Position = target;
             Zoom = scale;
 
-            // Common World-to-Local translation
-            // Rounding is essential for pixel art stability
+            // --- THE BASE VIEW ---
+            // Move world so target is at 0,0. (Rounded for pixel art)
             Matrix view = Matrix.CreateTranslation(-MathF.Round(Position.X), -MathF.Round(Position.Y), 0);
 
-            // --- A. SIMULATION (LOW-RES 480x270) ---
-            Matrix lowCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
-            SimulationView = view * lowCenter;
+            // --- A. NATIVE MATRICES (480x270) ---
+            // Background is drawn at 1x scale relative to world coords
+            Matrix nativeCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
+            NativeView = view * nativeCenter;
+            NativeFinal = NativeView * Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, 0, 1);
 
-            Matrix lowProj = Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, 0, 1);
-            SimulationFinal = SimulationView * lowProj;
+            // --- B. SIMULATION MATRICES (960x540) ---
+            // Grass/Player are drawn at 2x scale (SimScale) relative to 480p coords
+            // NOTE: We do NOT use 'scale' (User Zoom) here yet, as Simulation is fixed at 960p.
+            float simScaleFactor = 2.0f;
+            Matrix simZoom = Matrix.CreateScale(simScaleFactor);
+            Matrix simCenter = Matrix.CreateTranslation(_simRect.Width / 2f, _simRect.Height / 2f, 0);
 
-            // --- B. RENDER (HIGH-RES 1920x1080) ---
-            Matrix zoom = Matrix.CreateScale(Zoom);
-            Matrix highCenter = Matrix.CreateTranslation(_highResRect.Width / 2f, _highResRect.Height / 2f, 0);
-            RenderView = view * zoom * highCenter;
+            SimView = view * simZoom * simCenter;
+            SimFinal = SimView * Matrix.CreateOrthographicOffCenter(0, _simRect.Width, _simRect.Height, 0, 0, 1);
 
-            Matrix highProj = Matrix.CreateOrthographicOffCenter(0, _highResRect.Width, _highResRect.Height, 0, 0, 1);
-            RenderFinal = RenderView * highProj;
-
-            // --- C. CAMERA VIEW (For Ground Culling) ---
-            // Represents the rectangle of the world visible in the 480x270 native res
             CameraView = new Rectangle(
                 (int)(Position.X - _nativeRect.Width / 2f),
                 (int)(Position.Y - _nativeRect.Height / 2f),

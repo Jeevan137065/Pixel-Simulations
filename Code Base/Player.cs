@@ -126,6 +126,25 @@ namespace Pixel_Simulations
             sb.FillRectangle(BoundingBox, Color.White);
             sb.Draw(_texture, Position, Color.White);
         }
+
+        public void Draw(SpriteBatch sb, Matrix hiResProj)
+        {
+            sb.Begin(
+                SpriteSortMode.BackToFront,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.Default, // MUST match the Grass
+                null, null,
+                hiResProj); // Use the View-only matrix as discussed
+
+            sb.Draw(
+                _texture,
+                Position,
+                null,
+                Color.White);
+
+            sb.End();
+        }
     }
     public class Player : IRenderable
     {
@@ -133,12 +152,13 @@ namespace Pixel_Simulations
         private Texture2D _normalTexture;
         public Vector2 _position;
         private int _speed = 160;
+        public bool isMoving = false;
         public Vector2 Velocity { get; private set; }
         public Rectangle Bounds => new Rectangle((int)_position.X, (int)_position.Y, _texture.Width, _texture.Height);
 
         // Public property to allow the Camera to get the player's position
         public Vector2 Position => _position;
-
+        public float SubmergedAmount = 0.0f;
         public float Depth => _position.Y + _texture.Height;
         public Vector2 Foot => new Vector2(_position.X,Depth);
         public Rectangle FootBounds => new Rectangle((int)Foot.X, (int)Foot.Y - 8, _texture.Width, 8);
@@ -204,19 +224,18 @@ namespace Pixel_Simulations
             if (kstate.IsKeyDown(Keys.D5)) Inventory.SelectSlot(4);
             if (kstate.IsKeyDown(Keys.D6)) Inventory.SelectSlot(5);
             // Normalize the direction vector to prevent faster diagonal movement
-            if (moveDirection != Vector2.Zero)
-            {
-                moveDirection.Normalize();
-            }
+            
 
             if (moveDirection != Vector2.Zero)
             {
                 moveDirection.Normalize();
                 Velocity = moveDirection * _speed;
+                isMoving = true;
             }
             else
             {
                 Velocity = Vector2.Zero;
+                isMoving = false;
             }
 
             _position += Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -225,6 +244,14 @@ namespace Pixel_Simulations
             //_position.X = MathHelper.Clamp(_position.X, 0, _worldWidth);
             //_position.Y = MathHelper.Clamp(_position.Y, 0, _worldHeight);
             InteractionCenter = new Vector2(_position.X + _texture.Width / 2f, _position.Y + _texture.Height / 2f);
+        }
+
+        public void Sink(float waterDepth)
+        {
+            // waterDepth from LogicGrid: 0.0 to 1.0
+            // If depth is 0.5, we want to hide roughly the bottom 25% of the player
+            SubmergedAmount = MathHelper.Lerp(SubmergedAmount, waterDepth * 0.75f, 0.05f);
+            //SubmergedAmount = waterDepth * 0.75f;
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -289,6 +316,22 @@ namespace Pixel_Simulations
             foreach (var pass in playerShader.CurrentTechnique.Passes)
             {
                 pass.Apply(); // This applies the parameters once
+                gd.SetVertexBuffer(_playerBuffer);
+                gd.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+            }
+        }
+
+        public void DrawMod(Matrix RenderFinal, bool x)
+        {
+            playerShader.Parameters["WorldViewProjection"].SetValue(RenderFinal);
+            playerShader.Parameters["SubmergedAmount"].SetValue(SubmergedAmount); // NEW
+            playerShader.Parameters["PlayerOrigin"].SetValue(new Vector2(0, 0));
+            playerShader.Parameters["PlayerPos"].SetValue(_position);
+            playerShader.Parameters["PlayerTexture"].SetValue(_texture);
+
+            foreach (var pass in playerShader.CurrentTechnique.Passes)
+            {
+                pass.Apply();
                 gd.SetVertexBuffer(_playerBuffer);
                 gd.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
             }

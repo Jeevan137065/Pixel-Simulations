@@ -4,15 +4,15 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 
 namespace Pixel_Simulations
-{ 
+{
     public enum RenderLayer
     {
-        Albedo,     // Low-Res: Static ground colors
-        Normal,     // Low-Res: For lighting (Future)
-        Dynamic,    // High-Res: Swaying crops, player
-        Depth,      // High-Res: Z-buffer visualization
-        LightMask,  // High-Res: Lighting overlay
-        Composite   // High-Res: Final combined image
+        Albedo,         // 480x270: Static background
+        DepthOnly,      // 960p: Procedural depth/stencil pre-pass (Float)
+        Dynamic,        // 960x540: Grass, Player, NPCs (The G-Buffer Color)
+        Normal,         // 960x540: Normal maps for lighting
+        LightMask,      // 960x540: HDR Lighting calculation
+        Composite       // Final: Combined result at Window Resolution
     }
     public class Upscaler
     {
@@ -203,145 +203,148 @@ namespace Pixel_Simulations
         private readonly GraphicsDevice _graphicsDevice;
         private readonly int _nativeWidth;
         private readonly int _nativeHeight;
-        private readonly int _scale;
+        private readonly int _simScale = 2; // 480 -> 960
 
-        // Dictionary to store our RenderTargets by Enum
         private readonly Dictionary<RenderLayer, RenderTarget2D> _targets;
 
-        // Rectangles for drawing
-        public Rectangle NativeRect { get; }
-        public Rectangle HighResRect { get; }
+        public Rectangle NativeRect { get; }      // 480x270
+        public Rectangle SimRect { get; }         // 960x540
+        public Rectangle FinalRect { get; }       // e.g. 1920x1080
 
-        private RenderLayer _currentDebugView = RenderLayer.Composite;
+        public RenderLayer _currentDebugView = RenderLayer.Composite;
         private KeyboardState _prevKeyboardState;
         private readonly List<RenderLayer> _debugCycleOrder;
-        public float Scale => _scale;
-        public bool IsDebugDepthActive => _currentDebugView == RenderLayer.Depth;
-        public bool IsNormalPassActive => _currentDebugView == RenderLayer.Normal;
-        public string CurrentViewName => _currentDebugView.ToString();
+        public string currentRT = null;
 
-        public RenderPipeline(GraphicsDevice graphicsDevice, int nativeWidth, int nativeHeight, int scale)
+        public RenderPipeline(GraphicsDevice graphicsDevice, int nativeWidth, int nativeHeight, int finalWidth, int finalHeight)
         {
             _graphicsDevice = graphicsDevice;
             _nativeWidth = nativeWidth;
             _nativeHeight = nativeHeight;
-            _scale = scale;
 
             NativeRect = new Rectangle(0, 0, nativeWidth, nativeHeight);
-            HighResRect = new Rectangle(0, 0, nativeWidth * scale, nativeHeight * scale);
+            SimRect = new Rectangle(0, 0, nativeWidth * _simScale, nativeHeight * _simScale);
+            FinalRect = new Rectangle(0, 0, finalWidth, finalHeight);
 
             _targets = new Dictionary<RenderLayer, RenderTarget2D>();
             _debugCycleOrder = new List<RenderLayer>
-        {
-            RenderLayer.Composite, // Final Game
-            RenderLayer.Albedo,    // Static Background
-            RenderLayer.Dynamic,   // Moving Objects
-            RenderLayer.Normal,
-            RenderLayer.Depth      // Depth Visualization
-        };
+            {
+                RenderLayer.Composite,
+                RenderLayer.Albedo,
+                RenderLayer.DepthOnly,
+                RenderLayer.Dynamic,
+                RenderLayer.Normal,
+                RenderLayer.LightMask
+            };
+
             InitializeTargets();
         }
 
         public void SetWindowResolution(GraphicsDeviceManager graphicsManager)
         {
-            graphicsManager.PreferredBackBufferWidth = HighResRect.Width;
-            graphicsManager.PreferredBackBufferHeight = HighResRect.Height;
+            graphicsManager.PreferredBackBufferWidth = FinalRect.Width;
+            graphicsManager.PreferredBackBufferHeight = FinalRect.Height;
             graphicsManager.IsFullScreen = true;
             graphicsManager.ApplyChanges();
         }
 
         private void InitializeTargets()
         {
-            // 1. LOW RES TARGETS (Static World)
-            // We don't need depth buffers for the flat background
+            // 1. NATIVE LAYER (480x270)
             _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height);
-            _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height);
 
-            // 2. HIGH RES TARGETS (Dynamic World)
-            // IMPORTANT: Dynamic layer needs DepthFormat.Depth24 for proper Z-Sorting of crops/player!
-            _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height, false, SurfaceFormat.Color, DepthFormat.Depth24);
-            // Visualization targets
-            _targets[RenderLayer.Depth] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height, false, SurfaceFormat.Color, DepthFormat.Depth24);
-            _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height);
+            // 2. SIMULATION LAYER (960x540)
+            // This is our Master Depth/Stencil target. All simulation draws share this buffer.
+            _targets[RenderLayer.DepthOnly] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.HalfVector2, DepthFormat.Depth24Stencil8);
 
-            // Final Result
-            _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, HighResRect.Width, HighResRect.Height);
+            _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // Shared DepthStencil memory
+            // Normals: Used for deferred lighting
+            _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height);
+
+            // LightMask: Using HalfVector4 for HDR (Floating point lighting values)
+            _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.HalfVector4, DepthFormat.None);
+
+            // 3. FINAL LAYER
+            _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
         }
+
+        public void BeginDepthPass()
+        {
+            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.DepthOnly]);
+            _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.Black, 1.0f, 0);
+        }
+
+        // --- PHASE B: DYNAMIC COLOR PASS ---
+        // We use the depth/stencil from the previous pass to only draw pixels that passed the test.
+        public void BeginDynamicPass()
+        {
+            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Dynamic]);
+            // We do NOT clear depth here! We want to "Continue" using the depth from Phase A.
+            _graphicsDevice.Clear(Color.Transparent);
+        }
+
+        // --- PHASE C: NORMAL PASS ---
+        // Exclusive pass for Normal data.
+        public void BeginNormalPass()
+        {
+            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Normal]);
+            _graphicsDevice.Clear(Color.Transparent);
+        }
+
+        public void Begin(RenderLayer layer, Color clearColor)
+        {
+            _graphicsDevice.SetRenderTarget(_targets[layer]);
+
+            if (_targets[layer].DepthStencilFormat != DepthFormat.None)
+                _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, clearColor, 1.0f, 0);
+            else
+                _graphicsDevice.Clear(clearColor);
+        }
+
+        public RenderTargetBinding GetTarget(RenderLayer layer) => _targets[layer];
 
         public void Update()
         {
             var kstate = Keyboard.GetState();
-
             if (kstate.IsKeyDown(Keys.P) && _prevKeyboardState.IsKeyUp(Keys.P))
             {
-                // Cycle to next view
                 int currentIndex = _debugCycleOrder.IndexOf(_currentDebugView);
-                int nextIndex = (currentIndex + 1) % _debugCycleOrder.Count;
-                _currentDebugView = _debugCycleOrder[nextIndex];
+                _currentDebugView = _debugCycleOrder[(currentIndex + 1) % _debugCycleOrder.Count];
+                currentRT = _targets[_currentDebugView].ToString();
             }
             _prevKeyboardState = kstate;
         }
 
-        /// Sets the target and CLEARS it.
-        public void Begin(RenderLayer layer, Color clearColor)
+        /// <summary>
+        /// The Composite Engine. Combines 480p and 960p layers into the final user resolution.
+        /// </summary>
+        public void PresentFinal(SpriteBatch spriteBatch, Effect compositeEffect = null)
         {
-            _graphicsDevice.SetRenderTarget(_targets[layer]);
-            if (_targets[layer].DepthStencilFormat != DepthFormat.None)
-            {
-                // Clear Color, Depth (1.0f is farthest), and Stencil (0)
-                _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, clearColor, 1.0f, 0);
-            }
-            else
-            {
-                _graphicsDevice.Clear(clearColor);
-            }
-        }
-        /// Sets the target WITHOUT clearing. Useful for multi-pass rendering to the same layer.
-        public void Continue(RenderLayer layer)
-        {
-            _graphicsDevice.SetRenderTarget(_targets[layer]);
-            // No clear
-        }
-
-        /// Get a reference to a target texture (for shaders or debugging)
-        public Texture2D GetTarget(RenderLayer layer)
-        {
-            return _targets[layer];
-        }
-
-        /// Helper to render a specific layer to the screen (or another target) with an effect.
-        public void PresentLayer(SpriteBatch spriteBatch, RenderLayer layer, Effect effect = null)
-        {
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, effect);
-            spriteBatch.Draw(_targets[layer], HighResRect, Color.White);
-            spriteBatch.End();
-        }
-
-        /// The final logic to combine everything and draw to the BackBuffer.
-        public void PresentFinal(SpriteBatch spriteBatch)
-        {
-            // 1. COMPOSE STEP: Combine everything into the Composite Target
+            // 1. COMPOSE TO INTERNAL BUFFER
             _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Composite]);
             _graphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+            // If we have a composite effect (for lighting/HDR), we use it here
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, compositeEffect);
 
-            // A. Draw Albedo (Scaled up to fill background)
-            spriteBatch.Draw(_targets[RenderLayer.Albedo], HighResRect, Color.White);
+            // A. Draw Albedo (480p Background) scaled to fit the 1080p+ FinalRect
+            spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, Color.White);
 
-            // B. Draw Dynamic (Already High-Res, drawn on top)
-            spriteBatch.Draw(_targets[RenderLayer.Dynamic], HighResRect, Color.White);
-
-            // C. (Future) Draw LightMask with Multiply blend mode...
+            // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
+            spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
 
             spriteBatch.End();
 
-            // 2. SCREEN STEP: Draw Composite to the actual screen
+            // 2. OUTPUT TO SCREEN
             _graphicsDevice.SetRenderTarget(null);
             _graphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
-            spriteBatch.Draw(_targets[_currentDebugView], HighResRect, Color.White);
+            // Draw whichever layer is currently selected for debugging
+            spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
             spriteBatch.End();
         }
     }

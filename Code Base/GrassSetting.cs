@@ -106,46 +106,52 @@ namespace Pixel_Simulations
                     return new GrassSettings
                     {
                         GlobalHeightBase = 1.5f,
-                        BladeThickness = 1.0f,
-                        Segments = 1, // Lawn doesn't need much curve
-                        WindSpeed = 3.0f,
-                        WindIntensity = 1.0f,
-                        Stiffness = 0.9f,
+                        BladeThickness = 1.5f,
+                        Segments = 3,
+                        RestingCurvature = 0.25f,
+
+                        WindSpeed = 0.3f,
+                        WindIntensity = 0.3f,
+                        Stiffness = 0.5f,
                         PlayerPushRadius = 15f,
-                        PlayerPushStrength = 0.5f,
-                        DensityStep = 1.5f, // Very dense
-                        MinThreshold = 0.1f,
-                        MidThreshold = 0.2f,
-                        MaxThreshold = 0.5f,
-                        SparseDensity = 1.0f,
+                        PlayerPushStrength = 0.0f,
+
+                        DensityStep = 3.0f,
+                        MinThreshold = 0.20f,
+                        MidThreshold = 0.91f,
+                        MaxThreshold = 0.92f,
+                        SparseDensity = 0.4f,
                         LushCount = 1,
-                        RootColor = new Color(15, 40, 10),
-                        TipColor = new Color(50, 150, 40)
+                        TuftSize = 1,
+                        TuftSpread = 10.0f,
+                        BladeTaper = 0.9f,
+                        RootColor = new Color(5, 40, 5),
+                        TipColor = new Color(40, 150, 40)
                     };
 
                 case GrassPreset.Marsh:
                     return new GrassSettings
                     {
-                        GlobalHeightBase = 2.0f, // Max height
-                        BladeThickness = 1.0f,
+                        GlobalHeightBase = 5.0f, // Max height
+                        BladeThickness = 2.0f,
                         Segments = 8,
                         RestingCurvature = 2.0f,
 
                         WindSpeed = 0.5f,
-                        WindIntensity = 0.5f,
+                        WindIntensity = 0.1f,
                         Stiffness = 0.1f,
                         PlayerPushRadius = 0.1f,
                         PlayerPushStrength = 0.1f,
 
                         DensityStep = 2.5f,
                         MinThreshold = 0.6f,
-                        MidThreshold = 0.65f,
-                        MaxThreshold = 0.75f,
-                        SparseDensity = 0.5f,
-                        LushCount = 1,
+                        MidThreshold = 0.75f,
+                        MaxThreshold = 0.95f,
+                        SparseDensity = 0.8f,
+                        LushCount = 2,
                         TuftSize = 1,
-                        TuftSpread = 20.0f,
-                        BladeTaper = 0.9f,
+                        TuftSpread = 40.0f,
+                        BladeTaper = 0.5f,
                         RootColor = new Color(40, 75, 30),
                         TipColor = new Color(75, 75, 40)
                     };
@@ -158,13 +164,13 @@ namespace Pixel_Simulations
                         Segments = 2,
                         RestingCurvature = 1.0f,
 
-                        WindSpeed = 0.5f,
-                        WindIntensity = 0.8f,
+                        WindSpeed = 0.8f,
+                        WindIntensity = 0.5f,
                         Stiffness = 0.5f,
-                        PlayerPushRadius = 20f,
-                        PlayerPushStrength = 1.0f,
+                        PlayerPushRadius = 15f,
+                        PlayerPushStrength = 2.0f,
 
-                        DensityStep = 2.5f,
+                        DensityStep = 2.8f,
                         MinThreshold = 0.5f,
                         MidThreshold = 0.7f,
                         MaxThreshold = 0.8f,
@@ -180,14 +186,14 @@ namespace Pixel_Simulations
                 case GrassPreset.DeadMeadow:
                     return new GrassSettings
                     {
-                        GlobalHeightBase = 2.0f,
+                        GlobalHeightBase = 3.0f,
                         BladeThickness = 1.2f,
                         Segments = 2,
                         RestingCurvature = 2.0f,
 
                         WindSpeed = 0.1f,
                         WindIntensity = 0.5f,
-                        Stiffness = 0.01f,
+                        Stiffness = 0.4f,
                         PlayerPushRadius = 20f,
                         PlayerPushStrength = 1.0f,
                         
@@ -236,43 +242,56 @@ namespace Pixel_Simulations
                 case GrassPreset.DesertScrub:
                     return new GrassSettings
                     {
-                        GlobalHeightBase = 2.0f,
+                        GlobalHeightBase = 3.0f,
                         BladeThickness = 1.0f,
-                        Segments = 1,
-                        WindSpeed = 4.5f,
-                        WindIntensity = 1.5f,
-                        Stiffness = 0.95f,
+                        Segments = 2,
+                        RestingCurvature = 1.5f,
+
+                        WindSpeed = 0.5f,
+                        WindIntensity = 0.3f,
+                        Stiffness = 0.75f,
                         PlayerPushRadius = 15f,
                         PlayerPushStrength = 0.4f,
+
                         DensityStep = 6.0f,
                         MinThreshold = 0.6f,
                         MidThreshold = 0.8f,
                         MaxThreshold = 0.95f,
                         SparseDensity = 0.2f,
                         LushCount = 1,
+                        TuftSize = 2,
+                        TuftSpread = 40.0f,
+                        BladeTaper = 0.75f,
+
                         RootColor = new Color(60, 60, 60),
-                        TipColor = new Color(160, 140, 140)
+                        TipColor = new Color(180, 180, 140)
                     };
 
                 case GrassPreset.Highlands:
                     return new GrassSettings
                     {
-                        GlobalHeightBase = 3.5f,
-                        BladeThickness = 1.3f,
-                        Segments = 3,
-                        WindSpeed = 4.0f,
-                        WindIntensity = 9.0f,
-                        Stiffness = 0.4f,
-                        PlayerPushRadius = 25f,
-                        PlayerPushStrength = 1.3f,
-                        DensityStep = 3.0f,
-                        MinThreshold = 0.3f,
-                        MidThreshold = 0.5f,
-                        MaxThreshold = 0.8f,
-                        SparseDensity = 0.6f,
+                        GlobalHeightBase = 5.0f, // Max height
+                        BladeThickness = 1.0f,
+                        Segments = 5,
+                        RestingCurvature = 1.5f,
+
+                        WindSpeed = 0.5f,
+                        WindIntensity = 0.1f,
+                        Stiffness = 0.1f,
+                        PlayerPushRadius = 1.0f,
+                        PlayerPushStrength = 0.5f,
+
+                        DensityStep = 1.5f,
+                        MinThreshold = 0.5f,
+                        MidThreshold = 0.6f,
+                        MaxThreshold = 0.7f,
+                        SparseDensity = 0.8f,
                         LushCount = 2,
-                        RootColor = new Color(25, 40, 20),
-                        TipColor = new Color(100, 140, 70)
+                        TuftSize = 1,
+                        TuftSpread = 10.0f,
+                        BladeTaper = 0.75f,
+                        RootColor = new Color(40, 75, 30),
+                        TipColor = new Color(75, 75, 40)
                     };
             }
             return GetPreset(GrassPreset.ForestFloor); // Default

@@ -54,30 +54,28 @@ namespace Pixel_Simulations
 
                     // TIER 0: Empty
                     if (noise < Settings.MinThreshold) continue;
-
                     int spawnCount = 0;
-                    float heightMod = 1.0f;
+                    float heightMod = 0.1f;
 
                     // TIER 1: Sparse
-                    if (noise < Settings.MidThreshold)
-                    {
-                        if (rand.NextDouble() < Settings.SparseDensity)
-                        {
+                    if (noise > Settings.MinThreshold) 
+                    { 
                             spawnCount = 1;
-                            heightMod = 0.2f; // Young/Short grass
-                        }
+                            heightMod = 0.4f;
                     }
+
                     // TIER 2: Mid
-                    else if (noise < Settings.MaxThreshold)
+                    if (noise > Settings.MidThreshold)
                     {
-                        spawnCount = 1;
-                        heightMod = 0.6f;
+                            spawnCount = 1 * (int)(1 + Settings.SparseDensity);
+                            heightMod = 0.8f; // Young/Short grass
+                        
                     }
                     // TIER 3: Lush
-                    else
+                    else if (noise > Settings.MaxThreshold)
                     {
                         spawnCount = 2;
-                        heightMod = 1.0f; // Overgrown
+                        heightMod = 1.4f;
                     }
 
                     for (int i = 0; i < spawnCount; i++)
@@ -87,10 +85,10 @@ namespace Pixel_Simulations
                         {
                             Pos = new Vector2(x + (float)(rand.NextDouble() - 0.5) * jitter,
                                             y + (float)(rand.NextDouble() - 0.5) * jitter),
-                            Wind = (float)rand.NextDouble() * 10f,
+                            Wind = (float)rand.NextDouble()*Settings.WindIntensity,
                             Height = Settings.GlobalHeightBase * heightMod,
                             Var = (float)rand.NextDouble(),
-                            Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature * 2.0f
+                            Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature * 1.0f
                         });
                     }
                 }
