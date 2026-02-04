@@ -1,41 +1,83 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using MonoGame.Extended.Collisions.Layers;
 using Newtonsoft.Json;
 using Pixel_Simulations.Editor;
 using Pixel_Simulations.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Pixel_Simulations.Data
 {
 
-    public enum ObjectType { Prop, Rectangle, Point }
+    public enum ObjectType { Prop, Rectangle,Shape, Point }
     public enum SliceMode { RowFirst, ColumnFirst }
+    public enum ShapeOperation { None, Union, Intersection, Difference }
+    public enum HandleType { None, Body, TopLeft, TopRight, BottomLeft, BottomRight, Top, Bottom, Left, Right, Center }
+    [JsonObject(MemberSerialization.OptIn)] // Ensure this is present
     public abstract class MapObject
     {
-        public Vector2 Position { get; set; }
+        [JsonProperty] // Force the Type to be saved to JSON
         public abstract ObjectType Type { get; }
-    }
 
+        [JsonProperty]
+        public string Name { get; set; }
+
+        [JsonProperty]
+        public Vector2 Position { get; set; }
+    }
+    public class ShapeObject : MapObject
+    {
+        public override ObjectType Type => ObjectType.Shape; // Add "Shape" to the enum
+
+        [JsonProperty]
+        public Polygon Shape { get; set; }
+
+        [JsonProperty]
+        public string Tag { get; set; }
+        [JsonProperty]
+        public Vector2 Size { get; set; }
+
+        [JsonProperty]
+        public Color DebugColor { get; set; }
+
+        public ShapeObject()
+        {
+            Shape = new Polygon();
+        }
+
+        public void UpdateBoundsFromVertices()
+        {
+            if (Shape.Vertices.Count == 0) return;
+            var rect = Shape.GetBounds();
+            this.Position = new Vector2(rect.X, rect.Y);
+            this.Size = new Vector2(rect.Width, rect.Height);
+        }
+    }
     public class PropObject : MapObject
     {
         public override ObjectType Type => ObjectType.Prop;
         public string AssetName { get; set; }
     }
-
     public class RectangleObject : MapObject
     {
+        [JsonProperty]
         public override ObjectType Type => ObjectType.Rectangle;
+        [JsonProperty]
         public Vector2 Size { get; set; }
+        [JsonProperty]
         public string TriggerType { get; set; } // e.g., "Collision", "Trigger"
-
+        [JsonProperty]
         public Color DebugColor { get; set; }
     }
     public class PointObject : MapObject
     {
         [JsonProperty]
         public override ObjectType Type => ObjectType.Point;
+        [JsonProperty]
         public float Radius { get; set; }
         public Vector2 Center { get; set; }
         [JsonProperty]
@@ -52,69 +94,114 @@ namespace Pixel_Simulations.Data
 
     public class LayerRow
     {
-        public readonly Rectangle _bounds;
+        public  Rectangle _bounds;
         public readonly int _layerIndex;
-        private readonly Layer _layer;
-        public  List<Button> _buttons = new List<Button>();
+        public readonly Layer _layer;
+        public List<Button> _buttons = new List<Button>();
 
-        public LayerRow(Layer layer, int index, Rectangle bounds, EditorUI editorUI)
+        private const int HEADER_HEIGHT = 40;
+        private const int CHILD_HEIGHT = 20;
+        private const int ICON_SIZE = 24;
+        public LayerRow(Layer layer, int index, Rectangle bounds)
         {
             _layer = layer;
             _layerIndex = index;
             _bounds = bounds;
+            RefreshButtons();
+        }
+        /// Recalculates button positions based on current _bounds.
+        /// Call this whenever the layer list is scrolled or reordered.
+        public void RefreshButtons()
+        {
+            _buttons.Clear();
+            int x = _bounds.X + 45;
+            int y = _bounds.Y + (HEADER_HEIGHT - 20) / 2;
+            // 1. Expand/Collapse Button (Leftmost)
+            _buttons.Add(new Button(new Rectangle(_bounds.X + 5, y, 32, 32), new ToggleLayerExpansionCommand { LayerIndex = _layerIndex}, _layer.IsExpanded ? "Collapse" : "Expand"));
 
-            // Create this row's per-layer control buttons
-            _buttons.Add(new Button(new Rectangle(bounds.X + 5, bounds.Y + 4, 32, 32), new ToggleLayerVisibilityCommand { LayerIndex = index }, layer.IsVisible ? "Visible" : "Hidden"));
-            _buttons.Add(new Button(new Rectangle(bounds.X + 40, bounds.Y + 4, 32, 32), new ToggleLayerLockCommand { LayerIndex = index }, layer.IsLocked ? "Locked" : "Unlocked"));
-            _buttons.Add(new Button(new Rectangle(bounds.Right - 70, bounds.Y + 4, 32, 32), new MoveLayerCommand { LayerIndex = index, Direction = true }, "MoveUp"));
-            _buttons.Add(new Button(new Rectangle(bounds.Right - 38, bounds.Y + 4, 32, 32), new MoveLayerCommand {  LayerIndex = index, Direction = false}, "MoveDown"));
+            // 2. Visibility & Lock
+            _buttons.Add(new Button(new Rectangle(_bounds.X + 40, y, 32, 32), new ToggleLayerVisibilityCommand { LayerIndex = _layerIndex }, _layer.IsVisible ? "Visible" : "Hidden"));
+            _buttons.Add(new Button(new Rectangle(_bounds.X + 75, y, 32, 32), new ToggleLayerLockCommand { LayerIndex = _layerIndex }, _layer.IsLocked ? "Locked" : "Unlocked"));
+
+            // 3. Reorder Buttons (Right Aligned)
+            _buttons.Add(new Button(new Rectangle(_bounds.Right - 70, y, 32, 32), new MoveLayerCommand { LayerIndex = _layerIndex, Direction = true }, "MoveUp"));
+            _buttons.Add(new Button(new Rectangle(_bounds.Right - 38, y, 32, 32), new MoveLayerCommand { LayerIndex = _layerIndex, Direction = false }, "MoveDown"));
         }
 
-        public void Update(InputState input, EventBus eventBus)
+        public void Draw(SpriteBatch sb, EditorUI ui, bool isActive)
         {
-            foreach (var button in _buttons)
-            {
-                button.Update(input, eventBus);
-            }
-        }
+            // Row Highlight
+            Color typeColor = GetTypeColor();
+            string typeId = GetTypeString();
+            
+            if (isActive) sb.FillRectangle(_bounds, Color.Black * 0.3f);
+            else sb.FillRectangle(_bounds, typeColor * 0.5f);
 
-        public void Draw(SpriteBatch sb, EditorUI editorUI, bool isActive)
+            foreach (var button in _buttons) button.Draw(sb, ui);
+
+            // Type Symbol and Name
+
+            Vector2 typePos = new Vector2(_bounds.X + 115, _bounds.Y + 10);
+            sb.DrawString(ui.DebugFont, typeId, typePos, typeColor);
+
+            Vector2 namePos = new Vector2(typePos.X + 35, _bounds.Y + 10);
+            sb.DrawString(ui.DebugFont, _layer.Name, namePos, Color.White);
+
+            // Draw Children
+            if (_layer.IsExpanded) DrawChildren(sb, ui);
+        }
+        private Color GetTypeColor() => _layer.Type switch
         {
-            if (isActive)   sb.FillRectangle(_bounds, Color.CornflowerBlue * 0.3f);
-            else            sb.DrawRectangle(_bounds, Color.Gray * 0.3f);
-            string typeIdentifier = "";
-            Color typeColor = Color.White;
-            switch (_layer.Type)
+            LayerType.Tile => Color.LightGreen,
+            LayerType.Collision => Color.Red,
+            LayerType.Trigger => Color.Yellow,
+            LayerType.Navigation => Color.Cyan,
+            _ => Color.LightBlue
+        };
+        private string GetTypeString() => _layer.Type switch
+        {
+            LayerType.Tile => "[T]",
+            LayerType.Collision => "[C]",
+            LayerType.Navigation => "[N]",
+            LayerType.Trigger => "[E]",
+            _ => "[O]"
+        };
+        private void DrawChildren(SpriteBatch sb, EditorUI ui)
+        {
+            int yOffset = HEADER_HEIGHT;
+            var selectedObj = ui._editorState.Selection.SelectedMapObject;
+
+            // Local helper to draw items
+            Action<MapObject> DrawItem = (obj) => {
+                bool isSelected = (selectedObj == obj);
+                Color color = isSelected ? Color.Yellow : Color.White * 0.8f;
+
+                // Use obj.Name instead of a hardcoded string!
+                string displayName = string.IsNullOrEmpty(obj.Name) ? obj.Type.ToString() : obj.Name;
+
+                sb.DrawString(ui.DebugFont, "  |- " + displayName,
+                    new Vector2(_bounds.X + 20, _bounds.Y + yOffset), color);
+
+                yOffset += CHILD_HEIGHT;
+            };
+
+            if (_layer is CollisionLayer col) foreach (var s in col.CollisionMesh) DrawItem(s);
+            else if (_layer is NavigationLayer nav) foreach (var s in nav.NavigationMesh) DrawItem(s);
+            else if (_layer is TriggerLayer trig)
             {
-                case LayerType.Tile:
-                    typeIdentifier = "[T]";
-                    typeColor = Color.LightGreen;
-                    break;
-                case LayerType.Object:
-                    typeIdentifier = "[O]";
-                    typeColor = Color.LightBlue;
-                    break;
-                case LayerType.Collision:
-                    typeIdentifier = "[C]";
-                    typeColor = Color.Red;
-                    break;
-                case LayerType.Navigation:
-                    typeIdentifier = "[N]"; 
-                    typeColor = Color.Cyan; 
-                    break;
-                case LayerType.Trigger: 
-                    typeIdentifier = "[E]"; 
-                    typeColor = Color.Yellow; 
-                    break;
-                    // Add cases for Navigation, Trigger, etc.
+                foreach (var r in trig.TriggerMesh) DrawItem(r);
+                foreach (var p in trig.PointTriggers) DrawItem(p);
             }
-            foreach (var button in _buttons)
-                {
-                    button.Draw(sb, editorUI);
-                }
-            sb.DrawString(editorUI.DebugFont, typeIdentifier, new Vector2(_bounds.X + 80, _bounds.Y + 10), typeColor);
-            sb.DrawString(editorUI.DebugFont, _layer.Name, new Vector2(_bounds.X + 110, _bounds.Y + 10), Color.White);
+            else if (_layer is ObjectLayer objL) foreach (var o in objL.Objects) DrawItem(o);
+        }
+        public int GetTotalHeight() => _layer.IsExpanded ? HEADER_HEIGHT + (GetChildCount() * CHILD_HEIGHT) : HEADER_HEIGHT;
+
+        private int GetChildCount()
+        {
+            if (_layer is CollisionLayer col) return col.CollisionMesh.Count;
+            if (_layer is TriggerLayer trig) return trig.TriggerMesh.Count + trig.PointTriggers.Count;
+            if (_layer is ObjectLayer obj) return obj.Objects.Count;
+            return 0;
         }
     }
-
 }

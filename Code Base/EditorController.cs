@@ -39,6 +39,7 @@ namespace Pixel_Simulations.Editor
         }
         public void Update(GameTime gameTime, KeyboardState keyboardState, MouseState mouseState)
         {
+            _editorState.refresh(gameTime);
             // --- 1. ACTIVATE AND UPDATE THE INPUTSTATE ---
             UpdateInputState(keyboardState, mouseState);
             var input = _editorState.Input;
@@ -48,6 +49,7 @@ namespace Pixel_Simulations.Editor
             if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L)) { _editorState.ShowDebug = !_editorState.ShowDebug; }
             if (input.CurrentKeyboard.IsKeyDown(Keys.K) && input.PreviousKeyboard.IsKeyUp(Keys.K)) { _editorState.ShowGrid = !_editorState.ShowGrid; }
             if (input.CurrentKeyboard.IsKeyDown(Keys.I)) { }
+            
             // --- 3. Handle Camera Updates ---
             _editorState.camera.Update(input, _editorState._layoutmanager.ViewportPanel, true);
 
@@ -62,7 +64,7 @@ namespace Pixel_Simulations.Editor
                 if (activeTool != null)
                 {
                     // The tool receives the EventBus so it can publish undoable commands
-                    activeTool.Update(GetCurrentToolInput(), input, _eventBus);
+                    activeTool.Update(GetCurrentToolInput(), input, _eventBus,_editorState);
                 }
             }
 
@@ -212,6 +214,7 @@ namespace Pixel_Simulations.Editor
                 _editorState.camera.Pan(-movement); // Pan is inverted, so we negate the movement
             }
         }
+
     }
     public class HistoryController
     {
@@ -293,6 +296,7 @@ namespace Pixel_Simulations.Editor
             eventBus.Subscribe<AddLayerCommand>(HandleAddLayer);
             eventBus.Subscribe<DeleteActiveLayerCommand>(HandleDeleteLayer);
             eventBus.Subscribe<CycleNewLayerTypeCommand>(HandleCycleNewLayerType);
+            eventBus.Subscribe<ToggleLayerExpansionCommand>(HandleLayerExpansion);
         }
 
         private void HandleLayerSelection(SelectLayerCommand cmd)
@@ -399,6 +403,16 @@ namespace Pixel_Simulations.Editor
             // Update the state
             panelState.NewLayerType = layerTypes[nextIndex];
         }
+
+        private void HandleLayerExpansion(ToggleLayerExpansionCommand cmd)
+        {
+            if (cmd.LayerIndex >= 0 && cmd.LayerIndex < _editorState.ActiveMap.Layers.Count)
+            {
+                var layer = _editorState.ActiveMap.Layers[cmd.LayerIndex];
+                layer.IsExpanded = !layer.IsExpanded;
+            }
+        }
+
     }
     public class TilesetController
     {

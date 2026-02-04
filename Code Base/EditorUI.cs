@@ -4,13 +4,15 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using Newtonsoft.Json;
+using Pixel_Simulations;
 using Pixel_Simulations.Data;
 using Pixel_Simulations.Editor;
-using Pixel_Simulations;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata;
 
 
 namespace Pixel_Simulations.UI
@@ -44,10 +46,10 @@ namespace Pixel_Simulations.UI
 
             foreach (var button in _buttons)
             {
-                if (button.Update(input, bus))
+                if (button.Update(input))
                 {
                     panelState.HoveredButtonName = button.IconName.ToString();
-                    if (input.IsNewLeftClick())
+                    if (input.IsNewLeftClick)
                     {
                         bus.Publish(button.CommandToPublish);
                     }
@@ -119,7 +121,7 @@ namespace Pixel_Simulations.UI
             Create_Buttons(_editorState);
             if (!Area.Contains(input.MouseWindowPosition)) return;
             // --- 1. Handle Tab Switching ---
-            if (_tabArea.Contains(input.MouseWindowPosition) && input.IsNewLeftClick())
+            if (_tabArea.Contains(input.MouseWindowPosition) && input.IsNewLeftClick)
             {
                 if (input.MouseWindowPosition.X < Area.X + Area.Width / 2)
                     _activeTab = Tab.Tiles;
@@ -146,17 +148,17 @@ namespace Pixel_Simulations.UI
 
             if (_tilesetListArea.Contains(input.MouseWindowPosition))
             {
-                 if( _addTilesetButton.Update(input, eventBus))
+                 if( _addTilesetButton.Update(input))
                 {
-                    if (input.IsNewLeftClick())
+                    if (input.IsNewLeftClick)
                     { eventBus.Publish(new CreateTilesetCommand { AtlasName = "Wild" }); }
                 }
                 foreach(var tile in tileSets)
                 {
-                    if (tile.Update(input,eventBus))
+                    if (tile.Update(input))
                     {
                         panelState.HoveredTilesetName = tile.IconName;
-                        if (input.IsNewLeftClick()) { eventBus.Publish(tile.CommandToPublish); }
+                        if (input.IsNewLeftClick) { eventBus.Publish(tile.CommandToPublish); }
                     }
                 }
 
@@ -176,7 +178,7 @@ namespace Pixel_Simulations.UI
                         panelState.HoveredTileCell = new Point(col, row);
                         int tileIndex = row * tilesPerRow + col;
 
-                        if (input.IsNewLeftClick())
+                        if (input.IsNewLeftClick)
                         {
                             if (relX >= 0 && col < tilesPerRow && tileIndex >= 0 && tileIndex < activeTileset.SlicedAtlas.Count) {
                                 int tileId = activeTileset.SlicedAtlas.Keys.ElementAt(tileIndex);
@@ -307,17 +309,15 @@ namespace Pixel_Simulations.UI
 
             ToolStack.HoveredButtonName = null; // Reset hover state for this frame.
 
-            
-
             if (!Area.Contains(input.MouseWindowPosition)) return;
 
             foreach (var button in _buttons)
             {
-                if (button.Update(input, bus))
+                if (button.Update(input))
                 {
                     ToolStack.HoveredButtonName = button.IconName;
 
-                    if (input.IsNewLeftClick())// && ToolStack.HoveredButtonName != null)
+                    if (input.IsNewLeftClick)// && ToolStack.HoveredButtonName != null)
                     {
                         ToolStack.ActiveToolName = button.IconName;
                         ToolStack.ActiveTool = ToolStack.Tools.FirstOrDefault(t => t.Name == ToolStack.ActiveToolName);
@@ -359,8 +359,7 @@ namespace Pixel_Simulations.UI
         private readonly List<LayerRow> _layerRows = new List<LayerRow>();
 
         private float _scrollOffset = 0;
-        private const int ROW_HEIGHT = 40;
-        private const int ICON_SIZE = 32;
+        private float _totalContentHeight = 0;
         private LayerPanelState LayerStack;
 
         public LayerPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
@@ -382,20 +381,19 @@ namespace Pixel_Simulations.UI
 
             BuildLayerRows();
             LayerStack.HoveredButtonName = null;
-            //LayerStack.ActiveLayerIndex = -1;
             LayerStack.HoveredLayerIconName = null;
-            //LayerStack.HoveredLayerIndex = -1;
             if (!Area.Contains(input.MouseWindowPosition)) return;
+            
             // --- Update Global Control Buttons ---
             if (_controlsArea.Contains(input.MouseWindowPosition))
             {
                 foreach (var button in _globalControlButtons)
                 {
-                    if (button.Update(input, eventBus))
+                    if (button.Update(input))
                     {
                         LayerStack.HoveredButtonName = button.IconName.ToString();
 
-                        if (input.IsNewLeftClick()){
+                        if (input.IsNewLeftClick){
                             eventBus.Publish(button.CommandToPublish);
                         }
                     }
@@ -404,108 +402,155 @@ namespace Pixel_Simulations.UI
             // --- Update Layer List Area ---
             else if (_layerListArea.Contains(input.MouseWindowPosition))
             {
-                // Handle Scrolling
-                int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
-                if (scrollDelta != 0) _scrollOffset -= scrollDelta * 0.2f;
-                _scrollOffset = MathHelper.Clamp(_scrollOffset, 0, System.Math.Max(0, _editorState.Layers.Layers.Count * ROW_HEIGHT - _layerListArea.Height));
-
+             // Handle Scrolling
+             int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+                if (scrollDelta != 0) _scrollOffset -= scrollDelta * 0.5f;
+                _scrollOffset = MathHelper.Clamp(_scrollOffset, 0, Math.Max(0, _totalContentHeight - _layerListArea.Height));
                 // Update each individual row's buttons
                 foreach (var row in _layerRows)
                 {
-                    if (row._bounds.Contains(input.MouseWindowPosition))
+                    // We only interact with rows currently within the viewable list area
+                 if (row._bounds.Intersects(_layerListArea))
                     {
-                        _editorState.Layers.HoveredLayerIndex = row._layerIndex;
-                        if (input.IsNewLeftClick()) _editorState.Layers.ActiveLayerIndex = row._layerIndex;
-                    foreach(var item in row._buttons) 
-                    { 
-                        if (item.Update(input, eventBus)) 
+                        if (row._bounds.Contains(input.MouseWindowPosition))
                         {
-                            HandleLayerListClick(input.MouseWindowPosition.ToPoint(), eventBus, input.IsNewLeftClick(), item);
+                            LayerStack.HoveredLayerIndex = row._layerIndex;
+
+                            // Handle Row Selection (if not clicking a button)
+                            bool clickedButton = false;
+                            foreach (var btn in row._buttons)
+                            {
+                                if (btn.Update(input))
+                                {
+                                    clickedButton = true;
+                                    if (input.IsNewLeftClick) eventBus.Publish(btn.CommandToPublish);
+                                }
+                            }
+
+                            if (input.IsNewLeftClick && !clickedButton)
+                            {
+                                LayerStack.ActiveLayerIndex = row._layerIndex;
+                            }
+
+                            if (input.NewDoubleLeftClick && !clickedButton)
+                            {
+                                LayerStack.RenamingLayerIndex = row._layerIndex;
+                                LayerStack.TextEditorString = row._layer.Name;
+                            }
                         }
                     }
-                    }
                 }
+            }
 
-                // Handle selecting a layer by clicking on the row itself
-
+            if (_editorState.Layers.RenamingLayerIndex != -1)
+            {
+                HandleTextInput(input);
+                // IMPORTANT: We return here to prevent any other tools or shortcuts from processing while in text input mode.
+                return;
             }
         }
         private void BuildLayerRows()
         {
             _layerRows.Clear();
-            for (int i = 0; i < _editorState.Layers.Layers.Count; i++)
+            // Start drawing at the top of the list area, adjusted by scroll
+            int currentY = _layerListArea.Y - (int)_scrollOffset;
+
+            for (int i = 0; i < LayerStack.Layers.Count; i++)
             {
-                var layer = _editorState.Layers.Layers[i];
-                var rowBounds = new Rectangle(Area.X, Area.Y + i * ROW_HEIGHT - (int)_scrollOffset, Area.Width, ROW_HEIGHT);
-                _layerRows.Add(new LayerRow(layer, i, rowBounds, _editorUI));
+                var layer = LayerStack.Layers[i];
+
+                // Create a row with temporary bounds to calculate height
+                var tempRow = new LayerRow(layer, i, new Rectangle(_layerListArea.X, currentY, _layerListArea.Width, 40));
+                int rowHeight = tempRow.GetTotalHeight();
+
+                // Finalize the bounds for this frame
+                tempRow._bounds = new Rectangle(_layerListArea.X, currentY, _layerListArea.Width, rowHeight);
+                tempRow.RefreshButtons(); // Ensure buttons move with the row
+
+                _layerRows.Add(tempRow);
+                currentY += rowHeight;
+            }
+
+            // Track total height for scrolling clamp logic
+            _totalContentHeight = (currentY + (int)_scrollOffset) - _layerListArea.Y;
+        }
+        private void HandleTextInput(InputState input)
+        {
+            var panelState = _editorState.Layers;
+            var kbs = input.CurrentKeyboard;
+            var prevKbs = input.PreviousKeyboard;
+
+            // --- Check for finishing the edit ---
+            if (kbs.IsKeyDown(Keys.Enter) && prevKbs.IsKeyUp(Keys.Enter))
+            {
+                // Commit the change
+                var layer = _editorState.Layers.Layers[panelState.RenamingLayerIndex];
+                layer.Name = panelState.TextEditorString;
+                panelState.RenamingLayerIndex = -1; // Exit renaming mode
+                return;
+            }
+
+            // --- Handle Text Modification ---
+            if (kbs.IsKeyDown(Keys.Back) && prevKbs.IsKeyUp(Keys.Back) && panelState.TextEditorString.Length > 0)
+            {
+                panelState.TextEditorString = panelState.TextEditorString.Substring(0, panelState.TextEditorString.Length - 1);
+            }
+
+            // A simple way to get typed characters
+            foreach (var key in kbs.GetPressedKeys())
+            {
+                if (prevKbs.IsKeyUp(key)) // Only process new key presses
+                {
+                    char character = GetCharFromKey(key, kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift));
+                    if (character != '\0') // If it's a printable character
+                    {
+                        panelState.TextEditorString += character;
+                    }
+                }
             }
         }
-        private void HandleLayerListClick(Point mousePos, EventBus bus, bool click, Button item)
+        private char GetCharFromKey(Keys key, bool shift)
         {
-            int index = (int)((mousePos.Y - _layerListArea.Y + _scrollOffset) / ROW_HEIGHT);
-            if (index < 0 || index >= _editorState.Layers.Layers.Count) return;
-
-            // Define clickable hitboxes for the per-layer icons
-            var rowArea = new Rectangle(Area.X, Area.Y + index * ROW_HEIGHT - (int)_scrollOffset, Area.Width, ROW_HEIGHT);
-            var visibilityRect = new Rectangle(rowArea.X + 5, rowArea.Y + 4, ICON_SIZE, ICON_SIZE);
-            var lockRect = new Rectangle(rowArea.X + 40, rowArea.Y + 4, ICON_SIZE, ICON_SIZE);
-            var moveUpRect = new Rectangle(rowArea.Right - 70, rowArea.Y + 4, ICON_SIZE, ICON_SIZE);
-            var moveDownRect = new Rectangle(rowArea.Right - 38, rowArea.Y + 4, ICON_SIZE, ICON_SIZE);
-            LayerStack.HoveredLayerIndex = index++;
-
-            if (visibilityRect.Contains(mousePos)){
-                LayerStack.HoveredLayerIconName = "Visibilty";
-                if (click) { bus.Publish(item.CommandToPublish); }
-                //bus.Publish(new ToggleLayerVisibilityCommand { LayerIndex = index });
-            }
-            else if (lockRect.Contains(mousePos)) {
-                LayerStack.HoveredLayerIconName = "Lock";
-                if (click) { bus.Publish(item.CommandToPublish); } 
-            }
-            else if (moveUpRect.Contains(mousePos)){
-                LayerStack.HoveredLayerIconName = "Move Up";
-                if (click) {bus.Publish(item.CommandToPublish); }
-            }
-            else if (moveDownRect.Contains(mousePos)){
-                LayerStack.HoveredLayerIconName = "Move Down";
-                if (click) {bus.Publish(item.CommandToPublish); }
-            }
-            else if (rowArea.Contains(mousePos)) { 
-                //if (click) {bus.Publish(new SelectLayerCommand { LayerIndex = index });}
-            }
+            if (key >= Keys.A && key <= Keys.Z)
+                return shift ? (char)key : char.ToLower((char)key);
+            if (key >= Keys.D0 && key <= Keys.D9)
+                return (char)key;
+            if (key == Keys.Space) return ' ';
+            // Add more characters as needed (-, _, etc.)
+            return '\0';
         }
 
         public override void Draw(SpriteBatch sb)
         {
             sb.FillRectangle(Area, Color.DarkSlateGray);
-            sb.DrawRectangle(_controlsArea, Color.Blue*0.5f);
-            // Use a ScissorRectangle for the scrollable list
+
+            // Scissor for the scrollable list
             var originalScissorRect = sb.GraphicsDevice.ScissorRectangle;
             sb.End();
-            var scissorRasterizerState = new RasterizerState { ScissorTestEnable = true };
-            sb.Begin(rasterizerState: scissorRasterizerState);
+            sb.Begin(rasterizerState: new RasterizerState { ScissorTestEnable = true });
             sb.GraphicsDevice.ScissorRectangle = _layerListArea;
 
-            // Draw each row
-            for (int i = 0; i < _layerRows.Count; i++)
+            foreach (var row in _layerRows)
             {
-                _layerRows[i].Draw(sb, _editorUI ,i == _editorState.Layers.ActiveLayerIndex);
+                // Optimization: Only draw if on screen
+                if (row._bounds.Bottom > _layerListArea.Top && row._bounds.Top < _layerListArea.Bottom)
+                {
+                    row.Draw(sb, _editorUI, row._layerIndex == LayerStack.ActiveLayerIndex);
+                }
             }
 
             sb.End();
             sb.GraphicsDevice.ScissorRectangle = originalScissorRect;
             sb.Begin();
 
-            // Draw global controls
-            sb.FillRectangle(_controlsArea, Color.Black * 0.5f);
+            // Global controls background and drawing
+            sb.FillRectangle(_controlsArea, Color.Black * 0.6f);
             foreach (var button in _globalControlButtons)
             {
                 if (button.IconName == "CycleLayerType")
                 {
-                    // Get the current NewLayerType from the state and draw the corresponding icon.
-                    string iconName = _editorState.Layers.NewLayerType.ToString() + "Layer"; // e.g., "TileLayer", "ObjectLayer"
-                    Color tint = button.IsHovered ? Color.Yellow : Color.White;
-                    _editorUI.DrawIcon(sb, button.Bounds, iconName, tint);
+                    string iconName = _editorState.Layers.NewLayerType.ToString() + "Layer";
+                    _editorUI.DrawIcon(sb, button.Bounds, iconName, button.IsHovered ? Color.Yellow : Color.White);
                 }
                 else
                 {

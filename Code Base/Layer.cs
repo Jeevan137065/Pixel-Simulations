@@ -12,7 +12,7 @@ namespace Pixel_Simulations.Data
         public string Name { get; set; }
         public bool IsVisible { get; set; } = true;
         public bool IsLocked { get; set; } = false;
-
+        public bool IsExpanded { get; set; } = false;
         public abstract LayerType Type { get; }
 
         protected Layer(string name) { Name = name; }
@@ -78,33 +78,32 @@ namespace Pixel_Simulations.Data
     public class ObjectLayer : Layer
     {
         public override LayerType Type => LayerType.Object;
-        public List<MapObject> Objects { get; set; }
+        public List<MapObject> Objects = new List<MapObject>();
         public ObjectLayer(string name) : base(name)
         {
-            Objects = new List<MapObject>();
         }
         public ObjectLayer() : base() { }
     }
     public class CollisionLayer : ObjectLayer
     {
         public override LayerType Type => LayerType.Collision;
-        public List<RectangleObject> CollisionMesh { get; set; }
-        public CollisionLayer(string name) : base(name) { CollisionMesh = new List<RectangleObject>(); }
+        public List<ShapeObject> CollisionMesh { get; set; } = new List<ShapeObject>();
+        public CollisionLayer(string name) : base(name) {}
         public CollisionLayer() : base() { }
     }
     public class NavigationLayer : ObjectLayer
     {
         public override LayerType Type => LayerType.Navigation;
-        public List<RectangleObject> NavigationMesh { get; set; }
-        public NavigationLayer(string name) : base(name) { NavigationMesh = new List<RectangleObject>(); }
+        public List<ShapeObject> NavigationMesh = new List<ShapeObject>();
+        public NavigationLayer(string name) : base(name) {}
         public NavigationLayer() : base() { }
     }
     public class TriggerLayer : ObjectLayer
     {
         public override LayerType Type => LayerType.Trigger;
-        public List<RectangleObject> TriggerMesh { get; set; }
-        public List<PointObject> PointTriggers { get; set; }
-        public TriggerLayer(string name) : base(name) { TriggerMesh = new List<RectangleObject>(); PointTriggers = new List<PointObject>(); }
+        public List<RectangleObject> TriggerMesh = new List<RectangleObject>();
+        public List<PointObject> PointTriggers = new List<PointObject>();
+        public TriggerLayer(string name) : base(name) {  }
         public TriggerLayer() : base() { }
     }
 }

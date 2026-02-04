@@ -103,22 +103,46 @@ namespace Pixel_Simulations.Data
         {
             if (layer == null) return;
             float lineThickness = 1f / _editorState.camera.Zoom;
-            foreach (var rectObj in layer.CollisionMesh)
+
+            foreach (var shapeObj in layer.CollisionMesh)
             {
-                var bounds = new RectangleF(rectObj.Position, rectObj.Size);
-                sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
-                sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
+
+                if (shapeObj == null || shapeObj.Shape == null) continue;
+                // 1. Draw the filled area (using bounds for a simple transparent tint)
+                var bounds = shapeObj.Shape.GetBounds();
+                sb.FillRectangle(bounds, shapeObj.DebugColor * 0.2f);
+
+                // 2. DRAW THE ACTUAL POLYGON EDGES (The complex "Plus" shape)
+                var verts = shapeObj.Shape.Vertices;
+                for (int i = 0; i < verts.Count; i++)
+                {
+                    Vector2 start = verts[i];
+                    Vector2 end = verts[(i + 1) % verts.Count]; // Loop back to start
+                    sb.DrawLine(start, end, shapeObj.DebugColor, lineThickness * 2);
+                }
             }
         }
         private void DrawNavigationLayer(SpriteBatch sb, NavigationLayer layer)
         {
             if (layer == null) return;
             float lineThickness = 1f / _editorState.camera.Zoom;
-            foreach (var rectObj in layer.NavigationMesh)
+
+            foreach (var shapeObj in layer.NavigationMesh)
             {
-                var bounds = new RectangleF(rectObj.Position, rectObj.Size);
-                sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
-                sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
+
+                if (shapeObj == null || shapeObj.Shape == null) continue;
+                // 1. Draw the filled area (using bounds for a simple transparent tint)
+                var bounds = shapeObj.Shape.GetBounds();
+                sb.FillRectangle(bounds, shapeObj.DebugColor * 0.2f);
+
+                // 2. DRAW THE ACTUAL POLYGON EDGES (The complex "Plus" shape)
+                var verts = shapeObj.Shape.Vertices;
+                for (int i = 0; i < verts.Count; i++)
+                {
+                    Vector2 start = verts[i];
+                    Vector2 end = verts[(i + 1) % verts.Count]; // Loop back to start
+                    sb.DrawLine(start, end, shapeObj.DebugColor, lineThickness * 2);
+                }
             }
         }
         private void DrawTriggerLayer(SpriteBatch sb, TriggerLayer layer)
@@ -166,7 +190,6 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
-
     }
 
     public class GameMapRenderer
@@ -246,45 +269,65 @@ namespace Pixel_Simulations.Data
         {
             if (layer == null) return;
 
-            // Since the game camera has no zoom, line thickness is always 1 pixel.
-            const float lineThickness = 1f;
+            // Get the unified list of shapes from the layer
+            List<MapObject> shapes = null;
+            if (layer is ObjectLayer ol) shapes = ol.Objects;
+            
+            if (shapes == null) return;
 
-            // The specific List<> to draw from depends on the layer's concrete type
-            var rectanglesToDraw = (layer as CollisionLayer)?.CollisionMesh ??
-                                   (layer as NavigationLayer)?.NavigationMesh ??
-                                   (layer as TriggerLayer)?.TriggerMesh;
+            float lineThickness = 1f / _camera.Zoom;
 
-            if (rectanglesToDraw != null)
+            foreach (var mapObject in shapes)
             {
-                foreach (var rectObj in rectanglesToDraw)
+                if (mapObject is ShapeObject shapeObj)
                 {
-                    var bounds = new RectangleF(rectObj.Position, rectObj.Size);
-                    sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
-                    sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
+                    //DrawPolygon(sb, shapeObj.Shape, shapeObj.DebugColor, lineThickness);
+                }
+                else if (mapObject is PointObject pointObj)
+                {
+                    // Draw a circle for the radius and a crosshair at the center
+                    sb.DrawCircle(pointObj.Position, pointObj.Radius, 32, pointObj.DebugColor, lineThickness);
+                    sb.DrawLine(pointObj.Position - new Vector2(4 / _camera.Zoom, 0), pointObj.Position + new Vector2(4 / _camera.Zoom, 0), pointObj.DebugColor, lineThickness);
+                    sb.DrawLine(pointObj.Position - new Vector2(0, 4 / _camera.Zoom), pointObj.Position + new Vector2(0, 4 / _camera.Zoom), pointObj.DebugColor, lineThickness);
                 }
             }
-            // Add logic for PointObjects if the layer is a TriggerLayer
         }
         private void DrawCollisionLayer(SpriteBatch sb, CollisionLayer layer)
         {
             if (layer == null) return;
             float lineThickness = 1f;
-            foreach (var rectObj in layer.CollisionMesh)
+            foreach (var shapeObj in layer.CollisionMesh)
             {
-                var bounds = new RectangleF(rectObj.Position, rectObj.Size);
-                sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
-                sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
+                // Draw Fill (Optional)
+                sb.FillRectangle(shapeObj.Shape.GetBounds(), shapeObj.DebugColor * 0.3f);
+
+                // Draw Polygon Edges
+                var verts = shapeObj.Shape.Vertices;
+                for (int i = 0; i < verts.Count; i++)
+                {
+                    Vector2 v1 = verts[i];
+                    Vector2 v2 = verts[(i + 1) % verts.Count];
+                    sb.DrawLine(v1, v2, shapeObj.DebugColor, lineThickness);
+                }
             }
         }
         private void DrawNavigationLayer(SpriteBatch sb, NavigationLayer layer)
         {
             if (layer == null) return;
             float lineThickness = 1f;
-            foreach (var rectObj in layer.NavigationMesh)
+            foreach (var shapeObj in layer.NavigationMesh)
             {
-                var bounds = new RectangleF(rectObj.Position, rectObj.Size);
-                sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
-                sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
+                // Draw Fill (Optional)
+                sb.FillRectangle(shapeObj.Shape.GetBounds(), shapeObj.DebugColor * 0.3f);
+
+                // Draw Polygon Edges
+                var verts = shapeObj.Shape.Vertices;
+                for (int i = 0; i < verts.Count; i++)
+                {
+                    Vector2 v1 = verts[i];
+                    Vector2 v2 = verts[(i + 1) % verts.Count];
+                    sb.DrawLine(v1, v2, shapeObj.DebugColor, lineThickness);
+                }
             }
         }
         private void DrawTriggerLayer(SpriteBatch sb, TriggerLayer layer)

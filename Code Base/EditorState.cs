@@ -15,29 +15,75 @@ namespace Pixel_Simulations.Editor
     // A collection of sub-states for organization
     public class InputState
     {
-        // Raw States
         public MouseState CurrentMouse { get; set; }
         public MouseState PreviousMouse { get; set; }
         public KeyboardState CurrentKeyboard { get; set; }
         public KeyboardState PreviousKeyboard { get; set; }
+        public bool Drawing = false;
+        public int ClickCounter = 0;
+        // Click Flags (True for one frame)
+        public bool IsNewLeftClick { get; private set; }
+        public bool IsNewRightClick { get; private set; }
+        public bool NewDoubleLeftClick { get; private set; }
+        public bool NewDoubleRightClick { get; private set; }
 
-        // Processed, Contextual Data
+        // Hold Flags (True while button is down)
+        public bool LeftHold => CurrentMouse.LeftButton == ButtonState.Pressed;
+        public bool RightHold => CurrentMouse.RightButton == ButtonState.Pressed;
+
+        private float _lastLeftClickTime = -1f;
+        private float _lastRightClickTime = -1f;
+        private const float DOUBLE_CLICK_THRESHOLD = 0.3f; // Seconds
+
         public Vector2 MouseWindowPosition { get; set; }
         public Vector2 MouseWorldPosition { get; set; }
         public Point MouseGridCell { get; set; }
         public Point MouseChunkCell { get; set; }
-        public int ClickCounter = 0;
         public float Zoom;
-        public bool Drawing = false;
-        public bool IsNewLeftClick()
+        public MapObject mapObject { get; set; }
+        public void Update(GameTime gameTime)
         {
-            ClickCounter++; 
-            return CurrentMouse.LeftButton == ButtonState.Pressed && PreviousMouse.LeftButton == ButtonState.Released;
-        }
-        public bool IsNewRightClick()
-        {
-            ClickCounter++;
-            return CurrentMouse.RightButton == ButtonState.Pressed && PreviousMouse.RightButton == ButtonState.Released;
+            float elapsed = (float)gameTime.TotalGameTime.TotalSeconds;
+
+            // Reset frame-specific flags
+            IsNewLeftClick = false;
+            IsNewRightClick = false;
+            NewDoubleLeftClick = false;
+            NewDoubleRightClick = false;
+
+            // --- Left Click Logic ---
+            if (CurrentMouse.LeftButton == ButtonState.Pressed && PreviousMouse.LeftButton == ButtonState.Released)
+            {
+                if (elapsed - _lastLeftClickTime < DOUBLE_CLICK_THRESHOLD)
+                {
+                    NewDoubleLeftClick = true;
+                    _lastLeftClickTime = -1f;
+                    ClickCounter++;
+                }
+                else
+                {
+                    IsNewLeftClick = true;
+                    _lastLeftClickTime = elapsed;
+                }
+                ClickCounter++;
+            }
+
+            // --- Right Click Logic ---
+            if (CurrentMouse.RightButton == ButtonState.Pressed && PreviousMouse.RightButton == ButtonState.Released)
+            {
+                if (elapsed - _lastRightClickTime < DOUBLE_CLICK_THRESHOLD)
+                {
+                    NewDoubleRightClick = true;
+                    _lastRightClickTime = -1f;
+                    ClickCounter++;
+                }
+                else
+                {
+                    IsNewRightClick = true;
+                    _lastRightClickTime = elapsed;
+                }
+                ClickCounter++;
+            }
         }
     }
     public class UIState
@@ -56,6 +102,7 @@ namespace Pixel_Simulations.Editor
         public string HoveredButtonName { get; set; }
         public List<ITool> Tools { get; }
         public bool IsToolDrawing { get; set; } = false;
+        public ShapeOperation ActiveBooleanOp { get; set; } = ShapeOperation.None;
         //public List<string> ButtonNames { get; set; } = new List<string> { "Brush", "Eraser", "Fill", "Rectangle", "CollisionBrush", "Line", "Eyedropper", "Path", "ObjectPlacer", "PointPlacer", "PointLight", "SpotLight", "SpriteLight", "ReflectionPlane" };
         public ToolState()
         {
@@ -65,7 +112,7 @@ namespace Pixel_Simulations.Editor
                 new BrushTool(),
                 new EraserTool(),
                 new FreeRectangleTool(),
-                new GridRectangleTool(),
+                new ShapeTool(),
                 new SelectionTool(),
                 new PointPlacerTool()
                 // new RectangleTool(this) // Some tools might need a reference back to the state
@@ -81,6 +128,8 @@ namespace Pixel_Simulations.Editor
 
         // For object-based tools
         public string ActiveObjectAssetName { get; set; }
+        public MapObject SelectedMapObject { get; set; }
+        public HandleType ActiveHandle { get; set; } = HandleType.None;
     }
     public class HistoryState
     {
@@ -105,6 +154,8 @@ namespace Pixel_Simulations.Editor
     {
         public List<Layer> Layers { get; set; } = new List<Layer>();
         public int ActiveLayerIndex { get; set; } = -1;
+        public int RenamingLayerIndex { get; set; } = -1;
+        public string TextEditorString { get; set; }
         public string HoveredButtonName { get; set; } // For the bottom control bar
         public int HoveredLayerIndex { get; set; } = -1; // Which layer row is hovered
         public string HoveredLayerIconName { get; set; } // "Visible", "Lock", "MoveUp", etc.
@@ -189,9 +240,11 @@ namespace Pixel_Simulations.Editor
             }
         }
 
-        public void refresh()
+        public void refresh(GameTime gameTime)
         {
+            Input.Update(gameTime);
             Input.Zoom = camera.Zoom;
+            Input.mapObject = Selection.SelectedMapObject;
             Layers.Layers = ActiveMap.Layers;
             UI.ActivePanelName = _layoutmanager.GetPanelAt(Input.MouseWindowPosition.ToPoint());
         }

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using MonoGame.Extended;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Clipper2Lib;
 
 
 namespace Pixel_Simulations
@@ -169,6 +171,8 @@ namespace Pixel_Simulations
                 {
                     case ObjectType.Rectangle: target = new RectangleObject(); break;
                     case ObjectType.Point: target = new PointObject(); break;
+                    case ObjectType.Shape: target = new ShapeObject(); break; // ADDED THIS
+                    //case ObjectType.Prop: target = new PropObject(); break;   // ADDED THIS
                 }
                 if (target != null)
                 {
@@ -303,11 +307,11 @@ namespace Pixel_Simulations
                         break;
                     case LayerType.Collision:
                         var colLayer = (CollisionLayer)target;
-                        colLayer.CollisionMesh = jo["CollisionMesh"]?.ToObject<List<RectangleObject>>(serializer) ?? new List<RectangleObject>();
+                        colLayer.CollisionMesh = jo["CollisionMesh"]?.ToObject<List<ShapeObject>>(serializer) ?? new List<ShapeObject>();
                         break;
                     case LayerType.Navigation:
                         var navLayer = (NavigationLayer)target;
-                        navLayer.NavigationMesh = jo["NavigationMesh"]?.ToObject<List<RectangleObject>>(serializer) ?? new List<RectangleObject>();
+                        navLayer.NavigationMesh = jo["NavigationMesh"]?.ToObject<List<ShapeObject>>(serializer) ?? new List<ShapeObject>();
                         break;
                     case LayerType.Trigger:
                         var trigLayer = (TriggerLayer)target;
@@ -319,5 +323,94 @@ namespace Pixel_Simulations
             return target;
         }
     }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public partial class Polygon
+    {
+        [JsonProperty]
+        public List<Vector2> Vertices { get; set; } = new List<Vector2>();
+        private const double CLIPPER_SCALE = 1000.0; // Scale to preserve 3 decimal places
+
+        public Polygon(List<Vector2> vertices) => Vertices = vertices;
+
+        // Parameterless constructor for deserialization
+        public Polygon()    {}
+        /// Creates a rectangular polygon from two corner points.
+        public static Polygon FromRectangle(Vector2 p1, Vector2 p2)
+        {
+            float minX = System.Math.Min(p1.X, p2.X);
+            float minY = System.Math.Min(p1.Y, p2.Y);
+            float maxX = System.Math.Max(p1.X, p2.X);
+            float maxY = System.Math.Max(p1.Y, p2.Y);
+
+            return new Polygon(new List<Vector2>
+            {
+                new Vector2(minX, minY),
+                new Vector2(maxX, minY),
+                new Vector2(maxX, maxY),
+                new Vector2(minX, maxY)
+            });
+        }
+        public static Polygon FromVertices(List<Vector2> vertices) => new Polygon(new List<Vector2>(vertices));
+
+        // --- Clipper2 Integration ---
+        public Path64 ToClipperPath()
+        {
+            Path64 path = new Path64();
+            foreach (var v in Vertices)
+                path.Add(new Point64(v.X * CLIPPER_SCALE, v.Y * CLIPPER_SCALE));
+            return path;
+        }
+        public static List<Vector2> FromClipperPath(Path64 path)
+        {
+            return path.Select(p => new Vector2((float)(p.X / CLIPPER_SCALE), (float)(p.Y / CLIPPER_SCALE))).ToList();
+        }
+        public RectangleF GetBounds()
+        {
+            if (Vertices.Count == 0) return RectangleF.Empty;
+            float minX = Vertices.Min(v => v.X);
+            float minY = Vertices.Min(v => v.Y);
+            float maxX = Vertices.Max(v => v.X);
+            float maxY = Vertices.Max(v => v.Y);
+            return new RectangleF(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        public bool Contains(Vector2 p)
+        {
+            bool inside = false;
+            for (int i = 0, j = Vertices.Count - 1; i < Vertices.Count; j = i++)
+            {
+                if (((Vertices[i].Y > p.Y) != (Vertices[j].Y > p.Y)) &&
+                    (p.X < (Vertices[j].X - Vertices[i].X) * (p.Y - Vertices[i].Y) / (Vertices[j].Y - Vertices[i].Y) + Vertices[i].X))
+                    inside = !inside;
+            }
+            return inside;
+        }
+
+        public void Offset(Vector2 delta)
+        {
+            for (int i = 0; i < Vertices.Count; i++) Vertices[i] += delta;
+        }
+
+        public void Scale(Vector2 scale, Vector2 origin)
+        {
+            for (int i = 0; i < Vertices.Count; i++)
+                Vertices[i] = origin + (Vertices[i] - origin) * scale;
+        }
+        public void UpdateVertices(Vector2 oldPos, Vector2 oldSize, Vector2 newPos, Vector2 newSize)
+        {
+            if (oldSize.X == 0 || oldSize.Y == 0) return;
+
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                // 1. Convert to 0.0 - 1.0 local space based on old bounds
+                Vector2 local = (Vertices[i] - oldPos) / oldSize;
+                // 2. Map back to world space based on new bounds
+                Vertices[i] = newPos + (local * newSize);
+            }
+        }
+    }
+
+
 }
 

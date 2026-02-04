@@ -246,12 +246,21 @@ namespace Pixel_Simulations
             InteractionCenter = new Vector2(_position.X + _texture.Width / 2f, _position.Y + _texture.Height / 2f);
         }
 
-        public void Sink(float waterDepth)
+        public void Sink(float targetDepth)
         {
-            // waterDepth from LogicGrid: 0.0 to 1.0
-            // If depth is 0.5, we want to hide roughly the bottom 25% of the player
-            SubmergedAmount = MathHelper.Lerp(SubmergedAmount, waterDepth * 0.75f, 0.05f);
-            //SubmergedAmount = waterDepth * 0.75f;
+            float lerpSpeed = 0.05f;
+
+            // Standard Lerp
+            SubmergedAmount = MathHelper.Lerp(SubmergedAmount, targetDepth, lerpSpeed);
+
+            // FIX: Snap to target if we are close enough to avoid e-15 or 0.4999999
+            if (Math.Abs(SubmergedAmount - targetDepth) < 0.001f)
+            {
+                SubmergedAmount = targetDepth;
+            }
+
+            // Ensure it never goes below zero (fixes the e-negative issue)
+            if (SubmergedAmount < 0.0001f) SubmergedAmount = 0.0f;
         }
 
         public void Draw(SpriteBatch spriteBatch)

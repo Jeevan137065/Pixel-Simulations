@@ -22,7 +22,7 @@ namespace Pixel_Simulations.Data
             IconName = iconName;
         }
 
-        public bool Update(InputState input, EventBus eventBus)
+        public bool Update(InputState input)// Returns true if mouse is on this Button
         {
             return IsHovered = Bounds.Contains(input.MouseWindowPosition);
         }
@@ -63,7 +63,7 @@ namespace Pixel_Simulations.Data
             SelectedItem = null;
             if (!Bounds.Contains(input.MouseWindowPosition)) return;
 
-            if (input.IsNewLeftClick())
+            if (input.IsNewLeftClick)
             {
                 int index = (int)((input.MouseWindowPosition.Y - Bounds.Y - 30) / 20); // 30px for title
                 if (index >= 0 && index < Items.Count)

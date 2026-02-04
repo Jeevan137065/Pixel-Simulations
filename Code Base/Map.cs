@@ -284,19 +284,29 @@ namespace Pixel_Simulations.Data
         private static void WriteCollisionLayer(BinaryWriter writer, CollisionLayer layer)
         {
             writer.Write(layer.CollisionMesh.Count);
-            foreach (var rect in layer.CollisionMesh)
+            foreach (var shape in layer.CollisionMesh)
             {
-                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
-                writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
+                writer.Write(shape.Name ?? "");
+                writer.Write(shape.Shape.Vertices.Count);
+                foreach (var v in shape.Shape.Vertices)
+                {
+                    writer.Write(v.X);
+                    writer.Write(v.Y);
+                }
             }
         }
         private static void WriteNavigationLayer(BinaryWriter writer, NavigationLayer layer)
         {
             writer.Write(layer.NavigationMesh.Count);
-            foreach (var rect in layer.NavigationMesh)
+            foreach (var shape in layer.NavigationMesh)
             {
-                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
-                writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
+                writer.Write(shape.Name ?? "");
+                writer.Write(shape.Shape.Vertices.Count);
+                foreach (var v in shape.Shape.Vertices)
+                {
+                    writer.Write(v.X);
+                    writer.Write(v.Y);
+                }
             }
         }
         private static void WriteTriggerLayer(BinaryWriter writer, TriggerLayer layer)
@@ -317,26 +327,40 @@ namespace Pixel_Simulations.Data
         private static CollisionLayer ReadCollisionLayer(BinaryReader reader, string name)
         {
             var layer = new CollisionLayer(name);
-            int rectCount = reader.ReadInt32();
-            for (int i = 0; i < rectCount; i++)
+            int shapeCount = reader.ReadInt32();
+            for (int i = 0; i < shapeCount; i++)
             {
-                var rect = new RectangleObject();
-                rect.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-                rect.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-                layer.CollisionMesh.Add(rect);
+                var shape = new ShapeObject();
+                shape.Name = reader.ReadString();
+                int vertCount = reader.ReadInt32();
+                var verts = new List<Vector2>();
+                for (int j = 0; j < vertCount; j++)
+                {
+                    verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
+                }
+                shape.Shape = new Polygon(verts);
+                shape.UpdateBoundsFromVertices(); // Sync Position/Size for AABB checks
+                layer.CollisionMesh.Add(shape);
             }
             return layer;
         }
         private static NavigationLayer ReadNavigationLayer(BinaryReader reader, string name)
         {
             var layer = new NavigationLayer(name);
-            int rectCount = reader.ReadInt32();
-            for (int i = 0; i < rectCount; i++)
+            int shapeCount = reader.ReadInt32();
+            for (int i = 0; i < shapeCount; i++)
             {
-                var rect = new RectangleObject();
-                rect.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-                rect.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-                layer.NavigationMesh.Add(rect);
+                var shape = new ShapeObject();
+                shape.Name = reader.ReadString();
+                int vertCount = reader.ReadInt32();
+                var verts = new List<Vector2>();
+                for (int j = 0; j < vertCount; j++)
+                {
+                    verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
+                }
+                shape.Shape = new Polygon(verts);
+                shape.UpdateBoundsFromVertices(); // Sync Position/Size for AABB checks
+                layer.NavigationMesh.Add(shape);
             }
             return layer;
         }
