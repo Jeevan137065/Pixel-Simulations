@@ -12,7 +12,7 @@ namespace Pixel_Simulations.Data
     {
         public Rectangle Bounds { get; }
         public ICommand CommandToPublish { get; }
-        public string IconName { get; }
+        public string IconName { get; set; }
         public bool IsHovered { get; private set; }
 
         public Button(Rectangle bounds, ICommand command, string iconName)

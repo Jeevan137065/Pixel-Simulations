@@ -15,14 +15,17 @@ namespace Pixel_Simulations.Data
 
         [JsonProperty]
         public int TileID { get; private set; }
+        [JsonProperty]
+        public byte Rotation { get; set; } // 0=0, 1=90, 2=180, 3=270
 
         // Parameterless constructor for JSON deserialization
         private TileInfo() { }
 
-        public TileInfo(string tilesetName, int tileId)
+        public TileInfo(string tilesetName, int tileId, byte rotation = 0)
         {
             TilesetName = tilesetName;
             TileID = tileId;
+            Rotation = rotation;
         }
 
         // --- IEquatable Implementation for correct comparisons ---

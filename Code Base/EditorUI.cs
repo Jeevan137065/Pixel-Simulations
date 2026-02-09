@@ -284,45 +284,34 @@ namespace Pixel_Simulations.UI
     }
     public class ToolPanel : BasePanel
     {
-        private readonly List<Button> _buttons = new List<Button>();
-        private ToolState ToolStack;
+        private Dictionary<ITool, Button> _toolButtons = new Dictionary<ITool, Button>();
         public ToolPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
             : base(area, editorUI, editorState)
         {
-            ToolStack = editorState.ToolState;
-        }
-
-        public void InitializeButtons() // Call this after ToolManager is created
-        {
-            _buttons.Clear();
-            var toolNames = ToolStack.Tools.Select(t => t.Name).ToList();
-            for (int i = 0; i < toolNames.Count; i++)
+            int yOffset = 10;
+            foreach (var tool in editorState.ToolState.Tools)
             {
-                var name = toolNames[i];
-                var rect = new Rectangle(Area.X + 5 + i * 35, Area.Y + 4, 32, 32);
-                _buttons.Add(new Button(rect, new ChangeToolCommand { ToolName = name }, name));
+                var btnRect = new Rectangle(area.X + yOffset, area.Y + 10, 32, 32);
+                var btn = new Button(btnRect, new ChangeToolCommand { ToolName = tool.Name }, tool.IconName);
+
+                _toolButtons.Add(tool, btn);
+                yOffset += 40;
             }
         }
 
         public override void Update(InputState input, EventBus bus)
         {
-
-            ToolStack.HoveredButtonName = null; // Reset hover state for this frame.
-
-            if (!Area.Contains(input.MouseWindowPosition)) return;
-
-            foreach (var button in _buttons)
+            foreach (var kvp in _toolButtons)
             {
-                if (button.Update(input))
-                {
-                    ToolStack.HoveredButtonName = button.IconName;
+                ITool tool = kvp.Key;
+                Button button = kvp.Value;
 
-                    if (input.IsNewLeftClick)// && ToolStack.HoveredButtonName != null)
-                    {
-                        ToolStack.ActiveToolName = button.IconName;
-                        ToolStack.ActiveTool = ToolStack.Tools.FirstOrDefault(t => t.Name == ToolStack.ActiveToolName);
-                        bus.Publish(button.CommandToPublish);
-                    }
+                // REACTION POINT: Update the button's icon name from the tool's property
+                button.IconName = tool.IconName;
+
+                if (button.Update(input) && input.IsNewLeftClick)
+                {
+                    bus.Publish(button.CommandToPublish);
                 }
             }
 
@@ -330,24 +319,10 @@ namespace Pixel_Simulations.UI
 
         public override void Draw(SpriteBatch sb)
         {
-            sb.FillRectangle(Area, Color.Gray * 0.5f);
-            foreach (var button in _buttons)
+            sb.FillRectangle(Area, Color.DarkSlateGray);
+            foreach (var btn in _toolButtons.Values)
             {
-                bool isActive = ToolStack.ActiveToolName == button.IconName.ToString();
-                bool isHovered = ToolStack.HoveredButtonName == button.IconName.ToString();
-
-                // Draw visual feedback based on state
-                if (isActive)
-                {
-                    sb.FillRectangle(button.Bounds, Color.CornflowerBlue * 0.7f);
-                    sb.DrawRectangle(button.Bounds, Color.White, 1);
-                }
-                else if (isHovered)
-                {
-                    sb.FillRectangle(button.Bounds, Color.White * 0.2f);
-                }
-
-                _editorUI.DrawIcon(sb, button.Bounds, button.IconName, Color.White);
+                btn.Draw(sb, _editorUI);
             }
         }
     }
@@ -583,7 +558,6 @@ namespace Pixel_Simulations.UI
             TilesetPanel = new TilesetPanel(_editorState._layoutmanager.TilesetPanel, this, editorState);
             LayerPanel = new LayerPanel(_editorState._layoutmanager.LayerPanel,this,editorState);
             ToolPanel = new ToolPanel(_editorState._layoutmanager.ToolPanel, this, editorState);
-            ToolPanel.InitializeButtons();
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
         }
 

@@ -164,27 +164,30 @@ namespace Pixel_Simulations.Data
                 sb.DrawLine(pointObj.Position - new Vector2(0, 4), pointObj.Position + new Vector2(0, 4), pointObj.DebugColor, lineThickness);
             }
         }
+        // In MapRenderer.cs -> DrawChunk
         private void DrawChunk(SpriteBatch sb, Chunk chunk)
         {
-            // Calculate the top-left world position of the chunk
             float chunkWorldX = chunk.ChunkCoordinate.X * Chunk.CHUNK_SIZE * CELL_SIZE;
             float chunkWorldY = chunk.ChunkCoordinate.Y * Chunk.CHUNK_SIZE * CELL_SIZE;
+            Vector2 origin = new Vector2(8, 8); // Half of 16x16
 
             for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
             {
                 for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                 {
-                    var tileInfo = chunk.Tiles[x, y];
-                    if (tileInfo != null)
+                    var tile = chunk.Tiles[x, y];
+                    if (tile != null)
                     {
-                        var texture = _tilesetManager.GetTileTexture(tileInfo);
-                        if (texture != null)
+                        var tex = _tilesetManager.GetTileTexture(tile);
+                        if (tex != null)
                         {
-                            var position = new Vector2(
-                                chunkWorldX + x * CELL_SIZE,
-                                chunkWorldY + y * CELL_SIZE
+                            Vector2 pos = new Vector2(
+                                chunkWorldX + (x * CELL_SIZE) + 8, // Add 8 to offset the origin
+                                chunkWorldY + (y * CELL_SIZE) + 8
                             );
-                            sb.Draw(texture, position, Color.White);
+
+                            float rotationRadians = tile.Rotation * MathHelper.PiOver2;
+                            sb.Draw(tex, pos, null, Color.White, rotationRadians, origin, 1f, SpriteEffects.None, 0f);
                         }
                     }
                 }
@@ -353,19 +356,27 @@ namespace Pixel_Simulations.Data
         {
             float chunkWorldX = chunk.ChunkCoordinate.X * Chunk.CHUNK_SIZE * CELL_SIZE;
             float chunkWorldY = chunk.ChunkCoordinate.Y * Chunk.CHUNK_SIZE * CELL_SIZE;
+            Vector2 origin = new Vector2(8, 8); // Center of 16x16 tile
 
             for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
             {
                 for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                 {
-                    var tileInfo = chunk.Tiles[x, y];
-                    if (tileInfo != null)
+                    var tile = chunk.Tiles[x, y];
+                    if (tile != null)
                     {
-                        var texture = _tilesetManager.GetTileTexture(tileInfo);
+                        var texture = _tilesetManager.GetTileTexture(tile);
                         if (texture != null)
                         {
-                            var position = new Vector2(chunkWorldX + x * CELL_SIZE, chunkWorldY + y * CELL_SIZE);
-                            sb.Draw(texture, position, Color.White);
+                            // Offset position by 8,8 to account for center origin
+                            var position = new Vector2(
+                                chunkWorldX + (x * CELL_SIZE) + 8,
+                                chunkWorldY + (y * CELL_SIZE) + 8
+                            );
+
+                            float rotationRadians = tile.Rotation * MathHelper.PiOver2;
+
+                            sb.Draw(texture, position, null, Color.White, rotationRadians, origin, 1f, SpriteEffects.None, 0f);
                         }
                     }
                 }
