@@ -172,7 +172,7 @@ namespace Pixel_Simulations
                     case ObjectType.Rectangle: target = new RectangleObject(); break;
                     case ObjectType.Point: target = new PointObject(); break;
                     case ObjectType.Shape: target = new ShapeObject(); break; // ADDED THIS
-                    //case ObjectType.Prop: target = new PropObject(); break;   // ADDED THIS
+                    case ObjectType.Prop: target = new PropObject(); break;   // ADDED THIS
                 }
                 if (target != null)
                 {
@@ -184,7 +184,9 @@ namespace Pixel_Simulations
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            throw new NotImplementedException(); // We disabled writing
+            // Default serialization is fine, just ensure Type is written
+            JObject jo = JObject.FromObject(value);
+            jo.WriteTo(writer);
         }
     }
     public class ColorConverter : JsonConverter<Color>

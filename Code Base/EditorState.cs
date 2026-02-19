@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.Tiled;
@@ -8,7 +9,9 @@ using Pixel_Simulations.Data;
 using Pixel_Simulations.UI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 
 namespace Pixel_Simulations.Editor
 {
@@ -111,6 +114,7 @@ namespace Pixel_Simulations.Editor
             {
                 new BrushTool(),
                 new EraserTool(),
+                new ObjectPlacerTool(),
                 new FreeRectangleTool(),
                 new ShapeTool(),
                 new SelectionTool(),
@@ -125,11 +129,9 @@ namespace Pixel_Simulations.Editor
     {
         // For tile-based tools
         public TileInfo ActiveTileBrush { get; set; }
-
-        // For object-based tools
-        public string ActiveObjectAssetName { get; set; }
-        public MapObject SelectedMapObject { get; set; }
         public HandleType ActiveHandle { get; set; } = HandleType.None;
+        public ObjectPrefab ActivePrefab { get; set; } // The currently selected blueprint
+        public MapObject SelectedMapObject { get; set; } // The currently selected instance on the map
     }
     public class HistoryState
     {
@@ -141,7 +143,7 @@ namespace Pixel_Simulations.Editor
         public List<string> ButtonNames { get; } = new List<string> { "New", "Save", "Load", "Undo", "Redo", "Options" };
         public string HoveredButtonName { get; set; }
     }
-    public class TilesetPanelState
+    public class TilesetState
     {
         // Tileset list will be initialized by TilesetManager
         public string ActiveTilesetName { get; set; }
@@ -149,6 +151,20 @@ namespace Pixel_Simulations.Editor
         public Point HoveredTileCell { get; set; } = new Point(-1, -1); // For the tile grid
         public string HoveredTilesetName { get; set; } // For the list of tilesets
         public bool IsAtlasPickerVisible { get; set; } = false;
+    }
+    public class PrefabCreatorState
+    {
+        public bool IsOpen = false;
+        public string ActiveAtlasName { get; set; }
+
+        // The selection box on the atlas (in pixels)
+        public Rectangle SelectionRect { get; set; }
+        public string TempName { get; set; } = "New_Object";
+        public string TempTags { get; set; } = "tag1, tag2";
+
+        // Used for the click-and-drag logic on the atlas
+        public Vector2 DragStart { get; set; }
+        public bool IsDragging { get; set; }
     }
     public class LayerPanelState
     {
@@ -190,10 +206,16 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public ToolState ToolState { get; }
         [JsonIgnore] public SelectionState Selection { get; }
         [JsonIgnore] public HistoryState History { get; }
-        [JsonIgnore] public TilesetPanelState TilesetPanel { get; } = new TilesetPanelState();
-        [JsonIgnore] public Dictionary<string, Texture2D> AvailableAtlasTextures { get; } = new Dictionary<string, Texture2D>();
+        [JsonIgnore] public TilesetState TilesetPanel { get; } = new TilesetState();
+        [JsonIgnore] public PrefabCreatorState PrefabCreator { get; } = new PrefabCreatorState();
         [JsonIgnore] public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
         [JsonIgnore] public TilesetManager TilesetManager { get; }
+        // --- NEW ASSET CORE ---
+        [JsonIgnore] public AssetLibrary AssetLibrary { get; set; }
+        [JsonIgnore] public PrefabManager PrefabManager { get; }
+
+        // Flags for UI state
+        [JsonIgnore] public string ActiveAtlasForCreator { get; set; }
 
         public EditorState(LayoutManager layoutManager, GraphicsDevice graphicsDevice)
         {
@@ -211,35 +233,26 @@ namespace Pixel_Simulations.Editor
             History = new HistoryState();
             _layoutmanager = layoutManager;
             TilesetManager = new TilesetManager();
+            PrefabManager = new PrefabManager();
             Layers.Layers = ActiveMap.Layers;
             if (Layers.Layers.Count > 0)
             {
                 Layers.ActiveLayerIndex = 0;
             }
         }
-
-        public void CreateNewTileset(string atlasName, int tileSize, SliceMode sliceMode)
+        public void LoadContent(ContentManager content)
         {
-            if (AvailableAtlasTextures.TryGetValue(atlasName, out var texture))
-            {
-                // Check if a tileset with this name already exists
-                if (ActiveTileSets.Any(ts => ts.Name == atlasName)) return;
+            AssetLibrary = new AssetLibrary(content);
+            AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
+            AssetLibrary.LoadAtlas("BasiR", AtlasType.Tile);
+            AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
 
-                var newTileset = new TileSet(atlasName, texture, tileSize,_graphics, sliceMode);
-                ActiveTileSets.Add(newTileset);
-                TilesetManager.RegisterTileSet(newTileset);
-                // If this is the first tileset, make it active
-                if (ActiveTileSets.Count == 1)
-                {
-                    TilesetPanel.ActiveTilesetName = atlasName;
-                    // Also select the first tile
-                    int firstId = newTileset.SlicedAtlas.Keys.FirstOrDefault(-1);
-                    TilesetPanel.SelectedTileID = firstId;
-                    Selection.ActiveTileBrush = new TileInfo(atlasName, firstId);
-                }
-            }
+            AssetLibrary.LoadAtlas("Trees", AtlasType.Object);
+            AssetLibrary.LoadAtlas("Building", AtlasType.Object);
+
+            string prefabPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json");
+            PrefabManager.Load(prefabPath);
         }
-
         public void refresh(GameTime gameTime)
         {
             Input.Update(gameTime);

@@ -20,29 +20,31 @@ namespace Pixel_Simulations.Data
     [JsonObject(MemberSerialization.OptIn)] // Ensure this is present
     public abstract class MapObject
     {
-        [JsonProperty] // Force the Type to be saved to JSON
-        public abstract ObjectType Type { get; }
+        [JsonProperty]  public abstract ObjectType Type { get; }
 
-        [JsonProperty]
-        public string Name { get; set; }
+        [JsonProperty]  public string Name { get; set; }
 
-        [JsonProperty]
-        public Vector2 Position { get; set; }
+        [JsonProperty]  public Vector2 Position { get; set; }
     }
+    [JsonObject(MemberSerialization.OptIn)]
+    public class ObjectPrefab
+    {
+        [JsonProperty]  public string ID { get; set; }
+        [JsonProperty]  public string AtlasName { get; set; }
+        [JsonProperty]  public Rectangle SourceRect { get; set; }
+        [JsonProperty]  public Vector2 Pivot { get; set; }
+        public List<string> Tags { get; set; } = new List<string>();
+        // Helper: Get size in 16px cells
+        public Point SizeInCells => new Point(SourceRect.Width / 16, SourceRect.Height / 16);
+    }
+    [JsonObject(MemberSerialization.OptIn)]
     public class ShapeObject : MapObject
     {
         public override ObjectType Type => ObjectType.Shape; // Add "Shape" to the enum
-
-        [JsonProperty]
-        public Polygon Shape { get; set; }
-
-        [JsonProperty]
-        public string Tag { get; set; }
-        [JsonProperty]
-        public Vector2 Size { get; set; }
-
-        [JsonProperty]
-        public Color DebugColor { get; set; }
+        [JsonProperty]  public Polygon Shape { get; set; }
+        [JsonProperty]  public string Tag { get; set; }
+        [JsonProperty]  public Vector2 Size { get; set; }
+        [JsonProperty]  public Color DebugColor { get; set; }
 
         public ShapeObject()
         {
@@ -57,41 +59,38 @@ namespace Pixel_Simulations.Data
             this.Size = new Vector2(rect.Width, rect.Height);
         }
     }
+    [JsonObject(MemberSerialization.OptIn)]
     public class PropObject : MapObject
     {
-        public override ObjectType Type => ObjectType.Prop;
-        public string AssetName { get; set; }
+        [JsonProperty]  public override ObjectType Type => ObjectType.Prop;
+        [JsonProperty]  public string PrefabID { get; set; }
+        [JsonProperty]  public Vector2 Scale { get; set; } = Vector2.One;
+        [JsonProperty]  public float Rotation { get; set; } = 0f;
     }
+    [JsonObject(MemberSerialization.OptIn)]
     public class RectangleObject : MapObject
     {
-        [JsonProperty]
-        public override ObjectType Type => ObjectType.Rectangle;
-        [JsonProperty]
-        public Vector2 Size { get; set; }
-        [JsonProperty]
-        public string TriggerType { get; set; } // e.g., "Collision", "Trigger"
-        [JsonProperty]
-        public Color DebugColor { get; set; }
+        [JsonProperty]  public override ObjectType Type => ObjectType.Rectangle;
+        [JsonProperty]  public Vector2 Size { get; set; }
+        [JsonProperty]  public string TriggerType { get; set; } // e.g., "Collision", "Trigger"
+        [JsonProperty]  public Color DebugColor { get; set; }
     }
+    [JsonObject(MemberSerialization.OptIn)]
     public class PointObject : MapObject
     {
-        [JsonProperty]
-        public override ObjectType Type => ObjectType.Point;
-        [JsonProperty]
-        public float Radius { get; set; }
-        public Vector2 Center { get; set; }
-        [JsonProperty]
-        public string Label { get; set; } // For identifying the trigger
-        [JsonProperty]
-        public Color DebugColor { get; set; }
+        [JsonProperty]  public override ObjectType Type => ObjectType.Point;
+        [JsonProperty]  public float Radius { get; set; }
+        [JsonProperty]  public Vector2 Center { get; set; }
+        [JsonProperty]  public string Label { get; set; } // For identifying the trigger
+        [JsonProperty]  public Color DebugColor { get; set; }
     }
+    [JsonObject(MemberSerialization.OptOut)]
     public class IconDefinition { public int x { get; set; } public int y { get; set; } }
     public interface IPanel
     {
         void Update(InputState input, EventBus bus);
         void Draw(SpriteBatch spriteBatch);
     }
-
     public class LayerRow
     {
         public  Rectangle _bounds;
@@ -173,11 +172,17 @@ namespace Pixel_Simulations.Data
 
             // Local helper to draw items
             Action<MapObject> DrawItem = (obj) => {
+                if (obj == null) return; // Critical Null Guard
+
                 bool isSelected = (selectedObj == obj);
                 Color color = isSelected ? Color.Yellow : Color.White * 0.8f;
 
-                // Use obj.Name instead of a hardcoded string!
-                string displayName = string.IsNullOrEmpty(obj.Name) ? obj.Type.ToString() : obj.Name;
+                // Safely resolve the display name
+                string displayName = "Unknown";
+                if (!string.IsNullOrEmpty(obj.Name))
+                    displayName = obj.Name;
+                else
+                    displayName = obj.Type.ToString(); // Fallback if name is null
 
                 sb.DrawString(ui.DebugFont, "  |- " + displayName,
                     new Vector2(_bounds.X + 20, _bounds.Y + yOffset), color);
@@ -185,6 +190,24 @@ namespace Pixel_Simulations.Data
                 yOffset += CHILD_HEIGHT;
             };
 
+            if (_layer is ObjectLayer objLayer)
+            {
+                foreach (var obj in objLayer.Objects)
+                {
+                    bool isSelected = (ui._editorState.Selection.SelectedMapObject == obj);
+                    string displayName = obj.Name ?? "Unnamed Object";
+
+                    // Indicate if the prefab link is broken
+                    if (obj is PropObject p && ui._editorState.PrefabManager.GetPrefab(p.PrefabID) == null)
+                        displayName += " (Broken Link)";
+
+                    sb.DrawString(ui.DebugFont, "  |- " + displayName,
+                        new Vector2(_bounds.X + 20, _bounds.Y + yOffset),
+                        isSelected ? Color.Yellow : Color.White);
+
+                    yOffset += CHILD_HEIGHT;
+                }
+            }
             if (_layer is CollisionLayer col) foreach (var s in col.CollisionMesh) DrawItem(s);
             else if (_layer is NavigationLayer nav) foreach (var s in nav.NavigationMesh) DrawItem(s);
             else if (_layer is TriggerLayer trig)
@@ -192,7 +215,6 @@ namespace Pixel_Simulations.Data
                 foreach (var r in trig.TriggerMesh) DrawItem(r);
                 foreach (var p in trig.PointTriggers) DrawItem(p);
             }
-            else if (_layer is ObjectLayer objL) foreach (var o in objL.Objects) DrawItem(o);
         }
         public int GetTotalHeight() => _layer.IsExpanded ? HEADER_HEIGHT + (GetChildCount() * CHILD_HEIGHT) : HEADER_HEIGHT;
 

@@ -1,16 +1,17 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Clipper2Lib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions.Layers;
 using MonoGame.Extended.Particles.Modifiers;
 using Pixel_Simulations.Editor;
+using Pixel_Simulations;
 using Pixel_Simulations.UI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Clipper2Lib;
 
 namespace Pixel_Simulations.Data
 {
@@ -118,6 +119,87 @@ namespace Pixel_Simulations.Data
         {
             // A brush might draw a semi-transparent preview of the tile under the cursor.
             // For now, we'll leave it empty.
+        }
+    }
+    public class ObjectPlacerTool : ITool
+    {
+        public string Name => "ObjectPlacer";
+        public string IconName => Name;
+
+        private ObjectPrefab _activePrefab;
+        private EditorState _es;
+
+        public void Update(ToolInput toolInput, InputState input, EventBus eventBus, EditorState editorState)
+        {
+            // 1. Get current selection from UI (To be implemented in TilesetPanel)
+            _activePrefab = editorState.Selection.ActivePrefab;
+            _es = editorState;
+            if (_activePrefab == null) return;
+
+            if (input.IsNewLeftClick)
+            {
+                Vector2 pos = toolInput.WorldPosition;
+
+                // Handle Snapping if CapsLock is on
+                if (input.CurrentKeyboard.CapsLock)
+                {
+                    pos = new Vector2(
+                        (float)Math.Floor(pos.X / 16) * 16,
+                        (float)Math.Floor(pos.Y / 16) * 16
+                    );
+                }
+
+                if (toolInput.ActiveLayer is ObjectLayer objLayer)
+                {
+                    var instance = new PropObject
+                    {
+                        PrefabID = _activePrefab.ID,
+                        Position = pos,
+                        Name = GetUniqueName(objLayer, _activePrefab.ID) // Dynamic unique naming
+                    };
+
+                    eventBus.Publish(new AddObjectCommand(objLayer, instance));
+                }
+            }
+        }
+        private int GetObjectCount(Layer ActiveLayer)
+        {
+            if (ActiveLayer is ObjectLayer col) { return col.Objects.Count; }
+            else return -1;
+        }
+        private string GetUniqueName(ObjectLayer layer, string prefabID)
+        {
+            int count = 1;
+            string candidate;
+
+            // Loop until we find a name that isn't in the list
+            do
+            {
+                candidate = $"{prefabID}_{count}";
+                count++;
+            } while (layer.Objects.Any(o => o.Name == candidate));
+
+            return candidate;
+        }
+        public void DrawPreview(ToolInput toolInput,SpriteBatch sb, InputState input)
+        {
+            if (_activePrefab == null) return;
+
+            var atlas = _es.AssetLibrary.GetAtlas(_activePrefab.AtlasName);
+            if (atlas != null)
+            {
+                Vector2 pos = input.MouseWorldPosition;
+                if (input.CurrentKeyboard.CapsLock)
+                {
+                    pos = new Vector2((float)Math.Floor(pos.X / 16) * 16, (float)Math.Floor(pos.Y / 16) * 16);
+                }
+
+                // FIX: Use the Pivot as the origin so the "Ghost" matches the final placement
+                Vector2 origin = _activePrefab.Pivot;
+
+                sb.Draw(atlas, pos, _activePrefab.SourceRect, Color.White * 0.5f,
+                        0f, origin, 1f, SpriteEffects.None, 0f);
+            }
         }
     }
     public class FreeRectangleTool : ITool
@@ -383,24 +465,25 @@ namespace Pixel_Simulations.Data
         private MapObject CurrentSelect { get; set; }
         private Vector2 _initialPos, _initialSize;
         private Vector2 _dragOffset;
+        private EditorState _es;
 
         public void Update(ToolInput toolInput, InputState input, EventBus eventBus,EditorState editorState)
         {
-            var state = editorState;
-            if (state == null) return;
+            _es = editorState;
+            if (_es == null) return;
 
             // --- STEP 1: SELECTION (Only on the frame the button is pressed) ---
             if (input.IsNewLeftClick)
             {
 
                 // First, check handles on the EXISTING selection
-                if (state.Selection.SelectedMapObject != null)
+                if (_es.Selection.SelectedMapObject != null)
                 {
-                    _activeHandle = GetHandleAt(state.Selection.SelectedMapObject, input.MouseWorldPosition, input.Zoom);
+                    _activeHandle = GetHandleAt(_es.Selection.SelectedMapObject, input.MouseWorldPosition, input.Zoom);
                     if (_activeHandle != -1)
                     {
                         _currentMode = InteractionMode.Resizing;
-                        var obj = state.Selection.SelectedMapObject;
+                        var obj = _es.Selection.SelectedMapObject;
                         _initialPos = obj.Position;
                         _initialSize = GetObjectSize(obj);
                     }
@@ -638,10 +721,31 @@ namespace Pixel_Simulations.Data
         private void SnapPosition(MapObject obj) => obj.Position = new Vector2((float)Math.Round(obj.Position.X / 16) * 16, (float)Math.Round(obj.Position.Y / 16) * 16);
         private MapObject FindTopObject(Layer layer, Vector2 mouseWorld)
         {
-            if (layer is ObjectLayer objLayer && layer.Type == LayerType.Object)
+            if (layer is ObjectLayer objLayer)
             {
-                return objLayer.Objects.LastOrDefault(o =>
-                    new RectangleF(o.Position - new Vector2(8), new Vector2(16)).Contains(mouseWorld));
+                // Iterate backwards to pick the one on top
+                for (int i = objLayer.Objects.Count - 1; i >= 0; i--)
+                {
+                    var obj = objLayer.Objects[i];
+
+                    if (obj is PropObject prop)
+                    {
+                        var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
+                        if (prefab != null)
+                        {
+                            // Calculate world bounds based on Position and SourceRect
+                            // Offset by Pivot
+                            RectangleF bounds = new RectangleF(
+                                prop.Position.X - prefab.Pivot.X,
+                                prop.Position.Y - prefab.Pivot.Y,
+                                prefab.SourceRect.Width,
+                                prefab.SourceRect.Height
+                            );
+
+                            if (bounds.Contains(mouseWorld)) return prop;
+                        }
+                    }
+                }
             }
 
             // 2. Handle Collision/Navigation (Polygons)

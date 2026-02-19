@@ -1,7 +1,8 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
-using Pixel_Simulations.Editor;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using Pixel_Simulations.Editor;
+using Pixel_Simulations.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,19 +84,24 @@ namespace Pixel_Simulations.Data
         }
         private void DrawObjectLayer(SpriteBatch sb, ObjectLayer layer)
         {
-            // The camera zoom is needed to keep outlines a consistent 1px thickness
-            float lineThickness = 1f / _editorState.camera.Zoom;
-
-            foreach (var mapObject in layer.Objects)
+            foreach (var obj in layer.Objects)
             {
-                // Draw RectangleObjects
-                if (mapObject is RectangleObject rectObj)
+                if (obj is PropObject prop)
                 {
-                    var rectBounds = new RectangleF(rectObj.Position, rectObj.Size);
-                    // Draw a semi-transparent fill so it's not obstructive
-                    sb.FillRectangle(rectBounds, rectObj.DebugColor * 0.4f);
-                    // Draw a solid outline to clearly see its bounds
-                    sb.DrawRectangle(rectBounds, rectObj.DebugColor, lineThickness);
+                    // Case-sensitive check
+                    if (!_editorState.PrefabManager.Prefabs.TryGetValue(prop.PrefabID, out var prefab))
+                    {
+                        // DIAGNOSTIC: If it's missing, draw a bright box so we know it exists but link is broken
+                        sb.DrawRectangle(new RectangleF(prop.Position.X - 8, prop.Position.Y - 8, 16, 16), Color.Magenta, 1f);
+                        continue;
+                    }
+
+                    var tex = _editorState.AssetLibrary.GetAtlas(prefab.AtlasName);
+                    if (tex != null)
+                    {
+                        sb.Draw(tex, prop.Position, prefab.SourceRect, Color.White,
+                                prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, 0f);
+                    }
                 }
             }
         }

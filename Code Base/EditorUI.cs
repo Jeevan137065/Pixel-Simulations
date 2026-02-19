@@ -1,18 +1,18 @@
-﻿using Microsoft.Xna.Framework;
+﻿// Add the correct namespace for ImGui.NET if you are using the ImGui.NET library
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using Newtonsoft.Json;
-using Pixel_Simulations;
 using Pixel_Simulations.Data;
 using Pixel_Simulations.Editor;
 using System;
 using System.Collections.Generic;
+//using MonoGame.ImGuiNet;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata;
+using System.Text;
 
 
 namespace Pixel_Simulations.UI
@@ -72,214 +72,476 @@ namespace Pixel_Simulations.UI
         private enum Tab { Tiles, Objects }
         private Tab _activeTab = Tab.Tiles;
 
-        // --- UI Layout Rectangles ---
         private readonly Rectangle _tabArea;
         private readonly Rectangle _contentArea;
-        // Content areas for the "Tiles" tab
-        private readonly Rectangle _tilesetListArea;
-        private readonly Rectangle _tileDisplayArea;
-        private readonly Button _addTilesetButton;
-        private List<Button> tileSets = new List<Button>();
-        // --- State for "Tiles" Tab ---
-        private float _scrollOffset = 0;
-        private float _maxScroll = 0;
+        private readonly Rectangle _footerArea;
 
-        // --- Constants ---
+        // Sub-areas for Tiles tab
+        private readonly Rectangle _tileDisplayArea;
+
+        // Buttons in Footer
+        private readonly Button _addTilesetButton;
+        private readonly Button _addObjectButton;
+        private List<Button> _tilesetStackButtons = new List<Button>();
+
+        private float _scrollOffset = 0;
         private const int TAB_HEIGHT = 30;
+        private const int FOOTER_HEIGHT = 40;
         private const int MARGIN = 8;
         private const int TILE_DISPLAY_SIZE = 32;
-        private const int TILESET_LIST_ITEM_WIDTH = 80;
-        private const int TILESET_LIST_ITEM_HEIGHT = 40;
-
-
-        // Constants for layout
 
         public TilesetPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
             : base(area, editorUI, editorState)
         {
             _tabArea = new Rectangle(Area.X, Area.Y, Area.Width, TAB_HEIGHT);
-            _contentArea = new Rectangle(Area.X, Area.Y + TAB_HEIGHT, Area.Width, Area.Height - TAB_HEIGHT);
-            _tileDisplayArea = new Rectangle(_contentArea.X + MARGIN, _contentArea.Y + MARGIN, _contentArea.Width - 2 * MARGIN, _contentArea.Height - TILE_DISPLAY_SIZE - MARGIN);
-            _tilesetListArea = new Rectangle(_contentArea.X + MARGIN, _contentArea.Height - MARGIN - TILE_DISPLAY_SIZE, Area.Width - 2 * MARGIN - TILE_DISPLAY_SIZE, TILE_DISPLAY_SIZE);
-            _addTilesetButton = new Button(new Rectangle(_tilesetListArea.X, _tilesetListArea.Y, _tilesetListArea.Height, _tilesetListArea.Height), new CreateTilesetCommand { AtlasName = "ShowAtlasPicker" }, "New");
+            _footerArea = new Rectangle(Area.X, Area.Bottom - FOOTER_HEIGHT, Area.Width, FOOTER_HEIGHT);
+            _contentArea = new Rectangle(Area.X, Area.Y + TAB_HEIGHT, Area.Width, Area.Height - TAB_HEIGHT - FOOTER_HEIGHT);
+
+            _tileDisplayArea = new Rectangle(_contentArea.X + MARGIN, _contentArea.Y + MARGIN, _contentArea.Width - 2 * MARGIN, _contentArea.Height - 2 * MARGIN);
+
+            // Footer Controls
+            _addTilesetButton = new Button(new Rectangle(_footerArea.X + 5, _footerArea.Y + 4, 32, 32), new OpenAtlasPickerCommand(), "NewTileSet");
+            _addObjectButton = new Button(new Rectangle(_footerArea.X + 42, _footerArea.Y + 4, 32, 32), new OpenPrefabCreatorCommand(), "NewObject");
         }
 
-        private void Create_Buttons(EditorState editorState)
+        private void RefreshTilesetStack()
         {
-            if (tileSets.Count > 1) {tileSets.Clear(); }
-            for (int i=0; i < editorState.ActiveTileSets.Count; i++)
+            _tilesetStackButtons.Clear();
+            int xOffset = 85;
+            foreach (var ts in _editorState.ActiveTileSets)
             {
-                Rectangle bound = new Rectangle(_tilesetListArea.X + _addTilesetButton.Bounds.Width + i* TILESET_LIST_ITEM_WIDTH, _tilesetListArea.Y, TILESET_LIST_ITEM_WIDTH, _tilesetListArea.Height);
-                Button button = new Button(bound,new SelectTilesetCommand(), _editorState.ActiveTileSets[i].Name); 
-                tileSets.Add(button);
+                Rectangle bound = new Rectangle(_footerArea.X + xOffset, _footerArea.Y + 5, 80, 30);
+                _tilesetStackButtons.Add(new Button(bound, new SelectTilesetCommand { TilesetName = ts.Name }, ts.Name));
+                xOffset += 85;
             }
         }
 
         public override void Update(InputState input, EventBus eventBus)
         {
+            RefreshTilesetStack();
 
-            Create_Buttons(_editorState);
-            if (!Area.Contains(input.MouseWindowPosition)) return;
-            // --- 1. Handle Tab Switching ---
+            // 1. Handle Tab Switching (Check if we clicked the top 30px area)
             if (_tabArea.Contains(input.MouseWindowPosition) && input.IsNewLeftClick)
             {
-                if (input.MouseWindowPosition.X < Area.X + Area.Width / 2)
+                if (input.MouseWindowPosition.X < _tabArea.Center.X)
                     _activeTab = Tab.Tiles;
                 else
                     _activeTab = Tab.Objects;
+
+                return; // Don't process grid clicks on the same frame as a tab switch
+            }
+            if (!Area.Contains(input.MouseWindowPosition)) return;
+
+            // 2. Footer Updates
+            UpdateFooter(input, eventBus);
+
+            foreach (var btn in _tilesetStackButtons)
+            {
+                if (btn.Update(input) && input.IsNewLeftClick) eventBus.Publish(btn.CommandToPublish);
             }
 
-            // --- 2. Delegate to the Active Tab's Update Logic ---
-            if (_activeTab == Tab.Tiles)
-            {
-                UpdateTilesTab(input, eventBus);
-            }
-            else if (_activeTab == Tab.Objects)
-            {
-                // Future: UpdateObjectsTab(input, eventBus);
-            }
+            // 3. Content Updates
+            if (_activeTab == Tab.Tiles) UpdateTilesTab(input, eventBus);
+
+            else if (_activeTab == Tab.Objects) UpdateObjectsTab(input, eventBus);
         }
         private void UpdateTilesTab(InputState input, EventBus eventBus)
         {
+            if (!_tileDisplayArea.Contains(input.MouseWindowPosition)) return;
+
+            var activeTs = _editorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == _editorState.TilesetPanel.ActiveTilesetName);
+            if (activeTs == null) return;
+
+            int tilesPerRow = _tileDisplayArea.Width / TILE_DISPLAY_SIZE;
+            int relX = (int)input.MouseWindowPosition.X - _tileDisplayArea.X;
+            int relY = (int)input.MouseWindowPosition.Y - _tileDisplayArea.Y + (int)_scrollOffset;
+
+            int col = relX / TILE_DISPLAY_SIZE;
+            int row = relY / TILE_DISPLAY_SIZE;
+            int tileIndex = row * tilesPerRow + col;
+
+            if (input.IsNewLeftClick && tileIndex >= 0 && tileIndex < activeTs.SlicedAtlas.Count)
+            {
+                int tileId = activeTs.SlicedAtlas.Keys.ElementAt(tileIndex);
+                eventBus.Publish(new SelectTileCommand { TilesetName = activeTs.Name, TileID = tileId });
+            }
+
+            // Scroll
+            int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+            _scrollOffset = MathHelper.Clamp(_scrollOffset - scrollDelta * 0.5f, 0, 5000); // MaxScroll calculated dynamic usually
+        }
+        private void UpdateObjectsTab(InputState input, EventBus eventBus)
+        {
+            if (!_tileDisplayArea.Contains(input.MouseWindowPosition)) return;
+
+            int x = _tileDisplayArea.X;
+            int y = _tileDisplayArea.Y - (int)_scrollOffset;
+
+            foreach (var prefab in _editorState.PrefabManager.Prefabs.Values)
+            {
+                Rectangle slot = new Rectangle(x, y, 64, 64);
+                if (input.IsNewLeftClick && slot.Contains(input.MouseWindowPosition))
+                {
+                    eventBus.Publish(new SelectPrefabCommand { PrefabID = prefab.ID });
+                }
+
+                x += 70;
+                if (x + 70 > _tileDisplayArea.Right) { x = _tileDisplayArea.X; y += 70; }
+            }
+        }
+        private void UpdateFooter(InputState input, EventBus bus)
+        {
+            if (_addTilesetButton.Update(input) && input.IsNewLeftClick)
+            {
+                // This opens the picker for TILE atlases
+                bus.Publish(new OpenAtlasPickerCommand());
+            }
+
+            if (_addObjectButton.Update(input) && input.IsNewLeftClick)
+            {
+                // This opens the creator for OBJECT atlases
+                // We pass the first available Object Atlas as a default
+                string defaultAtlas = _editorState.AssetLibrary.GetNamesByType(AtlasType.Object).FirstOrDefault() ?? "Basic";
+                bus.Publish(new OpenPrefabCreatorCommand { AtlasName = defaultAtlas });
+            }
+        }
+        public override void Draw(SpriteBatch sb)
+        {
+            sb.FillRectangle(Area, Color.DarkSlateGray);
+
+            // Draw Tabs
+            DrawTabs(sb);
+
+            // Draw Content
+            if (_activeTab == Tab.Tiles) DrawTilesContent(sb);
+            else DrawObjectsContent(sb);
+
+            // Draw Footer
+            sb.FillRectangle(_footerArea, Color.Black * 0.4f);
+            _addTilesetButton.Draw(sb, _editorUI);
+            _addObjectButton.Draw(sb, _editorUI);
+            foreach (var btn in _tilesetStackButtons)
+            {
+                bool isSelected = btn.IconName == _editorState.TilesetPanel.ActiveTilesetName;
+                btn.Draw(sb, _editorUI);
+                sb.DrawString(_editorUI.DebugFont, btn.IconName, btn.Bounds.Location.ToVector2() + new Vector2(5, 10), isSelected ? Color.Yellow : Color.White);
+            }
+        }
+
+        private void DrawTabs(SpriteBatch sb)
+        {
+            var font = _editorUI.DebugFont;
+            Rectangle tRect = new Rectangle(_tabArea.X, _tabArea.Y, _tabArea.Width / 2, _tabArea.Height);
+            Rectangle oRect = new Rectangle(_tabArea.X + _tabArea.Width / 2, _tabArea.Y, _tabArea.Width / 2, _tabArea.Height);
+
+            sb.FillRectangle(tRect, _activeTab == Tab.Tiles ? Color.DarkSlateGray : Color.Black * 0.5f);
+            sb.DrawString(font, "Tiles", tRect.Center.ToVector2() - font.MeasureString("Tiles") / 2, Color.White);
+
+            sb.FillRectangle(oRect, _activeTab == Tab.Objects ? Color.DarkSlateGray : Color.Black * 0.5f);
+            sb.DrawString(font, "Objects", oRect.Center.ToVector2() - font.MeasureString("Objects") / 2, Color.White);
+        }
+        private void DrawObjectsContent(SpriteBatch sb)
+        {
+            var originalScissorRect = sb.GraphicsDevice.ScissorRectangle;
+            sb.End();
+            sb.Begin(rasterizerState: new RasterizerState { ScissorTestEnable = true });
+            sb.GraphicsDevice.ScissorRectangle = _tileDisplayArea;
+
+            int slotSize = 64;
+            int spacing = 6;
+            int x = _tileDisplayArea.X + spacing;
+            int y = _tileDisplayArea.Y + spacing - (int)_scrollOffset;
+
+            foreach (var prefab in _editorState.PrefabManager.Prefabs.Values)
+            {
+                Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
+                bool isSelected = _editorState.Selection.ActivePrefab?.ID == prefab.ID;
+
+                // 1. Draw Slot Background
+                sb.FillRectangle(slotRect, Color.Black * 0.3f);
+                sb.DrawRectangle(slotRect, isSelected ? Color.Yellow : Color.White * 0.2f, 1);
+
+                // 2. Draw Sprite scaled into slot
+                var tex = _editorState.AssetLibrary.GetAtlas(prefab.AtlasName);
+                if (tex != null)
+                {
+                    // Calculate scale to fit either width or height into (slotSize - 8)
+                    float maxDim = Math.Max(prefab.SourceRect.Width, prefab.SourceRect.Height);
+                    float scale = (slotSize - 10f) / maxDim;
+
+                    // Center the sprite in the slot
+                    Vector2 spritePos = new Vector2(
+                        slotRect.Center.X - (prefab.SourceRect.Width * scale) / 2,
+                        slotRect.Center.Y - (prefab.SourceRect.Height * scale) / 2
+                    );
+
+                    sb.Draw(tex, spritePos, prefab.SourceRect, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                }
+
+                // 3. Hover Tooltip (Handle in Update, draw here or in Top Layer)
+                if (slotRect.Contains(_editorState.Input.MouseWindowPosition))
+                {
+                    _editorState.TilesetPanel.HoveredTilesetName = $"{prefab.ID}\nTags: {string.Join(", ", prefab.Tags)}";
+                }
+
+                x += slotSize + spacing;
+                if (x + slotSize > _tileDisplayArea.Right)
+                {
+                    x = _tileDisplayArea.X + spacing;
+                    y += slotSize + spacing;
+                }
+            }
+
+            sb.End();
+            sb.GraphicsDevice.ScissorRectangle = originalScissorRect;
+            sb.Begin();
+        }
+        private void DrawTilesContent(SpriteBatch sb)
+        {
             var panelState = _editorState.TilesetPanel;
-            var TileSets = _editorState.ActiveTileSets;
-            panelState.HoveredTileCell = new Point(-1, -1);
-            panelState.HoveredTilesetName = null;
+            var activeTileset = _editorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
 
-            if (_tilesetListArea.Contains(input.MouseWindowPosition))
+            if (activeTileset == null) return;
+
+            // Use Scissor Rectangle to clip the scrolling grid
+            var originalScissorRect = sb.GraphicsDevice.ScissorRectangle;
+            sb.End();
+            sb.Begin(rasterizerState: new RasterizerState { ScissorTestEnable = true });
+            sb.GraphicsDevice.ScissorRectangle = _tileDisplayArea;
+
+            int tilesPerRow = _tileDisplayArea.Width / TILE_DISPLAY_SIZE;
+            int index = 0;
+
+            foreach (var tilePair in activeTileset.SlicedAtlas.OrderBy(p => p.Key))
             {
-                 if( _addTilesetButton.Update(input))
-                {
-                    if (input.IsNewLeftClick)
-                    { eventBus.Publish(new CreateTilesetCommand { AtlasName = "Wild" }); }
-                }
-                foreach(var tile in tileSets)
-                {
-                    if (tile.Update(input))
-                    {
-                        panelState.HoveredTilesetName = tile.IconName;
-                        if (input.IsNewLeftClick) { eventBus.Publish(tile.CommandToPublish); }
-                    }
-                }
+                int col = index % tilesPerRow;
+                int row = index / tilesPerRow;
 
-            }
-            else if (_tileDisplayArea.Contains(input.MouseWindowPosition))
-            {
-                var activeTileset = TileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
-                if (activeTileset != null)
-                {
-                    int tilesPerRow = (_tileDisplayArea.Width) / TILE_DISPLAY_SIZE;
-                    if (tilesPerRow > 0)
-                    {
-                        int relX = (int)input.MouseWindowPosition.X - _tileDisplayArea.X;
-                        int relY = (int)input.MouseWindowPosition.Y - _tileDisplayArea.Y + (int)_scrollOffset;
-                        int col = relX / TILE_DISPLAY_SIZE;
-                        int row = relY / TILE_DISPLAY_SIZE;
-                        panelState.HoveredTileCell = new Point(col, row);
-                        int tileIndex = row * tilesPerRow + col;
+                var destRect = new Rectangle(
+                    _tileDisplayArea.X + col * TILE_DISPLAY_SIZE,
+                    _tileDisplayArea.Y + row * TILE_DISPLAY_SIZE - (int)_scrollOffset,
+                    TILE_DISPLAY_SIZE, TILE_DISPLAY_SIZE);
 
-                        if (input.IsNewLeftClick)
-                        {
-                            if (relX >= 0 && col < tilesPerRow && tileIndex >= 0 && tileIndex < activeTileset.SlicedAtlas.Count) {
-                                int tileId = activeTileset.SlicedAtlas.Keys.ElementAt(tileIndex);
-                                eventBus.Publish(new SelectTileCommand { TilesetName = activeTileset.Name, TileID = tileId });
-                            }
-                        }
-                    }
+                // Optimization: Only draw if visible
+                if (destRect.Bottom > _tileDisplayArea.Top && destRect.Top < _tileDisplayArea.Bottom)
+                {
+                    sb.Draw(tilePair.Value, destRect, Color.White);
+
+                    if (tilePair.Key == panelState.SelectedTileID)
+                        sb.DrawRectangle(destRect, Color.Yellow, 2);
+                    else
+                        sb.DrawRectangle(destRect, Color.Black * 0.2f, 1);
                 }
+                index++;
             }
 
-            // Handle Scrolling in the tile display area
-            if (_tileDisplayArea.Contains(input.MouseWindowPosition))
+            sb.End();
+            sb.GraphicsDevice.ScissorRectangle = originalScissorRect;
+            sb.Begin();
+        }
+    }
+    public class PrefabCreatorPanel : BasePanel
+    {
+        private readonly Rectangle _atlasArea;
+        private readonly Rectangle _controlArea;
+        private readonly List<Button> _atlasSelectors = new List<Button>();
+
+        private Button _btnSaveNew, _btnReplace, _btnDelete, _btnExit;
+
+        // To handle text input focus
+        private int _focusedField = 0; // 0 = none, 1 = Name, 2 = Tags
+        private Rectangle _nameInputRect, _tagsInputRect;
+
+        public PrefabCreatorPanel(Rectangle area, EditorUI ui, EditorState state) : base(area, ui, state)
+        {
+            // Layout: 70% Atlas View, 30% Control Panel
+            _atlasArea = new Rectangle(area.X + 10, area.Y + 10, (int)(area.Width * 0.7f) - 20, area.Height - 20);
+            _controlArea = new Rectangle(_atlasArea.Right + 20, area.Y + 10, (int)(area.Width * 0.3f) - 30, area.Height - 20);
+
+            // Input Box Areas
+            _nameInputRect = new Rectangle(_controlArea.X + 10, _controlArea.Y + 40, _controlArea.Width - 20, 30);
+            _tagsInputRect = new Rectangle(_controlArea.X + 10, _controlArea.Y + 100, _controlArea.Width - 20, 30);
+
+            // Buttons
+            int bx = _controlArea.X + 10;
+            int bw = _controlArea.Width - 15;
+            _btnSaveNew = new Button(new Rectangle(bx, _controlArea.Y + 480, 32, 32), new SavePrefabCommand { Mode = "New" }, "New");
+            _btnReplace = new Button(new Rectangle(bx +40, _controlArea.Y + 480, 32, 32), new SavePrefabCommand { Mode = "Replace" }, "Stack");
+            _btnDelete = new Button(new Rectangle(bx +80, _controlArea.Y + 480, 32, 32), new DeletePrefabCommand(), "Delete");
+            _btnExit = new Button(new Rectangle(bx +120, _controlArea.Y + 480, 32, 32), new ClosePrefabCreatorCommand(), "Exit (TAB)");
+
+        }
+
+        private void BuildAtlasSelectors()
+        {
+            _atlasSelectors.Clear();
+            // Get all atlases marked as 'Object' or 'Universal'
+            var available = _editorState.AssetLibrary.GetNamesByType(AtlasType.Object);
+            int x = _atlasArea.X;
+
+            // List selectors vertically inside the Control Panel
+            int y = _controlArea.Y + 220;
+            foreach (var name in available)
             {
-                int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
-                if (scrollDelta != 0)
+                Rectangle rect = new Rectangle(_controlArea.X + 10, y, _controlArea.Width/2, 25);
+                _atlasSelectors.Add(new Button(rect, new SelectAtlasForCreatorCommand { AtlasName = name }, "Atlas: " + name));
+                y += 30;
+            }
+        }
+
+        public override void Update(InputState input, EventBus bus)
+        {
+            var ctx = _editorState.PrefabCreator;
+
+            BuildAtlasSelectors();
+            // 1. Toggle/Exit Logic
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Tab) && input.PreviousKeyboard.IsKeyUp(Keys.Tab))
+                bus.Publish(new ClosePrefabCreatorCommand());
+
+            // 2. Atlas Interaction (Selection)
+            if (_atlasArea.Contains(input.MouseWindowPosition))
+            {
+                // Calculate mouse position relative to atlas top-left
+                Vector2 mouseLocal = input.MouseWindowPosition - _atlasArea.Location.ToVector2();
+                // Snap to 16px grid
+                Vector2 snapped = new Vector2((float)Math.Floor(mouseLocal.X / 16) * 16, (float)Math.Floor(mouseLocal.Y / 16) * 16);
+
+                if (input.IsNewLeftClick)
                 {
-                    _scrollOffset -= scrollDelta * 0.5f;
-                    // You would calculate _maxScroll based on content height
-                    _scrollOffset = MathHelper.Clamp(_scrollOffset, 0, _maxScroll);
+                    ctx.DragStart = snapped;
+                    ctx.IsDragging = true;
+                    _focusedField = 0; // Unfocus text on atlas click
+                }
+
+                if (ctx.IsDragging)
+                {
+                    // Create a rect from start to current, ensuring at least 16x16
+                    ctx.SelectionRect = CreateRect(ctx.DragStart, snapped + new Vector2(16, 16));
+                    if (!input.LeftHold) ctx.IsDragging = false;
                 }
             }
+
+            // 3. Text Input Focus
+            if (input.IsNewLeftClick)
+            {
+                if (_nameInputRect.Contains(input.MouseWindowPosition)) _focusedField = 1;
+                else if (_tagsInputRect.Contains(input.MouseWindowPosition)) _focusedField = 2;
+            }
+
+            if (_focusedField > 0) HandleTextTyping(input);
+
+            // 4. Buttons & Selectors
+            foreach (var btn in _atlasSelectors)
+            {
+                if (btn.Update(input) && input.IsNewLeftClick) bus.Publish(btn.CommandToPublish);
+            }
+
+            if (_btnSaveNew.Update(input) && input.IsNewLeftClick) bus.Publish(_btnSaveNew.CommandToPublish);
+            if (_btnReplace.Update(input) && input.IsNewLeftClick) bus.Publish(_btnReplace.CommandToPublish);
+            if (_btnDelete.Update(input) && input.IsNewLeftClick) bus.Publish(_btnDelete.CommandToPublish);
+            if (_btnExit.Update(input) && input.IsNewLeftClick) bus.Publish(_btnExit.CommandToPublish);
+        }
+
+        private void HandleTextTyping(InputState input)
+        {
+            var ctx = _editorState.PrefabCreator;
+            string target = _focusedField == 1 ? ctx.TempName : ctx.TempTags;
+
+            // Handle Backspace
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Back) && input.PreviousKeyboard.IsKeyUp(Keys.Back) && target.Length > 0)
+                target = target.Substring(0, target.Length - 1);
+
+            // Handle Keys
+            foreach (var key in input.CurrentKeyboard.GetPressedKeys())
+            {
+                if (input.PreviousKeyboard.IsKeyUp(key))
+                {
+                    char c = GetCharFromKey(key, input.CurrentKeyboard.IsKeyDown(Keys.LeftShift));
+                    if (c != '\0') target += c;
+                }
+            }
+
+            // Write back
+            if (_focusedField == 1) ctx.TempName = target;
+            else ctx.TempTags = target;
         }
 
         public override void Draw(SpriteBatch sb)
         {
+            var ctx = _editorState.PrefabCreator;
             sb.FillRectangle(Area, Color.DarkSlateGray);
-            sb.DrawRectangle(_tileDisplayArea, Color.White * 0.3f);
-            sb.DrawRectangle(_tilesetListArea, Color.Blue * 0.3f);
-            var font = _editorUI.DebugFont;
+            sb.DrawRectangle(Area, Color.White, 2);
 
-            // --- Draw Tabs ---
-            var tilesTabRect = new Rectangle(_tabArea.X, _tabArea.Y, _tabArea.Width / 2, _tabArea.Height);
-            var objectsTabRect = new Rectangle(_tabArea.X + _tabArea.Width / 2, _tabArea.Y, _tabArea.Width / 2, _tabArea.Height);
-
-            sb.FillRectangle(tilesTabRect, _activeTab == Tab.Tiles ? Color.DarkSlateGray : Color.Black * 0.5f);
-            sb.DrawString(font, "Tiles", tilesTabRect.Center.ToVector2() - font.MeasureString("Tiles") / 2, Color.White);
-
-            sb.FillRectangle(objectsTabRect, _activeTab == Tab.Objects ? Color.DarkSlateGray : Color.Black * 0.5f);
-            sb.DrawString(font, "Objects", objectsTabRect.Center.ToVector2() - font.MeasureString("Objects") / 2, Color.White);
-
-            sb.DrawLine(_contentArea.X, _contentArea.Y, _contentArea.Right, _contentArea.Y, Color.Black);
-
-            // --- Draw Active Tab Content ---
-            if (_activeTab == Tab.Tiles)
+            // --- DRAW ATLAS VIEW ---
+            sb.FillRectangle(_atlasArea, Color.Black * 0.5f);
+            var tex = _editorState.AssetLibrary.GetAtlas(ctx.ActiveAtlasName);
+            if (tex != null)
             {
-                DrawTilesTabContent(sb, font);
+                sb.Draw(tex, _atlasArea.Location.ToVector2(), Color.White);
+                DrawGrid(sb, _atlasArea);
+
+                // Draw selection box relative to atlas area
+                Rectangle drawSelect = new Rectangle(
+                    _atlasArea.X + ctx.SelectionRect.X,
+                    _atlasArea.Y + ctx.SelectionRect.Y,
+                    ctx.SelectionRect.Width,
+                    ctx.SelectionRect.Height
+                );
+                sb.DrawRectangle(drawSelect, Color.Yellow, 2);
             }
-            else if (_activeTab == Tab.Objects)
+
+            // --- DRAW CONTROL PANEL ---
+            sb.FillRectangle(_controlArea, Color.Black * 0.3f);
+
+            // Name Field
+            sb.DrawString(_editorUI.DebugFont, "Object ID:", new Vector2(_controlArea.X + 10, _controlArea.Y + 20), Color.White);
+            sb.FillRectangle(_nameInputRect, _focusedField == 1 ? Color.White : Color.Gray);
+            sb.DrawString(_editorUI.DebugFont, ctx.TempName + (_focusedField == 1 ? "_" : ""), new Vector2(_nameInputRect.X + 5, _nameInputRect.Y + 5), Color.Black);
+
+            // Tags Field
+            sb.DrawString(_editorUI.DebugFont, "Tags (comma separated):", new Vector2(_controlArea.X + 10, _controlArea.Y + 80), Color.White);
+            sb.FillRectangle(_tagsInputRect, _focusedField == 2 ? Color.White : Color.Gray);
+            sb.DrawString(_editorUI.DebugFont, ctx.TempTags + (_focusedField == 2 ? "_" : ""), new Vector2(_tagsInputRect.X + 5, _tagsInputRect.Y + 5), Color.Black);
+
+
+            // Preview of what is selected
+            if (tex != null && !ctx.SelectionRect.IsEmpty)
             {
-                sb.DrawString(font, "Object Browser - Future", _contentArea.Location.ToVector2() + new Vector2(10, 10), Color.White);
+                sb.DrawString(_editorUI.DebugFont, "Preview:", new Vector2(_controlArea.X + 10, _controlArea.Y + 140), Color.White);
+                sb.Draw(tex, new Vector2(_controlArea.X + 10, _controlArea.Y + 160), ctx.SelectionRect, Color.White, 0, Vector2.Zero, 1f, SpriteEffects.None, 0);
             }
+            // Buttons & Selectors
+            foreach (var btn in _atlasSelectors) 
+            { 
+                btn.Draw(sb, _editorUI);
+                sb.DrawString(_editorUI.DebugFont, btn.IconName.ToString(), btn.Bounds.Location.ToVector2(), Color.White);
+            }
+            _btnSaveNew.Draw(sb, _editorUI);
+            _btnReplace.Draw(sb, _editorUI);
+            _btnDelete.Draw(sb, _editorUI);
+            _btnExit.Draw(sb, _editorUI);
         }
 
-        private void DrawTilesTabContent(SpriteBatch sb, SpriteFont font)
+        private Rectangle CreateRect(Vector2 p1, Vector2 p2) => new Rectangle(
+            (int)Math.Min(p1.X, p2.X), (int)Math.Min(p1.Y, p2.Y),
+            (int)Math.Abs(p1.X - p2.X), (int)Math.Abs(p1.Y - p2.Y));
+
+        private void DrawGrid(SpriteBatch sb, Rectangle area)
         {
-            var panelState = _editorState.TilesetPanel;
-            var TileSets = _editorState.ActiveTileSets;
-            // Draw the '+' button and the list of active tilesets
-            _addTilesetButton.Draw(sb, _editorUI);
-            foreach (var tile in tileSets)
-            {
-                Color color; 
-                tile.Draw(sb,_editorUI);
-                if (tile.IsHovered) color = Color.Yellow; else color = Color.White; 
-                    sb.DrawString(font, tile.IconName, tile.Bounds.Center.ToVector2(), color);
-            }
+            for (int x = 0; x < area.Width; x += 16)
+                sb.DrawLine(area.X + x, area.Y, area.X + x, area.Bottom, Color.White * 0.15f);
+            for (int y = 0; y < area.Height; y += 16)
+                sb.DrawLine(area.X, area.Y + y, area.Right, area.Y + y, Color.White * 0.15f);
+        }
 
-            var activeTileset = TileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
-            if (activeTileset != null)
-            {
-                // Use a scissor rectangle to clip the scrolling tile grid
-                var originalScissorRect = sb.GraphicsDevice.ScissorRectangle;
-                sb.End();
-                var scissorRasterizerState = new RasterizerState { ScissorTestEnable = true };
-                sb.Begin(rasterizerState: scissorRasterizerState);
-                sb.GraphicsDevice.ScissorRectangle = _tileDisplayArea;
-
-                int tilesPerRow = (_tileDisplayArea.Width) / TILE_DISPLAY_SIZE;
-                int index = 0;
-                foreach (var tilePair in activeTileset.SlicedAtlas.OrderBy(p => p.Key))
-                {
-                    int col = index % tilesPerRow;
-                    int row = index / tilesPerRow;
-                    var destRect = new Rectangle(
-                        _tileDisplayArea.X + col * TILE_DISPLAY_SIZE,
-                        _tileDisplayArea.Y + row * TILE_DISPLAY_SIZE - (int)_scrollOffset,
-                        TILE_DISPLAY_SIZE, TILE_DISPLAY_SIZE);
-
-                    sb.Draw(tilePair.Value, destRect, Color.White);
-                    sb.DrawRectangle(destRect, Color.Black * 0.5f, 1);
-
-                    if (tilePair.Key == panelState.SelectedTileID)
-                        sb.DrawRectangle(destRect, Color.Yellow, 2);
-
-                    index++;
-                }
-
-                sb.End();
-                sb.GraphicsDevice.ScissorRectangle = originalScissorRect;
-                sb.Begin();
-            }
+        private char GetCharFromKey(Keys key, bool shift)
+        {
+            if (key >= Keys.A && key <= Keys.Z) return shift ? (char)key : char.ToLower((char)key);
+            if (key >= Keys.D0 && key <= Keys.D9) return (char)key;
+            if (key == Keys.OemMinus) return shift ? '_' : '-';
+            if (key == Keys.Space) return ' ';
+            if (key == Keys.OemComma) return ',';
+            return '\0';
         }
     }
     public class ToolPanel : BasePanel
@@ -541,6 +803,7 @@ namespace Pixel_Simulations.UI
 
         public TopPanel TopPanel { get; }
         public TilesetPanel TilesetPanel { get; }
+        public PrefabCreatorPanel PrefabPanel { get; }
         public ToolPanel ToolPanel { get; }
         public LayerPanel LayerPanel { get; }
         public readonly EditorState _editorState;
@@ -556,6 +819,7 @@ namespace Pixel_Simulations.UI
             // Create all the panel instances
             TopPanel = new TopPanel(_editorState._layoutmanager.TopPanel, this, editorState);
             TilesetPanel = new TilesetPanel(_editorState._layoutmanager.TilesetPanel, this, editorState);
+            PrefabPanel = new PrefabCreatorPanel(_editorState._layoutmanager.ViewportPanel,this,_editorState);
             LayerPanel = new LayerPanel(_editorState._layoutmanager.LayerPanel,this,editorState);
             ToolPanel = new ToolPanel(_editorState._layoutmanager.ToolPanel, this, editorState);
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
@@ -590,6 +854,12 @@ namespace Pixel_Simulations.UI
             TilesetPanel.Draw(spriteBatch);
             ToolPanel.Draw(spriteBatch);
             LayerPanel.Draw(spriteBatch);
+            if (_editorState.PrefabCreator.IsOpen)
+            {
+                // Draw a semi-transparent black overlay to dim the background
+                //spriteBatch.FillRectangle(new Rectangle(0, 0, 1920, 1080), Color.Black * 0.5f);
+                PrefabPanel.Draw(spriteBatch);
+            }
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color)
         {

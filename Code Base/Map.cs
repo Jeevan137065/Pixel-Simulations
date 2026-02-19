@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Pixel_Simulations.Data
 {
@@ -110,8 +111,9 @@ namespace Pixel_Simulations.Data
         {
             _jsonSettings = new JsonSerializerSettings
             {
-                Formatting = Formatting.Indented,
-                Converters = { new LayerConverter(), new MapObjectConverter(), new Vector2Converter(), new ColorConverter() }
+                TypeNameHandling = TypeNameHandling.None,
+                Converters = { new MapObjectConverter(), new Vector2Converter(), new ColorConverter(), new LayerConverter() },
+                Formatting = Formatting.Indented
             };
         }
         #region Editor JSON Workflow
@@ -120,6 +122,8 @@ namespace Pixel_Simulations.Data
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             string json = JsonConvert.SerializeObject(map, _jsonSettings);
             File.WriteAllText(filePath, json);
+            System.Diagnostics.Debug.WriteLine($"JSON Map Saved to: {filePath}");
+
         }
         public static Map Load(string filePath)
         {
@@ -144,7 +148,7 @@ namespace Pixel_Simulations.Data
                 writer.Write(map.Layers.Count);
                 foreach (var layer in map.Layers)
                 {
-                    writer.Write((int)layer.Type);
+                    writer.Write(layer.Type.ToString());
                     writer.Write(layer.Name ?? " ");
                     writer.Write(layer.IsVisible);
                     writer.Write(layer.IsLocked);
@@ -156,7 +160,7 @@ namespace Pixel_Simulations.Data
                             WriteTileLayer(writer, layer as TileLayer);
                             break;
                         case LayerType.Object:
-                            //WriteObjectLayer(writer, layer as ObjectLayer); // Placeholder for future
+                            WriteObjectLayer(writer, layer as ObjectLayer); // Placeholder for future
                             break;
                         case LayerType.Collision:
                             WriteCollisionLayer(writer, layer as CollisionLayer);
@@ -165,7 +169,7 @@ namespace Pixel_Simulations.Data
                             WriteNavigationLayer(writer, layer as NavigationLayer);
                             break;
                         case LayerType.Trigger:
-                            //WriteTriggerLayer(writer, layer as TriggerLayer);
+                            WriteTriggerLayer(writer, layer as TriggerLayer);
                             break;
                     }
                 }
@@ -199,6 +203,9 @@ namespace Pixel_Simulations.Data
                     {
                         case LayerType.Tile:
                             newLayer = ReadTileLayer(reader, name);
+                            break;
+                        case LayerType.Object:
+                            newLayer = ReadObjectLayer(reader, name);
                             break;
                         case LayerType.Collision:
                             newLayer = ReadCollisionLayer(reader, name);
@@ -248,37 +255,19 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
-        private static TileLayer ReadTileLayer(BinaryReader reader, string name)
-        {
-            var layer = new TileLayer(name);
-            int chunkCount = reader.ReadInt32();
-            for (int i = 0; i < chunkCount; i++)
-            {
-                var chunkCoord = new Point(reader.ReadInt32(), reader.ReadInt32());
-                var chunk = new Chunk(chunkCoord);
-                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-                {
-                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
-                    {
-                        if (reader.ReadBoolean()) // Check if a tile exists
-                        {
-                            string tilesetName = reader.ReadString();
-                            int tileId = reader.ReadInt32();
-                            chunk.Tiles[x, y] = new TileInfo(tilesetName, tileId);
-                        }
-                    }
-                }
-                layer.Chunks[chunkCoord] = chunk;
-            }
-            return layer;
-        }
         private static void WriteObjectLayer(BinaryWriter writer, ObjectLayer layer)
         {
-            writer.Write(layer.Objects.Count);
-            foreach (var rect in layer.Objects)
+            // Filter only PropObjects to be safe
+            var props = layer.Objects.OfType<PropObject>().ToList();
+            writer.Write(props.Count);
+
+            foreach (var prop in props)
             {
-                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
-                //writer.Write(rect.Type); writer.Write(rect.Size.Y);
+                writer.Write(prop.Name); // Unique Name
+                writer.Write(prop.Position.X);  writer.Write(prop.Position.Y);
+                writer.Write(prop.PrefabID); // Link to objects.json
+                writer.Write(prop.Scale.X);     writer.Write(prop.Scale.Y);
+                writer.Write(prop.Rotation);
             }
         }
         private static void WriteCollisionLayer(BinaryWriter writer, CollisionLayer layer)
@@ -323,6 +312,50 @@ namespace Pixel_Simulations.Data
                 writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
                 writer.Write(rect.Radius); writer.Write(rect.Label);
             }
+        }
+        
+        private static TileLayer ReadTileLayer(BinaryReader reader, string name)
+        {
+            var layer = new TileLayer(name);
+            int chunkCount = reader.ReadInt32();
+            for (int i = 0; i < chunkCount; i++)
+            {
+                var chunkCoord = new Point(reader.ReadInt32(), reader.ReadInt32());
+                var chunk = new Chunk(chunkCoord);
+                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                {
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                    {
+                        if (reader.ReadBoolean()) // Check if a tile exists
+                        {
+                            string tilesetName = reader.ReadString();
+                            int tileId = reader.ReadInt32();
+                            chunk.Tiles[x, y] = new TileInfo(tilesetName, tileId);
+                        }
+                    }
+                }
+                layer.Chunks[chunkCoord] = chunk;
+            }
+            return layer;
+        }
+        private static ObjectLayer ReadObjectLayer(BinaryReader reader, string name)
+        {
+            var layer = new ObjectLayer(name);
+            int count = reader.ReadInt32();
+
+            for (int i = 0; i < count; i++)
+            {
+                var prop = new PropObject
+                {
+                    Name = reader.ReadString(),
+                    Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                    PrefabID = reader.ReadString(),
+                    Scale = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                    Rotation = reader.ReadSingle()
+                };
+                layer.Objects.Add(prop);
+            }
+            return layer;
         }
         private static CollisionLayer ReadCollisionLayer(BinaryReader reader, string name)
         {

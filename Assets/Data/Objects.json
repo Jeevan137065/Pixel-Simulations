@@ -1,0 +1,24 @@
+[
+  {
+    "ID": "pine-tree_Copy",
+    "AtlasName": "Trees",
+    "SourceRect": {
+      "X": 464,
+      "Y": 224,
+      "Width": 80,
+      "Height": 304
+    },
+    "Pivot": "40, 304"
+  },
+  {
+    "ID": "oak-tree",
+    "AtlasName": "Trees",
+    "SourceRect": {
+      "X": 160,
+      "Y": 304,
+      "Width": 176,
+      "Height": 224
+    },
+    "Pivot": "88, 224"
+  }
+]
