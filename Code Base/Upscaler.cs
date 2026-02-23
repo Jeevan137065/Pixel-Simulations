@@ -8,10 +8,10 @@ namespace Pixel_Simulations
     public enum RenderLayer
     {
         Albedo,         // 480x270: Static background
-        DepthOnly,      // 960p: Procedural depth/stencil pre-pass (Float)
         Dynamic,        // 960x540: Grass, Player, NPCs (The G-Buffer Color)
         Normal,         // 960x540: Normal maps for lighting
         LightMask,      // 960x540: HDR Lighting calculation
+        Shader,         // 960p: Weather and Atmospheric Shader
         Composite       // Final: Combined result at Window Resolution
     }
     public class Upscaler
@@ -231,10 +231,10 @@ namespace Pixel_Simulations
             {
                 RenderLayer.Composite,
                 RenderLayer.Albedo,
-                RenderLayer.DepthOnly,
                 RenderLayer.Dynamic,
                 RenderLayer.Normal,
-                RenderLayer.LightMask
+                RenderLayer.LightMask,
+                RenderLayer.Shader
             };
 
             InitializeTargets();
@@ -254,9 +254,6 @@ namespace Pixel_Simulations
             _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height);
 
             // 2. SIMULATION LAYER (960x540)
-            // This is our Master Depth/Stencil target. All simulation draws share this buffer.
-            _targets[RenderLayer.DepthOnly] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.HalfVector2, DepthFormat.Depth24Stencil8);
 
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // Shared DepthStencil memory
@@ -266,6 +263,10 @@ namespace Pixel_Simulations
             // LightMask: Using HalfVector4 for HDR (Floating point lighting values)
             _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.HalfVector4, DepthFormat.None);
+            
+            // This is our Master Shader target. All simulation draws share this buffer.
+            _targets[RenderLayer.Shader] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.HalfVector2, DepthFormat.Depth24Stencil8);
 
             // 3. FINAL LAYER
             _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
@@ -273,7 +274,7 @@ namespace Pixel_Simulations
 
         public void BeginDepthPass()
         {
-            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.DepthOnly]);
+            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Normal]);
             _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.Black, 1.0f, 0);
         }
 

@@ -58,6 +58,7 @@ namespace Pixel_Simulations.Data
             this.Position = new Vector2(rect.X, rect.Y);
             this.Size = new Vector2(rect.Width, rect.Height);
         }
+
     }
     [JsonObject(MemberSerialization.OptIn)]
     public class PropObject : MapObject

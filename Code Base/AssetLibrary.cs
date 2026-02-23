@@ -18,12 +18,12 @@ namespace Pixel_Simulations
         public Texture2D Texture { get; set; }
         public AtlasType Type { get; set; }
     }
-    public class AssetLibrary
+    public class EditorLibrary
         {
         public readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>();
         private readonly ContentManager _content;
 
-            public AssetLibrary(ContentManager content) => _content = content;
+        public EditorLibrary(ContentManager content) => _content = content;
 
         public void LoadAtlas(string assetName, AtlasType type)
         {
@@ -47,8 +47,85 @@ namespace Pixel_Simulations
                 .Select(m => m.Name).ToList();
         }
     }
+    public class AssetLibrary
+    {
+        // Store metadata, just like the EditorLibrary
+        private readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>();
+        private ContentManager _content;
 
-        public class PrefabManager
+        // Pass ContentManager in constructor for cleaner loading later
+        public AssetLibrary()
+        {
+
+        }
+
+        /// <summary>
+        /// Loads a specific atlas and categorizes it.
+        /// </summary>
+        public void LoadAtlas(string assetName, AtlasType type)
+        {
+            if (!_library.ContainsKey(assetName))
+            {
+                try
+                {
+                    _library[assetName] = new AtlasMetadata
+                    {
+                        Name = assetName,
+                        Texture = _content.Load<Texture2D>(assetName),
+                        Type = type
+                    };
+                }
+                catch (ContentLoadException)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ERROR: Could not load texture '{assetName}'.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads the core set of necessary game atlases.
+        /// </summary>
+        public void LoadCoreContent(ContentManager content)
+        {
+            _content = content;
+            // Load Tile Atlases
+            LoadAtlas("BasiR", AtlasType.Tile);
+            LoadAtlas("Wild", AtlasType.Tile);
+            //LoadAtlas("Temp", AtlasType.Tile);
+
+            // Load Object Atlases
+            LoadAtlas("Trees", AtlasType.Object);
+            LoadAtlas("Buildings", AtlasType.Object);
+
+            // Load Universal/UI Atlases
+            // LoadAtlas("UI_Elements", AtlasType.Universal);
+        }
+
+        /// <summary>
+        /// Retrieves a pre-loaded texture by its name.
+        /// </summary>
+        public Texture2D GetAtlas(string name)
+        {
+            if (_library.TryGetValue(name, out var meta))
+            {
+                return meta.Texture;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested but not loaded.");
+            return null;
+        }
+
+        /// <summary>
+        /// Gets all loaded atlas names of a specific type.
+        /// </summary>
+        public List<string> GetNamesByType(AtlasType type)
+        {
+            return _library.Values
+                .Where(m => m.Type == type || m.Type == AtlasType.Universal)
+                .Select(m => m.Name).ToList();
+        }
+    }
+    public class PrefabManager
         {
             public Dictionary<string, ObjectPrefab> Prefabs { get; private set; } = new Dictionary<string, ObjectPrefab>();
 

@@ -126,10 +126,9 @@ namespace Pixel_Simulations.Data
             return _slicedAtlas.TryGetValue(tileId, out var texture) ? texture : null;
         }
     }
-
     public class TilesetManager
     {
-        private readonly Dictionary<string, TileSet> _tileSets;
+        public readonly Dictionary<string, TileSet> _tileSets;
 
         public TilesetManager()
         {

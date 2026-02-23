@@ -1,11 +1,130 @@
 {
   "Layers": [
     {
-      "$type": "Tile",
-      "Name": "Ground",
+      "$type": "Collision",
+      "Name": "Collision3",
       "IsVisible": true,
       "IsLocked": false,
-      "Chunks": []
+      "CollisionMesh": [
+        {
+          "Type": 2,
+          "Shape": {
+            "Vertices": [
+              {
+                "X": 26.0,
+                "Y": 204.0
+              },
+              {
+                "X": 209.5,
+                "Y": 204.0
+              },
+              {
+                "X": 209.5,
+                "Y": 257.5
+              },
+              {
+                "X": 26.0,
+                "Y": 257.5
+              }
+            ]
+          },
+          "Tag": "Collision",
+          "Size": {
+            "X": 183.5,
+            "Y": 53.5
+          },
+          "DebugColor": "255,0,0,255",
+          "Name": "Collision3_Shape_1",
+          "Position": {
+            "X": 26.0,
+            "Y": 204.0
+          }
+        },
+        {
+          "Type": 2,
+          "Shape": {
+            "Vertices": [
+              {
+                "X": 649.5,
+                "Y": 181.5
+              },
+              {
+                "X": 651.0,
+                "Y": 181.5
+              },
+              {
+                "X": 651.0,
+                "Y": 274.5
+              },
+              {
+                "X": 559.0,
+                "Y": 274.5
+              },
+              {
+                "X": 559.0,
+                "Y": 181.5
+              },
+              {
+                "X": 589.5,
+                "Y": 181.5
+              },
+              {
+                "X": 589.5,
+                "Y": 148.5
+              },
+              {
+                "X": 649.5,
+                "Y": 148.5
+              }
+            ]
+          },
+          "Tag": "Collision",
+          "Size": {
+            "X": 92.0,
+            "Y": 126.0
+          },
+          "DebugColor": "255,0,0,255",
+          "Name": "Collision3_Shape_2",
+          "Position": {
+            "X": 559.0,
+            "Y": 148.5
+          }
+        },
+        {
+          "Type": 2,
+          "Shape": {
+            "Vertices": [
+              {
+                "X": 592.0,
+                "Y": -14.0
+              },
+              {
+                "X": 655.0,
+                "Y": -14.0
+              },
+              {
+                "X": 655.0,
+                "Y": 90.0
+              },
+              {
+                "X": 592.0,
+                "Y": 90.0
+              }
+            ]
+          },
+          "Tag": "Collision",
+          "Size": {
+            "X": 63.0,
+            "Y": 104.0
+          },
+          "DebugColor": "255,0,0,255",
+          "Name": "Collision3_Shape_3",
+          "Position": {
+            "X": 592.0,
+            "Y": -14.0
+          }
+        }
+      ]
     },
     {
       "$type": "Object",
@@ -157,10 +276,5085 @@
     },
     {
       "$type": "Tile",
-      "Name": "Ground",
+      "Name": "Tile2",
       "IsVisible": true,
       "IsLocked": false,
-      "Chunks": []
+      "Chunks": [
+        {
+          "Key": {
+            "X": 1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 53,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 73,
+                  "Rotation": 0
+                },
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 73,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 53,
+                  "Rotation": 0
+                },
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 53,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 73,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 53,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 2,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 2,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 3,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 3,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 0,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 73,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 53,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 0,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 4,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 4,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 3,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 3,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 2,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 2,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 0,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 4,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 4,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 4,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 4,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 3,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 3,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 2,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 2,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                null,
+                null
+              ]
+            ]
+          }
+        }
+      ]
     }
   ]
 }

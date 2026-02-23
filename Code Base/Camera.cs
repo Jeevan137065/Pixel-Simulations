@@ -62,11 +62,53 @@ namespace Pixel_Simulations
                 _nativeRect.Height
             );
         }
-        
+
+        // In MyGame/Camera.cs
+
+        public void Follow(NewPlayer target, float userZoom = 1f)
+        {
+            Position = target.Position;
+            Zoom = userZoom;
+
+            // 1. Center the view on the target. We round to prevent sub-pixel jitter.
+            Matrix translation = Matrix.CreateTranslation(
+                -System.MathF.Round(Position.X),
+                -System.MathF.Round(Position.Y),
+                0);
+
+            // --- A. NATIVE MATRICES (for 480x270 RenderTarget) ---
+            // The scale is just the user's zoom (default 1x).
+            Matrix nativeScale = Matrix.CreateScale(Zoom, Zoom, 1);
+            // Center the origin within the 480x270 canvas.
+            Matrix nativeCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
+
+            NativeFinal = translation * nativeScale * nativeCenter;
+
+
+            // --- B. SIMULATION MATRICES (for 960x540 RenderTarget) ---
+            // The scale must be multiplied by the factor between Native and Sim (960/480 = 2).
+            float simScaleFactor = (float)_simRect.Width / _nativeRect.Width; // Should be 2.0f
+            Matrix simScale = Matrix.CreateScale(Zoom * simScaleFactor, Zoom * simScaleFactor, 1);
+            // Center the origin within the 960x540 canvas.
+            Matrix simCenter = Matrix.CreateTranslation(_simRect.Width / 2f, _simRect.Height / 2f, 0);
+
+            SimFinal = translation * simScale * simCenter;
+
+
+            // Culling view calculation (based on native resolution for simplicity)
+            CameraView = new Rectangle(
+                (int)(Position.X - _nativeRect.Width / (2f * Zoom)),
+                (int)(Position.Y - _nativeRect.Height / (2f * Zoom)),
+                (int)(_nativeRect.Width / Zoom),
+                (int)(_nativeRect.Height / Zoom)
+            );
+        }
 
         public void Follow(Player player, float scale) => Follow(player._position, scale);
 
         public void Follow(TestPlayer player, float scale) => Follow(player.Position, scale);
+
+        //public void Follow(NewPlayer player, float scale) => Follow(player.Position, scale);
     }
 
     public class EditorCamera

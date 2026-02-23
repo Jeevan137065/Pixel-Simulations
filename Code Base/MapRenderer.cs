@@ -204,23 +204,26 @@ namespace Pixel_Simulations.Data
     public class GameMapRenderer
     {
         private const int CELL_SIZE = 16;
-        private readonly Map _map;
-        private readonly TilesetManager _tilesetManager;
-        private readonly Camera _camera;
+        // Hold a reference to the central state to access all needed managers
+        private readonly GameState _gameState;
         private readonly int _nativeScreenWidth;
         private readonly int _nativeScreenHeight;
 
-        public GameMapRenderer(Map map, TilesetManager tilesetManager, Camera camera, int nativeWidth, int nativeHeight)
+        //Debug Valus
+        public int Object_count = 0;
+
+        public GameMapRenderer(GameState gameState, int nativeWidth, int nativeHeight)
         {
-            _map = map;
-            _tilesetManager = tilesetManager;
-            _camera = camera;
+            _gameState = gameState;
             _nativeScreenWidth = nativeWidth;
             _nativeScreenHeight = nativeHeight;
         }
         public void Draw(SpriteBatch sb, LayerType typeToDraw)
         {
+            var _map = _gameState.CurrentMap;
             if (_map == null) return;
+
+            RectangleF streamBounds = _gameState.GetStreamingBounds(_nativeScreenWidth, _nativeScreenHeight);
             // Loop backwards for correct visual order (top layers in list are drawn last)
             for (int i = _map.Layers.Count - 1; i >= 0; i--)
             {
@@ -230,10 +233,10 @@ namespace Pixel_Simulations.Data
                     switch (layer.Type)
                     {
                         case LayerType.Tile:
-                            DrawTileLayer(sb, layer as TileLayer);
+                            DrawTileLayer(sb, layer as TileLayer, streamBounds);
                             break;
                         case LayerType.Object:
-                            DrawObjectLayer(sb, layer as ObjectLayer);
+                            DrawObjectLayer(sb, layer as ObjectLayer, streamBounds);
                             break;
                         case LayerType.Collision:
                             DrawCollisionLayer(sb, layer as CollisionLayer);
@@ -249,19 +252,16 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        private void DrawTileLayer(SpriteBatch sb, TileLayer layer)
+        private void DrawTileLayer(SpriteBatch sb, TileLayer layer, RectangleF streamBounds)
         {
             if (layer == null) return;
 
-            // Calculate the visible world area based on the game camera's position.
-            RectangleF visibleWorld = new RectangleF(_camera.Position, new Vector2(_nativeScreenWidth, _nativeScreenHeight));
-
-            // Determine which chunks are visible on screen for culling
-            int minChunkX = (int)System.Math.Floor(visibleWorld.Left / (Chunk.CHUNK_SIZE * CELL_SIZE));
-            int maxChunkX = (int)System.Math.Ceiling(visibleWorld.Right / (Chunk.CHUNK_SIZE * CELL_SIZE));
-            int minChunkY = (int)System.Math.Floor(visibleWorld.Top / (Chunk.CHUNK_SIZE * CELL_SIZE));
-            int maxChunkY = (int)System.Math.Ceiling(visibleWorld.Bottom / (Chunk.CHUNK_SIZE * CELL_SIZE));
-
+            // Convert the continuous bounding box into chunk coordinates
+            int minChunkX = (int)System.Math.Floor(streamBounds.Left / (Chunk.CHUNK_SIZE * CELL_SIZE));
+            int maxChunkX = (int)System.Math.Ceiling(streamBounds.Right / (Chunk.CHUNK_SIZE * CELL_SIZE));
+            int minChunkY = (int)System.Math.Floor(streamBounds.Top / (Chunk.CHUNK_SIZE * CELL_SIZE));
+            int maxChunkY = (int)System.Math.Ceiling(streamBounds.Bottom / (Chunk.CHUNK_SIZE * CELL_SIZE));
+            
             for (int y = minChunkY; y <= maxChunkY; y++)
             {
                 for (int x = minChunkX; x <= maxChunkX; x++)
@@ -274,32 +274,42 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        private void DrawObjectLayer(SpriteBatch sb, ObjectLayer layer)
+        private void DrawObjectLayer(SpriteBatch sb, ObjectLayer layer, RectangleF streamBounds)
         {
             if (layer == null) return;
-
-            // Get the unified list of shapes from the layer
-            List<MapObject> shapes = null;
-            if (layer is ObjectLayer ol) shapes = ol.Objects;
-            
-            if (shapes == null) return;
-
-            float lineThickness = 1f / _camera.Zoom;
-
-            foreach (var mapObject in shapes)
+            foreach (var obj in layer.Objects)
             {
-                if (mapObject is ShapeObject shapeObj)
+                // We are looking for PropObjects (trees, buildings, etc.)
+                if (obj is PropObject prop)
                 {
-                    //DrawPolygon(sb, shapeObj.Shape, shapeObj.DebugColor, lineThickness);
-                }
-                else if (mapObject is PointObject pointObj)
-                {
-                    // Draw a circle for the radius and a crosshair at the center
-                    sb.DrawCircle(pointObj.Position, pointObj.Radius, 32, pointObj.DebugColor, lineThickness);
-                    sb.DrawLine(pointObj.Position - new Vector2(4 / _camera.Zoom, 0), pointObj.Position + new Vector2(4 / _camera.Zoom, 0), pointObj.DebugColor, lineThickness);
-                    sb.DrawLine(pointObj.Position - new Vector2(0, 4 / _camera.Zoom), pointObj.Position + new Vector2(0, 4 / _camera.Zoom), pointObj.DebugColor, lineThickness);
+                    // 1. Look up the prefab definition from the PrefabManager
+                    var prefab = _gameState.PrefabManager.GetPrefab(prop.PrefabID);
+
+                    if (prefab == null)
+                    {
+                        // Diagnostic: Draw a magenta box if the prefab is missing
+                        sb.DrawRectangle(new RectangleF(prop.Position.X - 8, prop.Position.Y - 8, 16, 16), Color.Red, 1f);
+                        continue;
+                    }
+
+                    RectangleF objectBounds = new RectangleF(prop.Position.X, prop.Position.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
+
+                    if (streamBounds.Intersects(objectBounds))
+                    {
+                        var tex = _gameState.Assets.GetAtlas(prefab.AtlasName);
+                        if (tex != null)
+                        {
+                            // Calculate Depth based on the bottom Y (Y + Height)
+                            float bottomY = prop.Position.Y + prefab.SourceRect.Height;
+                            float depth = DepthUtil.Calculate(bottomY);
+
+                            sb.Draw(tex, prop.Position, prefab.SourceRect, Color.White,
+                                    prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, depth);
+                        }
+                    }
                 }
             }
+
         }
         private void DrawCollisionLayer(SpriteBatch sb, CollisionLayer layer)
         {
@@ -371,7 +381,7 @@ namespace Pixel_Simulations.Data
                     var tile = chunk.Tiles[x, y];
                     if (tile != null)
                     {
-                        var texture = _tilesetManager.GetTileTexture(tile);
+                        var texture = _gameState.TilesetManager.GetTileTexture(tile);
                         if (texture != null)
                         {
                             // Offset position by 8,8 to account for center origin

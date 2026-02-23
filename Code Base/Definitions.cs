@@ -17,7 +17,7 @@ using Clipper2Lib;
 
 namespace Pixel_Simulations
 {
-    public enum GameState { Playing, InventoryOpen }
+    public enum GameStatus { Playing, InventoryOpen }
     public static class ListExtensions
     {
         private static Random _random = new Random();
@@ -412,7 +412,27 @@ namespace Pixel_Simulations
             }
         }
     }
+    public static class DepthUtil
+    {
+        // Set this to the maximum possible Y coordinate your map will ever reach.
+        // 32768 is a safe, large number for 2D maps.
+        public const float MAX_WORLD_HEIGHT = 32768f;
 
+        /// <summary>
+        /// Converts a World Y coordinate into a hardware Depth value (0.0 to 1.0).
+        /// Higher Y values (lower on screen) return values closer to 0.0 (front).
+        /// </summary>
+        public static float Calculate(float worldBottomY)
+        {
+            // Formula: 1.0 - (Y / Max)
+            // Example: Y=0 -> Depth 1.0 (Back)
+            // Example: Y=32768 -> Depth 0.0 (Front)
+            float depth = 1.0f - (worldBottomY / MAX_WORLD_HEIGHT);
+
+            // Clamp just to be safe from floating point errors
+            return MathHelper.Clamp(depth, 0f, 1f);
+        }
+    }
 
 }
 

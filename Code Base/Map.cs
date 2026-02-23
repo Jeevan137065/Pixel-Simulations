@@ -48,7 +48,6 @@ namespace Pixel_Simulations.Data
             
         }
     }
-
     public class Map
     {
 
@@ -59,7 +58,7 @@ namespace Pixel_Simulations.Data
         {
             Layers = new List<Layer>();
             // Every new map starts with a default, unlocked Ground layer.
-            Layers.Add(new TileLayer("Ground"));
+            //Layers.Add(new TileLayer("Ground"));
             
         }
 
@@ -148,7 +147,7 @@ namespace Pixel_Simulations.Data
                 writer.Write(map.Layers.Count);
                 foreach (var layer in map.Layers)
                 {
-                    writer.Write(layer.Type.ToString());
+                    writer.Write((int)layer.Type);
                     writer.Write(layer.Name ?? " ");
                     writer.Write(layer.IsVisible);
                     writer.Write(layer.IsLocked);
@@ -160,7 +159,7 @@ namespace Pixel_Simulations.Data
                             WriteTileLayer(writer, layer as TileLayer);
                             break;
                         case LayerType.Object:
-                            WriteObjectLayer(writer, layer as ObjectLayer); // Placeholder for future
+                            WriteObjectLayer(writer, layer as ObjectLayer);
                             break;
                         case LayerType.Collision:
                             WriteCollisionLayer(writer, layer as CollisionLayer);

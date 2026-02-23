@@ -211,7 +211,7 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
         [JsonIgnore] public TilesetManager TilesetManager { get; }
         // --- NEW ASSET CORE ---
-        [JsonIgnore] public AssetLibrary AssetLibrary { get; set; }
+        [JsonIgnore] public EditorLibrary AssetLibrary { get; set; }
         [JsonIgnore] public PrefabManager PrefabManager { get; }
 
         // Flags for UI state
@@ -242,7 +242,7 @@ namespace Pixel_Simulations.Editor
         }
         public void LoadContent(ContentManager content)
         {
-            AssetLibrary = new AssetLibrary(content);
+            AssetLibrary = new EditorLibrary(content);
             AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
             AssetLibrary.LoadAtlas("BasiR", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
