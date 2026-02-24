@@ -1,35 +1,113 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using MonoGame.Extended.Timers;
 using Pixel_Simulations.Editor;
 using System;
+using System.Linq;
 
 namespace Pixel_Simulations
 { // <-- Make sure this matches your project's namespace
 
     public class Camera
     {
+        // --- State ---
         public Vector2 Position { get; private set; }
-        public float Zoom { get; private set; }
+        public float Zoom { get; private set; } = 1f;
 
-        // 1. For Ground Pass (480x270)
+
+
+        // --- Settings ---
+        private readonly float[] _zoomLevels = { 0.125f, 0.25f, 0.5f, 1f, 2f, 4f };
+        private float _moveLerpSpeed = 5.0f; // Higher is faster
+        private float _zoomLerpSpeed = 3.0f;
+
+        // --- Matrices ---
         public Matrix NativeFinal { get; private set; }
         public Matrix NativeView { get; private set; }
-
-        // 2. For Simulation Pass (960x540)
-        // Used by Grass Shader and Player Draw
         public Matrix SimFinal { get; private set; }
         public Matrix SimView { get; private set; }
 
-        private Rectangle _nativeRect; // 480x270
-        private Rectangle _simRect;    // 960x540
+        private Rectangle _nativeRect;
+        private Rectangle _simRect;
         public Rectangle CameraView { get; private set; }
         public void Setcamera(Rectangle nativeRect, Rectangle highResRect)
         {
             _nativeRect = nativeRect;
             _simRect = highResRect;
         }
+        /// <summary>
+        /// Call this every frame to process smoothing.
+        /// </summary>
+        public void Update(GameTime gameTime, Vector2 targetPos, float targetZoom, bool smooth = false)
+        {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+            if (smooth)
+            {
+                // 1. Smoothly interpolate position
+                Position = Vector2.Lerp(Position, targetPos, _moveLerpSpeed * dt);
+
+                // 2. Smoothly interpolate zoom
+                Zoom = MathHelper.Lerp(Zoom, targetZoom, _zoomLerpSpeed * dt);
+            }
+            else
+            {
+                Position = targetPos;
+                Zoom = targetZoom;
+            }
+
+            UpdateMatrices();
+        }
+        public float GetNearestZoomStep(float current, bool increase)
+        {
+            if (increase)
+                return _zoomLevels.FirstOrDefault(z => z > current + 0.01f, _zoomLevels.Last());
+            else
+                return _zoomLevels.LastOrDefault(z => z < current - 0.01f, _zoomLevels.First());
+        }
+
+        private void UpdateMatrices()
+        {
+
+            // --- THE BASE VIEW ---
+            Matrix translation = Matrix.CreateTranslation(
+                 -System.MathF.Round(Position.X),
+                 -System.MathF.Round(Position.Y),
+                 0);
+
+            // --- A. NATIVE MATRICES (480x270) ---
+            Matrix nativeScale = Matrix.CreateScale(Zoom, Zoom, 1);
+            Matrix nativeCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
+
+            NativeFinal = translation * nativeScale * nativeCenter;
+            //NativeFinal = NativeView * Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, 0, 1);
+
+            // --- B. SIMULATION MATRICES (960x540) ---
+            float simScaleFactor = (float)_simRect.Width / _nativeRect.Width; // Usually 2.0x
+            Matrix simScale = Matrix.CreateScale(Zoom * simScaleFactor, Zoom * simScaleFactor, 1);
+            Matrix simCenter = Matrix.CreateTranslation(_simRect.Width / 2f, _simRect.Height / 2f, 0);
+
+            SimFinal = translation * simScale * simCenter;
+            //SimFinal = SimView * Matrix.CreateOrthographicOffCenter(0, _simRect.Width, _simRect.Height, 0, 0, 1);
+
+            // Update visible bounds for culling
+            float invZoom = 1f / Zoom;
+            CameraView = new Rectangle(
+                (int)(Position.X - (_nativeRect.Width * invZoom) / 2f),
+                (int)(Position.Y - (_nativeRect.Height * invZoom) / 2f),
+                (int)(_nativeRect.Width * invZoom),
+                (int)(_nativeRect.Height * invZoom)
+            );
+        }
+
+        public void Follow(Vector2 target, float zoom, GameTime gt) => Update(gt, target, zoom);
+        public void SnapTo(Vector2 target, float zoom)
+        {
+            Position = target;
+            Zoom = zoom;
+            UpdateMatrices();
+        }
         public void Follow(Vector2 target, float scale)
         {
             Position = target;

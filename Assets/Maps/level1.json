@@ -3,7 +3,7 @@
     {
       "$type": "Collision",
       "Name": "Collision3",
-      "IsVisible": true,
+      "IsVisible": false,
       "IsLocked": false,
       "CollisionMesh": [
         {
@@ -129,7 +129,7 @@
     {
       "$type": "Object",
       "Name": "Object2",
-      "IsVisible": true,
+      "IsVisible": false,
       "IsLocked": false,
       "Objects": [
         {
@@ -322,8 +322,16 @@
                   "TileID": 73,
                   "Rotation": 0
                 },
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -356,8 +364,16 @@
                   "TileID": 53,
                   "Rotation": 0
                 },
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -380,7 +396,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 53,
@@ -433,7 +453,11 @@
                   "TileID": 53,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -478,10 +502,9 @@
                 }
               ],
               [
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -509,10 +532,23 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -543,10 +579,18 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -598,13 +642,21 @@
             },
             "Tiles": [
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -637,8 +689,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 32,
@@ -659,7 +719,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -672,33 +736,6 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 32,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 32,
@@ -712,6 +749,11 @@
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -728,15 +770,24 @@
               [
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 32,
@@ -747,8 +798,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -756,13 +810,63 @@
                 }
               ],
               [
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 32,
@@ -773,9 +877,21 @@
                   "TileID": 32,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -788,10 +904,26 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -814,8 +946,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -867,109 +1007,19 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
                   "Rotation": 0
                 },
                 {
@@ -986,6 +1036,132 @@
               [
                 {
                   "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
@@ -994,11 +1170,31 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1031,7 +1227,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1044,18 +1244,46 @@
                 }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -1068,12 +1296,36 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ]
             ]
           }
@@ -1125,13 +1377,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
-              ],
-              [
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1139,14 +1394,43 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1167,15 +1451,26 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1188,9 +1483,26 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1213,8 +1525,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -1225,7 +1545,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -1248,10 +1572,9 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1259,7 +1582,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -1277,7 +1609,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1293,7 +1629,11 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -1326,10 +1666,14 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 }
               ]
@@ -1353,15 +1697,9 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1379,35 +1717,19 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 }
               ],
@@ -1417,8 +1739,26 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -1426,47 +1766,7 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1481,8 +1781,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -1500,7 +1808,7 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1515,15 +1823,31 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1541,20 +1865,120 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1567,18 +1991,34 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1617,50 +2057,24 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1680,10 +2094,26 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1706,8 +2136,58 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -1740,19 +2220,31 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -1770,8 +2262,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -1782,7 +2282,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -1800,11 +2304,14 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1812,10 +2319,19 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 }
               ],
@@ -1830,16 +2346,36 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ]
             ]
           }
@@ -1886,35 +2422,9 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1926,7 +2436,17 @@
               [
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -1944,42 +2464,6 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2012,9 +2496,105 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2093,18 +2673,12 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -2112,60 +2686,6 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -2190,10 +2710,9 @@
               [
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2204,7 +2723,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -2222,7 +2750,95 @@
                 }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2238,8 +2854,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2257,7 +2881,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2300,7 +2928,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -2333,7 +2965,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -2349,7 +2985,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2381,93 +3021,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2500,9 +3058,147 @@
                 }
               ],
               [
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -2530,13 +3226,21 @@
                 }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2545,6 +3249,48 @@
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -2571,40 +3317,14 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -2620,7 +3340,11 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2695,15 +3419,31 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -2721,15 +3461,31 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -2752,14 +3508,26 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -2777,14 +3545,26 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2809,16 +3589,24 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2846,13 +3634,21 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2865,7 +3661,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2876,8 +3676,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -2972,10 +3780,26 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 null,
@@ -2984,12 +3808,36 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 null,
@@ -3046,10 +3894,26 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ]
             ]
           }
@@ -3138,13 +4002,41 @@
                 }
               ],
               [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -3152,11 +4044,31 @@
                 }
               ],
               [
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3167,13 +4079,33 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3206,8 +4138,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3321,11 +4261,31 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3338,12 +4298,36 @@
                 }
               ],
               [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3366,15 +4350,31 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3392,8 +4392,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -3430,35 +4438,9 @@
             },
             "Tiles": [
               [
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3468,7 +4450,12 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3478,42 +4465,7 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3533,15 +4485,31 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -3556,15 +4524,12 @@
               [
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3575,55 +4540,6 @@
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
                   "Rotation": 0
                 },
                 {
@@ -3648,15 +4564,199 @@
                 }
               ],
               [
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -3698,33 +4798,9 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3732,11 +4808,9 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3756,10 +4830,9 @@
                 }
               ],
               [
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 52,
                   "Rotation": 0
                 },
                 {
@@ -3767,8 +4840,63 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -3791,39 +4919,14 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3833,38 +4936,7 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3889,11 +4961,103 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3918,15 +5082,31 @@
                 }
               ],
               [
-                null,
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -3958,26 +5138,9 @@
             },
             "Tiles": [
               [
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -3987,30 +5150,7 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -4018,30 +5158,6 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4071,35 +5187,9 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4134,40 +5224,22 @@
               [
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -4192,8 +5264,184 @@
                 }
               ],
               [
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4250,87 +5498,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4370,13 +5542,113 @@
                 },
                 {
                   "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4467,11 +5739,31 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4489,9 +5781,21 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -4524,11 +5828,31 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -4638,7 +5962,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4649,8 +5977,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4668,16 +6004,36 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -4690,8 +6046,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -4702,7 +6066,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4720,11 +6088,31 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4742,8 +6130,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -4771,8 +6167,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4783,36 +6187,14 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -4827,9 +6209,63 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 52,
@@ -4845,7 +6281,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ]
             ]
           }
@@ -4872,93 +6312,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -4971,76 +6329,12 @@
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -5060,7 +6354,11 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -5071,8 +6369,16 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -5090,12 +6396,246 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ]
             ]
           }
@@ -5137,156 +6677,14 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
                 {
                   "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null
-              ],
-              [
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                null
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 52,
-                  "Rotation": 0
-                },
-                null,
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                null,
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "Wild",
-                  "TileID": 12,
+                  "TileID": 32,
                   "Rotation": 0
                 },
                 {
@@ -5301,7 +6699,21 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -5314,12 +6726,98 @@
                 },
                 {
                   "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ],
               [
                 {
@@ -5327,7 +6825,137 @@
                   "TileID": 52,
                   "Rotation": 0
                 },
-                null,
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 12,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 52,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
                 {
                   "TilesetName": "Wild",
                   "TileID": 12,
@@ -5348,8 +6976,16 @@
                   "TileID": 12,
                   "Rotation": 0
                 },
-                null,
-                null
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 32,
+                  "Rotation": 0
+                }
               ]
             ]
           }

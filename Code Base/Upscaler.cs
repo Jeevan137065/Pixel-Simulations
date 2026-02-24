@@ -12,7 +12,8 @@ namespace Pixel_Simulations
         Normal,         // 960x540: Normal maps for lighting
         LightMask,      // 960x540: HDR Lighting calculation
         Shader,         // 960p: Weather and Atmospheric Shader
-        Composite       // Final: Combined result at Window Resolution
+        Composite,   // Final: Combined result at Window Resolution
+        PostProcess// NEW: The final image AFTER Color Grading, Gusting, etc.
     }
     public class Upscaler
     {
@@ -233,7 +234,6 @@ namespace Pixel_Simulations
                 RenderLayer.Albedo,
                 RenderLayer.Dynamic,
                 RenderLayer.Normal,
-                RenderLayer.LightMask,
                 RenderLayer.Shader
             };
 
@@ -270,6 +270,7 @@ namespace Pixel_Simulations
 
             // 3. FINAL LAYER
             _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
+            _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
         }
 
         public void BeginDepthPass()
@@ -322,14 +323,14 @@ namespace Pixel_Simulations
         /// <summary>
         /// The Composite Engine. Combines 480p and 960p layers into the final user resolution.
         /// </summary>
-        public void PresentFinal(SpriteBatch spriteBatch, Effect compositeEffect = null)
+        public void PresentFinal(SpriteBatch spriteBatch)
         {
             // 1. COMPOSE TO INTERNAL BUFFER
             _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Composite]);
             _graphicsDevice.Clear(Color.Black);
 
             // If we have a composite effect (for lighting/HDR), we use it here
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, compositeEffect);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
 
             // A. Draw Albedo (480p Background) scaled to fit the 1080p+ FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, Color.White);
@@ -337,15 +338,68 @@ namespace Pixel_Simulations
             // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
 
+            //spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
+
             spriteBatch.End();
 
             // 2. OUTPUT TO SCREEN
+            //_graphicsDevice.SetRenderTarget(null);
+            //_graphicsDevice.Clear(Color.Black);
+
+            //spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
+            // Draw whichever layer is currently selected for debugging
+            //spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+            //spriteBatch.End();
+        }
+        /// <summary>
+        /// Takes the Composite image, applies full-screen post-processing effects, 
+        /// and draws the final result to the screen (BackBuffer).
+        /// </summary>
+        public void PostFinal(SpriteBatch spriteBatch, params Effect[] postEffects)
+        {
+            RenderTarget2D currentSource = _targets[RenderLayer.Composite];
+
+            if (postEffects != null && postEffects.Length > 0)
+            {
+                // Ping-pong between Composite and PostProcess targets if we have multiple effects
+                RenderTarget2D[] pingPongTargets = { _targets[RenderLayer.PostProcess], _targets[RenderLayer.Composite] };
+
+                for (int i = 0; i < postEffects.Length; i++)
+                {
+                    Effect effect = postEffects[i];
+                    if (effect == null) continue;
+
+                    RenderTarget2D destination = pingPongTargets[i % 2];
+
+                    _graphicsDevice.SetRenderTarget(destination);
+                    _graphicsDevice.Clear(Color.Black);
+
+                    // Apply the effect. Use PointClamp to keep pixel art crisp during distortion.
+                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, effect);
+                    spriteBatch.Draw(currentSource, FinalRect, Color.White);
+                    spriteBatch.End();
+
+                    currentSource = destination;
+                }
+            }
+
+            // --- OUTPUT TO SCREEN ---
             _graphicsDevice.SetRenderTarget(null);
             _graphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
-            // Draw whichever layer is currently selected for debugging
-            spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+            // Draw the final processed image (or a specific debug layer if selected)
+            if (_currentDebugView == RenderLayer.Composite || _currentDebugView == RenderLayer.PostProcess)
+            {
+                spriteBatch.Draw(currentSource, FinalRect, Color.White);
+            }
+            else
+            {
+                // If debugging, draw the specific layer (e.g., just the Albedo or Normal map)
+                spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+            }
+
             spriteBatch.End();
         }
     }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using MonoGame.Extended.Collisions.Layers;
 using Pixel_Simulations.Data;
 using Pixel_Simulations.Editor;
 using System;
@@ -23,19 +25,21 @@ namespace Pixel_Simulations
         public AssetLibrary Assets { get; }
         public TilesetManager TilesetManager { get; }
         public PrefabManager PrefabManager { get; }
-
-
+        public WeatherSimulator Weather { get; set; }
+        public ShaderManager Shaders { get; private set; }
         //useful objects
         public InputState input { get; }
         public PhysicsManager Physics { get; }
         public string gameMapPath;
+        public int _uKeyPressed = 0;
+        private bool _uKeyPressedLastFrame = false;
         public GameState()
         {
             GameCamera = new Camera();
             Assets = new AssetLibrary();
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
-
+            Weather = new WeatherSimulator();
             input = new InputState();
         }
 
@@ -62,6 +66,8 @@ namespace Pixel_Simulations
             // 3. Create all TileSet instances and register them with the TilesetManager.
             // The manager needs the raw textures from the AssetLibrary to do its job.
             InitializeTilesets(graphicsDevice);
+            Shaders = new ShaderManager(graphicsDevice);
+            Shaders.LoadContent(content);
             //Physics.LoadMapData(CurrentMap);
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
@@ -91,8 +97,39 @@ namespace Pixel_Simulations
         {
             input.Update(gameTime);
             Player.Update(gameTime);
+            GameCamera.Follow(Player.Position, 1.0f,gameTime);
+            //GameCamera.Follow(Player, 1.0f);
 
-            GameCamera.Follow(Player, 1.0f);
+            // 3. Update the camera with the desired target
+            // Assuming you don't have a single-fire trigger yet, this basic check works:
+            var keyboardState = Keyboard.GetState();
+            // Assuming you don't have a single-fire trigger yet, this basic check works:
+            if (keyboardState.IsKeyDown(Keys.U))
+            {
+                // Simple debounce so it doesn't cycle 60 times a second
+                if (!_uKeyPressedLastFrame)
+                {
+                    Weather.CycleWeather();
+                }
+                _uKeyPressedLastFrame = true;
+            }
+            else if (keyboardState.IsKeyDown(Keys.Y))
+            {
+                // Simple debounce so it doesn't cycle 60 times a second
+                if (!_uKeyPressedLastFrame)
+                {
+                    Weather.CyclePhase();
+                }
+                _uKeyPressedLastFrame = true;
+            }
+            else
+            {
+                _uKeyPressedLastFrame = false;
+            }
+
+            // Update the weather math
+            Weather.Update(gameTime);
+            Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
         }
 
         public RectangleF GetStreamingBounds(int nativeWidth, int nativeHeight)

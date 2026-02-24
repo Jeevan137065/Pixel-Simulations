@@ -1,13 +1,14 @@
 ﻿Texture2D StateTexture;
-sampler StateSampler = sampler_state{ Texture = <StateTexture>; };
+sampler StateSampler = sampler_state{ Texture = <StateTexture>; Filter = Point; AddressU = Clamp; AddressV = Clamp; };
 
 float DeltaTime;
 float Time;
 float2 WindDirection;
 float WindSpeed;
 
-// NEW: The size of our wrapping simulation box in world pixels
-float2 SimulationBounds;
+// --- NEW: Camera Awareness ---
+float2 CameraPosition;
+float2 ViewportSize;
 
 float rand(float2 s) { return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453); }
 struct VS_IN { float4 P : POSITION0; float2 TC : TEXCOORD0; };
@@ -33,22 +34,37 @@ float4 MainPS(PS_IN input) : SV_TARGET
     }
     else // Splash
     {
-        if (lifetime <= 0.0) { type = 0.0; pos = float2(-9999, -9999); lifetime = -1; } // Effectively kill it
+        if (lifetime <= 0.0) { type = 0.0; pos = float2(-9999, -9999); lifetime = -1.0; }
     }
 
-    // If particle is "dead", or has gone outside the wrap bounds, reset it.
-    if (lifetime < 0.0 || pos.x < 0 || pos.x > SimulationBounds.x || pos.y < 0 || pos.y > SimulationBounds.y)
+    // --- NEW: Camera-Relative Culling & Spawning ---
+    // Define a bounding box slightly larger than the screen
+    float buffer = 400.0;
+    float left = CameraPosition.x - buffer;
+    float right = CameraPosition.x + ViewportSize.x + buffer;
+    float top = CameraPosition.y - buffer;
+    float bottom = CameraPosition.y + ViewportSize.y + buffer;
+
+    // If particle is dead, OR it blew completely off the screen bounds
+    if (lifetime < 0.0 || pos.x < left || pos.x > right || pos.y > bottom)
     {
         type = 0.0;
+
         float seedX = rand(seed * 99.1);
         float seedY = rand(seed * 55.4);
         float seedLife = rand(seed * 12.7);
         float seedSpeed = rand(seed * 33.3);
 
-        pos = float2(seedX * SimulationBounds.x, seedY * SimulationBounds.y);
-        float travelDistance = SimulationBounds.y * (0.5 + seedLife * 1.0);
+        // Spawn randomly within the camera bounds, but biased towards the top
+        pos.x = left + (seedX * (right - left));
+        pos.y = top + (seedY * 200.0); // Spawn near the top edge
+
+        float travelDistance = ViewportSize.y * (0.8 + seedLife * 1.0);
         float speed = WindSpeed * lerp(0.4, 1.2, seedSpeed);
-        lifetime = (speed > 0.1) ? travelDistance / speed : 99.0;
+
+        // Ensure minimum speed so particles don't hover forever
+        speed = max(speed, 50.0);
+        lifetime = travelDistance / speed;
     }
 
     return float4(pos, lifetime, type);

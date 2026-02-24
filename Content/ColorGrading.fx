@@ -1,25 +1,34 @@
-﻿Texture2D ScreenTexture;
-sampler ScreenSampler = sampler_state{ Texture = <ScreenTexture>; };
+﻿#if OPENGL
+#define PS_SHADERMODEL ps_3_0
+#else
+#define PS_SHADERMODEL ps_4_0_level_9_1
+#endif
 
-// Parameters to be set from our JSON preset
-float Desaturation;
+float Saturation = 1.0;
+float Brightness = 1.0;
+float Contrast = 1.0;
+float3 TintColor = float3(1.0, 1.0, 1.0);
 
-// THE FIX - Part 1: We now expect color values in the 0-255 range.
-// We rename it to make it clear.
-float3 TintColor255;
+Texture2D ScreenTexture;
+sampler ScreenSampler = sampler_state{ Texture = <ScreenTexture>; AddressU = Clamp; AddressV = Clamp; };
 
-float4 main(float2 texCoord : TEXCOORD0) : SV_TARGET
+// Notice we added MonoGame's default SpriteBatch parameters here
+float4 MainPS(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : SV_TARGET
 {
-    float4 originalColor = tex2D(ScreenSampler, texCoord);
-    float grayscale = dot(originalColor.rgb, float3(0.299, 0.587, 0.114));
-    float3 desaturatedColor = lerp(originalColor.rgb, grayscale.xxx, Desaturation);
-
-    // THE FIX - Part 2: The shader normalizes the color itself.
-    // This is robust and removes any ambiguity.
-    float3 normalizedTintColor = TintColor255 / 255.0;
-
-    float3 finalColor = desaturatedColor * normalizedTintColor;
-    return float4(finalColor, originalColor.a);
+    float4 texColor = tex2D(ScreenSampler, texCoord);
+    texColor.rgb = ((texColor.rgb - 0.5) * max(Contrast, 0.0)) + 0.5;
+    texColor.rgb *= Brightness;
+    float luminance = dot(texColor.rgb, float3(0.299, 0.587, 0.114));
+    texColor.rgb = lerp(float3(luminance, luminance, luminance), texColor.rgb, Saturation);
+    texColor.rgb *= TintColor;
+    return texColor;
 }
 
-technique Basic{ pass P0 { PixelShader = compile ps_3_0 main(); } }
+technique Basic
+{
+    pass P0
+    {
+        // WE REMOVED THE VERTEX SHADER! SpriteBatch will handle it now.
+        PixelShader = compile PS_SHADERMODEL MainPS();
+    }
+}

@@ -1,0 +1,4 @@
+﻿
+A. Editor - Game
+	Components used by editor and game will be different (Camera, renderer, State, UI, Controllers, Commands)
+B. All good shader files will be moved to pixel simulation (For version controll and Avaliablity)
