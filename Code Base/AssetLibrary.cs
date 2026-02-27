@@ -22,7 +22,7 @@ namespace Pixel_Simulations
         {
         public readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>();
         private readonly ContentManager _content;
-
+        
         public EditorLibrary(ContentManager content) => _content = content;
 
         public void LoadAtlas(string assetName, AtlasType type)
@@ -52,7 +52,7 @@ namespace Pixel_Simulations
         // Store metadata, just like the EditorLibrary
         private readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>();
         private ContentManager _content;
-
+        public SpriteFont customFont;
         // Pass ContentManager in constructor for cleaner loading later
         public AssetLibrary()
         {
@@ -98,6 +98,7 @@ namespace Pixel_Simulations
             LoadAtlas("Buildings", AtlasType.Object);
 
             // Load Universal/UI Atlases
+            customFont = content.Load<SpriteFont>("Seattle");
             // LoadAtlas("UI_Elements", AtlasType.Universal);
         }
 

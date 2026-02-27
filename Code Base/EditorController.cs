@@ -78,7 +78,7 @@ namespace Pixel_Simulations.Editor
             }
 
         }
-        private void HandleGlobalShortcuts(InputState input, EventBus eventBus)
+        private void HandleGlobalShortcuts(EditorInputState input, EventBus eventBus)
         {
             var kbs = input.CurrentKeyboard;
             var prevKbs = input.PreviousKeyboard;
@@ -187,7 +187,7 @@ namespace Pixel_Simulations.Editor
                 ActiveBrush = _editorState.Selection.ActiveTileBrush
             };
         }
-        public void UpdateUI(InputState input, EventBus bus)
+        public void UpdateUI(EditorInputState input, EventBus bus)
         {
             _uiManager.TopPanel.Update(input, bus);
             _uiManager.ToolPanel.Update(input, bus);
@@ -196,7 +196,7 @@ namespace Pixel_Simulations.Editor
 
 
         }
-        private void HandleKeyboardCameraMovement(InputState input, GameTime gameTime)
+        private void HandleKeyboardCameraMovement(EditorInputState input, GameTime gameTime)
         {
             // The amount to move, in world pixels per second.
             // We scale it by the zoom level so navigation feels consistent.

@@ -28,7 +28,7 @@ namespace Pixel_Simulations
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
         //useful objects
-        public InputState input { get; }
+        public InputManager input { get; }
         public PhysicsManager Physics { get; }
         public string gameMapPath;
         public int _uKeyPressed = 0;
@@ -40,7 +40,7 @@ namespace Pixel_Simulations
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
             Weather = new WeatherSimulator();
-            input = new InputState();
+            input = new InputManager();
         }
 
         /// <summary>
@@ -95,9 +95,9 @@ namespace Pixel_Simulations
 
         public void Update(GameTime gameTime)
         {
-            input.Update(gameTime);
+            input.Update(gameTime,GameCamera);
             Player.Update(gameTime);
-            GameCamera.Follow(Player.Position, 1.0f,gameTime);
+            UpdateCameraInput(gameTime);
             //GameCamera.Follow(Player, 1.0f);
 
             // 3. Update the camera with the desired target
@@ -132,6 +132,30 @@ namespace Pixel_Simulations
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
         }
 
+        public void UpdateCameraInput(GameTime gameTime)
+        {
+            float targetZoom = GameCamera.Zoom;
+
+            // 1. Handle Zoom Steps via InputManager
+            if (input.IsKeyPressed(Keys.OemPlus) || input.GetScrollDelta() > 0)
+                GameCamera.ChangeZoomStep(true);
+
+            if (input.IsKeyPressed(Keys.OemMinus) || input.GetScrollDelta() < 0)
+                GameCamera.ChangeZoomStep(false);
+
+            // 2. Focus Logic
+            if (input.IsKeyDown(Keys.Space))
+            {
+                // When Space is held, pull camera 70% toward the mouse
+                GameCamera.SetFocusPoint(input.MouseWorldPosition, 0.7f);
+            }
+            else
+            {
+                // Release focus (smoothly slides back to player)
+                GameCamera.SetFocusPoint(Vector2.Zero, 0f);
+            }
+            GameCamera.Update(gameTime, Player.Position);
+        }
         public RectangleF GetStreamingBounds(int nativeWidth, int nativeHeight)
         {
             // 1. Start with a box slightly larger than the screen, centered on the player.

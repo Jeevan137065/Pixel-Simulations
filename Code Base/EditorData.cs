@@ -89,7 +89,7 @@ namespace Pixel_Simulations.Data
     public class IconDefinition { public int x { get; set; } public int y { get; set; } }
     public interface IPanel
     {
-        void Update(InputState input, EventBus bus);
+        void Update(EditorInputState input, EventBus bus);
         void Draw(SpriteBatch spriteBatch);
     }
     public class LayerRow

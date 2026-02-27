@@ -225,7 +225,7 @@ namespace Pixel_Simulations
 
             // The parts in the spritesheet have their own origin. 
             // Usually, the origin is the center of the frame (16, 24 for a 32x48 frame).
-            Vector2 partOrigin = new Vector2(16, 24);
+            Vector2 partOrigin = new Vector2(24, 32);
 
             foreach (var part in _bodyParts)
             {

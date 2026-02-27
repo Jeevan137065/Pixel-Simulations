@@ -20,8 +20,8 @@ namespace Pixel_Simulations.Data
     {
         public string Name { get; }
         public string IconName { get; }
-        void Update(ToolInput toolInput, InputState input , EventBus bus, EditorState editorState);
-        void DrawPreview(ToolInput toolInput, SpriteBatch spriteBatch, InputState input);
+        void Update(ToolInput toolInput, EditorInputState input , EventBus bus, EditorState editorState);
+        void DrawPreview(ToolInput toolInput, SpriteBatch spriteBatch, EditorInputState input);
     }
     public struct ToolInput
     {
@@ -39,7 +39,7 @@ namespace Pixel_Simulations.Data
         public string IconName { get; set; } = "Brush";
         public bool _isDrawing => false;
         private EditorState _es;
-        public void Update(ToolInput toolInput, InputState input,EventBus eventBus, EditorState editorState) // Add EventBus parameter
+        public void Update(ToolInput toolInput, EditorInputState input,EventBus eventBus, EditorState editorState) // Add EventBus parameter
         {
             var selection = toolInput.ActiveBrush;
             _es = editorState;
@@ -71,7 +71,7 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (toolInput.ActiveBrush == null) return;
 
@@ -99,7 +99,7 @@ namespace Pixel_Simulations.Data
         public string Name => "Eraser";
         public string IconName => Name;
         public bool _isDrawing = false;
-        public void Update(ToolInput toolInput, InputState input, EventBus eventBus, EditorState editorState)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
             if (toolInput.CurrentMouse.LeftButton == ButtonState.Pressed)
             {
@@ -115,7 +115,7 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             // A brush might draw a semi-transparent preview of the tile under the cursor.
             // For now, we'll leave it empty.
@@ -129,7 +129,7 @@ namespace Pixel_Simulations.Data
         private ObjectPrefab _activePrefab;
         private EditorState _es;
 
-        public void Update(ToolInput toolInput, InputState input, EventBus eventBus, EditorState editorState)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
             // 1. Get current selection from UI (To be implemented in TilesetPanel)
             _activePrefab = editorState.Selection.ActivePrefab;
@@ -181,7 +181,7 @@ namespace Pixel_Simulations.Data
 
             return candidate;
         }
-        public void DrawPreview(ToolInput toolInput,SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput,SpriteBatch sb, EditorInputState input)
         {
             if (_activePrefab == null) return;
 
@@ -212,7 +212,7 @@ namespace Pixel_Simulations.Data
 
         private float Zoom = 1f;
         private LayerType type;
-        public void Update(ToolInput toolInput, InputState input, EventBus eventBus, EditorState editorState)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
 
             if (input.CurrentKeyboard.CapsLock) { Mode = true; }    else { Mode = false; }
@@ -271,7 +271,7 @@ namespace Pixel_Simulations.Data
                 default: return Color.White;
             }
         }
-        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!_isDrawing) return;
             Vector2 start = _startWorldPos;
@@ -304,7 +304,7 @@ namespace Pixel_Simulations.Data
         private bool _isDrawing;
         private LayerType type;
         private ShapeOperation op = ShapeOperation.None;
-        public void Update(ToolInput toolInput, InputState input, EventBus eventBus, EditorState editorState)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
             var selectedShape = editorState.Selection.SelectedMapObject as ShapeObject;
             op = HandleKeys(input);
@@ -394,7 +394,7 @@ namespace Pixel_Simulations.Data
 
             return null;
         }
-        private ShapeOperation HandleKeys(InputState input)
+        private ShapeOperation HandleKeys(EditorInputState input)
         {
             var kbs = input.CurrentKeyboard;
 
@@ -430,7 +430,7 @@ namespace Pixel_Simulations.Data
             else return -1;
         }
 
-        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!_isDrawing) return;
             Vector2 start = _startPos;
@@ -467,7 +467,7 @@ namespace Pixel_Simulations.Data
         private Vector2 _dragOffset;
         private EditorState _es;
 
-        public void Update(ToolInput toolInput, InputState input, EventBus eventBus,EditorState editorState)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus,EditorState editorState)
         {
             _es = editorState;
             if (_es == null) return;
@@ -559,7 +559,7 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        private void HandleKeyboardMovement(MapObject obj, InputState input)
+        private void HandleKeyboardMovement(MapObject obj, EditorInputState input)
         {
             float speed = input.CurrentKeyboard.IsKeyDown(Keys.LeftShift) ? 16f : 1f;
             Vector2 move = Vector2.Zero;
@@ -676,7 +676,7 @@ namespace Pixel_Simulations.Data
                 _ => tl
             };
         }
-        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             // Draw the white stroke first
             // Then draw small squares (Handles) at corners
@@ -772,7 +772,7 @@ namespace Pixel_Simulations.Data
         private bool _isDrawing = false;
         private float _currentRadius = 0f;
 
-        public void Update(ToolInput toolInput, InputState input, EventBus eventBus, EditorState editorState)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
             input.Drawing = _isDrawing;
 
@@ -814,7 +814,7 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, InputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!_isDrawing) return;
 

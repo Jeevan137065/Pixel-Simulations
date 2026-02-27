@@ -34,7 +34,7 @@ namespace Pixel_Simulations.UI
             _buttons.Add(new Button(new Rectangle(Area.X + 215, Area.Y + 4, 32, 32), new MenuActionCommand { ActionName = "Export" }, "Export"));
         }
 
-        public override void Update(InputState input, EventBus bus)
+        public override void Update(EditorInputState input, EventBus bus)
         {
             var panelState = _editorState.TopState;
             panelState.HoveredButtonName = null;
@@ -116,7 +116,7 @@ namespace Pixel_Simulations.UI
             }
         }
 
-        public override void Update(InputState input, EventBus eventBus)
+        public override void Update(EditorInputState input, EventBus eventBus)
         {
             RefreshTilesetStack();
 
@@ -145,7 +145,7 @@ namespace Pixel_Simulations.UI
 
             else if (_activeTab == Tab.Objects) UpdateObjectsTab(input, eventBus);
         }
-        private void UpdateTilesTab(InputState input, EventBus eventBus)
+        private void UpdateTilesTab(EditorInputState input, EventBus eventBus)
         {
             if (!_tileDisplayArea.Contains(input.MouseWindowPosition)) return;
 
@@ -170,7 +170,7 @@ namespace Pixel_Simulations.UI
             int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
             _scrollOffset = MathHelper.Clamp(_scrollOffset - scrollDelta * 0.5f, 0, 5000); // MaxScroll calculated dynamic usually
         }
-        private void UpdateObjectsTab(InputState input, EventBus eventBus)
+        private void UpdateObjectsTab(EditorInputState input, EventBus eventBus)
         {
             if (!_tileDisplayArea.Contains(input.MouseWindowPosition)) return;
 
@@ -189,7 +189,7 @@ namespace Pixel_Simulations.UI
                 if (x + 70 > _tileDisplayArea.Right) { x = _tileDisplayArea.X; y += 70; }
             }
         }
-        private void UpdateFooter(InputState input, EventBus bus)
+        private void UpdateFooter(EditorInputState input, EventBus bus)
         {
             if (_addTilesetButton.Update(input) && input.IsNewLeftClick)
             {
@@ -389,7 +389,7 @@ namespace Pixel_Simulations.UI
             }
         }
 
-        public override void Update(InputState input, EventBus bus)
+        public override void Update(EditorInputState input, EventBus bus)
         {
             var ctx = _editorState.PrefabCreator;
 
@@ -442,7 +442,7 @@ namespace Pixel_Simulations.UI
             if (_btnExit.Update(input) && input.IsNewLeftClick) bus.Publish(_btnExit.CommandToPublish);
         }
 
-        private void HandleTextTyping(InputState input)
+        private void HandleTextTyping(EditorInputState input)
         {
             var ctx = _editorState.PrefabCreator;
             string target = _focusedField == 1 ? ctx.TempName : ctx.TempTags;
@@ -561,7 +561,7 @@ namespace Pixel_Simulations.UI
             }
         }
 
-        public override void Update(InputState input, EventBus bus)
+        public override void Update(EditorInputState input, EventBus bus)
         {
             foreach (var kvp in _toolButtons)
             {
@@ -613,7 +613,7 @@ namespace Pixel_Simulations.UI
             _globalControlButtons.Add(new Button(new Rectangle(_controlsArea.X + 110, _controlsArea.Y + 4, 32, 32), new DeleteActiveLayerCommand{ }, "Delete"));
         }
 
-        public override void Update(InputState input, EventBus eventBus)
+        public override void Update(EditorInputState input, EventBus eventBus)
         {
 
             BuildLayerRows();
@@ -711,7 +711,7 @@ namespace Pixel_Simulations.UI
             // Track total height for scrolling clamp logic
             _totalContentHeight = (currentY + (int)_scrollOffset) - _layerListArea.Y;
         }
-        private void HandleTextInput(InputState input)
+        private void HandleTextInput(EditorInputState input)
         {
             var panelState = _editorState.Layers;
             var kbs = input.CurrentKeyboard;

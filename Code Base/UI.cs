@@ -22,7 +22,7 @@ namespace Pixel_Simulations.Data
             IconName = iconName;
         }
 
-        public bool Update(InputState input)// Returns true if mouse is on this Button
+        public bool Update(EditorInputState input)// Returns true if mouse is on this Button
         {
             return IsHovered = Bounds.Contains(input.MouseWindowPosition);
         }
@@ -58,7 +58,7 @@ namespace Pixel_Simulations.Data
                 width, height);
         }
 
-        public void Update(InputState input)
+        public void Update(EditorInputState input)
         {
             SelectedItem = null;
             if (!Bounds.Contains(input.MouseWindowPosition)) return;
@@ -106,7 +106,7 @@ namespace Pixel_Simulations.Data
             _editorState = editorState;
         }
 
-        public abstract void Update(InputState input, EventBus bus);
+        public abstract void Update(EditorInputState input, EventBus bus);
         public abstract void Draw(SpriteBatch spriteBatch);
     }
 }

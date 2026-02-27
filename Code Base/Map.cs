@@ -58,7 +58,7 @@ namespace Pixel_Simulations.Data
         {
             Layers = new List<Layer>();
             // Every new map starts with a default, unlocked Ground layer.
-            //Layers.Add(new TileLayer("Ground"));
+            Layers.Add(new TileLayer("Ground"));
             
         }
 

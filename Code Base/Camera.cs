@@ -11,25 +11,31 @@ namespace Pixel_Simulations
 
     public class Camera
     {
-        // --- State ---
+        // --- Current State ---
         public Vector2 Position { get; private set; }
         public float Zoom { get; private set; } = 1f;
 
-
+        // --- Multi-Target Logic ---
+        private float _targetZoom = 1f;
+        private Vector2 _primaryTarget;    // Usually Player
+        private Vector2 _secondaryTarget;  // Object or Mouse
+        private float _focusStrength = 0f; // 0 = 100% Player, 1 = 100% Object
 
         // --- Settings ---
-        private readonly float[] _zoomLevels = { 0.125f, 0.25f, 0.5f, 1f, 2f, 4f };
-        private float _moveLerpSpeed = 5.0f; // Higher is faster
-        private float _zoomLerpSpeed = 3.0f;
+        //private readonly float[] _zoomLevels = { 0.25f, 0.5f, 1f, 2f, 4f };
+        private readonly float[] _zoomLevels = {0.5f, 1f, 2f};
+        public float MoveLerpSpeed { get; set; } = 15.0f;
+        public float ZoomLerpSpeed { get; set; } = 5.0f;
 
         // --- Matrices ---
         public Matrix NativeFinal { get; private set; }
-        public Matrix NativeView { get; private set; }
         public Matrix SimFinal { get; private set; }
+        public Matrix NativeView { get; private set; }
         public Matrix SimView { get; private set; }
 
         private Rectangle _nativeRect;
         private Rectangle _simRect;
+
         public Rectangle CameraView { get; private set; }
         public void Setcamera(Rectangle nativeRect, Rectangle highResRect)
         {
@@ -37,61 +43,61 @@ namespace Pixel_Simulations
             _simRect = highResRect;
         }
         /// <summary>
-        /// Call this every frame to process smoothing.
+        /// Sets a secondary point to look at (e.g. an item, an NPC, or mouse).
         /// </summary>
-        public void Update(GameTime gameTime, Vector2 targetPos, float targetZoom, bool smooth = false)
+        /// <param name="point">World position of interest.</param>
+        /// <param name="strength">0.0 (ignore) to 1.0 (look only at this).</param>
+        public void SetFocusPoint(Vector2 point, float strength)
+        {
+            _secondaryTarget = point;
+            _focusStrength = MathHelper.Clamp(strength, 0, 1);
+        }
+        public void Update(GameTime gameTime, Vector2 playerPos)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _primaryTarget = playerPos;
 
-            if (smooth)
-            {
-                // 1. Smoothly interpolate position
-                Position = Vector2.Lerp(Position, targetPos, _moveLerpSpeed * dt);
+            // 1. Calculate the blended target position
+            // This pulls the camera between the player and the focus point
+            Vector2 finalTarget = Vector2.Lerp(_primaryTarget, _secondaryTarget, _focusStrength);
 
-                // 2. Smoothly interpolate zoom
-                Zoom = MathHelper.Lerp(Zoom, targetZoom, _zoomLerpSpeed * dt);
-            }
-            else
-            {
-                Position = targetPos;
-                Zoom = targetZoom;
-            }
-
+            // 2. Smoothly lerp actual camera position and zoom
+            Position = Vector2.Lerp(Position, finalTarget, MoveLerpSpeed * dt);
+            Zoom = MathHelper.Lerp(Zoom, _targetZoom, ZoomLerpSpeed * dt);
+            // 4. Snap logic: If we are extremely close to the target, just set it.
+            // This prevents floating point "creeping" (0.9999999)
+            if (Math.Abs(Zoom - _targetZoom) < 0.001f) Zoom = _targetZoom;
+            if (Vector2.Distance(Position, finalTarget) < 0.1f) Position = finalTarget;
             UpdateMatrices();
         }
-        public float GetNearestZoomStep(float current, bool increase)
-        {
-            if (increase)
-                return _zoomLevels.FirstOrDefault(z => z > current + 0.01f, _zoomLevels.Last());
-            else
-                return _zoomLevels.LastOrDefault(z => z < current - 0.01f, _zoomLevels.First());
-        }
-
         private void UpdateMatrices()
         {
+            // PIXEL-PERFECTION: 
+            // We calculate matrices using a ROUNDED position to prevent 
+            // textures from being drawn "between" pixels, which causes squash.
+            Vector2 roundedPos = new Vector2(
+                (float)Math.Round(Position.X),
+                (float)Math.Round(Position.Y)
+            );
 
-            // --- THE BASE VIEW ---
-            Matrix translation = Matrix.CreateTranslation(
-                 -System.MathF.Round(Position.X),
-                 -System.MathF.Round(Position.Y),
-                 0);
+            // 1. World-to-Local Translation
+            Matrix translation = Matrix.CreateTranslation(-roundedPos.X, -roundedPos.Y, 0);
 
             // --- A. NATIVE MATRICES (480x270) ---
             Matrix nativeScale = Matrix.CreateScale(Zoom, Zoom, 1);
             Matrix nativeCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
-
+            NativeView = nativeCenter * translation;
+            // Combine: Translate to world -> Scale -> Center in viewport
             NativeFinal = translation * nativeScale * nativeCenter;
-            //NativeFinal = NativeView * Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, 0, 1);
 
             // --- B. SIMULATION MATRICES (960x540) ---
-            float simScaleFactor = (float)_simRect.Width / _nativeRect.Width; // Usually 2.0x
+            float simScaleFactor = (float)_simRect.Width / _nativeRect.Width; // 2.0x
             Matrix simScale = Matrix.CreateScale(Zoom * simScaleFactor, Zoom * simScaleFactor, 1);
             Matrix simCenter = Matrix.CreateTranslation(_simRect.Width / 2f, _simRect.Height / 2f, 0);
 
             SimFinal = translation * simScale * simCenter;
-            //SimFinal = SimView * Matrix.CreateOrthographicOffCenter(0, _simRect.Width, _simRect.Height, 0, 0, 1);
 
-            // Update visible bounds for culling
+            // --- C. CULLING VIEW ---
             float invZoom = 1f / Zoom;
             CameraView = new Rectangle(
                 (int)(Position.X - (_nativeRect.Width * invZoom) / 2f),
@@ -101,13 +107,30 @@ namespace Pixel_Simulations
             );
         }
 
-        public void Follow(Vector2 target, float zoom, GameTime gt) => Update(gt, target, zoom);
+        public void ChangeZoomStep(bool increase)
+        {
+            if (increase)
+            {
+                // Find the first value in the array strictly greater than our current target
+                _targetZoom = _zoomLevels.FirstOrDefault(z => z > _targetZoom + 0.001f);
+                if (_targetZoom == 0) _targetZoom = _zoomLevels.Last(); // Fallback if at end
+            }
+            else
+            {
+                // Find the last value in the array strictly less than our current target
+                _targetZoom = _zoomLevels.LastOrDefault(z => z < _targetZoom - 0.001f);
+                if (_targetZoom == 0) _targetZoom = _zoomLevels.First(); // Fallback if at start
+            }
+        }
+
         public void SnapTo(Vector2 target, float zoom)
         {
             Position = target;
             Zoom = zoom;
             UpdateMatrices();
         }
+
+        public void Follow(Vector2 target, float zoom, GameTime gt) => Update(gt, target);
         public void Follow(Vector2 target, float scale)
         {
             Position = target;
@@ -206,7 +229,7 @@ namespace Pixel_Simulations
             UpdateTransform();
         }
 
-        public void Update(InputState input, Rectangle viewportBounds)
+        public void Update(EditorInputState input, Rectangle viewportBounds)
         {
             // --- Panning ---
             if (input.CurrentMouse.MiddleButton == ButtonState.Pressed && viewportBounds.Contains(input.MouseWindowPosition))
@@ -251,7 +274,7 @@ namespace Pixel_Simulations
             UpdateTransform();
         }
 
-        public void Update(InputState input, Rectangle viewportBounds,bool x)
+        public void Update(EditorInputState input, Rectangle viewportBounds,bool x)
         {
             // --- Panning ---
             if (input.CurrentMouse.MiddleButton == ButtonState.Pressed && viewportBounds.Contains(input.MouseWindowPosition))
