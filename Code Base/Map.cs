@@ -161,14 +161,9 @@ namespace Pixel_Simulations.Data
                         case LayerType.Object:
                             WriteObjectLayer(writer, layer as ObjectLayer);
                             break;
-                        case LayerType.Collision:
-                            WriteCollisionLayer(writer, layer as CollisionLayer);
-                            break;
-                        case LayerType.Navigation:
-                            WriteNavigationLayer(writer, layer as NavigationLayer);
-                            break;
-                        case LayerType.Trigger:
-                            WriteTriggerLayer(writer, layer as TriggerLayer);
+
+                        case LayerType.Control:
+                            WriteControlLayer(writer, layer as ControlLayer);
                             break;
                     }
                 }
@@ -206,13 +201,9 @@ namespace Pixel_Simulations.Data
                         case LayerType.Object:
                             newLayer = ReadObjectLayer(reader, name);
                             break;
-                        case LayerType.Collision:
-                            newLayer = ReadCollisionLayer(reader, name);
+                        case LayerType.Control:
+                            newLayer = ReadControlLayer(reader, name);
                             break;
-                        case LayerType.Navigation:
-                            newLayer = ReadNavigationLayer(reader, name);
-                            break;
-                            // Add cases for other layer types
                     }
                     if (newLayer != null)
                     {
@@ -269,50 +260,35 @@ namespace Pixel_Simulations.Data
                 writer.Write(prop.Rotation);
             }
         }
-        private static void WriteCollisionLayer(BinaryWriter writer, CollisionLayer layer)
+        private static void WriteControlLayer(BinaryWriter writer, ControlLayer layer)
         {
-            writer.Write(layer.CollisionMesh.Count);
-            foreach (var shape in layer.CollisionMesh)
+            // Write Shapes
+            writer.Write(layer.Shapes.Count);
+            foreach (var shape in layer.Shapes)
             {
                 writer.Write(shape.Name ?? "");
                 writer.Write(shape.Shape.Vertices.Count);
-                foreach (var v in shape.Shape.Vertices)
-                {
-                    writer.Write(v.X);
-                    writer.Write(v.Y);
-                }
+                foreach (var v in shape.Shape.Vertices) { writer.Write(v.X); writer.Write(v.Y); }
             }
-        }
-        private static void WriteNavigationLayer(BinaryWriter writer, NavigationLayer layer)
-        {
-            writer.Write(layer.NavigationMesh.Count);
-            foreach (var shape in layer.NavigationMesh)
+
+            // Write Rectangles
+            writer.Write(layer.Rectangles.Count);
+            foreach (var rect in layer.Rectangles)
             {
-                writer.Write(shape.Name ?? "");
-                writer.Write(shape.Shape.Vertices.Count);
-                foreach (var v in shape.Shape.Vertices)
-                {
-                    writer.Write(v.X);
-                    writer.Write(v.Y);
-                }
-            }
-        }
-        private static void WriteTriggerLayer(BinaryWriter writer, TriggerLayer layer)
-        {
-            writer.Write(layer.TriggerMesh.Count);
-            foreach (var rect in layer.TriggerMesh)
-            {
+                writer.Write(rect.Name ?? "");
                 writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
                 writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
             }
-            writer.Write(layer.PointTriggers.Count);
-            foreach (var rect in layer.PointTriggers)
+
+            // Write Points
+            writer.Write(layer.Points.Count);
+            foreach (var pt in layer.Points)
             {
-                writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
-                writer.Write(rect.Radius); writer.Write(rect.Label);
+                writer.Write(pt.Name ?? "");
+                writer.Write(pt.Position.X); writer.Write(pt.Position.Y);
+                writer.Write(pt.Radius);
             }
         }
-        
         private static TileLayer ReadTileLayer(BinaryReader reader, string name)
         {
             var layer = new TileLayer(name);
@@ -356,47 +332,49 @@ namespace Pixel_Simulations.Data
             }
             return layer;
         }
-        private static CollisionLayer ReadCollisionLayer(BinaryReader reader, string name)
+        private static ControlLayer ReadControlLayer(BinaryReader reader, string name)
         {
-            var layer = new CollisionLayer(name);
-            int shapeCount = reader.ReadInt32();
-            for (int i = 0; i < shapeCount; i++)
-            {
-                var shape = new ShapeObject();
-                shape.Name = reader.ReadString();
-                int vertCount = reader.ReadInt32();
-                var verts = new List<Vector2>();
-                for (int j = 0; j < vertCount; j++)
-                {
-                    verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
-                }
-                shape.Shape = new Polygon(verts);
-                shape.UpdateBoundsFromVertices(); // Sync Position/Size for AABB checks
-                layer.CollisionMesh.Add(shape);
-            }
-            return layer;
-        }
-        private static NavigationLayer ReadNavigationLayer(BinaryReader reader, string name)
-        {
-            var layer = new NavigationLayer(name);
-            int shapeCount = reader.ReadInt32();
-            for (int i = 0; i < shapeCount; i++)
-            {
-                var shape = new ShapeObject();
-                shape.Name = reader.ReadString();
-                int vertCount = reader.ReadInt32();
-                var verts = new List<Vector2>();
-                for (int j = 0; j < vertCount; j++)
-                {
-                    verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
-                }
-                shape.Shape = new Polygon(verts);
-                shape.UpdateBoundsFromVertices(); // Sync Position/Size for AABB checks
-                layer.NavigationMesh.Add(shape);
-            }
-            return layer;
-        }
+            var layer = new ControlLayer(name);
 
+            // Read Shapes
+            int sCount = reader.ReadInt32();
+            for (int i = 0; i < sCount; i++)
+            {
+                var s = new ShapeObject { Name = reader.ReadString() };
+                int vCount = reader.ReadInt32();
+                var verts = new List<Vector2>();
+                for (int j = 0; j < vCount; j++) verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
+                s.Shape = new Polygon(verts);
+                s.UpdateBoundsFromVertices();
+                layer.Shapes.Add(s);
+            }
+
+            // Read Rects
+            int rCount = reader.ReadInt32();
+            for (int i = 0; i < rCount; i++)
+            {
+                layer.Rectangles.Add(new RectangleObject
+                {
+                    Name = reader.ReadString(),
+                    Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                    Size = new Vector2(reader.ReadSingle(), reader.ReadSingle())
+                });
+            }
+
+            // Read Points
+            int pCount = reader.ReadInt32();
+            for (int i = 0; i < pCount; i++)
+            {
+                layer.Points.Add(new PointObject
+                {
+                    Name = reader.ReadString(),
+                    Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
+                    Radius = reader.ReadSingle()
+                });
+            }
+
+            return layer;
+        }
         #endregion
     }
 

@@ -43,17 +43,10 @@ namespace Pixel_Simulations.Data
                         DrawObjectLayer(sb, layer as ObjectLayer);
                         break;
 
-                    case LayerType.Collision:
-                        DrawCollisionLayer(sb, layer as CollisionLayer);
+                    case LayerType.Control:
+                         DrawControlLayer(sb, layer as ControlLayer);
                         break;
 
-                    case LayerType.Navigation:
-                        DrawNavigationLayer(sb, layer as NavigationLayer);
-                        break;
-
-                    case LayerType.Trigger:
-                        DrawTriggerLayer(sb, layer as TriggerLayer);
-                        break;
                 }
             }
         }
@@ -105,12 +98,13 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
-        private void DrawCollisionLayer(SpriteBatch sb, CollisionLayer layer)
+        private void DrawControlLayer(SpriteBatch sb, ControlLayer layer)
         {
             if (layer == null) return;
             float lineThickness = 1f / _editorState.camera.Zoom;
 
-            foreach (var shapeObj in layer.CollisionMesh)
+
+            foreach (var shapeObj in layer.Shapes)
             {
 
                 if (shapeObj == null || shapeObj.Shape == null) continue;
@@ -127,50 +121,19 @@ namespace Pixel_Simulations.Data
                     sb.DrawLine(start, end, shapeObj.DebugColor, lineThickness * 2);
                 }
             }
-        }
-        private void DrawNavigationLayer(SpriteBatch sb, NavigationLayer layer)
-        {
-            if (layer == null) return;
-            float lineThickness = 1f / _editorState.camera.Zoom;
-
-            foreach (var shapeObj in layer.NavigationMesh)
-            {
-
-                if (shapeObj == null || shapeObj.Shape == null) continue;
-                // 1. Draw the filled area (using bounds for a simple transparent tint)
-                var bounds = shapeObj.Shape.GetBounds();
-                sb.FillRectangle(bounds, shapeObj.DebugColor * 0.2f);
-
-                // 2. DRAW THE ACTUAL POLYGON EDGES (The complex "Plus" shape)
-                var verts = shapeObj.Shape.Vertices;
-                for (int i = 0; i < verts.Count; i++)
-                {
-                    Vector2 start = verts[i];
-                    Vector2 end = verts[(i + 1) % verts.Count]; // Loop back to start
-                    sb.DrawLine(start, end, shapeObj.DebugColor, lineThickness * 2);
-                }
-            }
-        }
-        private void DrawTriggerLayer(SpriteBatch sb, TriggerLayer layer)
-        {
-            if (layer == null) return;
-            float lineThickness = 1f / _editorState.camera.Zoom;
-
-            // Draw Rectangle Triggers
-            foreach (var rectObj in layer.TriggerMesh)
+            foreach (var rectObj in layer.Rectangles)
             {
                 var bounds = new RectangleF(rectObj.Position, rectObj.Size);
                 sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
                 sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
             }
-            foreach (var pointObj in layer.PointTriggers)
+            foreach (var pointObj in layer.Points)
             {
                 sb.DrawCircle(pointObj.Position, pointObj.Radius, 32, pointObj.DebugColor, lineThickness);
                 sb.DrawLine(pointObj.Position - new Vector2(4, 0), pointObj.Position + new Vector2(4, 0), pointObj.DebugColor * 0.4f, lineThickness);
                 sb.DrawLine(pointObj.Position - new Vector2(0, 4), pointObj.Position + new Vector2(0, 4), pointObj.DebugColor, lineThickness);
             }
         }
-        // In MapRenderer.cs -> DrawChunk
         private void DrawChunk(SpriteBatch sb, Chunk chunk)
         {
             float chunkWorldX = chunk.ChunkCoordinate.X * Chunk.CHUNK_SIZE * CELL_SIZE;
@@ -238,14 +201,8 @@ namespace Pixel_Simulations.Data
                         case LayerType.Object:
                             DrawObjectLayer(sb, layer as ObjectLayer, streamBounds);
                             break;
-                        case LayerType.Collision:
-                            DrawCollisionLayer(sb, layer as CollisionLayer);
-                            break;
-                        case LayerType.Navigation:
-                            DrawNavigationLayer(sb, layer as NavigationLayer);
-                            break;
-                        case LayerType.Trigger:
-                            DrawTriggerLayer(sb, layer as TriggerLayer);
+                        case LayerType.Control:
+                            DrawControlLayer(sb, layer as ControlLayer);
                             break;
                     }
                 }
@@ -273,7 +230,82 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
+        public List<RenderableSprite> CollectDynamicSprites()
+        {
+            var sprites = new List<RenderableSprite>();
+            var _map = _gameState.CurrentMap;
+            if (_map == null) return sprites;
 
+            RectangleF streamBounds = _gameState.GetStreamingBounds(_nativeScreenWidth, _nativeScreenHeight);
+
+            // 1. COLLECT MAP OBJECTS
+            for (int i = _map.Layers.Count - 1; i >= 0; i--)
+            {
+                var layer = _map.Layers[i];
+                if (layer.IsVisible && layer.Type == LayerType.Object)
+                {
+                    var objLayer = layer as ObjectLayer;
+                    foreach (var obj in objLayer.Objects)
+                    {
+                        if (obj is PropObject prop)
+                        {
+                            var prefab = _gameState.PrefabManager.GetPrefab(prop.PrefabID);
+                            if (prefab == null) continue;
+
+                            RectangleF objectBounds = new RectangleF(prop.Position.X, prop.Position.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
+
+                            if (streamBounds.Intersects(objectBounds))
+                            {
+                                var tex = _gameState.Assets.GetAtlas(prefab.AtlasName);
+                                if (tex != null)
+                                {
+                                    // The physical bottom of the object
+                                    float distanceFromPivotToBottom = (prefab.SourceRect.Height - prefab.Pivot.Y) * prop.Scale.Y;
+                                    float bottomY = prop.Position.Y + distanceFromPivotToBottom;
+
+                                    sprites.Add(new RenderableSprite
+                                    {
+                                        Texture = tex,
+                                        Position = prop.Position,
+                                        SourceRect = prefab.SourceRect,
+                                        Origin = prefab.Pivot,
+                                        Scale = prop.Scale,
+                                        Rotation = prop.Rotation,
+                                        DrawDepth = DepthUtil.Calculate(bottomY), // Standard 0-1 depth
+                                        BaseWorldY = bottomY                      // Exact world altitude
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. COLLECT THE PLAYER
+            // Note: Adjust the property names based on how your NewPlayer class is actually set up!
+            if (_gameState.Player != null)
+            {
+                var P = _gameState.Player;
+                // Calculate where the player's feet touch the ground.
+                // If origin is centered, it's Position.Y + (Height / 2). 
+                // Adjust this formula to match your player's exact pivot point.
+                float playerFeetY = _gameState.Player.Position.Y + P.CurrentFrameRect.Height;
+
+                sprites.Add(new RenderableSprite
+                {
+                    Texture = P.CompositeTexture, // Assuming Player has a Texture property
+                    Position = P.Position,
+                    SourceRect = P.CurrentFrameRect, // Assuming Player has animation frame
+                    Origin = P.Origin, // e.g., new Vector2(Width/2, Height)
+                    Scale = Vector2.One,
+                    Rotation = 0f,
+                    DrawDepth = DepthUtil.Calculate(playerFeetY),
+                    BaseWorldY = playerFeetY
+                });
+            }
+
+            return sprites;
+        }
         private void DrawObjectLayer(SpriteBatch sb, ObjectLayer layer, RectangleF streamBounds)
         {
             if (layer == null) return;
@@ -311,11 +343,11 @@ namespace Pixel_Simulations.Data
             }
 
         }
-        private void DrawCollisionLayer(SpriteBatch sb, CollisionLayer layer)
+        private void DrawControlLayer(SpriteBatch sb, ControlLayer layer)
         {
             if (layer == null) return;
             float lineThickness = 1f;
-            foreach (var shapeObj in layer.CollisionMesh)
+            foreach (var shapeObj in layer.Shapes)
             {
                 // Draw Fill (Optional)
                 sb.FillRectangle(shapeObj.Shape.GetBounds(), shapeObj.DebugColor * 0.3f);
@@ -329,39 +361,13 @@ namespace Pixel_Simulations.Data
                     sb.DrawLine(v1, v2, shapeObj.DebugColor, lineThickness);
                 }
             }
-        }
-        private void DrawNavigationLayer(SpriteBatch sb, NavigationLayer layer)
-        {
-            if (layer == null) return;
-            float lineThickness = 1f;
-            foreach (var shapeObj in layer.NavigationMesh)
-            {
-                // Draw Fill (Optional)
-                sb.FillRectangle(shapeObj.Shape.GetBounds(), shapeObj.DebugColor * 0.3f);
-
-                // Draw Polygon Edges
-                var verts = shapeObj.Shape.Vertices;
-                for (int i = 0; i < verts.Count; i++)
-                {
-                    Vector2 v1 = verts[i];
-                    Vector2 v2 = verts[(i + 1) % verts.Count];
-                    sb.DrawLine(v1, v2, shapeObj.DebugColor, lineThickness);
-                }
-            }
-        }
-        private void DrawTriggerLayer(SpriteBatch sb, TriggerLayer layer)
-        {
-            if (layer == null) return;
-            float lineThickness = 1f;
-
-            // Draw Rectangle Triggers
-            foreach (var rectObj in layer.TriggerMesh)
+            foreach (var rectObj in layer.Rectangles)
             {
                 var bounds = new RectangleF(rectObj.Position, rectObj.Size);
                 sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
                 sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
             }
-            foreach (var pointObj in layer.PointTriggers)
+            foreach (var pointObj in layer.Points)
             {
                 sb.DrawCircle(pointObj.Position, pointObj.Radius, 32, pointObj.DebugColor, lineThickness);
                 sb.DrawLine(pointObj.Position - new Vector2(4, 0), pointObj.Position + new Vector2(4, 0), pointObj.DebugColor * 0.4f, lineThickness);

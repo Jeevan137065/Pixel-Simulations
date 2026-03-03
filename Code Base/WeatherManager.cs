@@ -195,7 +195,7 @@ namespace Pixel_Simulations
             // 4. Final Sanity Clamps (Physics limits)
             target.TempC = MathHelper.Clamp(target.TempC, -40f, 55f);
             target.Humidity = MathHelper.Clamp(target.Humidity, 0f, 100f);
-            target.WindKph = MathHelper.Clamp(target.WindKph, 0f, 200f); // 200kph = Category 3 Hurricane
+            target.WindKph = MathHelper.Clamp(target.WindKph, 0f, 100); // 200kph = Category 3 Hurricane
             target.PressureHpa = MathHelper.Clamp(target.PressureHpa, 950f, 1050f);
             target.Instability = MathHelper.Clamp(target.Instability, 0f, 100f);
 
@@ -298,9 +298,24 @@ namespace Pixel_Simulations
             WeatherVisualParams v = new WeatherVisualParams();
 
             // Convert Kph to a 0-1 vector for shaders (Assume 100kph is max normal wind)
-            float normalizedWind = Math.Min(CurrentClimate.WindKph / 100f, 1f);
-            v.WindVector = new Vector2(1, 0.5f) * normalizedWind;
+            Vector2 baseWindDir = new Vector2(0.15f, 1.0f);
+            baseWindDir.Normalize();
+            // 2. Convert WindKph to Pixels-Per-Second. 
+            // 1 Kph = 10 pixels per second. 50kph = 500 pps.
+            float speedPPS = CurrentClimate.WindKph * 8f;
 
+            // 3. Gravity! Even if there is 0 wind, rain must fall. Minimum speed is 300 pps.
+            speedPPS = Math.Max(speedPPS, 200f);
+            // Calculate Cloud Cover based primarily on Atmospheric Pressure
+            // High pressure (1020+) = Clear Skies. Low pressure (< 1005) = Fully Overcast.
+            float pressureFactor = MathHelper.Clamp((1020f - CurrentClimate.PressureHpa) / 20f, 0f, 1f);
+
+            // Humidity also contributes (can't have clouds without moisture)
+            float humidityFactor = MathHelper.Clamp(CurrentClimate.Humidity / 80f, 0f, 1f);
+
+            // Final Cloud Cover is a combination of both
+            v.CloudCover = MathHelper.Clamp(pressureFactor * humidityFactor * 1.5f, 0f, 1f);
+            v.WindVector = baseWindDir * speedPPS;
             // Calculate intensities based on how far past thresholds we are
             if (CurrentWeather == WeatherType.Rain || CurrentWeather == WeatherType.Thunderstorm)
                 v.RainIntensity = MathHelper.Clamp((CurrentClimate.Humidity - 70f) / 30f, 0.1f, 1f);

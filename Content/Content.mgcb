@@ -13,6 +13,12 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin AmbientLight.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:AmbientLight.fx
+
 #begin BlueA.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -25,6 +31,12 @@
 /processorParam:TextureFormat=Color
 /build:BlueA.png
 
+#begin CloudShadows.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:CloudShadows.fx
+
 #begin ColorGrading.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -36,6 +48,12 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Combine.fx
+
+#begin DepthChannel.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:DepthChannel.fx
 
 #begin grass.fx
 /importer:EffectImporter
@@ -103,11 +121,29 @@
 /processorParam:TextureFormat=Color
 /build:PerlinA.jpg
 
+#begin PerlinB.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PerlinB.png
+
 #begin RainA.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:RainA.fx
+
+#begin RollingFog.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:RollingFog.fx
 
 #begin Seattle.spritefont
 /importer:FontDescriptionImporter
@@ -116,11 +152,26 @@
 /processorParam:TextureFormat=Compressed
 /build:Seattle.spritefont
 
+#begin Seattle.ttf
+/copy:Seattle.ttf
+
 #begin SnowEffect.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:SnowEffect.fx
+
+#begin Test.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Test.fx
+
+#begin VolumeDepth.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:VolumeDepth.fx
 
 #begin VoronoiA.jpg
 /importer:TextureImporter

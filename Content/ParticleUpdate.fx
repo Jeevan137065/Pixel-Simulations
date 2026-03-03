@@ -5,69 +5,71 @@ float DeltaTime;
 float Time;
 float2 WindDirection;
 float WindSpeed;
+float FallSpeed;
+float SplashDuration; // NEW: How long the particle lives after hitting the ground
 
-// --- NEW: Camera Awareness ---
 float2 CameraPosition;
 float2 ViewportSize;
 
 float rand(float2 s) { return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453); }
+
 struct VS_IN { float4 P : POSITION0; float2 TC : TEXCOORD0; };
 struct PS_IN { float4 P : SV_POSITION; float2 TC : TEXCOORD0; };
 PS_IN MainVS(VS_IN i) { PS_IN o; o.P = i.P; o.TC = i.TC; return o; }
 
 float4 MainPS(PS_IN input) : SV_TARGET
 {
-    float4 currentState = tex2D(StateSampler, input.TC);
-    float2 pos = currentState.xy;
-    float lifetime = currentState.z;
-    float type = currentState.w;
-    float2 seed = input.TC + Time;
+    float4 data = tex2D(StateSampler, input.TC);
+    float groundX = data.x;
+    float groundY = data.y;
+    float heightZ = data.z;
+    float state = data.w;
 
-    lifetime -= DeltaTime;
+    float2 staticSeed = input.TC;
+    float2 dynamicSeed = input.TC + Time;
 
-    if (type == 0.0) // Rain
+    // --- PHYSICS ---
+    if (state <= 0.5) // FALLING
     {
-        float speed = WindSpeed * lerp(0.4, 1.2, rand(seed));
-        float2 vel = normalize(WindDirection) * speed;
-        pos += vel * DeltaTime;
-        if (lifetime <= 0.0) { type = 0.5; lifetime = 0.3 + rand(seed.yx) * 0.2; }
+        float2 windVel = normalize(WindDirection) * WindSpeed;
+        groundX += windVel.x * DeltaTime;
+        groundY += windVel.y * DeltaTime;
+
+        float speed = FallSpeed * lerp(0.8, 1.2, rand(staticSeed));
+        heightZ -= speed * DeltaTime;
+
+        if (heightZ <= 0.0)
+        {
+            heightZ = 0.0;
+            state = 1.0; // Change to Splash
+        }
     }
-    else // Splash
+    else // SPLASHING / ON GROUND
     {
-        if (lifetime <= 0.0) { type = 0.0; pos = float2(-9999, -9999); lifetime = -1.0; }
+        // heightZ counts down from 0.0 to -1.0 based on the SplashDuration
+        heightZ -= (DeltaTime / SplashDuration);
     }
 
-    // --- NEW: Camera-Relative Culling & Spawning ---
-    // Define a bounding box slightly larger than the screen
-    float buffer = 400.0;
+    // --- CULLING & RESPAWNING ---
+    float buffer = 200.0;
     float left = CameraPosition.x - buffer;
     float right = CameraPosition.x + ViewportSize.x + buffer;
     float top = CameraPosition.y - buffer;
     float bottom = CameraPosition.y + ViewportSize.y + buffer;
 
-    // If particle is dead, OR it blew completely off the screen bounds
-    if (lifetime < 0.0 || pos.x < left || pos.x > right || pos.y > bottom)
+    // Respawn if splash timer is done (heightZ <= -1) OR if blown off screen
+    if ((state > 0.5 && heightZ <= -1.0) || groundX < left || groundX > right || groundY < top || groundY > bottom)
     {
-        type = 0.0;
+        state = 0.0;
+        float seedX = rand(dynamicSeed * 99.1);
+        float seedY = rand(dynamicSeed * 55.4);
+        float seedZ = rand(dynamicSeed * 12.7);
 
-        float seedX = rand(seed * 99.1);
-        float seedY = rand(seed * 55.4);
-        float seedLife = rand(seed * 12.7);
-        float seedSpeed = rand(seed * 33.3);
-
-        // Spawn randomly within the camera bounds, but biased towards the top
-        pos.x = left + (seedX * (right - left));
-        pos.y = top + (seedY * 200.0); // Spawn near the top edge
-
-        float travelDistance = ViewportSize.y * (0.8 + seedLife * 1.0);
-        float speed = WindSpeed * lerp(0.4, 1.2, seedSpeed);
-
-        // Ensure minimum speed so particles don't hover forever
-        speed = max(speed, 50.0);
-        lifetime = travelDistance / speed;
+        groundX = left + (seedX * (right - left));
+        groundY = top + (seedY * (bottom - top));
+        heightZ = 300.0 + (seedZ * 300.0);
     }
 
-    return float4(pos, lifetime, type);
+    return float4(groundX, groundY, heightZ, state);
 }
-
 technique Basic{ pass P0 { VertexShader = compile vs_3_0 MainVS(); PixelShader = compile ps_3_0 MainPS(); } }

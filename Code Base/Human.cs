@@ -261,6 +261,19 @@ namespace Pixel_Simulations
 
             spriteBatch.Draw(_compositeTarget, Position, null, Color.White, 0f, drawOrigin, 1f, SpriteEffects.None, depth);
         }
+
+        public Texture2D Texture => _compositeTarget;
+
+        // The source rect is the entire composite target
+        public Rectangle CurrentFrameRect => new Rectangle(0, 0, _compositeTarget.Width, _compositeTarget.Height);
+
+        // The visual center/pivot of the player. 
+        // Assuming a 48x64 canvas where the feet are near the bottom (Y=48)
+        public Vector2 Origin => new Vector2(24, 48);
+
+        // The exact Y coordinate of the player's feet touching the ground
+        public float BaseY => Position.Y + 48f;
+
     }
 
     // A simple class to hold the state of a single body part

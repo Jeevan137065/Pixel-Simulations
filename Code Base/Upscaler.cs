@@ -8,6 +8,7 @@ namespace Pixel_Simulations
     public enum RenderLayer
     {
         Albedo,         // 480x270: Static background
+        VolumeDepth,    // 960x540: Store Altitude depth of world
         Dynamic,        // 960x540: Grass, Player, NPCs (The G-Buffer Color)
         Normal,         // 960x540: Normal maps for lighting
         LightMask,      // 960x540: HDR Lighting calculation
@@ -216,7 +217,7 @@ namespace Pixel_Simulations
         private KeyboardState _prevKeyboardState;
         private readonly List<RenderLayer> _debugCycleOrder;
         public string currentRT = null;
-
+        public int DebugDepthChannel = 0; // 0 for Volume (Red), 1 for Draw Depth (Blue)
         public RenderPipeline(GraphicsDevice graphicsDevice, int nativeWidth, int nativeHeight, int finalWidth, int finalHeight)
         {
             _graphicsDevice = graphicsDevice;
@@ -231,9 +232,10 @@ namespace Pixel_Simulations
             _debugCycleOrder = new List<RenderLayer>
             {
                 RenderLayer.Composite,
+                RenderLayer.PostProcess,
                 RenderLayer.Albedo,
                 RenderLayer.Dynamic,
-                RenderLayer.Normal,
+                RenderLayer.VolumeDepth,
                 RenderLayer.Shader
             };
 
@@ -254,7 +256,9 @@ namespace Pixel_Simulations
             _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height);
 
             // 2. SIMULATION LAYER (960x540)
-
+            _targets[RenderLayer.VolumeDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
+                SurfaceFormat.HalfVector4, DepthFormat.None);
+            
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // Shared DepthStencil memory
             // Normals: Used for deferred lighting
@@ -266,26 +270,11 @@ namespace Pixel_Simulations
             
             // This is our Master Shader target. All simulation draws share this buffer.
             _targets[RenderLayer.Shader] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.HalfVector2, DepthFormat.Depth24Stencil8);
+                SurfaceFormat.Color, DepthFormat.None);
 
             // 3. FINAL LAYER
             _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
             _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
-        }
-
-        public void BeginDepthPass()
-        {
-            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Normal]);
-            _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, Color.Black, 1.0f, 0);
-        }
-
-        // --- PHASE B: DYNAMIC COLOR PASS ---
-        // We use the depth/stencil from the previous pass to only draw pixels that passed the test.
-        public void BeginDynamicPass()
-        {
-            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Dynamic]);
-            // We do NOT clear depth here! We want to "Continue" using the depth from Phase A.
-            _graphicsDevice.Clear(Color.Transparent);
         }
 
         // --- PHASE C: NORMAL PASS ---
@@ -338,7 +327,7 @@ namespace Pixel_Simulations
             // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
 
-            //spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
+            spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
 
             spriteBatch.End();
 
@@ -355,7 +344,7 @@ namespace Pixel_Simulations
         /// Takes the Composite image, applies full-screen post-processing effects, 
         /// and draws the final result to the screen (BackBuffer).
         /// </summary>
-        public void PostFinal(SpriteBatch spriteBatch, params Effect[] postEffects)
+        public void PostFinal(SpriteBatch spriteBatch, Effect debugChannelEffect, params Effect[] postEffects)
         {
             RenderTarget2D currentSource = _targets[RenderLayer.Composite];
 
@@ -387,20 +376,28 @@ namespace Pixel_Simulations
             _graphicsDevice.SetRenderTarget(null);
             _graphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
-
-            // Draw the final processed image (or a specific debug layer if selected)
             if (_currentDebugView == RenderLayer.Composite || _currentDebugView == RenderLayer.PostProcess)
             {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
                 spriteBatch.Draw(currentSource, FinalRect, Color.White);
+                spriteBatch.End();
+            }
+            else if (_currentDebugView == RenderLayer.VolumeDepth && debugChannelEffect != null)
+            {
+                // USE THE DEBUG SHADER to isolate the Red or Blue channel
+                debugChannelEffect.Parameters["Channel"]?.SetValue(DebugDepthChannel);
+
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, debugChannelEffect);
+                spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+                spriteBatch.End();
             }
             else
             {
-                // If debugging, draw the specific layer (e.g., just the Albedo or Normal map)
+                // Standard debug draw for Albedo, Normal, etc.
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
                 spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+                spriteBatch.End();
             }
-
-            spriteBatch.End();
         }
     }
 }

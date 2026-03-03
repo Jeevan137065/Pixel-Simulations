@@ -27,6 +27,7 @@ namespace Pixel_Simulations
         public PrefabManager PrefabManager { get; }
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
+        public DayTimeManager TimeSystem { get; private set; }
         //useful objects
         public InputManager input { get; }
         public PhysicsManager Physics { get; }
@@ -40,6 +41,7 @@ namespace Pixel_Simulations
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
             Weather = new WeatherSimulator();
+            TimeSystem = new DayTimeManager(); // NEW
             input = new InputManager();
         }
 
@@ -126,10 +128,18 @@ namespace Pixel_Simulations
             {
                 _uKeyPressedLastFrame = false;
             }
+            if(keyboardState.IsKeyDown(Keys.OemCloseBrackets))
+                TimeSystem.AddHours(1f);
+
+            // Press '[' to jump backwards 1 hour
+            if (keyboardState.IsKeyDown(Keys.OemOpenBrackets))
+                TimeSystem.AddHours(-1f);
 
             // Update the weather math
             Weather.Update(gameTime);
+            TimeSystem.Update(gameTime, Weather.CurrentSeason, Weather.Phase);
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
+            Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);
         }
 
         public void UpdateCameraInput(GameTime gameTime)

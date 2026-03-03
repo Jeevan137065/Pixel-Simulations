@@ -68,6 +68,23 @@ namespace Pixel_Simulations
         void DrawDebugOutline( BasicEffect effect);
 
     }
+
+    public struct RenderableSprite
+    {
+        public Texture2D Texture;
+        public Vector2 Position;
+        public Rectangle SourceRect;
+        public Vector2 Origin;
+        public Vector2 Scale;
+        public float Rotation;
+
+        // --- DEPTH DATA ---
+        // Used for standard SpriteBatch Y-Sorting (0.0 to 1.0)
+        public float DrawDepth;
+
+        // Used for Volumetric Fog/Shadows. The exact physical Y coordinate where it touches the ground.
+        public float BaseWorldY;
+    }
 }
 
 
