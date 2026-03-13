@@ -64,6 +64,7 @@ namespace Pixel_Simulations
         public void LoadContent(ContentManager content)
         {
             // Load all Effects
+            Effects["ParallaxSprite"] = content.Load<Effect>("ParallaxSprite");
             Effects["ColorGrading"] = content.Load<Effect>("ColorGrading");
             Effects["Gusting"] = content.Load<Effect>("Gusting");
             Effects["RollingFog"] = content.Load<Effect>("RollingFog");
@@ -147,11 +148,12 @@ namespace Pixel_Simulations
             effect.SetSafe("CameraPosition", cameraPos);
             effect.SetSafe("ViewportSize", viewportSize);
 
-            float visualWindSpeed = (weatherSim.CurrentClimate.WindKph / 150f) * 200f;
-            Vector2 windDir = weatherSim.Visuals.WindVector != Vector2.Zero ? Vector2.Normalize(weatherSim.Visuals.WindVector) : new Vector2(0.1f, 1f);
+            float visualWindSpeed = weatherSim.Visuals.WindVector.X; // Drift speed in pixels per second
+            Vector2 windDir = new Vector2(1f, 0f); // Wind blows horizontally across the screen
 
             effect.SetSafe("WindDirection", windDir);
             effect.SetSafe("WindSpeed", visualWindSpeed);
+
 
             float fallSpeed = 400f; float splashDuration = 0.15f;
             if (type == WeatherType.Snow || type == WeatherType.Blizzard) { fallSpeed = type == WeatherType.Blizzard ? 200f : 80f; splashDuration = 2.0f; }
@@ -288,26 +290,26 @@ namespace Pixel_Simulations
                 fog.SetSafe("FogTopAltitude", 50f);
 
                 float density = Math.Max(weatherSim.Visuals.FogDensity, weatherSim.Visuals.RainIntensity);
-                fog.SetSafe("FogDensity", density);
+                fog.SetSafe("FogDensity", 1.5f);
 
                 Vector3 color = weatherSim.CurrentWeather == WeatherType.DustStorm ? new Vector3(0.6f, 0.4f, 0.2f) : new Vector3(0.5f, 0.55f, 0.6f);
                 fog.SetSafe("FogColor", color);
 
-                //_manager.GraphicsDevice.BlendState = BlendState.Opaque;
+                _manager.GraphicsDevice.BlendState = BlendState.Opaque;
 
-                //// 2. Apply the shader
-                //fog.CurrentTechnique.Passes[0].Apply();
+                // 2. Apply the shader
+                fog.CurrentTechnique.Passes[0].Apply();
 
-                //// 3. Draw the Quad! No SpriteBatch needed.
-                //_manager.GraphicsDevice.DrawUserPrimitives(
-                //    PrimitiveType.TriangleStrip,
-                //    _manager.FullScreenQuad,
-                //    0,
-                //    2
-                //);
-                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.PointClamp, null, null, fog);
-                spriteBatch.Draw(_manager.PixelTexture, bounds, Color.White);
-                spriteBatch.End();
+                // 3. Draw the Quad! No SpriteBatch needed.
+                _manager.GraphicsDevice.DrawUserPrimitives(
+                    PrimitiveType.TriangleStrip,
+                    _manager.FullScreenQuad,
+                    0,
+                    2
+                );
+                //spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.PointClamp, null, null, fog);
+                //spriteBatch.Draw(_manager.PixelTexture, bounds, Color.White);
+                //spriteBatch.End();
             }
             if (_manager.Effects.TryGetValue("TestWeather", out Effect test))
             {
@@ -351,11 +353,11 @@ namespace Pixel_Simulations
             var climate = weatherSim.CurrentClimate;
 
             // --- Gusting ---
-            Vector2 windDir = weatherSim.Visuals.WindVector != Vector2.Zero ? Vector2.Normalize(weatherSim.Visuals.WindVector) : Vector2.Zero;
-            CurrentDistortion = (climate.WindKph / 1000f) * 0.005f;
+            Vector2 gustingDir = new Vector2(1, 0) * (climate.WindKph / 100f);
+            CurrentDistortion = (climate.WindKph / 150f) * 0.015f;
 
             _manager.Effects["Gusting"].SetSafe("Time", time);
-            _manager.Effects["Gusting"].SetSafe("WindVector", windDir * 0.0005f);
+            _manager.Effects["Gusting"].SetSafe("WindVector", gustingDir);
             _manager.Effects["Gusting"].SetSafe("DistortionStrength", CurrentDistortion);
 
             // --- Lightning Logic ---
@@ -415,9 +417,9 @@ namespace Pixel_Simulations
         public Effect[] GetActiveEffects()
         {
             return new Effect[] {
-                //_manager.Effects["Gusting"],
-                //_manager.Effects["AmbientLighting"],
-                //_manager.Effects["ColorGrading"]
+                _manager.Effects["Gusting"],
+                _manager.Effects["AmbientLighting"],
+                _manager.Effects["ColorGrading"]
             };
         }
 

@@ -136,8 +136,8 @@ namespace Pixel_Simulations
                 TimeSystem.AddHours(-1f);
 
             // Update the weather math
-            Weather.Update(gameTime);
             TimeSystem.Update(gameTime, Weather.CurrentSeason, Weather.Phase);
+            Weather.Update(gameTime, TimeSystem.TimeOfDay);
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
             Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);
         }

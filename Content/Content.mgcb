@@ -85,6 +85,12 @@
 /processorParam:DebugMode=Auto
 /build:OcclusionEffect.fx
 
+#begin ParallaxSprite.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:ParallaxSprite.fx
+
 #begin particle_atlas.png
 /importer:TextureImporter
 /processor:TextureProcessor

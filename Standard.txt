@@ -2,3 +2,9 @@
 A. Editor - Game
 	Components used by editor and game will be different (Camera, renderer, State, UI, Controllers, Commands)
 B. All good shader files will be moved to pixel simulation (For version controll and Avaliablity)
+B2. All Draw Calls that use shader, Cannot be done with SpriteBatch rather graphicsDevice...
+
+C. Git Commits will 3 types. 
+	Month Minor - Fix some problems, improve functionality and Small Changes
+	Month Major - Big features And Mile Stone Updates
+	Month Mega - Mega Push that contains Many major changes.
