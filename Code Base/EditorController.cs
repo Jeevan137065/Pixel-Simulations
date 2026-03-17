@@ -35,7 +35,7 @@ namespace Pixel_Simulations.Editor
             _historyController = new HistoryController(_eventBus, _editorState.History);
             _toolController = new ToolController(_eventBus, _editorState.ToolState);
             _layerController = new LayerController(_eventBus, _editorState);
-            _tilesetController = new TilesetController(_eventBus, _editorState, _uiManager.gd);
+            _tilesetController = new TilesetController(_eventBus, _editorState, _uiManager);
             _mapController = new MapController(_eventBus, _editorState);
         }
         public void Update(GameTime gameTime, KeyboardState keyboardState, MouseState mouseState)
@@ -63,6 +63,12 @@ namespace Pixel_Simulations.Editor
             if (_editorState.PrefabCreator.IsOpen)
             {
                 _uiManager.PrefabPanel.Update(input, _eventBus);
+                // Block keys from reaching the map/camera while typing name
+                return;
+            }
+            if (_editorState.IsTagManagerOpen)
+            {
+                _uiManager.TagManagerPanel.Update(input, _eventBus);
                 // Block keys from reaching the map/camera while typing name
                 return;
             }
@@ -193,8 +199,7 @@ namespace Pixel_Simulations.Editor
             _uiManager.ToolPanel.Update(input, bus);
             _uiManager.TilesetPanel.Update(input, bus);
             _uiManager.LayerPanel.Update(input, bus);
-
-
+            
         }
         private void HandleKeyboardCameraMovement(EditorInputState input, GameTime gameTime)
         {
@@ -367,14 +372,8 @@ namespace Pixel_Simulations.Editor
                 case LayerType.Object:
                     newLayer = new ObjectLayer(name);
                     break;
-                case LayerType.Collision:
-                    newLayer = new CollisionLayer(name);
-                    break;
-                case LayerType.Navigation:
-                    newLayer = new NavigationLayer(name);
-                    break;
-                case LayerType.Trigger:
-                    newLayer = new TriggerLayer(name);
+                case LayerType.Control:
+                    newLayer = new ControlLayer(name);
                     break;
                 default:
                     newLayer = new TileLayer(name);
@@ -432,10 +431,10 @@ namespace Pixel_Simulations.Editor
         private readonly EventBus _eventBus; // Added to publish side-effects
         public int counter = 0;
 
-        public TilesetController(EventBus eventBus, EditorState editorState, GraphicsDevice graphicsDevice)
+        public TilesetController(EventBus eventBus, EditorState editorState, EditorUI editorUI)
         {
             _editorState = editorState;
-            _graphicsDevice = graphicsDevice;
+            _graphicsDevice = editorUI.gd;
             _eventBus = eventBus;
 
             eventBus.Subscribe<CreateTilesetCommand>(HandleCreateTileset);
@@ -447,6 +446,9 @@ namespace Pixel_Simulations.Editor
             eventBus.Subscribe<SavePrefabCommand>(HandleSavePrefab);
             eventBus.Subscribe<ClosePrefabCreatorCommand>(HandleCloseCreator);
             eventBus.Subscribe<DeletePrefabCommand>(HandleDeletePrefab);
+            eventBus.Subscribe<ToggleTagManagerCommand>(cmd => _editorState.IsTagManagerOpen = !_editorState.IsTagManagerOpen);
+            eventBus.Subscribe<SaveTagCommand>(cmd => editorUI.TagManagerPanel.ProcessSaveCommand());
+            eventBus.Subscribe<DeleteTagCommand>(cmd => editorUI.TagManagerPanel.ProcessDeleteCommand(cmd.HashID));
         }
 
         private void HandleCreateTileset(CreateTilesetCommand cmd)

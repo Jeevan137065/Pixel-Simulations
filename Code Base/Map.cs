@@ -247,16 +247,14 @@ namespace Pixel_Simulations.Data
         }
         private static void WriteObjectLayer(BinaryWriter writer, ObjectLayer layer)
         {
-            // Filter only PropObjects to be safe
             var props = layer.Objects.OfType<PropObject>().ToList();
             writer.Write(props.Count);
-
             foreach (var prop in props)
             {
-                writer.Write(prop.Name); // Unique Name
-                writer.Write(prop.Position.X);  writer.Write(prop.Position.Y);
-                writer.Write(prop.PrefabID); // Link to objects.json
-                writer.Write(prop.Scale.X);     writer.Write(prop.Scale.Y);
+                WriteMapObjectBase(writer, prop); // <--- Replaces writer.Write(prop.Name)
+                writer.Write(prop.Position.X); writer.Write(prop.Position.Y);
+                writer.Write(prop.PrefabID);
+                writer.Write(prop.Scale.X); writer.Write(prop.Scale.Y);
                 writer.Write(prop.Rotation);
             }
         }
@@ -266,7 +264,7 @@ namespace Pixel_Simulations.Data
             writer.Write(layer.Shapes.Count);
             foreach (var shape in layer.Shapes)
             {
-                writer.Write(shape.Name ?? "");
+                WriteMapObjectBase(writer, shape); // Saves ID, Links, Tags, Name
                 writer.Write(shape.Shape.Vertices.Count);
                 foreach (var v in shape.Shape.Vertices) { writer.Write(v.X); writer.Write(v.Y); }
             }
@@ -275,7 +273,7 @@ namespace Pixel_Simulations.Data
             writer.Write(layer.Rectangles.Count);
             foreach (var rect in layer.Rectangles)
             {
-                writer.Write(rect.Name ?? "");
+                WriteMapObjectBase(writer, rect); // Saves ID, Links, Tags, Name
                 writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
                 writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
             }
@@ -284,7 +282,7 @@ namespace Pixel_Simulations.Data
             writer.Write(layer.Points.Count);
             foreach (var pt in layer.Points)
             {
-                writer.Write(pt.Name ?? "");
+                WriteMapObjectBase(writer, pt); // Saves ID, Links, Tags, Name
                 writer.Write(pt.Position.X); writer.Write(pt.Position.Y);
                 writer.Write(pt.Radius);
             }
@@ -317,17 +315,14 @@ namespace Pixel_Simulations.Data
         {
             var layer = new ObjectLayer(name);
             int count = reader.ReadInt32();
-
             for (int i = 0; i < count; i++)
             {
-                var prop = new PropObject
-                {
-                    Name = reader.ReadString(),
-                    Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-                    PrefabID = reader.ReadString(),
-                    Scale = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-                    Rotation = reader.ReadSingle()
-                };
+                var prop = new PropObject();
+                ReadMapObjectBase(reader, prop); // <--- Replaces Name = reader.ReadString()
+                prop.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                prop.PrefabID = reader.ReadString();
+                prop.Scale = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                prop.Rotation = reader.ReadSingle();
                 layer.Objects.Add(prop);
             }
             return layer;
@@ -340,7 +335,8 @@ namespace Pixel_Simulations.Data
             int sCount = reader.ReadInt32();
             for (int i = 0; i < sCount; i++)
             {
-                var s = new ShapeObject { Name = reader.ReadString() };
+                var s = new ShapeObject();
+                ReadMapObjectBase(reader, s); // Loads ID, Links, Tags, Name
                 int vCount = reader.ReadInt32();
                 var verts = new List<Vector2>();
                 for (int j = 0; j < vCount; j++) verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
@@ -349,33 +345,96 @@ namespace Pixel_Simulations.Data
                 layer.Shapes.Add(s);
             }
 
-            // Read Rects
+            // Read Rectangles
             int rCount = reader.ReadInt32();
             for (int i = 0; i < rCount; i++)
             {
-                layer.Rectangles.Add(new RectangleObject
-                {
-                    Name = reader.ReadString(),
-                    Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-                    Size = new Vector2(reader.ReadSingle(), reader.ReadSingle())
-                });
+                var r = new RectangleObject();
+                ReadMapObjectBase(reader, r); // Loads ID, Links, Tags, Name
+                r.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                r.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                layer.Rectangles.Add(r);
             }
 
             // Read Points
             int pCount = reader.ReadInt32();
             for (int i = 0; i < pCount; i++)
             {
-                layer.Points.Add(new PointObject
-                {
-                    Name = reader.ReadString(),
-                    Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
-                    Radius = reader.ReadSingle()
-                });
+                var p = new PointObject();
+                ReadMapObjectBase(reader, p); // Loads ID, Links, Tags, Name
+                p.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                p.Radius = reader.ReadSingle();
+                layer.Points.Add(p);
             }
 
             return layer;
         }
         #endregion
+        private static void WriteMapObjectBase(BinaryWriter writer, MapObject obj)
+        {
+            writer.Write(obj.ID); // Save the unique ID
+            writer.Write(obj.Name ?? "");
+
+            // Write Links
+            writer.Write(obj.LinkedObjects.Count);
+            foreach (var link in obj.LinkedObjects) writer.Write(link);
+
+            // Write Tags
+            writer.Write(obj.Tags.Count);
+            foreach (var tag in obj.Tags) writer.Write(tag);
+        }
+        private static void ReadMapObjectBase(BinaryReader reader, MapObject obj)
+        {
+            obj.ID = reader.ReadString(); // Load the unique ID
+            obj.Name = reader.ReadString();
+
+            // Read Links
+            int linkCount = reader.ReadInt32();
+            obj.LinkedObjects = new List<string>();
+            for (int i = 0; i < linkCount; i++) obj.LinkedObjects.Add(reader.ReadString());
+
+            // Read Tags
+            int tagCount = reader.ReadInt32();
+            obj.Tags = new HashSet<string>();
+            for (int i = 0; i < tagCount; i++) obj.Tags.Add(reader.ReadString());
+        }
+        public static void CaptureToImage(Map map, GraphicsDevice gd, TilesetManager tsManager, string path)
+        {
+            // 1. Calculate Bounds
+            var bounds = CalculateMapBounds(map);
+            if (bounds.Width == 0 || bounds.Height == 0) return;
+
+            // 2. Create RenderTarget
+            var target = new RenderTarget2D(gd, (int)bounds.Width, (int)bounds.Height);
+            gd.SetRenderTarget(target);
+            gd.Clear(Color.Transparent);
+
+            var sb = new SpriteBatch(gd);
+            // Use an offset matrix so (minX, minY) becomes (0,0) in the image
+            var transform = Matrix.CreateTranslation(-bounds.X, -bounds.Y, 0);
+
+            sb.Begin(transformMatrix: transform, samplerState: SamplerState.PointClamp);
+
+            // 3. Draw all layers using the existing MapRenderer logic
+            // (You would iterate through layers and call your draw methods here)
+
+            sb.End();
+            gd.SetRenderTarget(null);
+
+            // 4. Save to Disk
+            using (var stream = File.OpenWrite(path))
+            {
+                target.SaveAsPng(stream, target.Width, target.Height);
+            }
+            target.Dispose();
+        }
+
+        private static RectangleF CalculateMapBounds(Map map)
+        {
+            // Logic to find the Min/Max X and Y of every tile and object
+            // Returns a rectangle covering the entire occupied area
+            return new RectangleF(0, 0, 2048, 2048); // Placeholder
+        }
     }
 
 }

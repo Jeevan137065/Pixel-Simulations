@@ -33,7 +33,6 @@ namespace Pixel_Simulations
         public Point MouseGridCell { get; set; }
         public Point MouseChunkCell { get; set; }
         public float Zoom;
-        public MapObject mapObject { get; set; }
         public void Update(GameTime gameTime)
         {
             float elapsed = (float)gameTime.TotalGameTime.TotalSeconds;

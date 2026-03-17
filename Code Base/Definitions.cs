@@ -18,6 +18,20 @@ using Clipper2Lib;
 namespace Pixel_Simulations
 {
     public enum GameStatus { Playing, InventoryOpen }
+    public static class SystemTags
+    {
+        // --- CONTROL/SHAPE TAGS ---
+        public const string SOLID = "#solid";      // Blocks physics movement
+        public const string NAV = "#nav";        // Navigation obstacle
+        public const string WARP = "#warp";       // Level transition trigger
+        public const string WATER = "#water";      // Slows movement / splash effect
+
+        // --- OBJECT/PROP TAGS ---
+        public const string VEG = "#vegetation"; // Wind sway / Growth logic
+        public const string LIGHT = "#light";      // Emits dynamic light
+        public const string CHEST = "#container";  // Inventory logic
+        public const string NPC = "#actor";      // AI logic target
+    }
     public static class ListExtensions
     {
         private static Random _random = new Random();
@@ -244,22 +258,14 @@ namespace Pixel_Simulations
                     writer.WritePropertyName("Objects");
                     serializer.Serialize(writer, objectLayer.Objects);
                     break;
-                case LayerType.Collision:
-                    var collisionLayer = (CollisionLayer)layer;
-                    writer.WritePropertyName("CollisionMesh");
-                    serializer.Serialize(writer, collisionLayer.CollisionMesh);
-                    break;
-                case LayerType.Navigation:
-                    var navLayer = (NavigationLayer)layer;
-                    writer.WritePropertyName("NavigationMesh");
-                    serializer.Serialize(writer, navLayer.NavigationMesh);
-                    break;
-                case LayerType.Trigger:
-                    var triggerLayer = (TriggerLayer)layer;
-                    writer.WritePropertyName("TriggerMesh");
-                    serializer.Serialize(writer, triggerLayer.TriggerMesh);
-                    writer.WritePropertyName("PointTriggers");
-                    serializer.Serialize(writer, triggerLayer.PointTriggers);
+                case LayerType.Control:
+                    var controlLayer = (ControlLayer)layer;
+                    writer.WritePropertyName("Rectangles");
+                    serializer.Serialize(writer, controlLayer.Rectangles);
+                    writer.WritePropertyName("Shapes");
+                    serializer.Serialize(writer, controlLayer.Shapes);
+                    writer.WritePropertyName("Points");
+                    serializer.Serialize(writer, controlLayer.Points);
                     break;
             }
 
@@ -278,9 +284,7 @@ namespace Pixel_Simulations
                 {
                     case LayerType.Tile: target = new TileLayer(); break;
                     case LayerType.Object: target = new ObjectLayer(); break;
-                    case LayerType.Collision: target = new CollisionLayer(); break;
-                    case LayerType.Navigation: target = new NavigationLayer(); break;
-                    case LayerType.Trigger: target = new TriggerLayer(); break;
+                    case LayerType.Control: target = new ControlLayer(); break;
                     default: return null;
                 }
                 target.Name = jo["Name"]?.Value<string>() ?? "Unnamed Layer";
@@ -307,18 +311,11 @@ namespace Pixel_Simulations
                         var objLayer = (ObjectLayer)target;
                         objLayer.Objects = jo["Objects"]?.ToObject<List<MapObject>>(serializer) ?? new List<MapObject>();
                         break;
-                    case LayerType.Collision:
-                        var colLayer = (CollisionLayer)target;
-                        colLayer.CollisionMesh = jo["CollisionMesh"]?.ToObject<List<ShapeObject>>(serializer) ?? new List<ShapeObject>();
-                        break;
-                    case LayerType.Navigation:
-                        var navLayer = (NavigationLayer)target;
-                        navLayer.NavigationMesh = jo["NavigationMesh"]?.ToObject<List<ShapeObject>>(serializer) ?? new List<ShapeObject>();
-                        break;
-                    case LayerType.Trigger:
-                        var trigLayer = (TriggerLayer)target;
-                        trigLayer.TriggerMesh = jo["TriggerMesh"]?.ToObject<List<RectangleObject>>(serializer) ?? new List<RectangleObject>();
-                        trigLayer.PointTriggers = jo["PointTriggers"]?.ToObject<List<PointObject>>(serializer) ?? new List<PointObject>();
+                    case LayerType.Control:
+                        var colLayer = (ControlLayer)target;
+                        colLayer.Rectangles = jo["Rectangles"]?.ToObject<List<RectangleObject>>(serializer) ?? new List<RectangleObject>();
+                        colLayer.Shapes = jo["Shapes"]?.ToObject<List<ShapeObject>>(serializer) ?? new List<ShapeObject>();
+                        colLayer.Points = jo["Points"]?.ToObject<List<PointObject>>(serializer) ?? new List<PointObject>();
                         break;
                 }
             }
@@ -427,12 +424,44 @@ namespace Pixel_Simulations
             // Formula: 1.0 - (Y / Max)
             // Example: Y=0 -> Depth 1.0 (Back)
             // Example: Y=32768 -> Depth 0.0 (Front)
-            float depth = 1.0f - (worldBottomY / MAX_WORLD_HEIGHT);
+            float depth = (worldBottomY / MAX_WORLD_HEIGHT);
 
             // Clamp just to be safe from floating point errors
             return MathHelper.Clamp(depth, 0f, 1f);
+            //return 1;
         }
     }
+    public static class SpriteSorter
+    {
+        /// <summary>
+        /// Sorts sprites based on their physical feet (BaseWorldY).
+        /// </summary>
+        /// <param name="sprites">The list to sort.</param>
+        /// <param name="isMostlySorted">True for per-frame updates. False for initial map load.</param>
+        public static void Sort(List<RenderableSprite> sprites, bool isMostlySorted)
+        {
+            if (isMostlySorted)
+            {
+                // Insertion Sort: Blazing fast for lists that are already mostly sorted (e.g. per-frame)
+                for (int i = 1; i < sprites.Count; i++)
+                {
+                    var key = sprites[i];
+                    int j = i - 1;
 
+                    while (j >= 0 && sprites[j].BaseWorldY > key.BaseWorldY)
+                    {
+                        sprites[j + 1] = sprites[j];
+                        j = j - 1;
+                    }
+                    sprites[j + 1] = key;
+                }
+            }
+            else
+            {
+                // Introspective Sort (QuickSort/HeapSort): Best for completely messy, unsorted lists
+                sprites.Sort((a, b) => a.BaseWorldY.CompareTo(b.BaseWorldY));
+            }
+        }
+    }
 }
 

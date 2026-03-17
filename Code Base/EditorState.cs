@@ -142,7 +142,8 @@ namespace Pixel_Simulations.Editor
         // --- NEW ASSET CORE ---
         [JsonIgnore] public EditorLibrary AssetLibrary { get; set; }
         [JsonIgnore] public PrefabManager PrefabManager { get; }
-
+        [JsonIgnore] public TagManager TagManager { get; } = new TagManager();
+        [JsonIgnore] public bool IsTagManagerOpen { get; set; } = false;
         // Flags for UI state
         [JsonIgnore] public string ActiveAtlasForCreator { get; set; }
 
@@ -172,7 +173,7 @@ namespace Pixel_Simulations.Editor
         public void LoadContent(ContentManager content)
         {
             AssetLibrary = new EditorLibrary(content);
-            AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
+            //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
             AssetLibrary.LoadAtlas("BasiR", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
 
@@ -181,12 +182,13 @@ namespace Pixel_Simulations.Editor
 
             string prefabPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json");
             PrefabManager.Load(prefabPath);
+            string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
+            TagManager.Load(tagsPath);
         }
         public void refresh(GameTime gameTime)
         {
             Input.Update(gameTime);
             Input.Zoom = camera.Zoom;
-            Input.mapObject = Selection.SelectedMapObject;
             Layers.Layers = ActiveMap.Layers;
             UI.ActivePanelName = _layoutmanager.GetPanelAt(Input.MouseWindowPosition.ToPoint());
         }

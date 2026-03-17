@@ -349,6 +349,7 @@ namespace Pixel_Simulations.Data
             float lineThickness = 1f;
             foreach (var shapeObj in layer.Shapes)
             {
+                shapeObj.DebugColor = Color.Red;
                 // Draw Fill (Optional)
                 sb.FillRectangle(shapeObj.Shape.GetBounds(), shapeObj.DebugColor * 0.3f);
 

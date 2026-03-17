@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Pixel_Simulations.Data
 {
-    public enum LayerType { Tile, Object, Collision, Navigation, Trigger }
+    public enum LayerType { Tile, Object, Control }
     public abstract class Layer
     {
         public string Name { get; set; }
@@ -84,26 +84,16 @@ namespace Pixel_Simulations.Data
         }
         public ObjectLayer() : base() { }
     }
-    public class CollisionLayer : ObjectLayer
+    public class ControlLayer : ObjectLayer
     {
-        public override LayerType Type => LayerType.Collision;
-        public List<ShapeObject> CollisionMesh { get; set; } = new List<ShapeObject>();
-        public CollisionLayer(string name) : base(name) {}
-        public CollisionLayer() : base() { }
+        public override LayerType Type => LayerType.Control;
+        // Unified lists for all shape types
+        public List<ShapeObject> Shapes { get; set; } = new List<ShapeObject>();
+        public List<RectangleObject> Rectangles { get; set; } = new List<RectangleObject>();
+        public List<PointObject> Points { get; set; } = new List<PointObject>();
+
+        public ControlLayer(string name) : base(name) {}
+        public ControlLayer() : base() { }
     }
-    public class NavigationLayer : ObjectLayer
-    {
-        public override LayerType Type => LayerType.Navigation;
-        public List<ShapeObject> NavigationMesh = new List<ShapeObject>();
-        public NavigationLayer(string name) : base(name) {}
-        public NavigationLayer() : base() { }
-    }
-    public class TriggerLayer : ObjectLayer
-    {
-        public override LayerType Type => LayerType.Trigger;
-        public List<RectangleObject> TriggerMesh = new List<RectangleObject>();
-        public List<PointObject> PointTriggers = new List<PointObject>();
-        public TriggerLayer(string name) : base(name) {  }
-        public TriggerLayer() : base() { }
-    }
+
 }

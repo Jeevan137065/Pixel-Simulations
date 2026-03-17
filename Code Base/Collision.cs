@@ -9,89 +9,48 @@ namespace Pixel_Simulations
 {
     public class PhysicsManager
     {
-        private List<ShapeObject> _collisionShapes = new List<ShapeObject>();
+        // For this test, we will use simple AABB (Axis-Aligned Bounding Box) collision for performance
+        private List<RectangleF> _collisionBounds = new List<RectangleF>();
 
-
-        /// <summary>
-        /// Reads the map and caches all collision shapes for fast lookups.
-        /// </summary>
         public void LoadMapData(Map map)
         {
             if (map == null) return;
-            _collisionShapes.Clear();
+            _collisionBounds.Clear();
 
-            foreach (var layer in map.Layers)
+            // Grab all control layers
+            foreach (var layer in map.Layers.OfType<ControlLayer>())
             {
-                if (layer is CollisionLayer colLayer)
-                {
-                    _collisionShapes.AddRange(colLayer.CollisionMesh);
-                }
+                // Cache Polygons (Shapes)
+                foreach (var shape in layer.Shapes)
+                    _collisionBounds.Add(shape.Shape.GetBounds());
+
+                // Cache Rectangles
+                //foreach (var rect in layer.Rectangles)
+                //    _collisionBounds.Add(new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y));
             }
         }
 
-        /// <summary>
-        /// Attempts to move an entity by a requested velocity. 
-        /// Returns the actual velocity allowed after collision resolution.
-        /// </summary>
         public Vector2 ResolveMovement(RectangleF entityBounds, Vector2 requestedVelocity)
         {
-            // A simple "slide" collision resolution.
-            // Test X and Y movement separately.
-
             Vector2 finalVelocity = requestedVelocity;
 
             // 1. Test X Movement
             RectangleF testBoundsX = new RectangleF(entityBounds.X + requestedVelocity.X, entityBounds.Y, entityBounds.Width, entityBounds.Height);
-            if (IsColliding(testBoundsX))
-            {
-                finalVelocity.X = 0; // Stop X movement
-            }
+            if (IsColliding(testBoundsX)) finalVelocity.X = 0;
 
             // 2. Test Y Movement
             RectangleF testBoundsY = new RectangleF(entityBounds.X, entityBounds.Y + requestedVelocity.Y, entityBounds.Width, entityBounds.Height);
-            if (IsColliding(testBoundsY))
-            {
-                finalVelocity.Y = 0; // Stop Y movement
-            }
+            if (IsColliding(testBoundsY)) finalVelocity.Y = 0;
 
             return finalVelocity;
         }
 
         private bool IsColliding(RectangleF bounds)
         {
-            // 1. Broad-phase AABB check (Fast)
-            var possibleCollisions = _collisionShapes.Where(s => s.Shape.GetBounds().Intersects(bounds));
-
-            // 2. Narrow-phase Polygon check (Slow, only done if AABB intersects)
-            foreach (var shapeObj in possibleCollisions)
+            foreach (var colBounds in _collisionBounds)
             {
-                // This is a complex geometric problem.
-                // Checking if an AABB intersects an arbitrary Polygon requires checking 
-                // if any line segment of the AABB intersects any line segment of the Polygon,
-                // OR if the AABB is entirely inside the Polygon,
-                // OR if the Polygon is entirely inside the AABB.
-
-                // For a simple, robust start, if we assume our collision shapes are mostly
-                // rectangular or convex, we can check if the four corners of our bounding box
-                // are inside the polygon.
-
-                Vector2 topLeft = new Vector2(bounds.Left, bounds.Top);
-                Vector2 topRight = new Vector2(bounds.Right, bounds.Top);
-                Vector2 bottomLeft = new Vector2(bounds.Left, bounds.Bottom);
-                Vector2 bottomRight = new Vector2(bounds.Right, bounds.Bottom);
-
-                if (shapeObj.Shape.Contains(topLeft) ||
-                    shapeObj.Shape.Contains(topRight) ||
-                    shapeObj.Shape.Contains(bottomLeft) ||
-                    shapeObj.Shape.Contains(bottomRight))
-                {
-                    return true;
-                }
-
-                // Note: A true robust solution requires a library like Velcro Physics or 
-                // writing a Separating Axis Theorem (SAT) implementation.
+                if (colBounds.Intersects(bounds)) return true;
             }
-
             return false;
         }
     }

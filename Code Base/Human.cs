@@ -29,6 +29,8 @@ namespace Pixel_Simulations
         // --- Animation Management ---
         private AnimationManager _animationManager;
         private List<BodyPart> _bodyParts;
+        private PhysicsManager _physics;
+
         //private PhysicsManager _physics;
         // --- Movement & Input ---
         private float _speed = 100f;
@@ -72,7 +74,7 @@ namespace Pixel_Simulations
             _bodyParts.Add(new BodyPart("LeftLeg"));
             _bodyParts.Add(new BodyPart("RightLeg"));
 
-            //_physics = physics;
+            _physics = physics;
         }
 
         public void Update(GameTime gameTime)
@@ -114,14 +116,11 @@ namespace Pixel_Simulations
                 CurrentState = PlayerState.Walking;
                 Vector2 desiredVelocity = Vector2.Normalize(moveDirection) * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-                // *** THE PHYSICS CHECK ***
-                // Define the player's collision box (usually smaller than the full sprite, near the feet)
-                RectangleF playerCollisionBox = new RectangleF(Position.X + 8, Position.Y + 32, 16, 16);
+                // Player collision box (feet)
+                RectangleF playerCollisionBox = new RectangleF(Position.X - 8, Position.Y + 16, 16, 16);
 
-                // Ask the physics manager how much of that desired velocity is allowed
-                //Vector2 allowedVelocity = _physics.ResolveMovement(playerCollisionBox, desiredVelocity);
-                Vector2 allowedVelocity = desiredVelocity;
-
+                // Resolve movement through PhysicsManager
+                Vector2 allowedVelocity = _physics.ResolveMovement(playerCollisionBox, desiredVelocity);
                 Position += allowedVelocity;
             }
             else
@@ -250,7 +249,29 @@ namespace Pixel_Simulations
             // 5. Restore the original render targets
             _graphicsDevice.SetRenderTargets(currentTargets);
         }
+        public RectangleF GetInteractionBox()
+        {
+            // True center of the player's feet
+            float centerX = Position.X;
+            float feetY = Position.Y + 24;
 
+            float w = 16;
+            float h = 16;
+            float reach = 20f;
+
+            return FacingDirection switch
+            {
+                // Reach UP from feet
+                Direction.North => new RectangleF(centerX - w / 2, feetY - h - reach, w, reach),
+                // Reach DOWN from feet
+                Direction.South => new RectangleF(centerX - w / 2, feetY, w, reach),
+                // Reach LEFT from center
+                Direction.West => new RectangleF(centerX - w / 2 - reach, feetY - h, reach, h),
+                // Reach RIGHT from center
+                Direction.East => new RectangleF(centerX + w / 2, feetY - h, reach, h),
+                _ => new RectangleF(centerX - w / 2, feetY - h, w, h)
+            };
+        }
         public void Draw(SpriteBatch spriteBatch)
         {
             Vector2 drawOrigin = new Vector2(24, 32);

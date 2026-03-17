@@ -3,96 +3,76 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using Pixel_Simulations.Data;
+using Pixel_Simulations.UI;
 using System;
 using System.Collections.Generic;
 
 
 namespace Pixel_Simulations
 {
-
     public class UIManager
     {
-        private Texture2D _hotbarSlotTexture;
-        private Dictionary<Tool, Rectangle> _iconSources;
-        private Texture2D _cropsGrowthTexture;
-        private Texture2D _cropsIconTexture;
-        private const int SlotSize = 48;
-        private const int SlotMargin = 2;
-
-        public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
+        public UIElement Root { get; }
+        public UITheme Theme { get; set; }
+        public UIElement FocusedElement { get; private set; }
+        public bool IsMouseOverUI { get; private set; }
+        public UIElement HoveredElement { get; private set; }
+        public UIManager()
         {
-            _hotbarSlotTexture = new Texture2D(graphicsDevice, 1, 1);
-            _hotbarSlotTexture.SetData(new[] { Color.White });
-
-            _cropsIconTexture = content.Load<Texture2D>("crops_icons");
-
-            _iconSources = new Dictionary<Tool,Rectangle>();
+            Root = new UIPanel
+            {
+                Size = Vector2.Zero, // Will be resized by layout manager if needed
+                //PanelBackground = Color.Transparent,
+                //BorderColor = Color.Transparent
+            };
+            Theme = new UITheme();
         }
 
-        public void RegisterCropIcons(Dictionary<Tool, CropData> cropData)
+        public void Update(EditorInputState input, EventBus bus)
         {
-            _iconSources.Clear();
-            foreach (var crop in cropData.Values)
+            HoveredElement = null; // Reset every frame
+
+            if (input.IsNewLeftClick)
             {
-                if (crop.SeedTool != Tool.None && crop.SeedIcon != null)
+                var clickedElement = FindElementAt(Root, input.MouseWindowPosition);
+
+                if (FocusedElement != null && FocusedElement != clickedElement)
+                    FocusedElement.IsFocused = false;
+
+                FocusedElement = clickedElement;
+                if (FocusedElement != null)
                 {
-                    var iconData = crop.SeedIcon;
-                    var rect = new Rectangle(
-                        iconData.X * GameConstants.GridCellSize,
-                        iconData.Y * GameConstants.GridCellSize,
-                        iconData.WidthInCells * GameConstants.GridCellSize,
-                        iconData.HeightInCells * GameConstants.GridCellSize
-                    );
-                    // Seed icons come from the growth sheet
-                    _iconSources.Add(crop.SeedTool, rect);
-                }
-                // You can add logic here for harvested items later
-                // if (crop.HarvestTool != Tool.None && crop.HarvestIcon != null) { ... }
-            }
-        }
-
-        public void DrawHotbar(SpriteBatch spriteBatch, Inventory inventory, GraphicsDevice graphicsDevice)
-        {
-            int totalWidth = (SlotSize + SlotMargin) * Inventory.HotbarSize;
-            int startX = (graphicsDevice.Viewport.Width - totalWidth) / 2;
-            int startY = graphicsDevice.Viewport.Height - SlotSize - 20;
-
-            for (int i = 0; i < Inventory.HotbarSize; i++)
-            {
-                int x = startX + i * (SlotSize + SlotMargin);
-                var destRect = new Rectangle(x, startY, SlotSize, SlotSize);
-
-                Color color = (i == inventory.SelectedSlot) ? Color.Yellow : Color.Gray;
-                spriteBatch.Draw(_hotbarSlotTexture, destRect, color * 0.5f);
-
-                // Draw the item icon inside the slot
-                Tool item = inventory.Hotbar[i];
-
-                // This line gets the Rectangle from the dictionary and puts it into the 'iconInfo' variable.
-                if (item != Tool.None && _iconSources.TryGetValue(item, out var iconInfo))
-                {
-                    // --- THIS IS THE CORRECTED LINE ---
-                    // Use 'iconInfo' here, which is the Rectangle we just got.
-                    DrawIconCentered(spriteBatch, _cropsIconTexture, iconInfo, destRect);
+                    FocusedElement.IsFocused = true;
+                    FocusedElement.OnGotFocus?.Invoke(); // Trigger focus event
                 }
             }
+
+            // Get the hovered element for debugging
+            HoveredElement = FindElementAt(Root, input.MouseWindowPosition);
+
+            IsMouseOverUI = Root.Update(input, bus);
         }
 
-        private void DrawIconCentered(SpriteBatch spriteBatch, Texture2D texture, Rectangle sourceRect, Rectangle destRect)
+        public void Draw(SpriteBatch sb, EditorUI ui)
         {
-            float scaleX = (float)destRect.Width / sourceRect.Width;
-            float scaleY = (float)destRect.Height / sourceRect.Height;
-            float scale = Math.Min(scaleX, scaleY); // Use the smaller scale to fit the whole icon
+            Root.Draw(sb, ui, Theme);
+        }
 
-            float scaledWidth = sourceRect.Width * scale;
-            float scaledHeight = sourceRect.Height * scale;
+        // Recursive helper to find the deepest UIElement under the mouse
+        private UIElement FindElementAt(UIElement element, Vector2 mousePos)
+        {
+            if (!element.IsVisible || !element.AbsoluteBounds.Contains(mousePos))
+                return null;
 
-            Vector2 position = new Vector2(
-                destRect.X + (destRect.Width - scaledWidth) / 2,
-                destRect.Y + (destRect.Height - scaledHeight) / 2
-            );
+            // Search children backwards (top-most first)
+            for (int i = element.Children.Count - 1; i >= 0; i--)
+            {
+                var hit = FindElementAt(element.Children[i], mousePos);
+                if (hit != null) return hit;
+            }
 
-            spriteBatch.Draw(texture, position, sourceRect, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            return element; // If no children were hit, return this element
         }
     }
 }

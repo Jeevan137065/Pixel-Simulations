@@ -45,7 +45,7 @@ namespace Pixel_Simulations.Data
     }
     public class AddRectangleCommand : IUndoableCommand
     {
-        private TriggerLayer _triggerLayer;
+        private ControlLayer _triggerLayer;
         private LayerType _type;
         private readonly RectangleObject _objectToAdd;
         public AddRectangleCommand(Layer layer, LayerType type, RectangleObject obj) { AssignLayer(type, layer); _type = type; _objectToAdd = obj; }
@@ -53,8 +53,8 @@ namespace Pixel_Simulations.Data
         {
             switch (type)
             {
-                case LayerType.Trigger:
-                    _triggerLayer = (TriggerLayer)layer;
+                case LayerType.Control:
+                    _triggerLayer = (ControlLayer)layer;
                     break;
             }
 
@@ -63,9 +63,9 @@ namespace Pixel_Simulations.Data
         {
             switch (_type)
             {
-                case LayerType.Trigger:
-                    if (!_triggerLayer.TriggerMesh.Contains(_objectToAdd))
-                    { _triggerLayer.TriggerMesh.Add(_objectToAdd); }
+                case LayerType.Control:
+                    if (!_triggerLayer.Rectangles.Contains(_objectToAdd))
+                    { _triggerLayer.Rectangles.Add(_objectToAdd); }
                     break;
                 default:
                     break;
@@ -75,8 +75,8 @@ namespace Pixel_Simulations.Data
         {
             switch (_type)
             {
-                case LayerType.Trigger:
-                    _triggerLayer.TriggerMesh.Remove(_objectToAdd);
+                case LayerType.Control:
+                    _triggerLayer.Rectangles.Remove(_objectToAdd);
                     break;
                 default:
                     break;
@@ -97,25 +97,17 @@ namespace Pixel_Simulations.Data
         public void Execute()
         {
             // Add the polygon to the correct list based on the layer type
-            if (_targetLayer is CollisionLayer colLayer && !colLayer.CollisionMesh.Contains(_polygonToAdd))
+            if (_targetLayer is ControlLayer colLayer && !colLayer.Shapes.Contains(_polygonToAdd))
             {
-                colLayer.CollisionMesh.Add(_polygonToAdd);
-            }
-            else if (_targetLayer is NavigationLayer navLayer && !navLayer.NavigationMesh.Contains(_polygonToAdd))
-            {
-                navLayer.NavigationMesh.Add(_polygonToAdd);
+                colLayer.Shapes.Add(_polygonToAdd);
             }
         }
 
         public void Undo()
         {
-            if (_targetLayer is CollisionLayer colLayer)
+            if (_targetLayer is ControlLayer colLayer)
             {
-                colLayer.CollisionMesh.Remove(_polygonToAdd);
-            }
-            else if (_targetLayer is NavigationLayer navLayer)
-            {
-                navLayer.NavigationMesh.Remove(_polygonToAdd);
+                colLayer.Shapes.Remove(_polygonToAdd);
             }
         }
     }
@@ -218,6 +210,32 @@ namespace Pixel_Simulations.Data
             }
         }
     }
+    public class PlaceTileAreaCommand : IUndoableCommand
+    {
+        private readonly TileLayer _layer;
+        private readonly Dictionary<Point, TileInfo> _newTiles;
+        private readonly Dictionary<Point, TileInfo> _oldTiles;
+
+        public PlaceTileAreaCommand(TileLayer layer, Dictionary<Point, TileInfo> tilesToPlace)
+        {
+            _layer = layer;
+            _newTiles = tilesToPlace;
+            _oldTiles = new Dictionary<Point, TileInfo>();
+
+            foreach (var coord in _newTiles.Keys)
+                _oldTiles[coord] = _layer.GetTileAt(coord);
+        }
+
+        public void Execute() { foreach (var kvp in _newTiles) _layer.PlaceTile(kvp.Key, kvp.Value); }
+        public void Undo()
+        {
+            foreach (var kvp in _oldTiles)
+            {
+                if (kvp.Value == null) _layer.RemoveTile(kvp.Key);
+                else _layer.PlaceTile(kvp.Key, kvp.Value);
+            }
+        }
+    }
     public class EraseTileCommand : IUndoableCommand
     {
         private readonly TileLayer _targetLayer;
@@ -251,12 +269,57 @@ namespace Pixel_Simulations.Data
     }
     public class AddPointCommand : IUndoableCommand
     {
-        private readonly TriggerLayer _targetLayer;
+        private readonly ControlLayer _targetLayer;
         private readonly PointObject _objectToAdd;
-        public AddPointCommand(TriggerLayer layer, PointObject obj) { _targetLayer = layer; _objectToAdd = obj; }
-        public void Execute() { if (!_targetLayer.PointTriggers.Contains(_objectToAdd)) _targetLayer.PointTriggers.Add(_objectToAdd); }
-        public void Undo() { _targetLayer.PointTriggers.Remove(_objectToAdd); }
+        public AddPointCommand(ControlLayer layer, PointObject obj) { _targetLayer = layer; _objectToAdd = obj; }
+        public void Execute() { if (!_targetLayer.Points.Contains(_objectToAdd)) _targetLayer.Points.Add(_objectToAdd); }
+        public void Undo() { _targetLayer.Points.Remove(_objectToAdd); }
     }
+    public class LinkObjectsCommand : IUndoableCommand
+    {
+        private readonly MapObject _source;
+        private readonly MapObject _target;
+
+        public LinkObjectsCommand(MapObject source, MapObject target)
+        {
+            _source = source;
+            _target = target;
+        }
+
+        public void Execute()
+        {
+            if (!_source.LinkedObjects.Contains(_target.ID))
+                _source.LinkedObjects.Add(_target.ID);
+        }
+
+        public void Undo() { _source.LinkedObjects.Remove(_target.ID); }
+    }
+
+    public class UnlinkObjectCommand : IUndoableCommand
+    {
+        private readonly MapObject _source;
+        private readonly string _targetIdToRemove;
+
+        public UnlinkObjectCommand(MapObject source, string targetId)
+        {
+            _source = source;
+            _targetIdToRemove = targetId;
+        }
+
+        public void Execute() { _source.LinkedObjects.Remove(_targetIdToRemove); }
+        public void Undo() { _source.LinkedObjects.Add(_targetIdToRemove); }
+    }
+    public class AddTagCommand : IUndoableCommand
+    {
+        private readonly MapObject _obj;
+        private readonly string _tag;
+        public AddTagCommand(MapObject obj, string tag) { _obj = obj; _tag = tag; }
+        public void Execute() { _obj.Tags.Add(_tag); }
+        public void Undo() { _obj.Tags.Remove(_tag); }
+    }
+    public struct ToggleTagManagerCommand : ICommand { }
+    public struct SaveTagCommand : ICommand { }
+    public struct DeleteTagCommand : ICommand { public string HashID; }
     public struct SelectLayerCommand : ICommand { public int LayerIndex; }
     public struct ToggleLayerVisibilityCommand : ICommand { public int LayerIndex; }
     public struct ToggleLayerLockCommand : ICommand { public int LayerIndex; }
@@ -271,7 +334,7 @@ namespace Pixel_Simulations.Data
     public struct OpenAtlasPickerCommand : ICommand { } // For Tileset +
     public struct SavePrefabCommand : ICommand { public String Mode; }
     public struct DeletePrefabCommand : ICommand { }
-
+    public struct CaptureMapCommand : ICommand { }
     public struct SelectAtlasForCreatorCommand : ICommand { public string AtlasName; }
 
 }

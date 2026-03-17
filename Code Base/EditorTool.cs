@@ -20,6 +20,7 @@ namespace Pixel_Simulations.Data
     {
         public string Name { get; }
         public string IconName { get; }
+        string GetShortcutHints();
         void Update(ToolInput toolInput, EditorInputState input , EventBus bus, EditorState editorState);
         void DrawPreview(ToolInput toolInput, SpriteBatch spriteBatch, EditorInputState input);
     }
@@ -37,6 +38,9 @@ namespace Pixel_Simulations.Data
     {
         public string Name => "Brush";
         public string IconName { get; set; } = "Brush";
+
+        private bool _isAreaMode = false;
+        private Point _startCell;
         public bool _isDrawing => false;
         private EditorState _es;
         public void Update(ToolInput toolInput, EditorInputState input,EventBus eventBus, EditorState editorState) // Add EventBus parameter
@@ -54,45 +58,104 @@ namespace Pixel_Simulations.Data
             {
                 selection.Rotation = (byte)((selection.Rotation + 3) % 4); // Anti-clockwise
             }
-            if (toolInput.CurrentMouse.LeftButton == ButtonState.Pressed)
-            {
-                if (toolInput.ActiveLayer is TileLayer tileLayer && (toolInput.ActiveLayer.Type == LayerType.Tile) &&toolInput.ActiveBrush != null)
-                {
-                    var cell = input.MouseGridCell;
-                    var existing = tileLayer.GetTileAt(cell);
+            bool shiftHeld = input.CurrentKeyboard.IsKeyDown(Keys.LeftShift);
+            if (toolInput.ActiveLayer is not TileLayer layer || toolInput.ActiveBrush == null) return;
 
-                    // Check if rotation or ID is different before placing
-                    if (existing == null || existing.TileID != selection.TileID || existing.Rotation != selection.Rotation)
+            // Toggle Area Mode with Shift
+            shiftHeld = input.CurrentKeyboard.IsKeyDown(Keys.LeftShift);
+
+            if (input.IsNewLeftClick)
+            {
+                _startCell = input.MouseGridCell;
+                _isAreaMode = shiftHeld;
+
+                // Standard click-paint if not holding shift
+                if (!_isAreaMode)
+                    eventBus.Publish(new PlaceTileCommand(layer, _startCell, toolInput.ActiveBrush));
+            }
+
+            // Handle Rectangle Fill on Release
+            if (input.CurrentMouse.LeftButton == ButtonState.Released && _isAreaMode)
+            {
+                Point endCell = input.MouseGridCell;
+                var tilesToPlace = new Dictionary<Point, TileInfo>();
+
+                int minX = Math.Min(_startCell.X, endCell.X);
+                int maxX = Math.Max(_startCell.X, endCell.X);
+                int minY = Math.Min(_startCell.Y, endCell.Y);
+                int maxY = Math.Max(_startCell.Y, endCell.Y);
+
+                for (int x = minX; x <= maxX; x++)
+                {
+                    for (int y = minY; y <= maxY; y++)
                     {
-                        eventBus.Publish(new PlaceTileCommand(tileLayer, cell,
-                            new TileInfo(selection.TilesetName, selection.TileID, selection.Rotation)));
+                        tilesToPlace[new Point(x, y)] = new TileInfo(
+                            toolInput.ActiveBrush.TilesetName,
+                            toolInput.ActiveBrush.TileID,
+                            toolInput.ActiveBrush.Rotation);
                     }
                 }
+
+                eventBus.Publish(new PlaceTileAreaCommand(layer, tilesToPlace));
+                _isAreaMode = false;
+            }
+
+            // Standard dragging for normal brush
+            if (input.LeftHold && !_isAreaMode)
+            {
+                eventBus.Publish(new PlaceTileCommand(layer, input.MouseGridCell, toolInput.ActiveBrush));
             }
         }
 
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
-            if (toolInput.ActiveBrush == null) return;
+            var activeBrush = toolInput.ActiveBrush;
+            if (activeBrush == null) return;
 
-            // Calculate grid-snapped position
-            Vector2 gridPos = new Vector2(
-                input.MouseGridCell.X * 16 + 8, // +8 for center origin
-                input.MouseGridCell.Y * 16 + 8
-            );
+            var tex = _es.TilesetManager.GetTileTexture(activeBrush);
+            if (tex == null) return;
 
-            // Get the texture from the manager
-            // Note: You may need to pass TilesetManager or EditorState to the tool
-            var tex = _es.TilesetManager.GetTileTexture(toolInput.ActiveBrush);
-            if (tex != null)
+            float rot = activeBrush.Rotation * MathHelper.PiOver2;
+            Vector2 origin = new Vector2(8, 8);
+
+            if (_isAreaMode && input.LeftHold)
             {
-                float rotationRadians = toolInput.ActiveBrush.Rotation * MathHelper.PiOver2;
-                Vector2 origin = new Vector2(8, 8);
+                // Calculate the grid range
+                int minX = Math.Min(_startCell.X, input.MouseGridCell.X);
+                int maxX = Math.Max(_startCell.X, input.MouseGridCell.X);
+                int minY = Math.Min(_startCell.Y, input.MouseGridCell.Y);
+                int maxY = Math.Max(_startCell.Y, input.MouseGridCell.Y);
 
-                // Draw with 40% opacity
-                sb.Draw(tex, gridPos, null, Color.White * 0.4f, rotationRadians, origin, 1f, SpriteEffects.None, 0f);
+                // Draw a ghost tile for every cell in the rectangle
+                for (int x = minX; x <= maxX; x++)
+                {
+                    for (int y = minY; y <= maxY; y++)
+                    {
+                        Vector2 pos = new Vector2(x * 16 + 8, y * 16 + 8);
+                        sb.Draw(tex, pos, null, Color.White * 0.3f, rot, origin, 1f, SpriteEffects.None, 0f);
+                    }
+                }
+
+                // Draw the selection border
+                RectangleF area = GetGridRect(_startCell, input.MouseGridCell);
+                sb.DrawRectangle(area, Color.White * 0.5f, 1f / input.Zoom);
+            }
+            else
+            {
+                // Standard single-tile ghost
+                Vector2 pos = new Vector2(input.MouseGridCell.X * 16 + 8, input.MouseGridCell.Y * 16 + 8);
+                sb.Draw(tex, pos, null, Color.White * 0.4f, rot, origin, 1f, SpriteEffects.None, 0f);
             }
         }
+        private RectangleF GetGridRect(Point p1, Point p2)
+        {
+            int x = Math.Min(p1.X, p2.X) * 16;
+            int y = Math.Min(p1.Y, p2.Y) * 16;
+            int w = (Math.Abs(p1.X - p2.X) + 1) * 16;
+            int h = (Math.Abs(p1.Y - p2.Y) + 1) * 16;
+            return new RectangleF(x, y, w, h);
+        }
+        public string GetShortcutHints() => "Q/E: Rotate | SHIFT: Fill Area ";
     }
     public class EraserTool : ITool
     {
@@ -120,6 +183,7 @@ namespace Pixel_Simulations.Data
             // A brush might draw a semi-transparent preview of the tile under the cursor.
             // For now, we'll leave it empty.
         }
+        public string GetShortcutHints() => "";
     }
     public class ObjectPlacerTool : ITool
     {
@@ -161,6 +225,7 @@ namespace Pixel_Simulations.Data
                     eventBus.Publish(new AddObjectCommand(objLayer, instance));
                 }
             }
+
         }
         private int GetObjectCount(Layer ActiveLayer)
         {
@@ -201,6 +266,7 @@ namespace Pixel_Simulations.Data
                         0f, origin, 1f, SpriteEffects.None, 0f);
             }
         }
+        public string GetShortcutHints() => "";
     }
     public class FreeRectangleTool : ITool
     {
@@ -220,7 +286,7 @@ namespace Pixel_Simulations.Data
             input.Drawing = _isDrawing;
             Zoom = input.Zoom;
             type = toolInput.ActiveLayer.Type;
-            if (!(type == LayerType.Trigger)) 
+            if (!(type == LayerType.Control)) 
             {
                 _isDrawing = false;
                 return; 
@@ -242,13 +308,14 @@ namespace Pixel_Simulations.Data
                     if (Mode) { end = new Vector2((float)Math.Floor(end.X / 16) * 16, (float)Math.Floor(end.Y / 16) * 16); }
 
                 var rectObject = new RectangleObject
-                    {
-                        Position = new Vector2(System.Math.Min(start.X, end.X), System.Math.Min(start.Y, end.Y)),
-                        Size = new Vector2(System.Math.Abs(start.X - end.X), System.Math.Abs(start.Y - end.Y)),
-                        // Set the type based on the layer's type!
+                {
+                    Position = new Vector2(System.Math.Min(start.X, end.X), System.Math.Min(start.Y, end.Y)),
+                    Size = new Vector2(System.Math.Abs(start.X - end.X), System.Math.Abs(start.Y - end.Y)),
+                    // Set the type based on the layer's type!
+                    Name = $"{toolInput.ActiveLayer.Name}__{1}",
                         TriggerType = type.ToString(),
-                        DebugColor = GetColorForLayerType(type)
-                    };
+                    DebugColor = GetColorForLayerType(type)
+                };
 
                     if(input.CurrentMouse.LeftButton == ButtonState.Pressed)
                     {
@@ -267,7 +334,7 @@ namespace Pixel_Simulations.Data
         {
             switch (type)
             {
-                case LayerType.Trigger: return Color.LimeGreen;
+                case LayerType.Control: return Color.LimeGreen;
                 default: return Color.White;
             }
         }
@@ -294,6 +361,7 @@ namespace Pixel_Simulations.Data
             var color = GetColorForLayerType(type);
             sb.DrawRectangle(rect, color, 1f / Zoom);
         }
+        public string GetShortcutHints() => "CAPS: Grid Snap";
     }
     public class ShapeTool : ITool
     {
@@ -314,7 +382,7 @@ namespace Pixel_Simulations.Data
             else if (op == ShapeOperation.Difference) IconName = "ShapeDifference";
             else IconName = "ShapeTool";
             type = toolInput.ActiveLayer.Type;
-            if(type == LayerType.Tile || type == LayerType.Object || type == LayerType.Trigger) { return; }
+            if(type == LayerType.Tile || type == LayerType.Object) { return; }
             if (input.IsNewLeftClick)
             {
                 _startPos = toolInput.WorldPosition;
@@ -412,24 +480,22 @@ namespace Pixel_Simulations.Data
             return new Vector2((float)Math.Floor(pos.X / 16) * 16, (float)Math.Floor(pos.Y / 16) * 16);
         }
 
-        private bool IsValidLayer(Layer l) => l is CollisionLayer || l is NavigationLayer;
+        private bool IsValidLayer(Layer l) => l is ControlLayer;
 
         private Color GetLayerColor(LayerType type)
         {
             switch (type)
             {
-                case LayerType.Collision: return Color.Red;
-                case LayerType.Navigation: return Color.Blue;
+                case LayerType.Control: return Color.Red;
                 default: return Color.White; // Fallback color
             }
         }
         private int GetObjectCount(Layer ActiveLayer)
         {
-            if(ActiveLayer is CollisionLayer col) { return col.CollisionMesh.Count; }
-            if (ActiveLayer is NavigationLayer nav) { return nav.NavigationMesh.Count; }
+            if(ActiveLayer is ControlLayer col) { return col.Shapes.Count; }
             else return -1;
         }
-
+        public string GetShortcutHints() => "CAPS: Grid Snap | SHIFT: Union | ALT: Difference | CTRL: Intersect";
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!_isDrawing) return;
@@ -678,19 +744,50 @@ namespace Pixel_Simulations.Data
         }
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
-            // Draw the white stroke first
-            // Then draw small squares (Handles) at corners
+            if (_es == null) return;
+            var selected = _es.Selection.SelectedMapObject;
+            if (selected == null) return;
 
-            if (input.mapObject == null) return;
+            RectangleF b = GetObjectBounds(selected);
+            float hs = 6f / input.Zoom;
 
-            RectangleF b = GetObjectBounds(input.mapObject);
-            float hs = 6f / input.Zoom; // Handle Screen Size
-            sb.DrawRectangle(b,GetObjectColor(input.mapObject.Type)*0.4f, 1, 0);
-            // Corner handles
+            // Draw base selection
+            sb.DrawRectangle(b, GetObjectColor(selected.Type) * 0.4f, 1 / input.Zoom, 0);
             sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
             sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
             sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
             sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
+
+            // --- NEW: DRAW LINK LINES ---
+            if (selected.LinkedObjects.Count > 0)
+            {
+                Vector2 startPos = b.Center;
+
+                foreach (string targetId in selected.LinkedObjects)
+                {
+                    var targetObj = FindObjectByID(targetId);
+                    if (targetObj != null)
+                    {
+                        RectangleF targetBounds = GetObjectBounds(targetObj);
+
+                        // Color Code based on the target's type!
+                        Color linkColor = targetObj.Type switch
+                        {
+                            ObjectType.Prop => Color.LimeGreen,
+                            ObjectType.Rectangle => Color.DeepSkyBlue,
+                            ObjectType.Shape => Color.OrangeRed,
+                            ObjectType.Point => Color.Yellow,
+                            _ => Color.Cyan
+                        };
+
+                        // Draw Dashed Line
+                        UIDrawExtensions.DrawDashedLine(sb, startPos, targetBounds.Center, linkColor, 2f / input.Zoom, 10f / input.Zoom, 5f / input.Zoom);
+
+                        // Highlight Target Box
+                        sb.DrawRectangle(targetBounds, linkColor * 0.8f, 2f / input.Zoom);
+                    }
+                }
+            }
         }
 
         // Helper utilities
@@ -703,12 +800,13 @@ namespace Pixel_Simulations.Data
                 default: return Color.White; // Fallback color
             }
         }
-
+        public string GetShortcutHints() => "Use Arrows to Move Selected Thing. Handles to Resize it";
         private RectangleF GetObjectBounds(MapObject obj)
         {
             if (obj is RectangleObject r) return new RectangleF(r.Position, r.Size);
             if (obj is ShapeObject s) return new RectangleF(s.Position, s.Size);
             if (obj is PointObject p) return new RectangleF(p.Position.X - p.Radius, p.Position.Y - p.Radius, p.Radius * 2, p.Radius * 2);
+            if (obj is MapObject o) return new RectangleF(o.Position, Vector2.Zero); 
             return RectangleF.Empty;
         }
         private Vector2 GetObjectSize(MapObject obj)
@@ -748,18 +846,32 @@ namespace Pixel_Simulations.Data
                 }
             }
 
-            // 2. Handle Collision/Navigation (Polygons)
-            if (layer is CollisionLayer col)
-                return col.CollisionMesh.LastOrDefault(s => s.Shape.Contains(mouseWorld));
-            if (layer is NavigationLayer nav)
-                return nav.NavigationMesh.LastOrDefault(s => s.Shape.Contains(mouseWorld));
-
             // 3. Handle Triggers (Rects/Points)
-            if (layer is TriggerLayer trig)
+            if (layer is ControlLayer trig)
             {
-                var rect = trig.TriggerMesh.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
+                var shap = trig.Shapes.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
+                if (shap != null) return shap;
+
+                var rect = trig.Rectangles.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
                 if (rect != null) return rect;
-                return trig.PointTriggers.LastOrDefault(p => Vector2.Distance(p.Position, mouseWorld) <= p.Radius);
+                return trig.Points.LastOrDefault(p => Vector2.Distance(p.Position, mouseWorld) <= p.Radius);
+            }
+            return null;
+        }
+        private MapObject FindObjectByID(string id)
+        {
+            foreach (var layer in _es.ActiveMap.Layers)
+            {
+                if (layer is ControlLayer cl)
+                {
+                    var match = cl.Rectangles.Cast<MapObject>().Concat(cl.Shapes).Concat(cl.Points).FirstOrDefault(o => o.ID == id);
+                    if (match != null) return match;
+                }
+                else if (layer is ObjectLayer ol && ol.Type == LayerType.Object)
+                {
+                    var match = ol.Objects.FirstOrDefault(o => o.ID == id);
+                    if (match != null) return match;
+                }
             }
             return null;
         }
@@ -777,7 +889,7 @@ namespace Pixel_Simulations.Data
             input.Drawing = _isDrawing;
 
             // This tool ONLY works on TriggerLayers.
-            if (!(toolInput.ActiveLayer is TriggerLayer triggerLayer))
+            if (!(toolInput.ActiveLayer is ControlLayer controlLayer))
             {
                 _isDrawing = false;
                 return;
@@ -807,13 +919,13 @@ namespace Pixel_Simulations.Data
 
                     if (pointObject.Radius > 1) // Only add if it has a size
                     {
-                        eventBus.Publish<IUndoableCommand>(new AddPointCommand(triggerLayer, pointObject));
+                        eventBus.Publish<IUndoableCommand>(new AddPointCommand(controlLayer, pointObject));
                     }
                     _isDrawing = false;
                 }
             }
         }
-
+        public string GetShortcutHints() => "Drag Left mouse to expand Radius";
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!_isDrawing) return;

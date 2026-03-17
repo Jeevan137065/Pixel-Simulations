@@ -19,7 +19,6 @@ namespace Pixel_Simulations
         // --- Core Data Objects ---
         public Map CurrentMap { get; private set; }
         public NewPlayer Player { get; private set; }
-
         // --- Managers and Services ---
         public Camera GameCamera { get; set; }
         public AssetLibrary Assets { get; }
@@ -33,7 +32,7 @@ namespace Pixel_Simulations
         public PhysicsManager Physics { get; }
         public string gameMapPath;
         public int _uKeyPressed = 0;
-        private bool _uKeyPressedLastFrame = false;
+        private bool _fKeyPressedLastFrame = false;
         public GameState()
         {
             GameCamera = new Camera();
@@ -43,6 +42,7 @@ namespace Pixel_Simulations
             Weather = new WeatherSimulator();
             TimeSystem = new DayTimeManager(); // NEW
             input = new InputManager();
+            Physics = new PhysicsManager();
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Pixel_Simulations
             InitializeTilesets(graphicsDevice);
             Shaders = new ShaderManager(graphicsDevice);
             Shaders.LoadContent(content);
-            //Physics.LoadMapData(CurrentMap);
+            Physics.LoadMapData(CurrentMap);
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
             Player.LoadContent(content,Physics); // Player loads its own specific content
@@ -109,24 +109,29 @@ namespace Pixel_Simulations
             if (keyboardState.IsKeyDown(Keys.U))
             {
                 // Simple debounce so it doesn't cycle 60 times a second
-                if (!_uKeyPressedLastFrame)
+                if (!_fKeyPressedLastFrame)
                 {
                     Weather.CycleWeather();
                 }
-                _uKeyPressedLastFrame = true;
+                _fKeyPressedLastFrame = true;
             }
             else if (keyboardState.IsKeyDown(Keys.Y))
             {
                 // Simple debounce so it doesn't cycle 60 times a second
-                if (!_uKeyPressedLastFrame)
+                if (!_fKeyPressedLastFrame)
                 {
                     Weather.CyclePhase();
                 }
-                _uKeyPressedLastFrame = true;
+                _fKeyPressedLastFrame = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.F))
+            {
+                if (!_fKeyPressedLastFrame) TryInteract(); // Fire once per press
+                _fKeyPressedLastFrame = true;
             }
             else
             {
-                _uKeyPressedLastFrame = false;
+                _fKeyPressedLastFrame = false;
             }
             if(keyboardState.IsKeyDown(Keys.OemCloseBrackets))
                 TimeSystem.AddHours(1f);
@@ -141,7 +146,73 @@ namespace Pixel_Simulations
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
             Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);
         }
+        private void TryInteract()
+        {
+            RectangleF interactBox = Player.GetInteractionBox();
 
+            PropObject targetProp = null;
+            ObjectLayer targetLayer = null;
+
+            // Search for a prop inside the interaction box
+            foreach (var layer in CurrentMap.Layers.OfType<ObjectLayer>().Where(l => l.Type == LayerType.Object))
+            {
+                foreach (var obj in layer.Objects)
+                {
+                    if (obj is PropObject prop)
+                    {
+                        var prefab = PrefabManager.GetPrefab(prop.PrefabID);
+                        if (prefab != null)
+                        {
+                            RectangleF bounds = new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
+
+                            if (bounds.Intersects(interactBox))
+                            {
+                                targetProp = prop;
+                                targetLayer = layer;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (targetProp != null) break;
+            }
+
+            if (targetProp != null)
+            {
+                // 1. Remove the Tree visually
+                targetLayer.Objects.Remove(targetProp);
+
+                // 2. Destroy all Linked Objects (the collision boxes!)
+                foreach (string targetID in targetProp.LinkedObjects)
+                {
+                    RemoveObjectFromMap(targetID);
+                }
+
+                // 3. Refresh the Physics Engine so the collision actually disappears!
+                Physics.LoadMapData(CurrentMap);
+
+                System.Diagnostics.Debug.WriteLine($"Chopped down: {targetProp.Name}");
+            }
+        }
+
+        private void RemoveObjectFromMap(string id)
+        {
+            foreach (var layer in CurrentMap.Layers.OfType<ObjectLayer>())
+            {
+                // Handle standard PropObjects
+                if (layer.Type == LayerType.Object)
+                {
+                    layer.Objects.RemoveAll(o => o.ID == id);
+                }
+                // Handle Collision/Triggers
+                else if (layer is ControlLayer cl)
+                {
+                    cl.Rectangles.RemoveAll(r => r.ID == id);
+                    cl.Shapes.RemoveAll(s => s.ID == id);
+                    cl.Points.RemoveAll(p => p.ID == id);
+                }
+            }
+        }
         public void UpdateCameraInput(GameTime gameTime)
         {
             float targetZoom = GameCamera.Zoom;
