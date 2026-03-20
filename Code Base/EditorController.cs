@@ -44,21 +44,22 @@ namespace Pixel_Simulations.Editor
             // --- 1. ACTIVATE AND UPDATE THE INPUTSTATE ---
             UpdateInputState(keyboardState, mouseState);
             var input = _editorState.Input;
-            
-            //_editorState.Input.Update(gameTime);
-
+            bool isTyping = _editorState.UI.FocusedElement is UITextBox;
             // --- 2. Handle Global Editor Controls ---
-            if (input.CurrentKeyboard.IsKeyDown(Keys.Escape)) { ShouldExit = true; }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L)) { _editorState.ShowDebug = !_editorState.ShowDebug; }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.K) && input.PreviousKeyboard.IsKeyUp(Keys.K)) { _editorState.ShowGrid = !_editorState.ShowGrid; }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.I)) { }
-            
+            if (!isTyping)
+            {
+                // Global Editor Controls
+                if (input.CurrentKeyboard.IsKeyDown(Keys.Escape)) { ShouldExit = true; }
+                if (input.CurrentKeyboard.IsKeyDown(Keys.L) && input.PreviousKeyboard.IsKeyUp(Keys.L)) { _editorState.ShowDebug = !_editorState.ShowDebug; }
+                if (input.CurrentKeyboard.IsKeyDown(Keys.K) && input.PreviousKeyboard.IsKeyUp(Keys.K)) { _editorState.ShowGrid = !_editorState.ShowGrid; }
+
+                HandleGlobalShortcuts(input, _eventBus);
+                HandleKeyboardCameraMovement(input, gameTime);
+            }
             // --- 3. Handle Camera Updates ---
             _editorState.camera.Update(input, _editorState._layoutmanager.ViewportPanel, true);
 
             UpdateUI(input, _eventBus);
-            HandleGlobalShortcuts(input, _eventBus);
-            HandleKeyboardCameraMovement( input, gameTime);
             // --- 4. Process Viewport/Tool Interaction ---
             if (_editorState.PrefabCreator.IsOpen)
             {
@@ -72,17 +73,15 @@ namespace Pixel_Simulations.Editor
                 // Block keys from reaching the map/camera while typing name
                 return;
             }
-            if (_editorState.UI.ActivePanelName == "Viewport")
+            if (_editorState.UI.ActivePanelName == "Viewport" && !_editorState.UI.IsLinkingMode)
             {
                 var activeTool = _editorState.ToolState.ActiveTool;
-
                 if (activeTool != null)
                 {
-                    // The tool receives the EventBus so it can publish undoable commands
-                    activeTool.Update(GetCurrentToolInput(), input, _eventBus,_editorState);
+                    activeTool.Update(GetCurrentToolInput(), input, _eventBus, _editorState);
                 }
-            }
 
+            }
         }
         private void HandleGlobalShortcuts(EditorInputState input, EventBus eventBus)
         {
@@ -97,10 +96,10 @@ namespace Pixel_Simulations.Editor
             if (kbs.IsKeyDown(Keys.E) && prevKbs.IsKeyUp(Keys.E))
                 eventBus.Publish(new ChangeToolCommand { ToolName = "Eraser" });
 
-            if (kbs.IsKeyDown(Keys.R) && prevKbs.IsKeyUp(Keys.R))
+            if (kbs.IsKeyDown(Keys.R) && prevKbs.IsKeyUp(Keys.T))
                 eventBus.Publish(new ChangeToolCommand { ToolName = "FreeRectangle" });
 
-            if (kbs.IsKeyDown(Keys.T) && prevKbs.IsKeyUp(Keys.T))
+            if (kbs.IsKeyDown(Keys.T) && prevKbs.IsKeyUp(Keys.G))
                 eventBus.Publish(new ChangeToolCommand { ToolName = "GridRectangle" });
 
             if (kbs.IsKeyDown(Keys.P) && prevKbs.IsKeyUp(Keys.P))
@@ -199,6 +198,7 @@ namespace Pixel_Simulations.Editor
             _uiManager.ToolPanel.Update(input, bus);
             _uiManager.TilesetPanel.Update(input, bus);
             _uiManager.LayerPanel.Update(input, bus);
+            _uiManager.InspectorPanel.Update(input, bus);
             
         }
         private void HandleKeyboardCameraMovement(EditorInputState input, GameTime gameTime)
@@ -441,7 +441,7 @@ namespace Pixel_Simulations.Editor
             eventBus.Subscribe<SelectTilesetCommand>(HandleSelectTileset);
             eventBus.Subscribe<SelectTileCommand>(HandleSelectTile);
             eventBus.Subscribe<SelectPrefabCommand>(HandleSelectPrefab);
-            eventBus.Subscribe<OpenPrefabCreatorCommand>(HandleOpenCreator);
+            eventBus.Subscribe<TogglePrefabCreatorCommand>(HandleToggleCreator);
             eventBus.Subscribe<OpenAtlasPickerCommand>(HandleOpenAtlasPicker);
             eventBus.Subscribe<SavePrefabCommand>(HandleSavePrefab);
             eventBus.Subscribe<ClosePrefabCreatorCommand>(HandleCloseCreator);
@@ -520,27 +520,43 @@ namespace Pixel_Simulations.Editor
                 // LOAD into Creator Context so we can Modify or Delete it
                 var ctx = _editorState.PrefabCreator;
                 ctx.TempName = prefab.ID;
-                ctx.TempTags = string.Join(", ", prefab.Tags);
+
+                // --- FIX: Copy Lists and Dictionaries safely ---
+                ctx.TempTags = new List<string>(prefab.Tags);
+                ctx.TempProperties = new Dictionary<string, MapProperty>();
+                foreach (var kvp in prefab.Properties)
+                {
+                    ctx.TempProperties[kvp.Key] = new MapProperty(kvp.Value.Type, kvp.Value.Value);
+                }
+
                 ctx.SelectionRect = prefab.SourceRect;
                 ctx.ActiveAtlasName = prefab.AtlasName;
+                ctx.NeedsUIRebuild = true;
+                // Reset pan offset so it doesn't spawn off-screen
+                ctx.AtlasPanOffset = Vector2.Zero;
 
+                // Automatically switch to the Object Placer tool so you can paint it immediately!
                 _eventBus.Publish(new ChangeToolCommand { ToolName = "ObjectPlacer" });
             }
         }
 
-        private void HandleOpenCreator(OpenPrefabCreatorCommand cmd)
+        private void HandleToggleCreator(TogglePrefabCreatorCommand cmd)
         {
             var ctx = _editorState.PrefabCreator;
-            ctx.IsOpen = true;
+            ctx.IsOpen = !ctx.IsOpen; // Toggle!
 
-            // RESET the context for a fresh object
-            ctx.TempName = "New_Object_" + (_editorState.PrefabManager.Prefabs.Count + 1);
-            ctx.TempTags = "tag";
-            ctx.SelectionRect = new Rectangle(0, 0, 16, 16);
-            ctx.ActiveAtlasName = cmd.AtlasName ?? "Basic";
+            if (ctx.IsOpen)
+            {
+                // RESET the context for a fresh object
+                ctx.TempName = "New_Object_" + (_editorState.PrefabManager.Prefabs.Count + 1);
+                ctx.TempTags = new List<string>(); // We will use a List now instead of a string!
+                ctx.TempProperties = new Dictionary<string, MapProperty>(); // NEW
+                ctx.SelectionRect = new Rectangle(0, 0, 16, 16);
+                ctx.ActiveAtlasName = cmd.DefaultAtlasName ?? "Basic";
+                ctx.AtlasPanOffset = Vector2.Zero; // Reset camera
 
-            // Deselect active prefab so we don't accidentally overwrite it
-            _editorState.Selection.ActivePrefab = null;
+                _editorState.Selection.ActivePrefab = null;
+            }
         }
         private void HandleSavePrefab(SavePrefabCommand cmd)
         {
@@ -550,7 +566,7 @@ namespace Pixel_Simulations.Editor
             // Check for "New" mode conflicts
             if (cmd.Mode == "New" && _editorState.PrefabManager.Prefabs.ContainsKey(ctx.TempName))
             {
-                ctx.TempName += "_Copy"; // Auto-rename to prevent block
+                ctx.TempName += "_Copy"; // Auto-rename to prevent blocking
             }
 
             var prefab = new ObjectPrefab
@@ -558,11 +574,23 @@ namespace Pixel_Simulations.Editor
                 ID = ctx.TempName,
                 AtlasName = ctx.ActiveAtlasName,
                 SourceRect = ctx.SelectionRect,
-                Tags = ctx.TempTags.Split(',').Select(t => t.Trim()).ToList(),
+
+                // FIX: Copy Lists and Dictionaries safely from the UI context
+                Tags = new List<string>(ctx.TempTags),
+                Properties = new Dictionary<string, MapProperty>(),
+
                 Pivot = new Vector2(ctx.SelectionRect.Width / 2, ctx.SelectionRect.Height)
             };
 
+            // Deep copy the properties so editing them later doesn't break the original
+            foreach (var kvp in ctx.TempProperties)
+            {
+                prefab.Properties[kvp.Key] = new MapProperty(kvp.Value.Type, kvp.Value.Value);
+            }
+
             _editorState.PrefabManager.Prefabs[prefab.ID] = prefab;
+
+            // Save to the JSON file
             _editorState.PrefabManager.Save(Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json"));
         }
         private void HandleDeletePrefab(DeletePrefabCommand cmd)

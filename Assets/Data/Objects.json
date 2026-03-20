@@ -12,6 +12,7 @@
     "Tags": [
       "tree"
     ],
+    "Properties": {},
     "SizeInCells": {
       "X": 11,
       "Y": 14
@@ -28,13 +29,14 @@
     },
     "Pivot": "40, 48",
     "Tags": [],
+    "Properties": {},
     "SizeInCells": {
       "X": 5,
       "Y": 3
     }
   },
   {
-    "ID": "pine-tree_Copy_Copy",
+    "ID": "pine-tree",
     "AtlasName": "Trees",
     "SourceRect": {
       "X": 464,
@@ -44,10 +46,30 @@
     },
     "Pivot": "40, 304",
     "Tags": [
-      "tree"
+      "#Tree"
     ],
+    "Properties": {},
     "SizeInCells": {
       "X": 5,
+      "Y": 19
+    }
+  },
+  {
+    "ID": "Light House",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 432,
+      "Y": 0,
+      "Width": 128,
+      "Height": 304
+    },
+    "Pivot": "64, 304",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 8,
       "Y": 19
     }
   }

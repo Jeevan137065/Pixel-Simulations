@@ -538,6 +538,20 @@ namespace Pixel_Simulations.Data
             _es = editorState;
             if (_es == null) return;
 
+            if (!(editorState.UI.FocusedElement is UITextBox))
+            {
+                if (input.CurrentKeyboard.IsKeyDown(Keys.Delete) && input.PreviousKeyboard.IsKeyUp(Keys.Delete))
+                {
+                    if (CurrentSelect != null && toolInput.ActiveLayer is ObjectLayer objLayer)
+                    {
+                        eventBus.Publish(new RemoveObjectCommand(objLayer, CurrentSelect));
+                        editorState.Selection.SelectedMapObject = null;
+                        CurrentSelect = null;
+                        _currentMode = InteractionMode.None;
+                        return; // Exit early
+                    }
+                }
+            }
             // --- STEP 1: SELECTION (Only on the frame the button is pressed) ---
             if (input.IsNewLeftClick)
             {
@@ -558,7 +572,8 @@ namespace Pixel_Simulations.Data
                 // Second, if no handle was hit, try to select a NEW object
                 if (_currentMode == InteractionMode.None)
                 {
-                    var hit = FindTopObject(toolInput.ActiveLayer, input.MouseWorldPosition);
+                    bool absoluteMode = input.CurrentKeyboard.IsKeyDown(Keys.LeftAlt);
+                    var hit = FindTopObject(toolInput.ActiveLayer, input.MouseWorldPosition, absoluteMode);
                     editorState.Selection.SelectedMapObject = hit; // APPLY SELECTION TO STATE
 
                     if (hit != null)
@@ -627,29 +642,30 @@ namespace Pixel_Simulations.Data
 
         private void HandleKeyboardMovement(MapObject obj, EditorInputState input)
         {
-            float speed = input.CurrentKeyboard.IsKeyDown(Keys.LeftShift) ? 16f : 1f;
+            if (_es.UI.FocusedElement is UITextBox) return; // Don't move if typing!
+
+            bool snapMode = input.CurrentKeyboard.CapsLock;
+            float speed = snapMode ? 16f : 1f;
             Vector2 move = Vector2.Zero;
 
-            // Use IsKeyDown for smooth nudging, or combine with IsKeyUp for step-by-step
-            //Removed isKeyup to make movement smooth while holding keys.
-            if (input.CurrentKeyboard.IsKeyDown(Keys.W)) move.Y -= speed;
-            if (input.CurrentKeyboard.IsKeyDown(Keys.S)) move.Y += speed;
-            if (input.CurrentKeyboard.IsKeyDown(Keys.A)) move.X -= speed;
-            if (input.CurrentKeyboard.IsKeyDown(Keys.D)) move.X += speed;
+            bool up = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.W) && input.PreviousKeyboard.IsKeyUp(Keys.W)) : input.CurrentKeyboard.IsKeyDown(Keys.W);
+            bool down = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.S) && input.PreviousKeyboard.IsKeyUp(Keys.S)) : input.CurrentKeyboard.IsKeyDown(Keys.S);
+            bool left = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.A) && input.PreviousKeyboard.IsKeyUp(Keys.A)) : input.CurrentKeyboard.IsKeyDown(Keys.A);
+            bool right = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.D) && input.PreviousKeyboard.IsKeyUp(Keys.D)) : input.CurrentKeyboard.IsKeyDown(Keys.D);
+
+            if (up) move.Y -= speed;
+            if (down) move.Y += speed;
+            if (left) move.X -= speed;
+            if (right) move.X += speed;
 
             if (move != Vector2.Zero)
             {
                 if (obj is ShapeObject poly)
                 {
-                    // IMPORTANT: Move vertices, then update the bounding box
                     poly.Shape.Offset(move);
                     poly.UpdateBoundsFromVertices();
                 }
-                else
-                {
-                    // Standard move for Rectangles/Points
-                    obj.Position += move;
-                }
+                else obj.Position += move;
             }
         }
 
@@ -800,8 +816,7 @@ namespace Pixel_Simulations.Data
                 default: return Color.White; // Fallback color
             }
         }
-        public string GetShortcutHints() => "Use Arrows to Move Selected Thing. Handles to Resize it";
-        private RectangleF GetObjectBounds(MapObject obj)
+        public string GetShortcutHints() => "ALT: Pick Any Layer | DEL: Delete | CAPS: Grid Nudge"; private RectangleF GetObjectBounds(MapObject obj)
         {
             if (obj is RectangleObject r) return new RectangleF(r.Position, r.Size);
             if (obj is ShapeObject s) return new RectangleF(s.Position, s.Size);
@@ -816,45 +831,45 @@ namespace Pixel_Simulations.Data
             if (obj is PointObject p) return new Vector2(p.Radius, p.Radius);
             return Vector2.Zero;
         }
-        private void SnapPosition(MapObject obj) => obj.Position = new Vector2((float)Math.Round(obj.Position.X / 16) * 16, (float)Math.Round(obj.Position.Y / 16) * 16);
-        private MapObject FindTopObject(Layer layer, Vector2 mouseWorld)
+        private MapObject FindTopObject(Layer activeLayer, Vector2 mouseWorld, bool searchAllLayers)
         {
-            if (layer is ObjectLayer objLayer)
+            // Define which layers we are allowed to look at
+            var layersToSearch = searchAllLayers ? _es.ActiveMap.Layers.AsEnumerable() : new List<Layer> { activeLayer };
+
+            // Loop backwards (top layer to bottom layer)
+            foreach (var layer in layersToSearch.Reverse())
             {
-                // Iterate backwards to pick the one on top
-                for (int i = objLayer.Objects.Count - 1; i >= 0; i--)
+                if (!layer.IsVisible || layer.IsLocked) continue;
+
+                if (layer is ObjectLayer objLayer)
                 {
-                    var obj = objLayer.Objects[i];
-
-                    if (obj is PropObject prop)
+                    // Reverse so top objects are selected first
+                    for (int i = objLayer.Objects.Count - 1; i >= 0; i--)
                     {
-                        var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
-                        if (prefab != null)
+                        var obj = objLayer.Objects[i];
+                        if (obj is PropObject prop)
                         {
-                            // Calculate world bounds based on Position and SourceRect
-                            // Offset by Pivot
-                            RectangleF bounds = new RectangleF(
-                                prop.Position.X - prefab.Pivot.X,
-                                prop.Position.Y - prefab.Pivot.Y,
-                                prefab.SourceRect.Width,
-                                prefab.SourceRect.Height
-                            );
-
-                            if (bounds.Contains(mouseWorld)) return prop;
+                            var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
+                            if (prefab != null)
+                            {
+                                RectangleF bounds = new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
+                                if (bounds.Contains(mouseWorld)) return prop;
+                            }
                         }
                     }
                 }
-            }
 
-            // 3. Handle Triggers (Rects/Points)
-            if (layer is ControlLayer trig)
-            {
-                var shap = trig.Shapes.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
-                if (shap != null) return shap;
+                if (layer is ControlLayer trig)
+                {
+                    var shap = trig.Shapes.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
+                    if (shap != null) return shap;
 
-                var rect = trig.Rectangles.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
-                if (rect != null) return rect;
-                return trig.Points.LastOrDefault(p => Vector2.Distance(p.Position, mouseWorld) <= p.Radius);
+                    var rect = trig.Rectangles.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
+                    if (rect != null) return rect;
+
+                    var pt = trig.Points.LastOrDefault(p => Vector2.Distance(p.Position, mouseWorld) <= p.Radius);
+                    if (pt != null) return pt;
+                }
             }
             return null;
         }

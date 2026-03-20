@@ -9,11 +9,24 @@ using System.Collections.Generic;
 
 namespace Pixel_Simulations.Data
 {
-
+    public enum PropertyType { String, Integer, Float, Boolean }
     public enum ObjectType { Prop, Rectangle, Shape, Point }
     public enum SliceMode { RowFirst, ColumnFirst }
     public enum ShapeOperation { None, Union, Intersection, Difference }
     public enum HandleType { None, Body, TopLeft, TopRight, BottomLeft, BottomRight, Top, Bottom, Left, Right, Center }
+    [JsonObject(MemberSerialization.OptIn)]
+    public class MapProperty
+    {
+        [JsonProperty] public PropertyType Type { get; set; }
+        [JsonProperty] public string Value { get; set; }
+
+        public MapProperty() { }
+        public MapProperty(PropertyType type, string value)
+        {
+            Type = type;
+            Value = value;
+        }
+    }
     [JsonObject(MemberSerialization.OptIn)] // Ensure this is present
     public abstract class MapObject
     {
@@ -23,6 +36,7 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public abstract ObjectType Type { get; }
         [JsonProperty] public HashSet<string> Tags { get; set; } = new HashSet<string>();
         [JsonProperty] public List<string> LinkedObjects { get; set; } = new List<string>();
+        [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
     }
     [JsonObject(MemberSerialization.OptIn)]
     public class ObjectPrefab
@@ -32,7 +46,7 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public Rectangle SourceRect { get; set; }
         [JsonProperty] public Vector2 Pivot { get; set; }
         [JsonProperty] public List<string> Tags { get; set; } = new List<string>();
-        // Helper: Get size in 16px cells
+        [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
         [JsonProperty] public Point SizeInCells => new Point(SourceRect.Width / 16, SourceRect.Height / 16);
     }
     [JsonObject(MemberSerialization.OptIn)]

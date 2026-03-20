@@ -382,6 +382,14 @@ namespace Pixel_Simulations.Data
             // Write Tags
             writer.Write(obj.Tags.Count);
             foreach (var tag in obj.Tags) writer.Write(tag);
+            // Write Properties
+            writer.Write(obj.Properties.Count);
+            foreach (var kvp in obj.Properties)
+            {
+                writer.Write(kvp.Key);
+                writer.Write((int)kvp.Value.Type);  // Save type as an int
+                writer.Write(kvp.Value.Value ?? ""); // Save value as string
+            }
         }
         private static void ReadMapObjectBase(BinaryReader reader, MapObject obj)
         {
@@ -397,6 +405,17 @@ namespace Pixel_Simulations.Data
             int tagCount = reader.ReadInt32();
             obj.Tags = new HashSet<string>();
             for (int i = 0; i < tagCount; i++) obj.Tags.Add(reader.ReadString());
+
+            // --- NEW: READ PROPERTIES ---
+            int propCount = reader.ReadInt32();
+            obj.Properties = new Dictionary<string, MapProperty>();
+            for (int i = 0; i < propCount; i++)
+            {
+                string key = reader.ReadString();
+                PropertyType type = (PropertyType)reader.ReadInt32();
+                string val = reader.ReadString();
+                obj.Properties[key] = new MapProperty(type, val);
+            }
         }
         public static void CaptureToImage(Map map, GraphicsDevice gd, TilesetManager tsManager, string path)
         {

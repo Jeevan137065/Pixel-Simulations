@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Simulations", "Pixel 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Light Simulation", "..\Light Simulation\Light Simulation.csproj", "{0901FC25-27DC-48F2-B056-F773D5641379}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Bones", "..\Pixel Bones\Pixel Bones.csproj", "{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pixel Cinematics", "..\Pixel Bones\Pixel Cinematics.csproj", "{AC82CA5C-D984-4F7F-A29A-A6E271E18CD2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wind Simulation", "..\Wind Simulation\Wind Simulation.csproj", "{90A46838-8836-4546-B582-F3E1079E5AE9}"
 EndProject

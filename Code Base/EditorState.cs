@@ -22,10 +22,8 @@ namespace Pixel_Simulations.Editor
     {
         public string ActivePanelName { get; set; } = "None";
         public Vector2 MouseInPanelPosition { get; set; }
-
-        // We can add more specific state here later
-        // public List<MapObject> SelectedObjects { get; set; } = new List<MapObject>();
-        // public bool IsPopupWindowVisible { get; set; } = false;
+        public bool IsLinkingMode { get; set; } = false; // Add this!
+        public UIElement FocusedElement { get; set; }
     }
     public class ToolState
     {
@@ -85,15 +83,19 @@ namespace Pixel_Simulations.Editor
     {
         public bool IsOpen = false;
         public string ActiveAtlasName { get; set; }
-
-        // The selection box on the atlas (in pixels)
         public Rectangle SelectionRect { get; set; }
+        public bool NeedsUIRebuild { get; set; } = false;
         public string TempName { get; set; } = "New_Object";
-        public string TempTags { get; set; } = "tag1, tag2";
 
-        // Used for the click-and-drag logic on the atlas
+        // --- CHANGED to List and Dictionary! ---
+        public List<string> TempTags { get; set; } = new List<string>();
+        public Dictionary<string, MapProperty> TempProperties { get; set; } = new Dictionary<string, MapProperty>();
+
         public Vector2 DragStart { get; set; }
         public bool IsDragging { get; set; }
+
+        // --- NEW: For panning large atlases ---
+        public Vector2 AtlasPanOffset { get; set; } = Vector2.Zero;
     }
     public class LayerPanelState
     {

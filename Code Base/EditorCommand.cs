@@ -329,12 +329,11 @@ namespace Pixel_Simulations.Data
     public struct ToggleLayerExpansionCommand : ICommand { public int LayerIndex; }
     public struct ChangeTilesetTabCommand : ICommand { public bool ShowObjects; }
     public class SelectPrefabCommand : ICommand { public string PrefabID; }
-    public struct OpenPrefabCreatorCommand : ICommand { public string AtlasName; }
     public struct ClosePrefabCreatorCommand : ICommand { }
     public struct OpenAtlasPickerCommand : ICommand { } // For Tileset +
     public struct SavePrefabCommand : ICommand { public String Mode; }
     public struct DeletePrefabCommand : ICommand { }
     public struct CaptureMapCommand : ICommand { }
     public struct SelectAtlasForCreatorCommand : ICommand { public string AtlasName; }
-
+    public struct TogglePrefabCreatorCommand : ICommand { public string DefaultAtlasName; }
 }

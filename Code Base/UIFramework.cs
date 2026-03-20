@@ -14,8 +14,9 @@ namespace Pixel_Simulations.UI
     // Defines the look of the UI so the Game and Editor can look different.
     public class UITheme
     {
+        public static SpriteFont DefaultFont { get; set; }
         public SpriteFont Font { get; set; }
-        public Color PanelBackground { get; set; } = Color.DarkSlateGray;
+        public Color PanelBackground { get; set; } = Color.Black;
         public Color ButtonNormal { get; set; } = Color.Black * 0.6f;
         public Color ButtonHover { get; set; } = Color.Gray;
         public Color ButtonPressed { get; set; } = Color.DarkGray;
@@ -196,17 +197,64 @@ namespace Pixel_Simulations.UI
 
     public class UILabel : UIElement
     {
-        public string Text { get; set; }
+        private string _text = "";
         public Color? ColorOverride { get; set; }
-
+        public string Text
+        {
+            get => _text;
+            set
+            {
+                _text = value;
+                // Calculate size IMMEDIATELY when text changes
+                if (UITheme.DefaultFont != null && !string.IsNullOrEmpty(_text))
+                    Size = UITheme.DefaultFont.MeasureString(_text);
+                else
+                    Size = Vector2.Zero;
+            }
+        }
         public override void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
         {
             if (!IsVisible || string.IsNullOrEmpty(Text)) return;
-            sb.DrawString(theme.Font, Text, AbsoluteBounds.Location.ToVector2(), ColorOverride ?? theme.TextColor);
+            sb.DrawString(UITheme.DefaultFont ?? theme.Font, Text, AbsoluteBounds.Location.ToVector2(), TextColor ?? theme.TextColor);
             base.Draw(sb, ui, theme);
         }
     }
+    // A panel that wraps its children to the next row when it runs out of horizontal space!
+    public class UIFlowPanel : UIPanel
+    {
+        public float SpacingX { get; set; } = 5f;
+        public float SpacingY { get; set; } = 5f;
+        public float Padding { get; set; } = 5f;
 
+        public override void UpdateLayout()
+        {
+            float currentX = Padding;
+            float currentY = Padding;
+            float currentRowHeight = 0;
+
+            foreach (var child in Children)
+            {
+                if (!child.IsVisible) continue;
+
+                // If this element exceeds the panel width, wrap to the next line!
+                if (currentX + child.Size.X > (Size.X - Padding) && currentX > Padding)
+                {
+                    currentX = Padding;
+                    currentY += currentRowHeight + SpacingY;
+                    currentRowHeight = 0; // Reset row height
+                }
+
+                child.LocalPosition = new Vector2(currentX, currentY);
+                child.UpdateLayout(); // Update child's internals
+
+                currentX += child.Size.X + SpacingX;
+                currentRowHeight = System.Math.Max(currentRowHeight, child.Size.Y);
+            }
+
+            // Auto-expand the Y size to fit all rows
+            Size = new Vector2(Size.X, currentY + currentRowHeight + Padding);
+        }
+    }
     public class UIButton : UIElement
     {
         public string Text { get; set; }

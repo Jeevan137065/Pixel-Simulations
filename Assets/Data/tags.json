@@ -1,7 +1,7 @@
 [
   {
-    "HashID": "#tree",
-    "Name": "#tree",
+    "HashID": "#Tree",
+    "Name": "Tree",
     "Description": "",
     "TagColor": {
       "B": 87,
@@ -11,13 +11,24 @@
     }
   },
   {
-    "HashID": "#Sand",
-    "Name": "Sand",
-    "Description": "Yellow shit",
+    "HashID": "#Building",
+    "Name": "Building",
+    "Description": "can be entered",
     "TagColor": {
-      "B": 32,
-      "G": 165,
-      "R": 218,
+      "B": 225,
+      "G": 105,
+      "R": 65,
+      "A": 255
+    }
+  },
+  {
+    "HashID": "#Pine",
+    "Name": "Pine Tree",
+    "Description": "",
+    "TagColor": {
+      "B": 128,
+      "G": 128,
+      "R": 0,
       "A": 255
     }
   }

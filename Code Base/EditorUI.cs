@@ -28,13 +28,13 @@ namespace Pixel_Simulations.UI
         public PrefabCreatorPanel PrefabPanel { get; set; }
         public TagManagerPanel TagManagerPanel { get; set; }
         public ToolPanel ToolPanel { get; set; }
+        public InspectorPanel InspectorPanel { get; set; }
         public LayerPanel LayerPanel { get; set; }
         public readonly EditorState _editorState;
         public GraphicsDevice gd { get; }
         public SpriteFont DebugFont { get; private set; }
         // It will contain a list of all panels: Viewport, ToolPanel, LayerPanel, etc.
         private GridRenderer gridRenderer { get; set; }
-        public UIElement FocusedElement { get; private set; }
         public bool IsMouseOverUI { get; private set; } // Prevents map clicks
 
         public EditorUI(EditorState editorState)
@@ -48,6 +48,7 @@ namespace Pixel_Simulations.UI
         public void LoadContent(ContentManager content) 
         {
             DebugFont = content.Load<SpriteFont>("Font");
+            UITheme.DefaultFont = DebugFont;
             _iconsTexture = content.Load<Texture2D>("EditorUI");
             string json = File.ReadAllText("Content/EditorIcons.json");
             var defFile = JsonConvert.DeserializeObject<dynamic>(json);
@@ -61,9 +62,10 @@ namespace Pixel_Simulations.UI
             // Create all the panel instances
             TopPanel = new TopPanel(_editorState._layoutmanager.TopPanel, this, _editorState);
             TilesetPanel = new TilesetPanel(_editorState._layoutmanager.TilesetPanel, this, _editorState);
-            PrefabPanel = new PrefabCreatorPanel(_editorState._layoutmanager.ViewportPanel, this, _editorState);
+            PrefabPanel = new PrefabCreatorPanel(_editorState._layoutmanager.prefabModalBounds, this, _editorState);
             LayerPanel = new LayerPanel(_editorState._layoutmanager.LayerPanel, this, _editorState);
             ToolPanel = new ToolPanel(_editorState._layoutmanager.ToolPanel, this, _editorState);
+            InspectorPanel = new InspectorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState); 
             TagManagerPanel = new TagManagerPanel(_editorState._layoutmanager.tagModalBounds, this, _editorState);
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
         }
@@ -82,6 +84,7 @@ namespace Pixel_Simulations.UI
             TopPanel.Draw(spriteBatch);
             TilesetPanel.Draw(spriteBatch);
             ToolPanel.Draw(spriteBatch);
+            InspectorPanel.Draw(spriteBatch);
             LayerPanel.Draw(spriteBatch);
             if (_editorState.IsTagManagerOpen)
                 TagManagerPanel.Draw(spriteBatch);
@@ -100,9 +103,16 @@ namespace Pixel_Simulations.UI
         }
         public void SetFocus(UIElement element)
         {
-            if (FocusedElement != null) FocusedElement.IsFocused = false;
-            FocusedElement = element;
-            if (FocusedElement != null) FocusedElement.IsFocused = true;
+            // 1. Unfocus the old element
+            if (_editorState.UI.FocusedElement != null)
+                _editorState.UI.FocusedElement.IsFocused = false;
+
+            // 2. Update the central state
+            _editorState.UI.FocusedElement = element;
+
+            // 3. Focus the new element
+            if (_editorState.UI.FocusedElement != null)
+                _editorState.UI.FocusedElement.IsFocused = true;
         }
 
         public void CheckFocusClick(UIElement root, EditorInputState input)
@@ -110,8 +120,14 @@ namespace Pixel_Simulations.UI
             if (!input.IsNewLeftClick) return;
 
             var hit = FindElementAt(root, input.MouseWindowPosition);
-            if (hit is UITextBox) SetFocus(hit);
-            else if (hit == null || !(hit is UIButton)) SetFocus(null); // Clicked dead space
+
+            // If we clicked a textbox, focus it. 
+            // If we clicked empty space (null) or a simple Panel/Label, unfocus.
+            // (We don't unfocus if we click a UIButton, so we can click "Save" while still typing!)
+            if (hit is UITextBox)
+                SetFocus(hit);
+            else if (hit == null || !(hit is UIButton))
+                SetFocus(null);
         }
 
         private UIElement FindElementAt(UIElement element, Vector2 mousePos)
@@ -135,8 +151,10 @@ namespace Pixel_Simulations.UI
         public Rectangle TilesetPanel { get; private set; }
         public Rectangle LayerPanel { get; private set; }
         public Rectangle ToolPanel { get; private set; }
+        public Rectangle InspectorPanel { get; private set; }
         public Rectangle TopPanel { get; private set; }
         public Rectangle tagModalBounds { get; set; }
+        public Rectangle prefabModalBounds { get; set; }
 
         // A dictionary to easily look up panel names
         public readonly Dictionary<string, Rectangle> _panels = new Dictionary<string, Rectangle>();
@@ -151,7 +169,7 @@ namespace Pixel_Simulations.UI
             int tilesetWidth = 400;
             int layerWidth = 80;
             int topPanelHeight = 60;
-            int toolPanelHeight = 120;
+            int inspectorHeight = 180; // Big, spacious bottom panel
 
             UpscaleFactor = editorUpscaler.Scale;
             // Calculate the positions and sizes
@@ -159,13 +177,14 @@ namespace Pixel_Simulations.UI
             //ToolPanel = new Rectangle(tilesetWidth, windowHeight - toolPanelHeight, windowWidth - tilesetWidth - layerWidth, toolPanelHeight);
             //TilesetPanel = new Rectangle(0, 0, tilesetWidth, windowHeight);
             //LayerPanel = new Rectangle(windowWidth - layerWidth, 0, layerWidth, windowHeight);
-            
-            TopPanel = new Rectangle(tilesetWidth, 0, ViewW, topPanelHeight);
-            ToolPanel = new Rectangle(tilesetWidth, windowHeight - toolPanelHeight, windowWidth, toolPanelHeight);
 
+            TopPanel = new Rectangle(tilesetWidth, 0, 400, topPanelHeight);
+            ToolPanel = new Rectangle(tilesetWidth + 400, 0, ViewW - 400, topPanelHeight);
             TilesetPanel = new Rectangle(0, 0, tilesetWidth, windowHeight);
-            LayerPanel = new Rectangle(tilesetWidth + ViewW, 0, windowWidth - tilesetWidth - ViewW, windowHeight - toolPanelHeight);
+            InspectorPanel = new Rectangle(tilesetWidth, windowHeight - inspectorHeight, windowWidth - tilesetWidth, inspectorHeight);
+            LayerPanel = new Rectangle(tilesetWidth + ViewW, 0, windowWidth - tilesetWidth - ViewW, windowHeight - inspectorHeight);
             tagModalBounds = new Rectangle(WindowBounds.Center.X - 250,WindowBounds.Center.Y - 275,500, 550);
+            prefabModalBounds = new Rectangle(tilesetWidth, topPanelHeight, ViewW + LayerPanel.Width, ViewH);
             ViewportPanel = new Rectangle(
                 tilesetWidth,
                 topPanelHeight,
@@ -179,6 +198,7 @@ namespace Pixel_Simulations.UI
             _panels["Top"] = TopPanel;
             _panels["Tool"] = ToolPanel;
             _panels["Viewport"] = ViewportPanel;
+            _panels["Inspector"] = InspectorPanel;
         }
 
         /// <summary>
