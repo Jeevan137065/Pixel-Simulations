@@ -1,12 +1,13 @@
 ﻿using Clipper2Lib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions.Layers;
 using MonoGame.Extended.Particles.Modifiers;
-using Pixel_Simulations.Editor;
 using Pixel_Simulations;
+using Pixel_Simulations.Editor;
 using Pixel_Simulations.UI;
 using System;
 using System.Collections;
@@ -273,7 +274,7 @@ namespace Pixel_Simulations.Data
         public bool _isDrawing = false;
         public bool Mode = false;
         public string Name => "FreeRectangle";
-        public string IconName { get; set; } = "GridRectangle";
+        public string IconName { get; set; } = "FreeRectangle";
         private Vector2 _startWorldPos;
 
         private float Zoom = 1f;
@@ -951,4 +952,281 @@ namespace Pixel_Simulations.Data
             sb.DrawLine(_startWorldPos - new Vector2(0, 4), _startWorldPos + new Vector2(0, 4), Color.Yellow, 1f / input.Zoom);
         }
     }
+    public enum PaintChannel { R_Biome, G_SpawnType, B_Elevation, A_SpawnIndex }
+    public class TerrainBrushTool : ITool
+    {
+        public string Name => "TerrainBrush";
+        public string IconName { get; set; } = "TerrainBrush";
+
+        public float BrushRadius { get; set; } = 32f;
+        public int TargetValue { get; set; } = 128; // The 0-255 value for the active channel
+        public PaintChannel ActiveChannel { get; set; } = PaintChannel.B_Elevation;
+
+        // "Normalized" elevation (0.0 to 1.0) so we can apply the Bell Curve math smoothly
+        private float _normalizedElevation = 0.5f;
+
+        private bool _isDrawing = false;
+        private Texture2D _brushTexture;
+        private bool _brushNeedsUpdate = true;
+        private string _lastNoiseName = "None";
+
+        private Dictionary<Point, Color[]> _strokeBefore;
+        private HashSet<Point> _touchedChunksThisStroke;
+
+        private static readonly BlendState PaintRed = new BlendState { ColorSourceBlend = Blend.SourceAlpha, ColorDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Red };
+        private static readonly BlendState PaintGreen = new BlendState { ColorSourceBlend = Blend.SourceAlpha, ColorDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Green };
+        private static readonly BlendState PaintBlue = new BlendState { ColorSourceBlend = Blend.SourceAlpha, ColorDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Blue };
+        private static readonly BlendState PaintAlpha = new BlendState { AlphaSourceBlend = Blend.SourceAlpha, AlphaDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Alpha };
+
+        private static readonly BlendState EraseChannel = new BlendState
+        {
+            ColorSourceBlend = Blend.Zero,
+            ColorDestinationBlend = Blend.Zero,
+            ColorBlendFunction = BlendFunction.Add,
+            AlphaSourceBlend = Blend.Zero,
+            AlphaDestinationBlend = Blend.Zero,
+            AlphaBlendFunction = BlendFunction.Add
+        };
+
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
+        {
+            if (!(toolInput.ActiveLayer is MaskLayer maskLayer)) return;
+
+            var kbs = input.CurrentKeyboard;
+            bool shift = kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift);
+            bool isErasing = kbs.IsKeyDown(Keys.LeftControl) || kbs.IsKeyDown(Keys.RightControl);
+
+            if (_lastNoiseName != editorState.noiseManager.ActiveNoiseName)
+            {
+                _lastNoiseName = editorState.noiseManager.ActiveNoiseName;
+                _brushNeedsUpdate = true;
+            }
+
+            // --- CONTROLS ---
+            if (kbs.IsKeyDown(Keys.OemCloseBrackets)) // ']'
+            {
+                if (shift) BrushRadius = MathHelper.Clamp(BrushRadius + 2f, 8f, 256f);
+                else AdjustValue(true);
+                _brushNeedsUpdate = true;
+            }
+            if (kbs.IsKeyDown(Keys.OemOpenBrackets)) // '['
+            {
+                if (shift) BrushRadius = MathHelper.Clamp(BrushRadius - 2f, 8f, 256f);
+                else AdjustValue(false);
+                _brushNeedsUpdate = true;
+            }
+
+            // --- STROKE TRACKING ---
+            if (input.LeftHold)
+            {
+                if (!_isDrawing)
+                {
+                    _isDrawing = true;
+                    _strokeBefore = new Dictionary<Point, Color[]>();
+                    _touchedChunksThisStroke = new HashSet<Point>();
+                }
+                PaintOnMask(maskLayer, input.MouseWorldPosition, editorState, isErasing);
+            }
+            else if (_isDrawing)
+            {
+                _isDrawing = false;
+                if (_touchedChunksThisStroke != null && _touchedChunksThisStroke.Count > 0)
+                {
+                    var strokeAfter = new Dictionary<Point, Color[]>();
+                    foreach (var chunkCoord in _touchedChunksThisStroke)
+                    {
+                        Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                        maskLayer.Chunks[chunkCoord].GetData(data);
+                        strokeAfter[chunkCoord] = data;
+                    }
+                    eventBus.Publish(new PaintMaskCommand(maskLayer, _strokeBefore, strokeAfter, editorState._graphics));
+                }
+                _strokeBefore = null;
+                _touchedChunksThisStroke = null;
+            }
+        }
+        private float SmootherStep(float x) => x * x * x * (x * (x * 6 - 15) + 10);
+        private void AdjustValue(bool increase)
+        {
+            if (ActiveChannel == PaintChannel.B_Elevation)
+            {
+                // Move the normalized value slightly
+                _normalizedElevation += increase ? 0.005f : -0.005f;
+                _normalizedElevation = MathHelper.Clamp(_normalizedElevation, 0f, 1f);
+
+                // Apply a Sigmoid Curve (Bell Curve Integral)
+                // This makes values near 0.5 expand slowly, and values near 0 or 1 snap quickly.
+                float curve = SmootherStep(_normalizedElevation);
+                TargetValue = (int)Math.Round(curve * 255f);
+            }
+            else
+            {
+                // Linear adjustment for Biomes, Spawn Types, etc.
+                TargetValue = MathHelper.Clamp(TargetValue + (increase ? 1 : -1), 0, 255);
+            }
+        }
+        private void PaintOnMask(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
+        {
+            var gd = es._graphics;
+            EnsureBrushTexture(gd, es.noiseManager);
+
+            float r = BrushRadius;
+            int minChunkX = (int)Math.Floor((worldPos.X - r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int maxChunkX = (int)Math.Floor((worldPos.X + r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int minChunkY = (int)Math.Floor((worldPos.Y - r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int maxChunkY = (int)Math.Floor((worldPos.Y + r) / MaskLayer.CHUNK_PIXEL_SIZE);
+
+            var prevTargets = gd.GetRenderTargets();
+
+            using (var sb = new SpriteBatch(gd))
+            {
+                for (int y = minChunkY; y <= maxChunkY; y++)
+                {
+                    for (int x = minChunkX; x <= maxChunkX; x++)
+                    {
+                        Point chunkCoord = new Point(x, y);
+                        var chunkRT = layer.GetOrCreateChunk(chunkCoord, gd);
+
+                        if (!_touchedChunksThisStroke.Contains(chunkCoord))
+                        {
+                            Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                            chunkRT.GetData(data);
+                            _strokeBefore[chunkCoord] = data;
+                            _touchedChunksThisStroke.Add(chunkCoord);
+                        }
+
+                        Vector2 localPos = new Vector2(worldPos.X - (x * MaskLayer.CHUNK_PIXEL_SIZE), worldPos.Y - (y * MaskLayer.CHUNK_PIXEL_SIZE));
+                        gd.SetRenderTarget(chunkRT);
+
+                        // Select the correct Blend State based on the active channel
+                        BlendState activeState = ActiveChannel switch
+                        {
+                            PaintChannel.R_Biome => PaintRed,
+                            PaintChannel.G_SpawnType => PaintGreen,
+                            PaintChannel.B_Elevation => PaintBlue,
+                            PaintChannel.A_SpawnIndex => PaintAlpha,
+                            _ => PaintBlue
+                        };
+
+                        // If erasing, we override the ColorWriteChannels to act as an eraser for the specific channel
+                        if (isErasing)
+                        {
+                            activeState = new BlendState
+                            {
+                                ColorSourceBlend = Blend.Zero,
+                                ColorDestinationBlend = Blend.Zero,
+                                ColorBlendFunction = BlendFunction.Add,
+                                AlphaSourceBlend = Blend.Zero,
+                                AlphaDestinationBlend = Blend.Zero,
+                                AlphaBlendFunction = BlendFunction.Add,
+                                ColorWriteChannels = activeState.ColorWriteChannels // Preserve channel isolation!
+                            };
+                        }
+
+                        sb.Begin(blendState: activeState);
+                        int val = isErasing ? 0 : TargetValue;
+                        Color paintColor = new Color(val, val, val, val);
+
+                        Vector2 origin = new Vector2(_brushTexture.Width / 2f, _brushTexture.Height / 2f);
+                        sb.Draw(_brushTexture, localPos, null, paintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
+
+                        sb.End();
+                    }
+                }
+            }
+
+            gd.SetRenderTargets(prevTargets);
+        }
+
+        private void EnsureBrushTexture(GraphicsDevice gd, NoiseManager nm)
+        {
+            if (!_brushNeedsUpdate && _brushTexture != null) return;
+
+            int diameter = (int)(BrushRadius * 2);
+            if (diameter < 1) diameter = 1;
+
+            if (_brushTexture != null && _brushTexture.Width != diameter)
+            {
+                _brushTexture.Dispose();
+                _brushTexture = null;
+            }
+
+            if (_brushTexture == null) _brushTexture = new Texture2D(gd, diameter, diameter);
+            Color[] data = new Color[diameter * diameter];
+
+            Texture2D noiseTex = nm.GetActiveNoise();
+            Color[] noiseData = null;
+            if (noiseTex != null)
+            {
+                noiseData = new Color[noiseTex.Width * noiseTex.Height];
+                noiseTex.GetData(noiseData);
+            }
+
+            float radius = diameter / 2f;
+            Vector2 center = new Vector2(radius, radius);
+            float noiseAmplitude = 50f; // How much the noise swings the value up or down
+
+            for (int y = 0; y < diameter; y++)
+            {
+                for (int x = 0; x < diameter; x++)
+                {
+                    float dist = Vector2.Distance(center, new Vector2(x, y));
+                    if (dist <= radius)
+                    {
+                        int pixelValue = TargetValue;
+
+                        if (noiseData != null && ActiveChannel == PaintChannel.B_Elevation)
+                        {
+                            int nx = x % noiseTex.Width;
+                            int ny = y % noiseTex.Height;
+                            float noiseVal = noiseData[nx + ny * noiseTex.Width].R / 255f;
+
+                            // --- YOUR EXACT FORMULA ---
+                            // b + 50 * (noise - 0.5)
+                            float offset = (noiseVal - 0.5f) * noiseAmplitude;
+                            pixelValue = (int)MathHelper.Clamp(TargetValue + offset, 0, 255);
+                        }
+
+                        // Alpha 255 ensures a hard overwrite using SourceAlpha blending.
+                        data[x + y * diameter] = new Color(pixelValue, pixelValue, pixelValue, 255);
+                    }
+                    else
+                    {
+                        data[x + y * diameter] = Color.Transparent;
+                    }
+                }
+            }
+
+            _brushTexture.SetData(data);
+            _brushNeedsUpdate = false;
+        }
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            if (!(toolInput.ActiveLayer is MaskLayer)) return;
+
+            bool isErasing = input.CurrentKeyboard.IsKeyDown(Keys.LeftControl) || input.CurrentKeyboard.IsKeyDown(Keys.RightControl);
+
+            // Change cursor color based on active channel!
+            Color cursorColor = ActiveChannel switch
+            {
+                PaintChannel.R_Biome => Color.Red,
+                PaintChannel.G_SpawnType => Color.LimeGreen,
+                PaintChannel.B_Elevation => Color.DeepSkyBlue,
+                PaintChannel.A_SpawnIndex => Color.White,
+                _ => Color.Cyan
+            };
+            if (isErasing) cursorColor = Color.Magenta;
+
+            sb.DrawCircle(input.MouseWorldPosition, BrushRadius, 32, cursorColor, 2f / input.Zoom);
+
+            Vector2 textPos = input.MouseWorldPosition + new Vector2(BrushRadius + 10, -10) / input.Zoom;
+            string modeText = isErasing ? "ERASE ALL" : $"{ActiveChannel}: {TargetValue}";
+
+            sb.DrawString(UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            sb.DrawString(UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+        }
+
+        public string GetShortcutHints() => "[ / ]: Adjust Value | SHIFT + [ / ]: Radius | CTRL: Erase All Channels";
+    }
 }
+

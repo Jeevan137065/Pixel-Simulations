@@ -1,182 +1,272 @@
-﻿public class TilesetPanel : BasePanel
+﻿public class TerrainBrushTool : ITool
     {
-        private readonly PopupWindow _atlasPickerPopup;
-        private readonly Button _addTilesetButton;
-        private const int MARGIN = 8;
-        private const int DISPLAY_TILE_SIZE = 32;
-        private const int TILESET_LIST_ITEM_HEIGHT = 20;
-        private const int TILESET_LIST_ITEM_WIDTH = 40;
-        private const int TILE_DISPLAY_MARGIN = 8;
-        private const int TILE_DISPLAY_SIZE = 32;
-        public enum Tab { Tiles, Objects } // Enum for managing the tab state
-        private Tab _activeTab = Tab.Tiles; // The currently active tab
+        public string Name => "TerrainBrush";
+        public string IconName { get; set; } = "TerrainBrush";
 
-        private Rectangle _tilesetListArea; // Area for listing the tileset names
-        private Rectangle _tileDisplayArea; // Area for displaying the tiles of the selected tileset
-        private float _scrollOffset = 0;
-        public int SelectedTileID { get; private set; } = -1;
-        public Point HoveredTileCell { get; private set; } = new Point(-1, -1); // For debug info
+        public float BrushRadius { get; set; } = 32f;
+        public int TargetValue { get; set; } = 128; // The 0-255 value for the active channel
+        public PaintChannel ActiveChannel { get; set; } = PaintChannel.B_Elevation;
 
-        // Constants for layout
-        
-        public TilesetPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
-            : base(area, editorUI, editorState)
+        // "Normalized" elevation (0.0 to 1.0) so we can apply the Bell Curve math smoothly
+        private float _normalizedElevation = 0.5f;
+
+        private bool _isDrawing = false;
+        private Texture2D _brushTexture;
+        private bool _brushNeedsUpdate = true;
+        private string _lastNoiseName = "None";
+
+        private Dictionary<Point, Color[]> _strokeBefore;
+        private HashSet<Point> _touchedChunksThisStroke;
+
+        // Custom Blend State to ERASE from a RenderTarget
+        private static readonly BlendState PaintRed = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Red };
+        private static readonly BlendState PaintGreen = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Green };
+        private static readonly BlendState PaintBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Blue };
+        private static readonly BlendState PaintAlpha = new BlendState { AlphaSourceBlend = Blend.One, AlphaDestinationBlend = Blend.One, AlphaBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Alpha };
+
+        // Erasing punches a hole in ALL channels to reset the mask to 0
+        private static readonly BlendState EraseAll = new BlendState
         {
-            _tileDisplayArea = new Rectangle(Area.X + MARGIN, Area.Y + MARGIN, Area.Width - 2* MARGIN, Area.Height - TILE_DISPLAY_SIZE - 2* MARGIN);
-            _tilesetListArea = new Rectangle(Area.X + MARGIN + TILE_DISPLAY_SIZE, Area.Height - MARGIN - 32 , Area.Width - 2*TILE_DISPLAY_MARGIN - DISPLAY_TILE_SIZE , DISPLAY_TILE_SIZE);
-            _addTilesetButton = new Button(new Rectangle(_tilesetListArea.X - TILE_DISPLAY_SIZE, _tilesetListArea.Y, _tilesetListArea.Height, _tilesetListArea.Height),new CreateTilesetCommand { AtlasName = "ShowAtlasPicker" }, "New");
-        }
+            ColorBlendFunction = BlendFunction.Add,
+            ColorSourceBlend = Blend.Zero,
+            ColorDestinationBlend = Blend.Zero,
+            AlphaBlendFunction = BlendFunction.Add,
+            AlphaSourceBlend = Blend.Zero,
+            AlphaDestinationBlend = Blend.Zero
+        };
 
-
-        public override void Update(InputState input, EventBus bus)
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
-            // Reset hover state for this frame.
-            HoveredTileCell = new Point(-1, -1);
-            var panelState = EditorState.TilesetPanel; // Get the relevant state object
+            if (!(toolInput.ActiveLayer is MaskLayer maskLayer)) return;
 
-            if (!Area.Contains(input.MouseWindowPosition)) return;
+            var kbs = input.CurrentKeyboard;
+            bool shift = kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift);
+            bool isErasing = kbs.IsKeyDown(Keys.LeftControl) || kbs.IsKeyDown(Keys.RightControl);
 
-            // --- Tab Interaction ---
-            if (_tileDisplayArea.Contains(input.MouseWindowPosition))   { _activeTab = Tab.Tiles;}
-            else    { _activeTab = Tab.Objects;}
-
-            if (_activeTab == Tab.Tiles)
+            if (_lastNoiseName != editorState.noiseManager.ActiveNoiseName)
             {
-                // Handle Scrolling in the tile display area
-                if (_tileDisplayArea.Contains(input.MouseWindowPosition))
+                _lastNoiseName = editorState.noiseManager.ActiveNoiseName;
+                _brushNeedsUpdate = true;
+            }
+
+            // --- CONTROLS ---
+            if (kbs.IsKeyDown(Keys.OemCloseBrackets)) // ']'
+            {
+                if (shift) BrushRadius = MathHelper.Clamp(BrushRadius + 2f, 8f, 256f);
+                else AdjustValue(true);
+                _brushNeedsUpdate = true;
+            }
+            if (kbs.IsKeyDown(Keys.OemOpenBrackets)) // '['
+            {
+                if (shift) BrushRadius = MathHelper.Clamp(BrushRadius - 2f, 8f, 256f);
+                else AdjustValue(false);
+                _brushNeedsUpdate = true;
+            }
+
+            // --- STROKE TRACKING ---
+            if (input.LeftHold)
+            {
+                if (!_isDrawing)
                 {
-                    int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
-                    if (scrollDelta != 0)
-                    {
-                        _scrollOffset -= scrollDelta * 0.5f;
-                        // Clamp scroll offset later with _maxScroll
-                    }
-               
-                    var activeTileset = EditorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
-                    if (activeTileset != null)
-                    {
-                        int tilesPerRow = _tileDisplayArea.Width / TILE_DISPLAY_SIZE;
-                        if (tilesPerRow > 0)
-                        {
-                            int relX = (int)input.MouseWindowPosition.X - _tileDisplayArea.X;
-                            int relY = (int)input.MouseWindowPosition.Y - _tileDisplayArea.Y + (int)_scrollOffset;
-                            int col = relX / TILE_DISPLAY_SIZE;
-                            int row = relY / TILE_DISPLAY_SIZE;
-                            HoveredTileCell = new Point(col, row);
-
-                            if (input.IsNewLeftClick())
-                            {
-                                int tileIndex = row * tilesPerRow + col;
-                                if (relX >= 0 && col < tilesPerRow && tileIndex >= 0 && tileIndex < activeTileset.SlicedAtlas.Count)
-                                {
-                                    // Fire an event to tell the controller to change the selected tile
-                                    int tileId = activeTileset.SlicedAtlas.Keys.ElementAt(tileIndex);
-                                    UIEvents.OnTileSelected(activeTileset.Name, tileId);
-                                }
-                            }
-                        }
-                    }
+                    _isDrawing = true;
+                    _strokeBefore = new Dictionary<Point, Color[]>();
+                    _touchedChunksThisStroke = new HashSet<Point>();
                 }
+                PaintOnMask(maskLayer, input.MouseWorldPosition, editorState, isErasing);
             }
-            else if(_activeTab == Tab.Objects)
+            else if (_isDrawing)
             {
-                _addTilesetButton.Update(input, bus);
-                // Handle Hovering and Clicking
-                if (_tilesetListArea.Contains(input.MouseWindowPosition))
+                _isDrawing = false;
+                if (_touchedChunksThisStroke != null && _touchedChunksThisStroke.Count > 0)
                 {
-                    if (input.IsNewLeftClick())
+                    var strokeAfter = new Dictionary<Point, Color[]>();
+                    foreach (var chunkCoord in _touchedChunksThisStroke)
                     {
-                        int index = (int)((input.MouseWindowPosition.Y - _tilesetListArea.Y) / TILESET_LIST_ITEM_HEIGHT);
-                        if (index >= 0 && index < EditorState.ActiveTileSets.Count)
-                        {
-                            // Fire an event to tell the controller to change the active tileset
-                            UIEvents.OnTilesetSelected(EditorState.ActiveTileSets[index].Name);
-                        }
+                        Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                        maskLayer.Chunks[chunkCoord].GetData(data);
+                        strokeAfter[chunkCoord] = data;
                     }
+                    eventBus.Publish(new PaintMaskCommand(maskLayer, _strokeBefore, strokeAfter, editorState._graphics));
                 }
+                _strokeBefore = null;
+                _touchedChunksThisStroke = null;
             }
         }
-
-        public override void Draw(SpriteBatch sb)
+        private float SmootherStep(float x) => x * x * x * (x * (x * 6 - 15) + 10);
+        private void AdjustValue(bool increase)
         {
-            sb.FillRectangle(Area, Color.DarkSlateGray);
-            _addTilesetButton.Draw(sb, EditorUI);
-            if (EditorState.ShowDebug) 
-            { 
-                sb.DrawRectangle(_tilesetListArea, Color.Black);
-                sb.DrawRectangle(_tileDisplayArea, Color.White);
-            }
-
-            var panelState = EditorState.TilesetPanel;
-            var font = EditorUI.DebugFont; // Assuming EditorUI has the font
-
-            // Draw list of active tilesets
-            int xOffset = 40;
-            foreach (var tileset in EditorState.ActiveTileSets)
+            if (ActiveChannel == PaintChannel.B_Elevation)
             {
-                Color color = (tileset.Name == panelState.ActiveTilesetName) ? Color.Yellow : Color.White;
-                sb.DrawString(font, tileset.Name, new Vector2(_addTilesetButton.Bounds.X + xOffset, _addTilesetButton.Bounds.Y), color);
-                xOffset += TILESET_LIST_ITEM_WIDTH;
-            }
+                // Move the normalized value slightly
+                _normalizedElevation += increase ? 0.005f : -0.005f;
+                _normalizedElevation = MathHelper.Clamp(_normalizedElevation, 0f, 1f);
 
-            // Draw the divider
-            int dividerY = Area.Y; // Fixed position for the divider
-            sb.DrawLine(Area.X, dividerY, Area.Right, dividerY, Color.Black);
-
-            // Draw the tiles from the active tileset
-            var activeTileset = EditorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == panelState.ActiveTilesetName);
-            if (activeTileset != null)
-            {
-                // Scissor rect logic here to clip the tile display
-                // ...
-
-                int tilesPerRow = _tileDisplayArea.Width / TILE_DISPLAY_SIZE;
-                int index = 0;
-                foreach (var tilePair in activeTileset.SlicedAtlas.OrderBy(p => p.Key))
-                {
-                    int col = index % tilesPerRow;
-                    int row = index / tilesPerRow;
-                    var destRect = new Rectangle(
-                        _tileDisplayArea.X + col * TILE_DISPLAY_SIZE,
-                        _tileDisplayArea.Y + row * TILE_DISPLAY_SIZE, // - (int)_scrollOffset,
-                        TILE_DISPLAY_SIZE, TILE_DISPLAY_SIZE);
-
-                    sb.Draw(tilePair.Value, destRect, Color.White);
-                    sb.DrawRectangle(destRect, Color.Black * 0.5f, 1);
-
-                    if (tilePair.Key == panelState.SelectedTileID)
-                        sb.DrawRectangle(destRect, Color.Yellow, 2);
-
-                    index++;
-                }
-            }
-
-            // Draw popup if it's active
-            if (panelState.IsAtlasPickerVisible)
-            {
-                _atlasPickerPopup?.Draw(sb, font);
-            }
-        }
-        private void HandleTileSelection(string tilesetName, int tileId)
-        {
-            var panelState = EditorState.TilesetPanel;
-            panelState.ActiveTilesetName = tilesetName;
-            panelState.SelectedTileID = tileId;
-
-            // The selection state's brush is now just a new TileInfo object.
-            EditorState.Selection.ActiveTileBrush = new TileInfo(tilesetName, tileId);
-        }
-        private void UpdateActiveBrush()
-        {
-            var _selectedTileID = EditorState.TilesetPanel.SelectedTileID;
-            var _selectedTileset = EditorState.TilesetPanel.TilesetNames;
-            if (_selectedTileset != null && _selectedTileID != -1)
-            {
-                EditorState.Selection.ActiveTileBrush = new TileInfo(_selectedTileset[SelectedTileID], _selectedTileID);
+                // Apply a Sigmoid Curve (Bell Curve Integral)
+                // This makes values near 0.5 expand slowly, and values near 0 or 1 snap quickly.
+                float curve = SmootherStep(_normalizedElevation);
+                TargetValue = (int)Math.Round(curve * 255f);
             }
             else
             {
-                EditorState.Selection.ActiveTileBrush = null; // Set to null if nothing is selected
+                // Linear adjustment for Biomes, Spawn Types, etc.
+                TargetValue = MathHelper.Clamp(TargetValue + (increase ? 1 : -1), 0, 255);
             }
         }
+        private void PaintOnMask(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
+        {
+            var gd = es._graphics;
+            EnsureBrushTexture(gd, es.noiseManager);
+
+            float r = BrushRadius;
+            int minChunkX = (int)Math.Floor((worldPos.X - r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int maxChunkX = (int)Math.Floor((worldPos.X + r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int minChunkY = (int)Math.Floor((worldPos.Y - r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int maxChunkY = (int)Math.Floor((worldPos.Y + r) / MaskLayer.CHUNK_PIXEL_SIZE);
+
+            var prevTargets = gd.GetRenderTargets();
+
+            using (var sb = new SpriteBatch(gd))
+            {
+                for (int y = minChunkY; y <= maxChunkY; y++)
+                {
+                    for (int x = minChunkX; x <= maxChunkX; x++)
+                    {
+                        Point chunkCoord = new Point(x, y);
+                        var chunkRT = layer.GetOrCreateChunk(chunkCoord, gd);
+
+                        if (!_touchedChunksThisStroke.Contains(chunkCoord))
+                        {
+                            Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                            chunkRT.GetData(data);
+                            _strokeBefore[chunkCoord] = data;
+                            _touchedChunksThisStroke.Add(chunkCoord);
+                        }
+
+                        Vector2 localPos = new Vector2(worldPos.X - (x * MaskLayer.CHUNK_PIXEL_SIZE), worldPos.Y - (y * MaskLayer.CHUNK_PIXEL_SIZE));
+                        gd.SetRenderTarget(chunkRT);
+
+                        // Select the correct Blend State based on the active channel
+                        BlendState activeState = ActiveChannel switch
+                        {
+                            PaintChannel.R_Biome => PaintRed,
+                            PaintChannel.G_SpawnType => PaintGreen,
+                            PaintChannel.B_Elevation => PaintBlue,
+                            PaintChannel.A_SpawnIndex => PaintAlpha,
+                            _ => PaintBlue
+                        };
+
+                        sb.Begin(blendState: activeState);
+
+                        // If erasing, push ZERO to the channel. If painting, push White (which preserves the brush's baked pixelValue).
+                        Color tintColor = isErasing ? new Color(0, 0, 0, 255) : Color.White;
+
+                        Vector2 origin = new Vector2(_brushTexture.Width / 2f, _brushTexture.Height / 2f);
+                        sb.Draw(_brushTexture, localPos, null, tintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
+
+                        sb.End();
+                    }
+                }
+            }
+
+            gd.SetRenderTargets(prevTargets);
+        }
+
+        private void EnsureBrushTexture(GraphicsDevice gd, NoiseManager nm)
+        {
+            if (!_brushNeedsUpdate && _brushTexture != null) return;
+
+            int diameter = (int)(BrushRadius * 2);
+            if (diameter < 1) diameter = 1;
+
+            if (_brushTexture != null && _brushTexture.Width != diameter)
+            {
+                _brushTexture.Dispose();
+                _brushTexture = null;
+            }
+
+            if (_brushTexture == null) _brushTexture = new Texture2D(gd, diameter, diameter);
+            Color[] data = new Color[diameter * diameter];
+
+            Texture2D noiseTex = nm.GetActiveNoise();
+            Color[] noiseData = null;
+            if (noiseTex != null)
+            {
+                noiseData = new Color[noiseTex.Width * noiseTex.Height];
+                noiseTex.GetData(noiseData);
+            }
+
+            float radius = diameter / 2f;
+            Vector2 center = new Vector2(radius, radius);
+            float noiseAmplitude = 50f; // How much the noise swings the value up or down
+
+            for (int y = 0; y < diameter; y++)
+            {
+                for (int x = 0; x < diameter; x++)
+                {
+                    float dist = Vector2.Distance(center, new Vector2(x, y));
+                    if (dist <= radius)
+                    {
+                        int pixelValue = TargetValue;
+                        float noiseVal = 1f;
+
+                        if (noiseData != null)
+                        {
+                            int nx = x % noiseTex.Width;
+                            int ny = y % noiseTex.Height;
+                            // Normalized 0.0 to 1.0
+                            noiseVal = noiseData[nx + ny * noiseTex.Width].R / 255f;
+
+                            // --- NEW: BAKE NOISE INTO VALUE (Only for Elevation/Blue) ---
+                            if (ActiveChannel == PaintChannel.B_Elevation)
+                            {
+                                // Shift noise to (-0.5 to +0.5) and multiply by amplitude
+                                float offset = (noiseVal - 0.5f) * 2f * noiseAmplitude;
+                                pixelValue = (int)MathHelper.Clamp(TargetValue + offset, 0, 255);
+                            }
+                        }
+
+                        // If we aren't using noise on this channel, the alpha is solid 255.
+                        // If we ARE using noise, but it's NOT Blue, the noise drives the Alpha (transparency).
+                        byte alpha = (ActiveChannel == PaintChannel.B_Elevation) ? (byte)255 : (byte)(255f * noiseVal);
+
+                        // The tint color sets ALL channels. The BlendState filters it later!
+                        data[x + y * diameter] = new Color(pixelValue, pixelValue, pixelValue, alpha);
+                    }
+                    else
+                    {
+                        data[x + y * diameter] = Color.Transparent;
+                    }
+                }
+            }
+
+            _brushTexture.SetData(data);
+            _brushNeedsUpdate = false;
+        }
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            if (!(toolInput.ActiveLayer is MaskLayer)) return;
+
+            bool isErasing = input.CurrentKeyboard.IsKeyDown(Keys.LeftControl) || input.CurrentKeyboard.IsKeyDown(Keys.RightControl);
+
+            // Change cursor color based on active channel!
+            Color cursorColor = ActiveChannel switch
+            {
+                PaintChannel.R_Biome => Color.Red,
+                PaintChannel.G_SpawnType => Color.LimeGreen,
+                PaintChannel.B_Elevation => Color.DeepSkyBlue,
+                PaintChannel.A_SpawnIndex => Color.White,
+                _ => Color.Cyan
+            };
+            if (isErasing) cursorColor = Color.Magenta;
+
+            sb.DrawCircle(input.MouseWorldPosition, BrushRadius, 32, cursorColor, 2f / input.Zoom);
+
+            Vector2 textPos = input.MouseWorldPosition + new Vector2(BrushRadius + 10, -10) / input.Zoom;
+            string modeText = isErasing ? "ERASE ALL" : $"{ActiveChannel}: {TargetValue}";
+
+            sb.DrawString(UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            sb.DrawString(UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+        }
+
+        public string GetShortcutHints() => "[ / ]: Adjust Value | SHIFT + [ / ]: Radius | CTRL: Erase All Channels";
     }

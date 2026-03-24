@@ -60,11 +60,12 @@ namespace Pixel_Simulations.UI
         {
             get
             {
-                int x = (int)LocalPosition.X + (Parent?.AbsoluteBounds.X ?? 0);
-                int y = (int)LocalPosition.Y + (Parent?.AbsoluteBounds.Y ?? 0);
-                return new Rectangle(x, y, (int)Size.X, (int)Size.Y);
+                float px = Parent != null ? Parent.AbsoluteBounds.X - Parent.ScrollOffset.X : 0;
+                float py = Parent != null ? Parent.AbsoluteBounds.Y - Parent.ScrollOffset.Y : 0;
+                return new Rectangle((int)(LocalPosition.X + px), (int)(LocalPosition.Y + py), (int)Size.X, (int)Size.Y);
             }
         }
+
 
         public void AddChild(UIElement child)
         {
@@ -115,16 +116,15 @@ namespace Pixel_Simulations.UI
             {
                 sb.End();
                 sb.Begin(rasterizerState: new RasterizerState { ScissorTestEnable = true });
-                sb.GraphicsDevice.ScissorRectangle = AbsoluteBounds;
+
+                // Prevent crashing if the bounds are outside the screen
+                var clipRect = Rectangle.Intersect(AbsoluteBounds, sb.GraphicsDevice.Viewport.Bounds);
+                if (clipRect.Width > 0 && clipRect.Height > 0)
+                    sb.GraphicsDevice.ScissorRectangle = clipRect;
             }
 
-            // Apply scroll offset visually to children
-            foreach (var child in Children)
-            {
-                child.LocalPosition -= ScrollOffset; // Temp offset
-                child.Draw(sb, ui, theme);
-                child.LocalPosition += ScrollOffset; // Restore
-            }
+            // Just draw children normally. AbsoluteBounds now handles the scroll shift perfectly.
+            foreach (var child in Children) child.Draw(sb, ui, theme);
 
             if (ClipToBounds)
             {

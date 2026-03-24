@@ -40,8 +40,87 @@ namespace Pixel_Simulations.Data
         private readonly ObjectLayer _targetLayer;
         private readonly MapObject _objectToRemove;
         public RemoveObjectCommand(ObjectLayer layer, MapObject obj) { _targetLayer = layer; _objectToRemove = obj; }
-        public void Execute() { _targetLayer.Objects.Remove(_objectToRemove); }
-        public void Undo() { if (!_targetLayer.Objects.Contains(_objectToRemove)) _targetLayer.Objects.Add(_objectToRemove); }
+
+        public void Execute()
+        {
+            _targetLayer.Objects.Remove(_objectToRemove);
+            if (_targetLayer is ControlLayer cl)
+            {
+                if (_objectToRemove is ShapeObject s) cl.Shapes.Remove(s);
+                else if (_objectToRemove is RectangleObject r) cl.Rectangles.Remove(r);
+                else if (_objectToRemove is PointObject p) cl.Points.Remove(p);
+            }
+        }
+        public void Undo()
+        {
+            _targetLayer.Objects.Add(_objectToRemove);
+            if (_targetLayer is ControlLayer cl)
+            {
+                if (_objectToRemove is ShapeObject s) cl.Shapes.Add(s);
+                else if (_objectToRemove is RectangleObject r) cl.Rectangles.Add(r);
+                else if (_objectToRemove is PointObject p) cl.Points.Add(p);
+            }
+        }
+    }
+    public class TransformObjectCommand : IUndoableCommand
+    {
+        private readonly MapObject _target;
+        private readonly Vector2 _oldPos, _newPos;
+        private readonly Vector2 _oldSize, _newSize;
+
+        public TransformObjectCommand(MapObject target, Vector2 oldPos, Vector2 newPos, Vector2 oldSize, Vector2 newSize)
+        {
+            _target = target;
+            _oldPos = oldPos; _newPos = newPos;
+            _oldSize = oldSize; _newSize = newSize;
+        }
+
+        public void Execute()
+        {
+            _target.Position = _newPos;
+            if (_target is RectangleObject r) r.Size = _newSize;
+            if (_target is ShapeObject s) s.Size = _newSize; // Assuming Shape has a Size for its bounds
+        }
+
+        public void Undo()
+        {
+            _target.Position = _oldPos;
+            if (_target is RectangleObject r) r.Size = _oldSize;
+            if (_target is ShapeObject s) s.Size = _oldSize;
+        }
+    }
+    public class LinkObjectsCommand : IUndoableCommand
+    {
+        private readonly MapObject _source;
+        private readonly MapObject _target;
+
+        public LinkObjectsCommand(MapObject source, MapObject target)
+        {
+            _source = source;
+            _target = target;
+        }
+
+        public void Execute()
+        {
+            if (!_source.LinkedObjects.Contains(_target.ID))
+                _source.LinkedObjects.Add(_target.ID);
+        }
+
+        public void Undo() { _source.LinkedObjects.Remove(_target.ID); }
+    }
+    public class UnlinkObjectCommand : IUndoableCommand
+    {
+        private readonly MapObject _source;
+        private readonly string _targetIdToRemove;
+
+        public UnlinkObjectCommand(MapObject source, string targetId)
+        {
+            _source = source;
+            _targetIdToRemove = targetId;
+        }
+
+        public void Execute() { _source.LinkedObjects.Remove(_targetIdToRemove); }
+        public void Undo() { _source.LinkedObjects.Add(_targetIdToRemove); }
     }
     public class AddRectangleCommand : IUndoableCommand
     {
@@ -136,32 +215,13 @@ namespace Pixel_Simulations.Data
             _target.UpdateBoundsFromVertices();
         }
     }
-    public class TransformObjectCommand : IUndoableCommand
+    public class AddPointCommand : IUndoableCommand
     {
-        private readonly MapObject _target;
-        private readonly Vector2 _oldPos, _newPos;
-        private readonly Vector2 _oldSize, _newSize;
-
-        public TransformObjectCommand(MapObject target, Vector2 oldPos, Vector2 newPos, Vector2 oldSize, Vector2 newSize)
-        {
-            _target = target;
-            _oldPos = oldPos; _newPos = newPos;
-            _oldSize = oldSize; _newSize = newSize;
-        }
-
-        public void Execute()
-        {
-            _target.Position = _newPos;
-            if (_target is RectangleObject r) r.Size = _newSize;
-            if (_target is ShapeObject s) s.Size = _newSize; // Assuming Shape has a Size for its bounds
-        }
-
-        public void Undo()
-        {
-            _target.Position = _oldPos;
-            if (_target is RectangleObject r) r.Size = _oldSize;
-            if (_target is ShapeObject s) s.Size = _oldSize;
-        }
+        private readonly ControlLayer _targetLayer;
+        private readonly PointObject _objectToAdd;
+        public AddPointCommand(ControlLayer layer, PointObject obj) { _targetLayer = layer; _objectToAdd = obj; }
+        public void Execute() { if (!_targetLayer.Points.Contains(_objectToAdd)) _targetLayer.Points.Add(_objectToAdd); }
+        public void Undo() { _targetLayer.Points.Remove(_objectToAdd); }
     }
     public struct MenuActionCommand : ICommand
     {
@@ -173,8 +233,6 @@ namespace Pixel_Simulations.Data
     {
         public string AtlasName;
     }
-    public class SelectTilesetCommand : ICommand { public string TilesetName; }
-    public class SelectTileCommand : ICommand { public string TilesetName; public int TileID; }
     public class PlaceTileCommand : IUndoableCommand
     {
         private readonly TileLayer _targetLayer;
@@ -210,32 +268,6 @@ namespace Pixel_Simulations.Data
             }
         }
     }
-    public class PlaceTileAreaCommand : IUndoableCommand
-    {
-        private readonly TileLayer _layer;
-        private readonly Dictionary<Point, TileInfo> _newTiles;
-        private readonly Dictionary<Point, TileInfo> _oldTiles;
-
-        public PlaceTileAreaCommand(TileLayer layer, Dictionary<Point, TileInfo> tilesToPlace)
-        {
-            _layer = layer;
-            _newTiles = tilesToPlace;
-            _oldTiles = new Dictionary<Point, TileInfo>();
-
-            foreach (var coord in _newTiles.Keys)
-                _oldTiles[coord] = _layer.GetTileAt(coord);
-        }
-
-        public void Execute() { foreach (var kvp in _newTiles) _layer.PlaceTile(kvp.Key, kvp.Value); }
-        public void Undo()
-        {
-            foreach (var kvp in _oldTiles)
-            {
-                if (kvp.Value == null) _layer.RemoveTile(kvp.Key);
-                else _layer.PlaceTile(kvp.Key, kvp.Value);
-            }
-        }
-    }
     public class EraseTileCommand : IUndoableCommand
     {
         private readonly TileLayer _targetLayer;
@@ -267,48 +299,34 @@ namespace Pixel_Simulations.Data
             }
         }
     }
-    public class AddPointCommand : IUndoableCommand
+    public class SelectTileCommand : ICommand { public string TilesetName; public int TileID; }
+    public class PlaceTileAreaCommand : IUndoableCommand
     {
-        private readonly ControlLayer _targetLayer;
-        private readonly PointObject _objectToAdd;
-        public AddPointCommand(ControlLayer layer, PointObject obj) { _targetLayer = layer; _objectToAdd = obj; }
-        public void Execute() { if (!_targetLayer.Points.Contains(_objectToAdd)) _targetLayer.Points.Add(_objectToAdd); }
-        public void Undo() { _targetLayer.Points.Remove(_objectToAdd); }
-    }
-    public class LinkObjectsCommand : IUndoableCommand
-    {
-        private readonly MapObject _source;
-        private readonly MapObject _target;
+        private readonly TileLayer _layer;
+        private readonly Dictionary<Point, TileInfo> _newTiles;
+        private readonly Dictionary<Point, TileInfo> _oldTiles;
 
-        public LinkObjectsCommand(MapObject source, MapObject target)
+        public PlaceTileAreaCommand(TileLayer layer, Dictionary<Point, TileInfo> tilesToPlace)
         {
-            _source = source;
-            _target = target;
+            _layer = layer;
+            _newTiles = tilesToPlace;
+            _oldTiles = new Dictionary<Point, TileInfo>();
+
+            foreach (var coord in _newTiles.Keys)
+                _oldTiles[coord] = _layer.GetTileAt(coord);
         }
 
-        public void Execute()
+        public void Execute() { foreach (var kvp in _newTiles) _layer.PlaceTile(kvp.Key, kvp.Value); }
+        public void Undo()
         {
-            if (!_source.LinkedObjects.Contains(_target.ID))
-                _source.LinkedObjects.Add(_target.ID);
+            foreach (var kvp in _oldTiles)
+            {
+                if (kvp.Value == null) _layer.RemoveTile(kvp.Key);
+                else _layer.PlaceTile(kvp.Key, kvp.Value);
+            }
         }
-
-        public void Undo() { _source.LinkedObjects.Remove(_target.ID); }
     }
-
-    public class UnlinkObjectCommand : IUndoableCommand
-    {
-        private readonly MapObject _source;
-        private readonly string _targetIdToRemove;
-
-        public UnlinkObjectCommand(MapObject source, string targetId)
-        {
-            _source = source;
-            _targetIdToRemove = targetId;
-        }
-
-        public void Execute() { _source.LinkedObjects.Remove(_targetIdToRemove); }
-        public void Undo() { _source.LinkedObjects.Add(_targetIdToRemove); }
-    }
+    public class SelectTilesetCommand : ICommand { public string TilesetName; }
     public class AddTagCommand : IUndoableCommand
     {
         private readonly MapObject _obj;
@@ -316,6 +334,76 @@ namespace Pixel_Simulations.Data
         public AddTagCommand(MapObject obj, string tag) { _obj = obj; _tag = tag; }
         public void Execute() { _obj.Tags.Add(_tag); }
         public void Undo() { _obj.Tags.Remove(_tag); }
+    }
+    public class MoveObjectCommand : IUndoableCommand
+    {
+        private readonly ObjectLayer _layer;
+        private readonly MapObject _obj;
+        private readonly bool _moveUp; // True = Move towards end of list (Drawn on top)
+
+        public MoveObjectCommand(ObjectLayer layer, MapObject obj, bool moveUp)
+        {
+            _layer = layer;
+            _obj = obj;
+            _moveUp = moveUp;
+        }
+
+        public void Execute() { Shift(_moveUp); }
+        public void Undo() { Shift(!_moveUp); }
+        private void Shift(bool up)
+        {
+            if (_layer is ControlLayer cl)
+            {
+                if (_obj is ShapeObject s) ShiftList(cl.Shapes, s, up);
+                else if (_obj is RectangleObject r) ShiftList(cl.Rectangles, r, up);
+                else if (_obj is PointObject p) ShiftList(cl.Points, p, up);
+            }
+            else ShiftList(_layer.Objects, _obj, up);
+        }
+
+        private void ShiftList<T>(System.Collections.Generic.List<T> list, T item, bool moveUp)
+        {
+            int idx = list.IndexOf(item);
+            if (idx < 0) return;
+
+            if (moveUp && idx < list.Count - 1)
+            {
+                list.RemoveAt(idx);
+                list.Insert(idx + 1, item);
+            }
+            else if (!moveUp && idx > 0)
+            {
+                list.RemoveAt(idx);
+                list.Insert(idx - 1, item);
+            }
+        }
+    }
+    public class PaintMaskCommand : IUndoableCommand
+    {
+        private readonly MaskLayer _layer;
+        private readonly GraphicsDevice _gd;
+        private readonly Dictionary<Point, Color[]> _beforeState;
+        private readonly Dictionary<Point, Color[]> _afterState;
+
+        public PaintMaskCommand(MaskLayer layer, Dictionary<Point, Color[]> before, Dictionary<Point, Color[]> after, GraphicsDevice gd)
+        {
+            _layer = layer;
+            _beforeState = before;
+            _afterState = after;
+            _gd = gd;
+        }
+
+        public void Execute() { RestoreState(_afterState); }
+        public void Undo() { RestoreState(_beforeState); }
+
+        private void RestoreState(Dictionary<Point, Color[]> state)
+        {
+            foreach (var kvp in state)
+            {
+                var rt = _layer.GetOrCreateChunk(kvp.Key, _gd);
+                rt.SetData(kvp.Value); // Blit the pixels straight back to the GPU
+            }
+        }
     }
     public struct ToggleTagManagerCommand : ICommand { }
     public struct SaveTagCommand : ICommand { }

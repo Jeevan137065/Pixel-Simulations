@@ -14,7 +14,7 @@ namespace Pixel_Simulations
         LightMask,      // 960x540: HDR Lighting calculation
         Shader,         // 960p: Weather and Atmospheric Shader
         Composite,   // Final: Combined result at Window Resolution
-        PostProcess// NEW: The final image AFTER Color Grading, Gusting, etc.
+        PostProcess,// NEW: The final image AFTER Color Grading, Gusting, etc.
     }
     public class Upscaler
     {
@@ -199,10 +199,53 @@ namespace Pixel_Simulations
             spriteBatch.End();
         }
     }
+    public class MicroRenderTargetPool
+    {
+        private GraphicsDevice _graphicsDevice;
+        private List<RenderTarget2D> _pool = new List<RenderTarget2D>();
+        private bool[] _inUse;
+        private const int MAX_POOL_SIZE = 32;
 
+        public MicroRenderTargetPool(GraphicsDevice graphicsDevice)
+        {
+            _graphicsDevice = graphicsDevice;
+            _inUse = new bool[MAX_POOL_SIZE];
+        }
+
+        public RenderTarget2D Rent(int width, int height, SurfaceFormat format, DepthFormat depthFormat)
+        {
+            for (int i = 0; i < MAX_POOL_SIZE; i++)
+            {
+                if (!_inUse[i])
+                {
+                    // If slot is empty, or size/format doesn't match, recreate it
+                    if (_pool.Count <= i) _pool.Add(null);
+
+                    var rt = _pool[i];
+                    if (rt == null || rt.Width != width || rt.Height != height || rt.Format != format || rt.DepthStencilFormat != depthFormat)
+                    {
+                        rt?.Dispose();
+                        // Notice PreserveContents! This ensures the Micro RT doesn't randomly clear itself.
+                        rt = new RenderTarget2D(_graphicsDevice, width, height, false, format, depthFormat, 0, RenderTargetUsage.PreserveContents);
+                        _pool[i] = rt;
+                    }
+
+                    _inUse[i] = true;
+                    return rt;
+                }
+            }
+            throw new System.Exception("Micro RT Pool exhausted! Increase MAX_POOL_SIZE or check for memory leaks.");
+        }
+
+        public void ReturnAll()
+        {
+            for (int i = 0; i < MAX_POOL_SIZE; i++) _inUse[i] = false;
+        }
+    }
     public class RenderPipeline
     {
         private readonly GraphicsDevice _graphicsDevice;
+        public MicroRenderTargetPool MicroRTs { get; private set; }
         private readonly int _nativeWidth;
         private readonly int _nativeHeight;
         private readonly int _simScale = 2; // 480 -> 960
@@ -235,10 +278,9 @@ namespace Pixel_Simulations
                 RenderLayer.PostProcess,
                 RenderLayer.Albedo,
                 RenderLayer.Dynamic,
-                RenderLayer.VolumeDepth,
-                RenderLayer.Shader
+                RenderLayer.VolumeDepth
             };
-
+            MicroRTs = new MicroRenderTargetPool(graphicsDevice);
             InitializeTargets();
         }
 
@@ -253,48 +295,49 @@ namespace Pixel_Simulations
         private void InitializeTargets()
         {
             // 1. NATIVE LAYER (480x270)
-            _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height);
-
+            _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height, false, 
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // 2. SIMULATION LAYER (960x540)
             _targets[RenderLayer.VolumeDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
-                SurfaceFormat.HalfVector4, DepthFormat.None);
+                SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // Shared DepthStencil memory
+                SurfaceFormat.Color, DepthFormat.Depth24Stencil8 ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
             // Normals: Used for deferred lighting
-            _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height);
-
+            _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // LightMask: Using HalfVector4 for HDR (Floating point lighting values)
             _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.HalfVector4, DepthFormat.None);
+                SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             
             // This is our Master Shader target. All simulation draws share this buffer.
             _targets[RenderLayer.Shader] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None);
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
             // 3. FINAL LAYER
-            _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
-            _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height);
+            _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         }
-
-        // --- PHASE C: NORMAL PASS ---
-        // Exclusive pass for Normal data.
-        public void BeginNormalPass()
-        {
-            _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Normal]);
-            _graphicsDevice.Clear(Color.Transparent);
-        }
-
-        public void Begin(RenderLayer layer, Color clearColor)
+        public void Begin(RenderLayer layer, Color? clearColor = null)
         {
             _graphicsDevice.SetRenderTarget(_targets[layer]);
 
-            if (_targets[layer].DepthStencilFormat != DepthFormat.None)
-                _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, clearColor, 1.0f, 0);
-            else
-                _graphicsDevice.Clear(clearColor);
+            if (clearColor.HasValue)
+            {
+                if (_targets[layer].DepthStencilFormat != DepthFormat.None)
+                    _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, clearColor.Value, 1.0f, 0);
+                else
+                    _graphicsDevice.Clear(clearColor.Value);
+            }
         }
+        public void BeginMRT(RenderTarget2D[] targets, Color clearColor)
+        {
+            var bindings = new RenderTargetBinding[targets.Length];
+            for (int i = 0; i < targets.Length; i++) bindings[i] = new RenderTargetBinding(targets[i]);
 
+            _graphicsDevice.SetRenderTargets(bindings);
+            _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, clearColor, 1.0f, 0);
+        }
         public RenderTargetBinding GetTarget(RenderLayer layer) => _targets[layer];
 
         public void Update()
@@ -344,6 +387,14 @@ namespace Pixel_Simulations
         /// Takes the Composite image, applies full-screen post-processing effects, 
         /// and draws the final result to the screen (BackBuffer).
         /// </summary>
+        public void CompositeMicroRT(RenderLayer targetLayer, RenderTarget2D microRT, SpriteBatch spriteBatch, BlendState blendState)
+        {
+            _graphicsDevice.SetRenderTarget(_targets[targetLayer]);
+            spriteBatch.Begin(SpriteSortMode.Immediate, blendState, SamplerState.PointClamp);
+            spriteBatch.Draw(microRT, _targets[targetLayer].Bounds, Color.White);
+            spriteBatch.End();
+        }
+
         public void PostFinal(SpriteBatch spriteBatch, Effect debugChannelEffect, params Effect[] postEffects)
         {
             RenderTarget2D currentSource = _targets[RenderLayer.Composite];

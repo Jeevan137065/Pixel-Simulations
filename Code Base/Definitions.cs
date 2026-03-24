@@ -267,6 +267,10 @@ namespace Pixel_Simulations
                     writer.WritePropertyName("Points");
                     serializer.Serialize(writer, controlLayer.Points);
                     break;
+                case LayerType.Mask:
+                    // We DON'T write the chunks to JSON! They are saved to the PNG.
+                    // We just need to know the Mask layer exists.
+                    break;
             }
 
             writer.WriteEndObject();
@@ -285,6 +289,7 @@ namespace Pixel_Simulations
                     case LayerType.Tile: target = new TileLayer(); break;
                     case LayerType.Object: target = new ObjectLayer(); break;
                     case LayerType.Control: target = new ControlLayer(); break;
+                    case LayerType.Mask: target = new MaskLayer(); break;
                     default: return null;
                 }
                 target.Name = jo["Name"]?.Value<string>() ?? "Unnamed Layer";

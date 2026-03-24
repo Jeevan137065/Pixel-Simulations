@@ -1,89 +1,17 @@
 {
   "Layers": [
     {
-      "$type": "Control",
-      "Name": "Control2",
+      "$type": "Mask",
+      "Name": "Mask2",
       "IsVisible": true,
-      "IsLocked": false,
-      "Rectangles": [],
-      "Shapes": [],
-      "Points": []
+      "IsLocked": false
     },
     {
-      "$type": "Object",
-      "Name": "Object2",
+      "$type": "Tile",
+      "Name": "Ground",
       "IsVisible": true,
       "IsLocked": false,
-      "Objects": [
-        {
-          "Type": 0,
-          "PrefabID": "pine-tree",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "1bb66c00",
-          "Name": "pine-tree_1",
-          "Position": {
-            "X": 67.0,
-            "Y": 103.5
-          },
-          "Tags": [
-            "#Pine"
-          ],
-          "LinkedObjects": [],
-          "Properties": {}
-        },
-        {
-          "Type": 0,
-          "PrefabID": "pine-tree",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "916f6e4d",
-          "Name": "pine-tree_2",
-          "Position": {
-            "X": 206.5,
-            "Y": 176.5
-          },
-          "Tags": [
-            "#Pine"
-          ],
-          "LinkedObjects": [
-            "1bb66c00",
-            "8871a61e"
-          ],
-          "Properties": {
-            "Health": {
-              "Type": 1,
-              "Value": "10"
-            }
-          }
-        },
-        {
-          "Type": 0,
-          "PrefabID": "pine-tree",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "8871a61e",
-          "Name": "pine-tree_3",
-          "Position": {
-            "X": 410.5,
-            "Y": 122.5
-          },
-          "Tags": [
-            "#Pine"
-          ],
-          "LinkedObjects": [],
-          "Properties": {}
-        }
-      ]
+      "Chunks": []
     }
   ]
 }

@@ -96,20 +96,25 @@ namespace Pixel_Simulations.Editor
             if (kbs.IsKeyDown(Keys.E) && prevKbs.IsKeyUp(Keys.E))
                 eventBus.Publish(new ChangeToolCommand { ToolName = "Eraser" });
 
-            if (kbs.IsKeyDown(Keys.R) && prevKbs.IsKeyUp(Keys.T))
+            if (kbs.IsKeyDown(Keys.O) && prevKbs.IsKeyUp(Keys.O))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "ObjectPlacer" });
+
+            if (kbs.IsKeyDown(Keys.T) && prevKbs.IsKeyUp(Keys.T))
                 eventBus.Publish(new ChangeToolCommand { ToolName = "FreeRectangle" });
 
-            if (kbs.IsKeyDown(Keys.T) && prevKbs.IsKeyUp(Keys.G))
-                eventBus.Publish(new ChangeToolCommand { ToolName = "GridRectangle" });
+            if (kbs.IsKeyDown(Keys.G) && prevKbs.IsKeyUp(Keys.G))
+                eventBus.Publish(new ChangeToolCommand { ToolName = "ShapeTool" });
 
             if (kbs.IsKeyDown(Keys.P) && prevKbs.IsKeyUp(Keys.P))
                 eventBus.Publish(new ChangeToolCommand { ToolName = "PointPlacer" });
+            
+            if (kbs.IsKeyDown(Keys.M) && prevKbs.IsKeyUp(Keys.M)) 
+                eventBus.Publish(new ChangeToolCommand { ToolName = "Selection" });
 
             // --- Other Tool Shortcuts (Commented out for now) ---
             // if (kbs.IsKeyDown(Keys.F) && prevKbs.IsKeyUp(Keys.F)) eventBus.Publish(new ChangeToolCommand { ToolName = "Fill" });
             // if (kbs.IsKeyDown(Keys.L) && prevKbs.IsKeyUp(Keys.L)) eventBus.Publish(new ChangeToolCommand { ToolName = "Line" });
             // if (kbs.IsKeyDown(Keys.I) && prevKbs.IsKeyUp(Keys.I)) eventBus.Publish(new ChangeToolCommand { ToolName = "Eyedropper" });
-            // if (kbs.IsKeyDown(Keys.M) && prevKbs.IsKeyUp(Keys.M)) eventBus.Publish(new ChangeToolCommand { ToolName = "Selection" });
 
 
             // --- File Menu Shortcuts ---
@@ -198,8 +203,17 @@ namespace Pixel_Simulations.Editor
             _uiManager.ToolPanel.Update(input, bus);
             _uiManager.TilesetPanel.Update(input, bus);
             _uiManager.LayerPanel.Update(input, bus);
-            _uiManager.InspectorPanel.Update(input, bus);
-            
+
+            // Toggle updating based on active layer
+            var activeLayer = _editorState.Layers.GetActiveLayer();
+            if (activeLayer != null && activeLayer.Type == LayerType.Mask)
+            {
+                _uiManager.MaskEditorPanel.Update(input, bus);
+            }
+            else
+            {
+                _uiManager.InspectorPanel.Update(input, bus);
+            }
         }
         private void HandleKeyboardCameraMovement(EditorInputState input, GameTime gameTime)
         {
@@ -360,24 +374,24 @@ namespace Pixel_Simulations.Editor
             counter++;
             var activeIndex = _editorState.Layers.ActiveLayerIndex;
             var newLayerType = _editorState.Layers.NewLayerType;
+
+            // --- NEW: Enforce 1 Mask Layer Rule ---
+            if (newLayerType == LayerType.Mask && _editorState.ActiveMap.Layers.Any(l => l.Type == LayerType.Mask))
+            {
+                System.Diagnostics.Debug.WriteLine("Map already has a Mask Layer!");
+                return; // Abort!
+            }
+
+            string name = $"{newLayerType}{_editorState.ActiveMap.Layers.Count + 1}";
             Layer newLayer;
 
-            // Create the correct type of layer based on the state
-            string name = $"{newLayerType}{_editorState.ActiveMap.Layers.Count + 1}";
             switch (newLayerType)
             {
-                case LayerType.Tile:
-                    newLayer = new TileLayer(name);
-                    break;
-                case LayerType.Object:
-                    newLayer = new ObjectLayer(name);
-                    break;
-                case LayerType.Control:
-                    newLayer = new ControlLayer(name);
-                    break;
-                default:
-                    newLayer = new TileLayer(name);
-                    break;
+                case LayerType.Tile: newLayer = new TileLayer(name); break;
+                case LayerType.Object: newLayer = new ObjectLayer(name); break;
+                case LayerType.Control: newLayer = new ControlLayer(name); break;
+                case LayerType.Mask: newLayer = new MaskLayer(name); break; // Add this!
+                default: newLayer = new TileLayer(name); break;
             }
             if (cmd.Direction) // Add Above
             {
@@ -626,31 +640,40 @@ namespace Pixel_Simulations.Editor
             string assetsPath = PathHelper.GetAssetsPath();
             if (string.IsNullOrEmpty(assetsPath)) return;
 
-            // Define the paths once
-            string jsonPath = Path.Combine(assetsPath, "Maps", "level1.json");
-            string gameMapPath = Path.Combine(assetsPath, "Maps", "level1.map"); // Adjust
+            // Use the string typed in the Top Panel! (Default to level1 if empty)
+            string mapName = string.IsNullOrWhiteSpace(_editorState.CurrentMapFile) ? "level1" : _editorState.CurrentMapFile;
+
+            // Ensure it doesn't end with .json twice
+            mapName = mapName.Replace(".json", "").Replace(".map", "");
+
+            string jsonPath = Path.Combine(assetsPath, "Maps", $"{mapName}.json");
+            string gameMapPath = Path.Combine(assetsPath, "Maps", $"{mapName}.map");
+            string maskPath = Path.Combine(assetsPath, "Maps", $"{mapName}_mask.png"); // NEW
 
             switch (cmd.ActionName)
             {
                 case "Save":
-                    // "Save" now saves the .json working file
                     MapSerializer.Save(_editorState.ActiveMap, jsonPath);
-                    _editorState.CurrentMapFile = jsonPath;
                     System.Diagnostics.Debug.WriteLine($"Working map SAVED to: {jsonPath}");
+                    var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                    if (maskToSave != null) MapSerializer.SaveMaskLayer(maskToSave, maskPath, _editorState._graphics);
                     break;
-
                 case "Load":
-                    // "Load" now loads the .json working file
                     var loadedMap = MapSerializer.Load(jsonPath);
                     if (loadedMap != null)
                     {
                         LoadNewMap(loadedMap, jsonPath);
+                        // Load Mask Layer Data!
+                        var maskToLoad = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                        if (maskToLoad != null) MapSerializer.LoadMaskLayer(maskToLoad, maskPath, _editorState._graphics);
                     }
+                    System.Diagnostics.Debug.WriteLine($"Map Loaded for game to: {gameMapPath}");
                     break;
-
                 case "Export":
-                    // "Export" creates the binary .map file for the game
                     MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
+                    // We usually want to make sure the mask is saved during export too
+                    var exportMask = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                    if (exportMask != null) MapSerializer.SaveMaskLayer(exportMask, maskPath, _editorState._graphics);
                     System.Diagnostics.Debug.WriteLine($"Map EXPORTED for game to: {gameMapPath}");
                     break;
             }

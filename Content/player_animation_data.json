@@ -1,0 +1,484 @@
+﻿{
+    "frameWidth": 32,
+    "frameHeight": 64,
+    "bodyParts": [ "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg" ],
+
+    "drawOrder": {
+        "South": {
+            "Torso": 2,
+            "LeftLeg": 1,
+            "RightLeg": 1,
+            "LeftArm": 3,
+            "RightArm": 3
+        },
+        "North": { // Same as South for now
+            "Torso": 2,
+            "LeftLeg": 1,
+            "RightLeg": 1,
+            "LeftArm": 3,
+            "RightArm": 3
+        },
+        "East": {
+            "Torso": 2,
+            "LeftArm": 1,
+            "LeftLeg": 0,
+            "RightArm": 4,
+            "RightLeg": 3
+        },
+        "West": { // Same as East
+            "Torso": 2,
+            "LeftArm": 1,
+            "LeftLeg": 0,
+            "RightArm": 4,
+            "RightLeg": 3
+        },
+        "Turning": {
+            // Third frame of turn animation uses side view order
+            // We will handle this logic in AnimationManager
+        }
+    },
+
+    "animations": {
+        "Idle_South": {
+            "frames": [
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 0,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 0,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 0,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 0,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 0,
+                            "Y": 9
+                        }
+                    }
+                }
+            ],
+            "frameDuration": 1.0
+        },
+        "Idle_North": {
+            "frames": [
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 0,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 0,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 0,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 0,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 0,
+                            "Y": 9
+                        }
+                    }
+                }
+            ],
+            "frameDuration": 1.0
+        },
+        "Idle_East": {
+            "frames": [
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 2,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 2,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 2,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 2,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 2,
+                            "Y": 9
+                        }
+                    }
+                }
+            ],
+            "frameDuration": 1.0
+        },
+        "Idle_West": {
+            "frames": [
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 2,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 2,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 2,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 2,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 2,
+                            "Y": 9
+                        }
+                    }
+                }
+            ],
+            "frameDuration": 1.0
+        },
+        "Walk_East": {
+            // 0,1,2,3,4 = Left leg, Torso, Right leg, left arm, right arm
+            "frames": [
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 0,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 0,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 4,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 0,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 0,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 1,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 1,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 1,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 1,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 1,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 2,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 2,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 2,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 2,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 2,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 3,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 3,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 3,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 3,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 3,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 4,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 4,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 4,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 4,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 4,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 5,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 5,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 5,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 5,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 5,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 6,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 6,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 6,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 6,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 6,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 7,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 7,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 7,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 7,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 7,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 8,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 8,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 8,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 8,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 8,
+                            "Y": 4
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 9,
+                            "Y": 1
+                        },
+                        "LeftLeg": {
+                            "X": 9,
+                            "Y": 0
+                        },
+                        "RightLeg": {
+                            "X": 9,
+                            "Y": 2
+                        },
+                        "LeftArm": {
+                            "X": 9,
+                            "Y": 3
+                        },
+                        "RightArm": {
+                            "X": 9,
+                            "Y": 4
+                        }
+                    }
+                }
+            ],
+            "frameDuration": 0.1
+        },
+        "Turn_South_East": {
+            // 5,6,7,8,9 = Left leg, Torso, Right leg, Left arm, right arm
+            "frames": [
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 0,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 0,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 0,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 0,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 0,
+                            "Y": 9
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 1,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 1,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 1,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 1,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 1,
+                            "Y": 9
+                        }
+                    }
+                },
+                {
+                    "Parts": {
+                        "Torso": {
+                            "X": 2,
+                            "Y": 6
+                        },
+                        "LeftLeg": {
+                            "X": 2,
+                            "Y": 5
+                        },
+                        "RightLeg": {
+                            "X": 2,
+                            "Y": 7
+                        },
+                        "LeftArm": {
+                            "X": 2,
+                            "Y": 8
+                        },
+                        "RightArm": {
+                            "X": 2,
+                            "Y": 9
+                        }
+                    }
+                }
+            ],
+            "frameDuration": 0.06,
+            "isLooping": false
+        }
+    }
+}

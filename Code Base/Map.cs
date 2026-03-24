@@ -447,7 +447,101 @@ namespace Pixel_Simulations.Data
             }
             target.Dispose();
         }
+        public static void SaveMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd)
+        {
+            if (maskLayer == null || maskLayer.Chunks.Count == 0) return;
 
+            // 1. Find the absolute bounds of all chunks
+            int minX = maskLayer.Chunks.Keys.Min(p => p.X);
+            int maxX = maskLayer.Chunks.Keys.Max(p => p.X);
+            int minY = maskLayer.Chunks.Keys.Min(p => p.Y);
+            int maxY = maskLayer.Chunks.Keys.Max(p => p.Y);
+
+            int width = (maxX - minX + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+            int height = (maxY - minY + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+
+            // 2. Create a master RenderTarget
+            using (var masterRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
+            {
+                gd.SetRenderTarget(masterRt);
+                gd.Clear(new Color(0,0,0,255));
+
+                // 3. Draw all chunks onto the master canvas
+                using (var sb = new SpriteBatch(gd))
+                {
+                    sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
+                    foreach (var kvp in maskLayer.Chunks)
+                    {
+                        Vector2 pos = new Vector2(
+                            (kvp.Key.X - minX) * MaskLayer.CHUNK_PIXEL_SIZE,
+                            (kvp.Key.Y - minY) * MaskLayer.CHUNK_PIXEL_SIZE
+                        );
+                        sb.Draw(kvp.Value, pos, Color.White);
+                    }
+                    sb.End();
+                }
+
+                gd.SetRenderTarget(null);
+
+                // 4. Save to PNG
+                using (var stream = File.OpenWrite(imagePath))
+                {
+                    masterRt.SaveAsPng(stream, width, height);
+                }
+            }
+
+            // Save the offset so we know where to place it when loading!
+            string metaPath = imagePath.Replace(".png", ".meta");
+            File.WriteAllText(metaPath, $"{minX},{minY}");
+        }
+        public static void LoadMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd)
+        {
+            if (!File.Exists(imagePath)) return;
+
+            string metaPath = imagePath.Replace(".png", ".meta");
+            int offsetX = 0, offsetY = 0;
+            if (File.Exists(metaPath))
+            {
+                var parts = File.ReadAllText(metaPath).Split(',');
+                offsetX = int.Parse(parts[0]);
+                offsetY = int.Parse(parts[1]);
+            }
+
+            using (var stream = File.OpenRead(imagePath))
+            {
+                using (var masterTex = Texture2D.FromStream(gd, stream))
+                {
+                    int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
+                    int chunksY = masterTex.Height / MaskLayer.CHUNK_PIXEL_SIZE;
+
+                    var prevRt = gd.GetRenderTargets();
+
+                    using (var sb = new SpriteBatch(gd))
+                    {
+                        for (int y = 0; y < chunksY; y++)
+                        {
+                            for (int x = 0; x < chunksX; x++)
+                            {
+                                Point chunkCoord = new Point(x + offsetX, y + offsetY);
+                                var rt = maskLayer.GetOrCreateChunk(chunkCoord, gd);
+
+                                Rectangle sourceRect = new Rectangle(
+                                    x * MaskLayer.CHUNK_PIXEL_SIZE,
+                                    y * MaskLayer.CHUNK_PIXEL_SIZE,
+                                    MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE);
+
+                                gd.SetRenderTarget(rt);
+
+                                sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
+                                sb.Draw(masterTex, Vector2.Zero, sourceRect, Color.White);
+                                sb.End();
+                            }
+                        }
+                    }
+                    gd.SetRenderTargets(prevRt);
+                }
+            }
+        }
         private static RectangleF CalculateMapBounds(Map map)
         {
             // Logic to find the Min/Max X and Y of every tile and object

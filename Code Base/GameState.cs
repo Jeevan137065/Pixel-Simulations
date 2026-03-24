@@ -14,6 +14,12 @@ using System.Text;
 
 namespace Pixel_Simulations
 {
+    //Stores all game bools used for debug only
+    public enum DebugBool
+    {
+        Collision,
+        GrassArea
+    }
     public class GameState
     {
         // --- Core Data Objects ---
@@ -27,12 +33,15 @@ namespace Pixel_Simulations
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
         public DayTimeManager TimeSystem { get; private set; }
+        public GrassSystem Grass { get; private set; }
         //useful objects
         public InputManager input { get; }
         public PhysicsManager Physics { get; }
         public string gameMapPath;
         public int _uKeyPressed = 0;
         private bool _fKeyPressedLastFrame = false;
+        //Debug Bool
+        public Dictionary<DebugBool, bool> DebugPool = new Dictionary<DebugBool, bool>();
         public GameState()
         {
             GameCamera = new Camera();
@@ -50,6 +59,8 @@ namespace Pixel_Simulations
         /// </summary>
         public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
         {
+            DebugPool[DebugBool.Collision] = false;
+            DebugPool[DebugBool.GrassArea] = false;
             // 1. Load all raw texture assets first.
             Assets.LoadCoreContent(content);
 
@@ -71,6 +82,23 @@ namespace Pixel_Simulations
             Shaders = new ShaderManager(graphicsDevice);
             Shaders.LoadContent(content);
             Physics.LoadMapData(CurrentMap);
+            // --- NEW: GRASS INITIALIZATION ---
+            Grass = new GrassSystem(graphicsDevice, GrassLibrary.GetPreset(GrassPreset.ForestFloor));
+            var grassAreas = new List<RectangleF>();
+
+            // Search all layers for Control rectangles tagged #Grass
+            foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
+            {
+                foreach (var rect in layer.Rectangles)
+                {
+                    if (rect.Tags.Contains("#Grass"))
+                    {
+                        grassAreas.Add(new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y));
+                    }
+                }
+            }
+            Grass.LoadContent(content, grassAreas);
+            // ---------------------------------
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
             Player.LoadContent(content,Physics); // Player loads its own specific content
@@ -115,6 +143,14 @@ namespace Pixel_Simulations
                 }
                 _fKeyPressedLastFrame = true;
             }
+            if (keyboardState.IsKeyDown(Keys.G))
+            {
+                if (!_fKeyPressedLastFrame)
+                {
+                    DebugPool[DebugBool.GrassArea] = true;
+                }
+                _fKeyPressedLastFrame = true;
+            }
             else if (keyboardState.IsKeyDown(Keys.Y))
             {
                 // Simple debounce so it doesn't cycle 60 times a second
@@ -142,6 +178,7 @@ namespace Pixel_Simulations
 
             // Update the weather math
             TimeSystem.Update(gameTime, Weather.CurrentSeason, Weather.Phase);
+            Grass.Update(gameTime, new Vector2(Player.Position.X, Player.Position.Y + 24));
             Weather.Update(gameTime, TimeSystem.TimeOfDay);
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
             Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);

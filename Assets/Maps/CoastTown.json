@@ -1,0 +1,145 @@
+{
+  "Layers": [
+    {
+      "$type": "Object",
+      "Name": "Object2",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Objects": [
+        {
+          "Type": 0,
+          "PrefabID": "Light House",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "e5e66495",
+          "Name": "Light House_1",
+          "Position": {
+            "X": -2.0,
+            "Y": 190.5
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "pine-tree",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "64c34967",
+          "Name": "pine-tree_1",
+          "Position": {
+            "X": 130.0,
+            "Y": 114.0
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "pine-tree",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "996c97c6",
+          "Name": "pine-tree_2",
+          "Position": {
+            "X": 235.0,
+            "Y": 22.0
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "pine-tree",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "14cdb035",
+          "Name": "pine-tree_3",
+          "Position": {
+            "X": 275.0,
+            "Y": 127.0
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "pine-tree",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "75135a9c",
+          "Name": "pine-tree_4",
+          "Position": {
+            "X": 402.0,
+            "Y": 98.0
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "pine-tree",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "31aebb4b",
+          "Name": "pine-tree_5",
+          "Position": {
+            "X": 511.0,
+            "Y": 176.0
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "pine-tree",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "a1520550",
+          "Name": "pine-tree_6",
+          "Position": {
+            "X": 615.0,
+            "Y": 108.0
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {}
+        }
+      ]
+    },
+    {
+      "$type": "Tile",
+      "Name": "Ground",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Chunks": []
+    }
+  ]
+}

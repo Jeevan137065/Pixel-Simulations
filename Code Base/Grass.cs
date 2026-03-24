@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -30,15 +31,15 @@ namespace Pixel_Simulations
             Settings = initialSettings;
         }
 
-        public void LoadContent(ContentManager content,  int mapWidth, int mapHeight)
+        public void LoadContent(ContentManager content, List<RectangleF> validAreas)
         {
             _effect = content.Load<Effect>("grass");
             _noiseMap = content.Load<Texture2D>("noise");
             LoadNoiseMap(_noiseMap);
-            InitializeField(mapWidth, mapHeight);
+            InitializeField(validAreas);
         }
 
-        private void InitializeField(int mapWidth, int mapHeight)
+        private void InitializeField(List<RectangleF> validAreas)
         {
             List<BladeData> blades = new List<BladeData>();
             Random rand = new Random();
@@ -46,50 +47,53 @@ namespace Pixel_Simulations
             // We use a fixed step but vary spawn chance based on settings
             float step = Settings.DensityStep;
 
-            for (float x = 0; x < mapWidth; x += step)
+            foreach (var rect in validAreas)
             {
-                for (float y = 0; y < mapHeight; y += step)
+                for (float x = rect.Left; x < rect.Right; x += step)
                 {
-                    float noise = GetNoiseValue(x, y);
+                    for (float y = rect.Top; y < rect.Bottom; y += step)
+                    {
+                        float noise = GetNoiseValue(x, y);
 
-                    // TIER 0: Empty
-                    if (noise < Settings.MinThreshold) continue;
-                    int spawnCount = 0;
-                    float heightMod = 0.1f;
+                        // TIER 0: Empty
+                        if (noise < Settings.MinThreshold) continue;
+                        int spawnCount = 0;
+                        float heightMod = 0.1f;
 
-                    // TIER 1: Sparse
-                    if (noise > Settings.MinThreshold) 
-                    { 
+                        // TIER 1: Sparse
+                        if (noise > Settings.MinThreshold)
+                        {
                             spawnCount = 1;
                             heightMod = 0.4f;
-                    }
+                        }
 
-                    // TIER 2: Mid
-                    if (noise > Settings.MidThreshold)
-                    {
+                        // TIER 2: Mid
+                        if (noise > Settings.MidThreshold)
+                        {
                             spawnCount = 1 * (int)(1 + Settings.SparseDensity);
                             heightMod = 0.8f; // Young/Short grass
-                        
-                    }
-                    // TIER 3: Lush
-                    else if (noise > Settings.MaxThreshold)
-                    {
-                        spawnCount = 2;
-                        heightMod = 1.4f;
-                    }
 
-                    for (int i = 0; i < spawnCount; i++)
-                    {
-                        float jitter = step;
-                        blades.Add(new BladeData
+                        }
+                        // TIER 3: Lush
+                        else if (noise > Settings.MaxThreshold)
                         {
-                            Pos = new Vector2(x + (float)(rand.NextDouble() - 0.5) * jitter,
-                                            y + (float)(rand.NextDouble() - 0.5) * jitter),
-                            Wind = (float)rand.NextDouble()*Settings.WindIntensity,
-                            Height = Settings.GlobalHeightBase * heightMod,
-                            Var = (float)rand.NextDouble(),
-                            Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature * 1.0f
-                        });
+                            spawnCount = 2;
+                            heightMod = 1.4f;
+                        }
+
+                        for (int i = 0; i < spawnCount; i++)
+                        {
+                            float jitter = step;
+                            blades.Add(new BladeData
+                            {
+                                Pos = new Vector2(x + (float)(rand.NextDouble() - 0.5) * jitter,
+                                                y + (float)(rand.NextDouble() - 0.5) * jitter),
+                                Wind = (float)rand.NextDouble() * Settings.WindIntensity,
+                                Height = Settings.GlobalHeightBase * heightMod,
+                                Var = (float)rand.NextDouble(),
+                                Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature * 1.0f
+                            });
+                        }
                     }
                 }
             }

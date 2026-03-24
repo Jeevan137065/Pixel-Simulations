@@ -13,15 +13,5 @@ using System.Text.Json.Serialization;
 
 namespace Pixel_Simulations
 {
-    
-
-    public enum TileType { Grass, Dirt, Tilled }
-
-    public struct Tile
-    {
-        public TileType Type;
-        public int Variant;
-        public Rectangle SourceRect;
-    }
 
 }

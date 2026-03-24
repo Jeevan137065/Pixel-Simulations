@@ -35,18 +35,10 @@ namespace Pixel_Simulations.Data
 
                 switch (layer.Type)
                 {
-                    case LayerType.Tile:
-                        DrawTileLayer(sb, layer as TileLayer);
-                        break;
-
-                    case LayerType.Object:
-                        DrawObjectLayer(sb, layer as ObjectLayer);
-                        break;
-
-                    case LayerType.Control:
-                         DrawControlLayer(sb, layer as ControlLayer);
-                        break;
-
+                    case LayerType.Tile: DrawTileLayer(sb, layer as TileLayer); break;
+                    case LayerType.Object: DrawObjectLayer(sb, layer as ObjectLayer); break;
+                    case LayerType.Control: DrawControlLayer(sb, layer as ControlLayer); break;
+                    case LayerType.Mask: DrawMaskLayer(sb, layer as MaskLayer); break; // Add this!
                 }
             }
         }
@@ -133,6 +125,45 @@ namespace Pixel_Simulations.Data
                 sb.DrawLine(pointObj.Position - new Vector2(4, 0), pointObj.Position + new Vector2(4, 0), pointObj.DebugColor * 0.4f, lineThickness);
                 sb.DrawLine(pointObj.Position - new Vector2(0, 4), pointObj.Position + new Vector2(0, 4), pointObj.DebugColor, lineThickness);
             }
+        }
+        private void DrawMaskLayer(SpriteBatch sb, MaskLayer layer)
+        {
+            // Build a dynamic BlendState based on the EditorState toggles
+            ColorWriteChannels writeChannels = ColorWriteChannels.None;
+            if (_editorState.ShowMaskRed) writeChannels |= ColorWriteChannels.Red;
+            if (_editorState.ShowMaskGreen) writeChannels |= ColorWriteChannels.Green;
+            if (_editorState.ShowMaskBlue) writeChannels |= ColorWriteChannels.Blue;
+            if (_editorState.ShowMaskAlpha) writeChannels |= ColorWriteChannels.Alpha;
+
+            // If nothing is selected, don't draw anything
+            if (writeChannels == ColorWriteChannels.None) return;
+
+            var customBlend = new BlendState
+            {
+                ColorSourceBlend = Blend.SourceAlpha,
+                ColorDestinationBlend = Blend.One,
+                ColorWriteChannels = writeChannels
+            };
+
+            // We must temporarily end the standard SpriteBatch to apply our custom BlendState
+            sb.End();
+            sb.Begin(blendState: customBlend, samplerState: SamplerState.PointClamp, transformMatrix: _editorState.camera.Transform);
+
+            Color overlayColor = Color.White * 0.6f; // 60% opacity so we can see the map underneath
+
+            foreach (var kvp in layer.Chunks)
+            {
+                Point coord = kvp.Key;
+                RenderTarget2D rt = kvp.Value;
+                Vector2 worldPos = new Vector2(coord.X * MaskLayer.CHUNK_PIXEL_SIZE, coord.Y * MaskLayer.CHUNK_PIXEL_SIZE);
+                sb.Draw(rt, worldPos, overlayColor);
+                sb.Draw(rt, worldPos, overlayColor);
+                sb.Draw(rt, worldPos, overlayColor);
+            }
+
+            // Restore the standard SpriteBatch for the rest of the Editor
+            sb.End();
+            sb.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _editorState.camera.Transform);
         }
         private void DrawChunk(SpriteBatch sb, Chunk chunk)
         {
@@ -252,7 +283,12 @@ namespace Pixel_Simulations.Data
                             var prefab = _gameState.PrefabManager.GetPrefab(prop.PrefabID);
                             if (prefab == null) continue;
 
-                            RectangleF objectBounds = new RectangleF(prop.Position.X, prop.Position.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
+                            // FIXED: Offset the bounds by the Pivot so the intersection math is accurate!
+                            RectangleF objectBounds = new RectangleF(
+                                prop.Position.X - prefab.Pivot.X,
+                                prop.Position.Y - prefab.Pivot.Y,
+                                prefab.SourceRect.Width * prop.Scale.X,
+                                prefab.SourceRect.Height * prop.Scale.Y);
 
                             if (streamBounds.Intersects(objectBounds))
                             {
@@ -271,8 +307,8 @@ namespace Pixel_Simulations.Data
                                         Origin = prefab.Pivot,
                                         Scale = prop.Scale,
                                         Rotation = prop.Rotation,
-                                        DrawDepth = DepthUtil.Calculate(bottomY), // Standard 0-1 depth
-                                        BaseWorldY = bottomY                      // Exact world altitude
+                                        DrawDepth = DepthUtil.Calculate(bottomY),
+                                        BaseWorldY = bottomY
                                     });
                                 }
                             }
@@ -282,21 +318,17 @@ namespace Pixel_Simulations.Data
             }
 
             // 2. COLLECT THE PLAYER
-            // Note: Adjust the property names based on how your NewPlayer class is actually set up!
             if (_gameState.Player != null)
             {
                 var P = _gameState.Player;
-                // Calculate where the player's feet touch the ground.
-                // If origin is centered, it's Position.Y + (Height / 2). 
-                // Adjust this formula to match your player's exact pivot point.
                 float playerFeetY = _gameState.Player.Position.Y + P.CurrentFrameRect.Height;
 
                 sprites.Add(new RenderableSprite
                 {
-                    Texture = P.CompositeTexture, // Assuming Player has a Texture property
+                    Texture = P.CompositeTexture,
                     Position = P.Position,
-                    SourceRect = P.CurrentFrameRect, // Assuming Player has animation frame
-                    Origin = P.Origin, // e.g., new Vector2(Width/2, Height)
+                    SourceRect = P.CurrentFrameRect,
+                    Origin = P.Origin,
                     Scale = Vector2.One,
                     Rotation = 0f,
                     DrawDepth = DepthUtil.Calculate(playerFeetY),

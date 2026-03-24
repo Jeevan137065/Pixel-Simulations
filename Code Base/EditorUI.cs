@@ -29,6 +29,7 @@ namespace Pixel_Simulations.UI
         public TagManagerPanel TagManagerPanel { get; set; }
         public ToolPanel ToolPanel { get; set; }
         public InspectorPanel InspectorPanel { get; set; }
+        public MaskEditorPanel MaskEditorPanel { get; set; }
         public LayerPanel LayerPanel { get; set; }
         public readonly EditorState _editorState;
         public GraphicsDevice gd { get; }
@@ -65,7 +66,8 @@ namespace Pixel_Simulations.UI
             PrefabPanel = new PrefabCreatorPanel(_editorState._layoutmanager.prefabModalBounds, this, _editorState);
             LayerPanel = new LayerPanel(_editorState._layoutmanager.LayerPanel, this, _editorState);
             ToolPanel = new ToolPanel(_editorState._layoutmanager.ToolPanel, this, _editorState);
-            InspectorPanel = new InspectorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState); 
+            InspectorPanel = new InspectorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
+            MaskEditorPanel = new MaskEditorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
             TagManagerPanel = new TagManagerPanel(_editorState._layoutmanager.tagModalBounds, this, _editorState);
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
         }
@@ -80,19 +82,25 @@ namespace Pixel_Simulations.UI
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            
+
             TopPanel.Draw(spriteBatch);
             TilesetPanel.Draw(spriteBatch);
             ToolPanel.Draw(spriteBatch);
-            InspectorPanel.Draw(spriteBatch);
-            LayerPanel.Draw(spriteBatch);
-            if (_editorState.IsTagManagerOpen)
-                TagManagerPanel.Draw(spriteBatch);
-            else
-                LayerPanel.Draw(spriteBatch);
 
-            if (_editorState.PrefabCreator.IsOpen)
-                PrefabPanel.Draw(spriteBatch);
+            var activeLayer = _editorState.Layers.GetActiveLayer();
+            if (activeLayer != null && activeLayer.Type == LayerType.Mask)
+            {
+                MaskEditorPanel.Draw(spriteBatch);
+            }
+            else
+            {
+                InspectorPanel.Draw(spriteBatch);
+            }
+
+            if (_editorState.IsTagManagerOpen) TagManagerPanel.Draw(spriteBatch);
+            else LayerPanel.Draw(spriteBatch);
+
+            if (_editorState.PrefabCreator.IsOpen) PrefabPanel.Draw(spriteBatch);
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color)
         {
@@ -178,8 +186,8 @@ namespace Pixel_Simulations.UI
             //TilesetPanel = new Rectangle(0, 0, tilesetWidth, windowHeight);
             //LayerPanel = new Rectangle(windowWidth - layerWidth, 0, layerWidth, windowHeight);
 
-            TopPanel = new Rectangle(tilesetWidth, 0, 400, topPanelHeight);
-            ToolPanel = new Rectangle(tilesetWidth + 400, 0, ViewW - 400, topPanelHeight);
+            TopPanel = new Rectangle(tilesetWidth, 0, 500, topPanelHeight);
+            ToolPanel = new Rectangle(tilesetWidth + 500, 0, ViewW - 500, topPanelHeight);
             TilesetPanel = new Rectangle(0, 0, tilesetWidth, windowHeight);
             InspectorPanel = new Rectangle(tilesetWidth, windowHeight - inspectorHeight, windowWidth - tilesetWidth, inspectorHeight);
             LayerPanel = new Rectangle(tilesetWidth + ViewW, 0, windowWidth - tilesetWidth - ViewW, windowHeight - inspectorHeight);

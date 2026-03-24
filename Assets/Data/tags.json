@@ -31,5 +31,16 @@
       "R": 0,
       "A": 255
     }
+  },
+  {
+    "HashID": "#Grass",
+    "Name": "#Grass",
+    "Description": "For Spawning Grass",
+    "TagColor": {
+      "B": 87,
+      "G": 139,
+      "R": 46,
+      "A": 255
+    }
   }
 ]

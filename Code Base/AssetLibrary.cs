@@ -154,8 +154,7 @@ namespace Pixel_Simulations
             public void Load(string path)
             {
                 // 1. Initialize to empty dictionary immediately so we never have a null 'Prefabs' property
-                Prefabs = new Dictionary<string, ObjectPrefab>();
-
+                Prefabs = new Dictionary<string, ObjectPrefab>(StringComparer.OrdinalIgnoreCase);
                 if (!File.Exists(path))
                 {
                     System.Diagnostics.Debug.WriteLine($"Prefab file not found at {path}. Starting fresh.");

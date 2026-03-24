@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Pixel_Simulations.Data
 {
-    public enum LayerType { Tile, Object, Control }
+    public enum LayerType { Tile, Object, Control,Mask }
     public abstract class Layer
     {
         public string Name { get; set; }
@@ -95,5 +95,36 @@ namespace Pixel_Simulations.Data
         public ControlLayer(string name) : base(name) {}
         public ControlLayer() : base() { }
     }
+    public class MaskLayer : Layer
+    {
+        public override LayerType Type => LayerType.Mask;
 
+        // Each chunk is a 256x256 pixel texture (16x16 standard tiles)
+        public const int CHUNK_PIXEL_SIZE = 256;
+
+        [JsonIgnore]
+        public Dictionary<Point, RenderTarget2D> Chunks { get; set; } = new Dictionary<Point, RenderTarget2D>();
+
+        public MaskLayer(string name) : base(name) { }
+        public MaskLayer() : base() { }
+
+        // Helper to get or create a chunk on the GPU
+        public RenderTarget2D GetOrCreateChunk(Point coord, GraphicsDevice gd)
+        {
+            if (!Chunks.TryGetValue(coord, out var rt))
+            {
+                rt = new RenderTarget2D(gd, CHUNK_PIXEL_SIZE, CHUNK_PIXEL_SIZE, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+
+                var prevRt = gd.GetRenderTargets();
+                gd.SetRenderTarget(rt);
+
+                // FIX: Clear to Opaque Black so PNG loading doesn't destroy RGB data!
+                gd.Clear(new Color(0, 0, 0, 255));
+
+                gd.SetRenderTargets(prevRt);
+                Chunks[coord] = rt;
+            }
+            return rt;
+        }
+    }
 }

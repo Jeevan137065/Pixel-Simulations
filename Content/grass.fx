@@ -95,18 +95,15 @@ PixelInput MainVS(VertexInput input) {
 PixelShaderOutput MainPS(PixelInput input) {
     PixelShaderOutput output;
     float4 color = input.Color;
-    // This 'clip' is the most important line for performance.
-    // It kills the pixel before it can write to the Normal or Color RTs.
     clip(color.a - 0.5);
 
     output.Color = color;
-
-    // Generate a simple procedural normal for the blade
-    // Faces slightly "up" (0.5, 0.5, 1.0 is flat in encoded normals)
     output.Normal = float4(0.5, 0.4, 1.0, 0.001);
-    float materialID = 0.1;
-    float visualDepth = (input.DepthValue - 0.94) / (0.99 - 0.94);
-    output.Depth = float4(visualDepth, materialID, 0, 1);
+
+    // NEW: Aligning perfectly with VolumeDepth format!
+    // Red Channel = Altitude (0.0 for flat ground objects)
+    // Blue Channel = DrawDepth (Y-Sort)
+    output.Depth = float4(0.0, 0.0, input.DepthValue, 1.0);
     return output;
 }
 

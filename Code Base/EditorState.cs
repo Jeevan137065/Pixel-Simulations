@@ -42,6 +42,7 @@ namespace Pixel_Simulations.Editor
                 new BrushTool(),
                 new EraserTool(),
                 new ObjectPlacerTool(),
+                new TerrainBrushTool(),
                 new FreeRectangleTool(),
                 new ShapeTool(),
                 new SelectionTool(),
@@ -143,11 +144,16 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public TilesetManager TilesetManager { get; }
         // --- NEW ASSET CORE ---
         [JsonIgnore] public EditorLibrary AssetLibrary { get; set; }
+        [JsonIgnore] public NoiseManager noiseManager = new NoiseManager();
         [JsonIgnore] public PrefabManager PrefabManager { get; }
         [JsonIgnore] public TagManager TagManager { get; } = new TagManager();
         [JsonIgnore] public bool IsTagManagerOpen { get; set; } = false;
         // Flags for UI state
         [JsonIgnore] public string ActiveAtlasForCreator { get; set; }
+        [JsonIgnore] public bool ShowMaskRed { get; set; } = true;
+        [JsonIgnore] public bool ShowMaskGreen { get; set; } = true;
+        [JsonIgnore] public bool ShowMaskBlue { get; set; } = true;
+        [JsonIgnore] public bool ShowMaskAlpha { get; set; } = false; // Usually keep alpha hidden in editor
 
         public EditorState(LayoutManager layoutManager, GraphicsDevice graphicsDevice)
         {
@@ -174,6 +180,7 @@ namespace Pixel_Simulations.Editor
         }
         public void LoadContent(ContentManager content)
         {
+            noiseManager.LoadContent(content);
             AssetLibrary = new EditorLibrary(content);
             //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
             AssetLibrary.LoadAtlas("BasiR", AtlasType.Tile);
