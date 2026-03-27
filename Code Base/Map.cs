@@ -165,6 +165,10 @@ namespace Pixel_Simulations.Data
                         case LayerType.Control:
                             WriteControlLayer(writer, layer as ControlLayer);
                             break;
+                        case LayerType.Mask:
+                            // Do nothing! The base layer info (Name, Visible, Locked) is already written.
+                            // The chunk pixel data is handled by the PNG exporter.
+                            break;
                     }
                 }
             }
@@ -203,6 +207,10 @@ namespace Pixel_Simulations.Data
                             break;
                         case LayerType.Control:
                             newLayer = ReadControlLayer(reader, name);
+                            break;
+                        case LayerType.Mask:
+                            // Do nothing! The base layer info (Name, Visible, Locked) is already written.
+                            newLayer = new MaskLayer(name);
                             break;
                     }
                     if (newLayer != null)
@@ -541,6 +549,64 @@ namespace Pixel_Simulations.Data
                     gd.SetRenderTargets(prevRt);
                 }
             }
+        }
+        public static Dictionary<Point, Texture2D> LoadGameMaskChunks(string imagePath, GraphicsDevice gd)
+        {
+            var chunks = new Dictionary<Point, Texture2D>();
+            if (!File.Exists(imagePath)) return chunks;
+
+            string metaPath = imagePath.Replace(".png", ".meta");
+            int offsetX = 0, offsetY = 0;
+
+            if (File.Exists(metaPath))
+            {
+                var parts = File.ReadAllText(metaPath).Split(',');
+                offsetX = int.Parse(parts[0]);
+                offsetY = int.Parse(parts[1]);
+                System.Diagnostics.Debug.WriteLine($"[MASK] Loaded offset: X:{offsetX}, Y:{offsetY}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[WARNING] Mask .meta file not found at: {metaPath}. Chunks will be offset to Origin (0,0)!");
+            }
+
+            using (var stream = File.OpenRead(imagePath))
+            {
+                using (var masterTex = Texture2D.FromStream(gd, stream))
+                {
+                    int chunkPixels = MaskLayer.CHUNK_PIXEL_SIZE; // 256
+                    int chunksX = masterTex.Width / chunkPixels;
+                    int chunksY = masterTex.Height / chunkPixels;
+
+                    Color[] masterData = new Color[masterTex.Width * masterTex.Height];
+                    masterTex.GetData(masterData);
+
+                    for (int y = 0; y < chunksY; y++)
+                    {
+                        for (int x = 0; x < chunksX; x++)
+                        {
+                            // Apply the loaded offset!
+                            Point coord = new Point(x + offsetX, y + offsetY);
+                            Texture2D chunkTex = new Texture2D(gd, chunkPixels, chunkPixels);
+                            Color[] chunkData = new Color[chunkPixels * chunkPixels];
+
+                            for (int cy = 0; cy < chunkPixels; cy++)
+                            {
+                                for (int cx = 0; cx < chunkPixels; cx++)
+                                {
+                                    int masterX = (x * chunkPixels) + cx;
+                                    int masterY = (y * chunkPixels) + cy;
+                                    chunkData[cx + cy * chunkPixels] = masterData[masterX + masterY * masterTex.Width];
+                                }
+                            }
+
+                            chunkTex.SetData(chunkData);
+                            chunks[coord] = chunkTex;
+                        }
+                    }
+                }
+            }
+            return chunks;
         }
         private static RectangleF CalculateMapBounds(Map map)
         {

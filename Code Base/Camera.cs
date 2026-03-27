@@ -207,8 +207,6 @@ namespace Pixel_Simulations
 
         public void Follow(Player player, float scale) => Follow(player._position, scale);
 
-        public void Follow(TestPlayer player, float scale) => Follow(player.Position, scale);
-
         //public void Follow(NewPlayer player, float scale) => Follow(player.Position, scale);
     }
 

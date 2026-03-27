@@ -10,16 +10,6 @@ using System.Linq;
 
 namespace Pixel_Simulations
 {
-    public enum Tool
-    {
-        None,
-        Shovel,
-        Hoe,
-        LeekSeeds,
-        CarrotSeeds,
-        TurnipSeeds,
-        DiakonSeeds
-    }
 
     public class Ball 
     {
@@ -84,67 +74,6 @@ namespace Pixel_Simulations
             spriteBatch.Draw(_albedoTexture, Position, null, Color.White, 0f, _albedoOrigin, highResScale, SpriteEffects.None, 0);
         }
 
-    }
-    public class TestPlayer
-    {
-        public Vector2 Position { get; set; }
-
-        public Rectangle BoundingBox { get; private set; }
-
-        private Texture2D _texture;
-        private float _speed = 320f;
-
-        public TestPlayer(Texture2D texture, Vector2 startPosition)
-        {
-            _texture = texture;
-            Position = startPosition;
-            BoundingBox = new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
-        }
-
-        public void Update(GameTime gameTime)
-        {
-            var keyboard = Keyboard.GetState();
-            Vector2 moveDirection = Vector2.Zero;
-
-            if (keyboard.IsKeyDown(Keys.W)) moveDirection.Y -= 1;
-            if (keyboard.IsKeyDown(Keys.S)) moveDirection.Y += 1;
-            if (keyboard.IsKeyDown(Keys.A)) moveDirection.X -= 1;
-            if (keyboard.IsKeyDown(Keys.D)) moveDirection.X += 1;
-
-            if (moveDirection != Vector2.Zero)
-            {
-                moveDirection.Normalize();
-                Position += moveDirection * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
-
-            // Update bounding box to follow the player
-            BoundingBox = new Rectangle((int)Position.X, (int)Position.Y, BoundingBox.Width, BoundingBox.Height);
-        }
-
-        public void Draw(SpriteBatch sb)
-        { 
-            sb.FillRectangle(BoundingBox, Color.White);
-            sb.Draw(_texture, Position, Color.White);
-        }
-
-        public void Draw(SpriteBatch sb, Matrix hiResProj)
-        {
-            sb.Begin(
-                SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                SamplerState.PointClamp,
-                DepthStencilState.Default, // MUST match the Grass
-                null, null,
-                hiResProj); // Use the View-only matrix as discussed
-
-            sb.Draw(
-                _texture,
-                Position,
-                null,
-                Color.White);
-
-            sb.End();
-        }
     }
     public class Player : IRenderable
     {
@@ -453,48 +382,4 @@ namespace Pixel_Simulations
 
     }
 
-    public class Inventory
-    {
-        public const int HotbarSize = 10;
-        public Tool[] Hotbar { get; } = new Tool[HotbarSize];
-        public int SelectedSlot { get; private set; }
-
-        public Inventory()
-        {
-            // Spawn with some seeds for testing
-            Hotbar[0] = Tool.Shovel;
-            Hotbar[1] = Tool.Hoe;
-            Hotbar[2] = Tool.LeekSeeds;
-            Hotbar[3] = Tool.CarrotSeeds;
-            Hotbar[4] = Tool.TurnipSeeds;
-            Hotbar[5] = Tool.DiakonSeeds;
-        }
-
-        public void SelectSlot(int slot)
-        {
-            if (slot >= 0 && slot < HotbarSize)
-            {
-                SelectedSlot = slot;
-            }
-        }
-
-        public Tool GetSelectedItem()
-        {
-            return Hotbar[SelectedSlot];
-        }
-
-        public bool AddItem(Tool itemToAdd)
-        {
-            // Find the first empty slot (skipping the first 2 locked slots)
-            for (int i = 2; i < HotbarSize; i++)
-            {
-                if (Hotbar[i] == Tool.None)
-                {
-                    Hotbar[i] = itemToAdd;
-                    return true; // Item was added
-                }
-            }
-            return false; // Inventory is full
-        }
-    }
 }

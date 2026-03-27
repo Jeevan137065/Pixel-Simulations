@@ -46,19 +46,30 @@ namespace Pixel_Simulations.Data
         private EditorState _es;
         public void Update(ToolInput toolInput, EditorInputState input,EventBus eventBus, EditorState editorState) // Add EventBus parameter
         {
-            var selection = toolInput.ActiveBrush;
             _es = editorState;
-            if (selection == null) return;
-
-            // Handle Rotation Input
-            if (input.CurrentKeyboard.IsKeyDown(Keys.E) && input.PreviousKeyboard.IsKeyUp(Keys.E))
+            var selection = toolInput.ActiveBrush;
+            if (selection != null)
             {
-                selection.Rotation = (byte)((selection.Rotation + 1) % 4);
+                byte currentRot = selection.Rotation;
+                bool rotChanged = false;
+                if (input.CurrentKeyboard.IsKeyDown(Keys.E) && input.PreviousKeyboard.IsKeyUp(Keys.E))
+                {
+                    currentRot = (byte)((currentRot + 1) % 4);
+                    rotChanged = true;
+                }
+                if (input.CurrentKeyboard.IsKeyDown(Keys.Q) && input.PreviousKeyboard.IsKeyUp(Keys.Q))
+                {
+                    currentRot = (byte)((currentRot + 3) % 4);
+                    rotChanged = true;
+                }
+                if (rotChanged)
+                {
+                    editorState.Selection.ActiveTileBrush = new TileInfo(selection.TilesetName, selection.TileID, currentRot);
+                    selection = editorState.Selection.ActiveTileBrush; // Update local ref for painting
+                }
             }
-            if (input.CurrentKeyboard.IsKeyDown(Keys.Q) && input.PreviousKeyboard.IsKeyUp(Keys.Q))
-            {
-                selection.Rotation = (byte)((selection.Rotation + 3) % 4); // Anti-clockwise
-            }
+            // If we rotated, create a BRAND NEW brush instance and assign it to the global state
+            
             bool shiftHeld = input.CurrentKeyboard.IsKeyDown(Keys.LeftShift);
             if (toolInput.ActiveLayer is not TileLayer layer || toolInput.ActiveBrush == null) return;
 
@@ -70,11 +81,18 @@ namespace Pixel_Simulations.Data
                 _startCell = input.MouseGridCell;
                 _isAreaMode = shiftHeld;
 
-                // Standard click-paint if not holding shift
                 if (!_isAreaMode)
-                    eventBus.Publish(new PlaceTileCommand(layer, _startCell, toolInput.ActiveBrush));
+                {
+                    // FIX: Create a brand new TileInfo instance so it's disconnected from the brush!
+                    var tileClone = new TileInfo(toolInput.ActiveBrush.TilesetName, toolInput.ActiveBrush.TileID, toolInput.ActiveBrush.Rotation);
+                    eventBus.Publish(new PlaceTileCommand(layer, _startCell, tileClone));
+                }
             }
-
+            if (input.LeftHold && !_isAreaMode)
+            {
+                var tileClone = new TileInfo(toolInput.ActiveBrush.TilesetName, toolInput.ActiveBrush.TileID, toolInput.ActiveBrush.Rotation);
+                eventBus.Publish(new PlaceTileCommand(layer, input.MouseGridCell, tileClone));
+            }
             // Handle Rectangle Fill on Release
             if (input.CurrentMouse.LeftButton == ButtonState.Released && _isAreaMode)
             {

@@ -1151,16 +1151,25 @@ namespace Pixel_Simulations.Editor
         private readonly UIStackPanel _mainStack;
         private readonly UITheme _theme;
 
+        // Column 1 (Stats & Views)
         private UILabel _radiusLabel;
         private UILabel _elevationLabel;
+
+        // Column 2 (The "Smart" Channel Column)
+        private UIStackPanel _col2Stack;
+        private PaintChannel _lastBuiltChannel = PaintChannel.B_Elevation;
+        private string _newDataName = "";
+        private int _newDataValue = 0;
+
+        // Column 3 (Noise)
         private UIStackPanel _noiseListScroll;
 
         public MaskEditorPanel(Rectangle area, EditorUI ui, EditorState state) : base(area, ui, state)
         {
-            _theme = new UITheme { Font = ui.DebugFont, PanelBackground = Color.Black * 0.8f, BorderColor = Color.DarkGray };
-            _rootPanel = new UIPanel { LocalPosition = area.Location.ToVector2(), Size = new Vector2(area.Width, area.Height) };
+            _theme = new UITheme { Font = ui.DebugFont, PanelBackground = Color.Black * 0.85f, BorderColor = Color.DarkGray };
+            _rootPanel = new UIPanel { LocalPosition = area.Location.ToVector2(), Size = new Vector2(area.Width, area.Height), BackgroundColor = _theme.PanelBackground, BorderColor = Color.White };
 
-            // MAIN HORIZONTAL STACK(Invisible Layout)
+            // Main Layout Container (Horizontal)
             _mainStack = new UIStackPanel
             {
                 Direction = StackDirection.Horizontal,
@@ -1168,74 +1177,159 @@ namespace Pixel_Simulations.Editor
                 Size = new Vector2(area.Width - 30, area.Height - 20),
                 PanelBackground = Color.Transparent,
                 BorderColor = Color.Transparent,
-                Spacing = 40f // Wide gaps between columns
+                Spacing = 30f
             };
 
-            // --- COL 1: BRUSH STATS & VIEW TOGGLES (300px) ---
-            var col1 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(300, 140), Spacing = 7f };
+            // ==========================================================
+            // COLUMN 1: BRUSH STATS & VIEW TOGGLES (Width: 280px)
+            // ==========================================================
+            var col1 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(280, 160), Spacing = 8f };
             col1.AddChild(new UILabel { Text = "Terrain Brush Tools", TextColor = Color.Cyan });
 
             _radiusLabel = new UILabel { Text = "Radius: --", TextColor = Color.White };
             _elevationLabel = new UILabel { Text = "Value: --", TextColor = Color.White };
-
             col1.AddChild(_radiusLabel);
             col1.AddChild(_elevationLabel);
             col1.AddChild(new UILabel { Text = "[ / ] Adjust | SHIFT [ / ] Radius | CTRL Erase", TextColor = Color.Gray });
 
-            col1.AddChild(new UIPanel { Size = new Vector2(300, 2), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
+            col1.AddChild(new UIPanel { Size = new Vector2(280, 2), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
             col1.AddChild(new UILabel { Text = "View Toggles:", TextColor = Color.Yellow });
 
-            var toggleRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
+            var toggleRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 8f };
             toggleRow.AddChild(CreateViewToggleBtn("Red", Color.Red, () => state.ShowMaskRed = !state.ShowMaskRed, () => state.ShowMaskRed));
             toggleRow.AddChild(CreateViewToggleBtn("Grn", Color.LimeGreen, () => state.ShowMaskGreen = !state.ShowMaskGreen, () => state.ShowMaskGreen));
             toggleRow.AddChild(CreateViewToggleBtn("Blu", Color.DeepSkyBlue, () => state.ShowMaskBlue = !state.ShowMaskBlue, () => state.ShowMaskBlue));
-
             col1.AddChild(toggleRow);
 
+            // ==========================================================
+            // COLUMN 2: THE "SMART" CHANNEL EDITOR (Width: 550px)
+            // ==========================================================
+            // This stack will be cleared and rebuilt dynamically in RebuildColumn2()
+            _col2Stack = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(550, 160), Spacing = 8f };
 
-            // --- COL 2: CHANNEL & ELEVATION (350px) ---
-            var col2 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(350, 160), Spacing = 10f };
-            col2.AddChild(new UILabel { Text = "Active Channel:", TextColor = Color.Yellow });
-
-            var channelRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
-            channelRow.AddChild(CreateChannelBtn("Biome", PaintChannel.R_Biome, Color.Red));
-            channelRow.AddChild(CreateChannelBtn("Spawn", PaintChannel.G_SpawnType, Color.LimeGreen));
-            channelRow.AddChild(CreateChannelBtn("Elev", PaintChannel.B_Elevation, Color.DeepSkyBlue));
-            col2.AddChild(channelRow);
-
-            col2.AddChild(new UIPanel { Size = new Vector2(350, 2), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
-
-            col2.AddChild(new UILabel { Text = "Quick Elevations (Blue):", TextColor = Color.Cyan });
-            var btnRow1 = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 10f };
-            btnRow1.AddChild(CreateElevBtn("Sea (0)", 0, Color.DarkBlue));
-            btnRow1.AddChild(CreateElevBtn("Ground (128)", 128, Color.SeaGreen));
-
-            var btnRow2 = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 10f };
-            btnRow2.AddChild(CreateElevBtn("Hill (192)", 192, Color.SaddleBrown));
-            btnRow2.AddChild(CreateElevBtn("Peak (255)", 255, Color.White));
-
-            col2.AddChild(btnRow1);
-            col2.AddChild(btnRow2);
-
-
-            // --- COL 3: NOISE MANAGER (350px) ---
-            var col3 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(350, 160), Spacing = 10f };
+            // ==========================================================
+            // COLUMN 3: NOISE MANAGER (Width: 300px)
+            // ==========================================================
+            var col3 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(300, 160), Spacing = 8f };
             col3.AddChild(new UILabel { Text = "Active Noise:", TextColor = Color.Cyan });
 
-            _noiseListScroll = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.4f, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(350, 120), ClipToBounds = true, Spacing = 5f, Padding = 5f };
+            _noiseListScroll = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.4f, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(300, 120), ClipToBounds = true, Spacing = 5f, Padding = 5f };
             col3.AddChild(_noiseListScroll);
 
-            // Assemble
+            // ==========================================================
+            // ASSEMBLE THE MAIN STACK
+            // ==========================================================
             _mainStack.AddChild(col1);
-            _mainStack.AddChild(new UIPanel { Size = new Vector2(2, 140), BackgroundColor = Color.Gray, BorderColor = Color.Transparent });
-            _mainStack.AddChild(col2);
-            _mainStack.AddChild(new UIPanel { Size = new Vector2(2, 140), BackgroundColor = Color.Gray, BorderColor = Color.Transparent });
+            _mainStack.AddChild(new UIPanel { Size = new Vector2(2, 140), BackgroundColor = Color.Gray, BorderColor = Color.Transparent }); // Divider
+            _mainStack.AddChild(_col2Stack);
+            _mainStack.AddChild(new UIPanel { Size = new Vector2(2, 140), BackgroundColor = Color.Gray, BorderColor = Color.Transparent }); // Divider
             _mainStack.AddChild(col3);
+
             _rootPanel.AddChild(_mainStack);
+
+            // Force initial build of Col 2
+            RebuildColumn2(PaintChannel.B_Elevation);
         }
 
-        // ----------------------------------------------------
-        // Add this helper method to MaskEditorPanel class:
+        // ==========================================================
+        // DYNAMIC REBUILDER FOR COLUMN 2
+        // ==========================================================
+        private void RebuildColumn2(PaintChannel activeChannel)
+        {
+            // CRITICAL: We clear the children of Col 2, so it never duplicates sideways!
+            _col2Stack.ClearChildren();
+            _lastBuiltChannel = activeChannel;
+
+            // 1. Channel Selector Row (Top of Col 2)
+            var channelHeader = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 10f };
+            channelHeader.AddChild(new UILabel { Text = "Active Channel:", TextColor = Color.Yellow });
+            channelHeader.AddChild(CreateChannelBtn("Biome (Red)", PaintChannel.R_Biome, Color.Red));
+            channelHeader.AddChild(CreateChannelBtn("Spawn (Green)", PaintChannel.G_SpawnType, Color.LimeGreen));
+            channelHeader.AddChild(CreateChannelBtn("Elev (Blue)", PaintChannel.B_Elevation, Color.DeepSkyBlue));
+            _col2Stack.AddChild(channelHeader);
+
+            _col2Stack.AddChild(new UIPanel { Size = new Vector2(550, 2), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
+
+            // 2. Create a Horizontal Split for the Data Editing (Bottom of Col 2)
+            var splitLayout = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 15f };
+
+            // --- LEFT HALF: ADD NEW DATA FORM (220px) ---
+            var leftForm = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Size = new Vector2(220, 100), AutoSize = false, Spacing = 10f };
+
+            string title = activeChannel switch { PaintChannel.R_Biome => "Biomes (R):", PaintChannel.G_SpawnType => "Spawns (G):", _ => "Elevations (B):" };
+            leftForm.AddChild(new UILabel { Text = title, TextColor = Color.Cyan });
+
+            var nameIn = new UITextBox { Size = new Vector2(220, 24), Placeholder = "Name (e.g. Grass)", Text = _newDataName, DebugName = "DataNameIn" };
+            nameIn.OnTextChanged = (t) => _newDataName = t;
+            leftForm.AddChild(nameIn);
+
+            var valRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
+            var valIn = new UITextBox { Size = new Vector2(140, 24), Placeholder = "Value (0-255)", Text = _newDataValue.ToString(), DebugName = "DataValIn" };
+            valIn.OnTextChanged = (t) => { if (int.TryParse(t, out int v)) _newDataValue = v; };
+            valRow.AddChild(valIn);
+
+            var dataList = activeChannel switch { PaintChannel.R_Biome => _editorState.MaskData.Biomes, PaintChannel.G_SpawnType => _editorState.MaskData.Spawns, _ => _editorState.MaskData.Elevations };
+
+            var addBtn = new UIButton { Size = new Vector2(70, 24), Text = "+ Add", BackgroundColor = Color.DarkGreen };
+            addBtn.OnClick = () => {
+                if (!string.IsNullOrWhiteSpace(_newDataName))
+                {
+                    dataList.Add(new MaskDataDef { Name = _newDataName, Value = MathHelper.Clamp(_newDataValue, 0, 255) });
+                    _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
+                    _newDataName = ""; _newDataValue = 0;
+                    _editorUI.SetFocus(null);
+                    RebuildColumn2(activeChannel); // Refresh UI!
+                }
+            };
+            valRow.AddChild(addBtn);
+            leftForm.AddChild(valRow);
+
+            splitLayout.AddChild(leftForm);
+
+            // --- RIGHT HALF: SCROLLABLE LIST OF SAVED DATA (310px) ---
+            var rightList = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(310, 100), PanelBackground = Color.Black * 0.3f, BorderColor = Color.Transparent, ClipToBounds = true, Spacing = 4f, Padding = 5f, AutoSize = false };
+
+            foreach (var def in dataList.ToList())
+            {
+                var safeDef = def;
+                var listRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
+
+                var btn = new UIButton { Size = new Vector2(260, 24), Text = $"[{safeDef.Value}] {safeDef.Name}", BackgroundColor = Color.DarkSlateGray };
+                btn.OnClick = () => {
+                    var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
+                    if (tool != null) tool.TargetValue = safeDef.Value;
+                };
+
+                var delBtn = new UIButton { Size = new Vector2(30, 24), Text = "X", BackgroundColor = Color.DarkRed };
+                delBtn.OnClick = () => {
+                    dataList.Remove(safeDef);
+                    _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
+                    RebuildColumn2(activeChannel);
+                };
+
+                listRow.AddChild(btn);
+                listRow.AddChild(delBtn);
+                rightList.AddChild(listRow);
+            }
+            if (dataList.Count == 0) rightList.AddChild(new UILabel { Text = "No data defined.", TextColor = Color.Gray });
+
+            splitLayout.AddChild(rightList);
+            _col2Stack.AddChild(splitLayout);
+        }
+
+        // ==========================================================
+        // HELPER METHODS
+        // ==========================================================
+        private UIButton CreateChannelBtn(string text, PaintChannel channel, Color c)
+        {
+            var btn = new UIButton { Size = new Vector2(100, 24), Text = text, BackgroundColor = c * 0.4f, TextColor = Color.White };
+            btn.OnClick = () => {
+                var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
+                if (tool != null) tool.ActiveChannel = channel;
+            };
+            return btn;
+        }
+
         private UIButton CreateViewToggleBtn(string text, Color baseColor, System.Action onClick, System.Func<bool> getState)
         {
             var btn = new UIButton { Size = new Vector2(60, 24), Text = text, BackgroundColor = baseColor * 0.5f, TextColor = Color.White };
@@ -1244,29 +1338,11 @@ namespace Pixel_Simulations.Editor
                 btn.BorderColor = getState() ? Color.Yellow : Color.Transparent;
                 btn.BackgroundColor = getState() ? baseColor : baseColor * 0.2f;
             };
-            // Initial state
             btn.BorderColor = getState() ? Color.Yellow : Color.Transparent;
             btn.BackgroundColor = getState() ? baseColor : baseColor * 0.2f;
             return btn;
         }
-        private UIButton CreateChannelBtn(string text, PaintChannel channel, Color c)
-        {
-            var btn = new UIButton { Size = new Vector2(65, 24), Text = text, BackgroundColor = c * 0.4f, TextColor = Color.White };
-            btn.OnClick = () => {
-                var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
-                if (tool != null) tool.ActiveChannel = channel;
-            };
-            return btn;
-        }
-        private UIButton CreateElevBtn(string text, int val, Color c)
-        {
-            var btn = new UIButton { Size = new Vector2(120, 30), Text = text, BackgroundColor = c * 0.6f, TextColor = Color.White };
-            btn.OnClick = () => {
-                var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
-                if (tool != null) tool.TargetValue = val;
-            };
-            return btn;
-        }
+
         public void PopulateNoises()
         {
             _noiseListScroll.ClearChildren();
@@ -1287,12 +1363,21 @@ namespace Pixel_Simulations.Editor
         public override void Update(EditorInputState input, EventBus bus)
         {
             var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
+
+            // Sync live text
             if (tool != null)
             {
                 _radiusLabel.Text = $"Radius: {tool.BrushRadius:F0} px";
-                _elevationLabel.Text = $"Elevation ({tool.ActiveChannel}): {tool.TargetValue}";
+                _elevationLabel.Text = $"Value ({tool.ActiveChannel}): {tool.TargetValue}";
+
+                // Trigger dynamic rebuild ONLY if channel actually changed
+                if (tool.ActiveChannel != _lastBuiltChannel)
+                {
+                    RebuildColumn2(tool.ActiveChannel);
+                }
             }
 
+            // Sync visual highlights on Noise list
             if (_noiseListScroll.Children.Count <= 1 && _editorState.noiseManager.Noises.Count > 0) PopulateNoises();
 
             foreach (UIButton btn in _noiseListScroll.Children)
@@ -1304,15 +1389,22 @@ namespace Pixel_Simulations.Editor
 
             if (Area.Contains(input.MouseWindowPosition))
             {
-                if (_noiseListScroll.AbsoluteBounds.Contains(input.MouseWindowPosition))
-                {
-                    int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
-                    if (scrollDelta != 0) _noiseListScroll.ScrollOffset = new Vector2(0, System.Math.Max(0, _noiseListScroll.ScrollOffset.Y - scrollDelta * 0.5f));
-                }
+                // Handle global scrolling for all UI Stack Panels
+                ApplyGlobalScrolling(_rootPanel, input);
 
                 _editorUI.CheckFocusClick(_rootPanel, input);
                 _rootPanel.Update(input, bus);
             }
+        }
+
+        private void ApplyGlobalScrolling(UIElement element, EditorInputState input)
+        {
+            if (element is UIStackPanel stack && stack.ClipToBounds && stack.AbsoluteBounds.Contains(input.MouseWindowPosition))
+            {
+                int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+                if (scrollDelta != 0) stack.ScrollOffset = new Vector2(0, System.Math.Max(0, stack.ScrollOffset.Y - scrollDelta * 0.5f));
+            }
+            foreach (var child in element.Children) ApplyGlobalScrolling(child, input);
         }
 
         public override void Draw(SpriteBatch sb) => _rootPanel.Draw(sb, _editorUI, _theme);

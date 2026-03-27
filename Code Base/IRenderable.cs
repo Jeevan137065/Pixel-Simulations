@@ -18,11 +18,7 @@ namespace Pixel_Simulations
         void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer);
     }
 
-    public enum SwayType
-    {
-        PhysicsSpring, // The elastic, spring-based movement
-        TriangleWave   // The decaying linear movement (Stardew style)
-    }
+
 
     public class Decoration : IRenderable
     {
@@ -46,27 +42,6 @@ namespace Pixel_Simulations
         }
 
         public void DrawNormal(SpriteBatch spriteBatch, Effect normalEffect, IndexBuffer indexBuffer) { }
-    }
-
-    public interface ISwayable : IRenderable
-    {
-        // The collision area of the object, usually at its base.
-        Rectangle Bounds { get; }
-
-        // The current horizontal sway value. Negative is left, positive is right.
-        float _swayValue { get; }
-        void UpdateVertices(float totalTime, float windAmount, float windSpeed);
-
-        // Apply a force to the object, causing it to sway.
-        void Push(Vector2 direction, float force);
-
-        // Update the sway physics (like damping/decay) each frame.
-        void UpdateSway(GameTime gameTime);
-
-        void Draw(BasicEffect effect, IndexBuffer indexBuffer);
-        void DrawDepth(SpriteBatch spriteBatch, Effect depthEffect, IndexBuffer indexBuffer);
-        void DrawDebugOutline( BasicEffect effect);
-
     }
 
     public struct RenderableSprite

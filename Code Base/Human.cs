@@ -11,13 +11,13 @@ namespace Pixel_Simulations
 {
     public enum Direction { South, North, East, West }
     public enum PlayerState { Idle, Walking, Turning }
+    public enum Tool { None, Shovel, Hoe, LeekSeeds, CarrotSeeds, TurnipSeeds, DiakonSeeds }
     public abstract class Human
     {
         // Core Properties
         public string Name { get; protected set; }
         public Vector2 Position { get; protected set; }
         public Vector2 Velocity { get; protected set; }
-        public RectangleF BoundingBox { get; protected set; }
         public Direction FacingDirection { get; protected set; }
 
     }
@@ -25,20 +25,29 @@ namespace Pixel_Simulations
     {
         // --- State Properties ---
         public PlayerState CurrentState { get; private set; }
+        public Inventory Inventory { get; private set; }
+        public bool IsMoving => Velocity != Vector2.Zero;
 
-        // --- Animation Management ---
+        // --- Visual & Shader Properties for GameRenderer ---
+        public Texture2D Texture => _compositeTarget;
+        public Rectangle SourceRect => new Rectangle(0, 0, 48, 64);
+        public Vector2 Origin => new Vector2(24, 48); // Local pivot inside the 48x64 texture
+        public Vector2 Foot => Position; // World position of the feet
+
+        // FootBounds represents the physical space the player occupies on the ground.
+        // Used for Physics, Grass flattening (Green Channel), and Interaction.
+        public RectangleF FootBounds => new RectangleF(Position.X - 8, Position.Y - 4, 16, 8);
+
+        // --- Internal Components ---
         private AnimationManager _animationManager;
         private List<BodyPart> _bodyParts;
         private PhysicsManager _physics;
 
-        //private PhysicsManager _physics;
-        // --- Movement & Input ---
         private float _speed = 100f;
         private bool _isTurning = false;
         private float _turnTimer = 0f;
-
-        private const float TURN_FRAME_DURATION = 0.6f; // How fast each frame of the turn animation plays
-        private int _turnFrameCount = 3; // Number of frames in your South -> East turn animation
+        private const float TURN_FRAME_DURATION = 0.6f;
+        private int _turnFrameCount = 3;
 
         private Direction _targetDirection;
         private KeyboardState _previousKeyboardState;
@@ -51,9 +60,11 @@ namespace Pixel_Simulations
         {
             Name = name;
             Position = startPosition;
+            Inventory = new Inventory();
+
             _graphicsDevice = graphicsDevice;
             _localSpriteBatch = new SpriteBatch(_graphicsDevice);
-            _compositeTarget = new RenderTarget2D(_graphicsDevice,48, 64,false,SurfaceFormat.Color,DepthFormat.None,0,RenderTargetUsage.PreserveContents);
+            _compositeTarget = new RenderTarget2D(_graphicsDevice, 48, 64, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
             FacingDirection = Direction.South;
             CurrentState = PlayerState.Idle;
@@ -79,25 +90,15 @@ namespace Pixel_Simulations
 
         public void Update(GameTime gameTime)
         {
-            if (_isTurning)
-            {
-                UpdateTurning(gameTime);
-            }
-            else
-            {
-                HandleInput(gameTime);
-            }
+            if (_isTurning) UpdateTurning(gameTime);
+            else HandleInput(gameTime);
 
-            // Update all body parts with their new frames from the animation manager
             _animationManager.Update(gameTime, CurrentState, FacingDirection, FacingDirection, _isTurning);
             foreach (var part in _bodyParts)
             {
                 part.SourceRectangle = _animationManager.GetFrame(part.Name);
             }
-
-            // Update the drawing order based on the current state and direction
             UpdateDrawOrder();
-
             ComposeTexture();
         }
 
@@ -110,6 +111,14 @@ namespace Pixel_Simulations
             if (kbs.IsKeyDown(Keys.S)) moveDirection.Y += 1;
             if (kbs.IsKeyDown(Keys.A)) moveDirection.X -= 1;
             if (kbs.IsKeyDown(Keys.D)) moveDirection.X += 1;
+
+            // Handle Hotbar
+            if (kbs.IsKeyDown(Keys.D1)) Inventory.SelectSlot(0);
+            if (kbs.IsKeyDown(Keys.D2)) Inventory.SelectSlot(1);
+            if (kbs.IsKeyDown(Keys.D3)) Inventory.SelectSlot(2);
+            if (kbs.IsKeyDown(Keys.D4)) Inventory.SelectSlot(3);
+            if (kbs.IsKeyDown(Keys.D5)) Inventory.SelectSlot(4);
+            if (kbs.IsKeyDown(Keys.D6)) Inventory.SelectSlot(5);
 
             if (moveDirection != Vector2.Zero)
             {
@@ -272,25 +281,10 @@ namespace Pixel_Simulations
                 _ => new RectangleF(centerX - w / 2, feetY - h, w, h)
             };
         }
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            Vector2 drawOrigin = new Vector2(24, 32);
-
-            // Depth is based on the player's feet (Position.Y + height)
-            float bottomY = Position.Y + 48; // Assuming the player sprite is 48px tall
-            float depth = DepthUtil.Calculate(bottomY);
-
-            spriteBatch.Draw(_compositeTarget, Position, null, Color.White, 0f, drawOrigin, 1f, SpriteEffects.None, depth);
-        }
-
-        public Texture2D Texture => _compositeTarget;
 
         // The source rect is the entire composite target
         public Rectangle CurrentFrameRect => new Rectangle(0, 0, _compositeTarget.Width, _compositeTarget.Height);
 
-        // The visual center/pivot of the player. 
-        // Assuming a 48x64 canvas where the feet are near the bottom (Y=48)
-        public Vector2 Origin => new Vector2(24, 48);
 
         // The exact Y coordinate of the player's feet touching the ground
         public float BaseY => Position.Y + 48f;
@@ -306,6 +300,26 @@ namespace Pixel_Simulations
         public BodyPart(string name)
         {
             Name = name;
+        }
+    }
+    public class Inventory
+    {
+        public const int HotbarSize = 10;
+        public Tool[] Hotbar { get; } = new Tool[HotbarSize];
+        public int SelectedSlot { get; private set; }
+
+        public Inventory()
+        {
+            Hotbar[0] = Tool.Shovel; Hotbar[1] = Tool.Hoe; Hotbar[2] = Tool.LeekSeeds;
+            Hotbar[3] = Tool.CarrotSeeds; Hotbar[4] = Tool.TurnipSeeds; Hotbar[5] = Tool.DiakonSeeds;
+        }
+
+        public void SelectSlot(int slot) { if (slot >= 0 && slot < HotbarSize) SelectedSlot = slot; }
+        public Tool GetSelectedItem() => Hotbar[SelectedSlot];
+        public bool AddItem(Tool itemToAdd)
+        {
+            for (int i = 2; i < HotbarSize; i++) { if (Hotbar[i] == Tool.None) { Hotbar[i] = itemToAdd; return true; } }
+            return false;
         }
     }
 }

@@ -95,7 +95,7 @@ namespace Pixel_Simulations
 
             // Load Object Atlases
             LoadAtlas("Trees", AtlasType.Object);
-            LoadAtlas("Buildings", AtlasType.Object);
+            LoadAtlas("Building", AtlasType.Object);
 
             // Load Universal/UI Atlases
             customFont = content.Load<SpriteFont>("Seattle");

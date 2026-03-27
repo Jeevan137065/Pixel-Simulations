@@ -37,6 +37,12 @@
     <None Update="Assets\Maps\level1.map">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Maps\level1_mask.meta">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Maps\level1_mask.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Content\player_animation_data.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

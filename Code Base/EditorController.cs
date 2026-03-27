@@ -44,6 +44,8 @@ namespace Pixel_Simulations.Editor
             // --- 1. ACTIVATE AND UPDATE THE INPUTSTATE ---
             UpdateInputState(keyboardState, mouseState);
             var input = _editorState.Input;
+            if (_editorState.UI.FocusedElement != null && !_editorState.UI.FocusedElement.IsFocused)
+                _editorState.UI.FocusedElement = null;
             bool isTyping = _editorState.UI.FocusedElement is UITextBox;
             // --- 2. Handle Global Editor Controls ---
             if (!isTyping)

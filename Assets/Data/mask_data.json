@@ -1,0 +1,14 @@
+{
+  "Elevations": [
+    {
+      "Name": "Ground",
+      "Value": 150
+    },
+    {
+      "Name": "Beach",
+      "Value": 80
+    }
+  ],
+  "Biomes": [],
+  "Spawns": []
+}

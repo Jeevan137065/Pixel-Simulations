@@ -34,7 +34,7 @@ namespace Pixel_Simulations
         public void LoadContent(ContentManager content, List<RectangleF> validAreas)
         {
             _effect = content.Load<Effect>("grass");
-            _noiseMap = content.Load<Texture2D>("noise");
+            _noiseMap = content.Load<Texture2D>("WhiteA");
             LoadNoiseMap(_noiseMap);
             InitializeField(validAreas);
         }
@@ -45,73 +45,64 @@ namespace Pixel_Simulations
             Random rand = new Random();
 
             // We use a fixed step but vary spawn chance based on settings
-            float step = Settings.DensityStep;
-
+            float step = Math.Max(1.0f, Settings.DensityStep);
+            int maxAllowedBlades = 50000;
             foreach (var rect in validAreas)
             {
+                // Skip invalid rectangles
+                if (rect.Width <= 0 || rect.Height <= 0) continue;
+
                 for (float x = rect.Left; x < rect.Right; x += step)
                 {
                     for (float y = rect.Top; y < rect.Bottom; y += step)
                     {
+                        if (blades.Count >= maxAllowedBlades) break; ; // Break out completely
+
                         float noise = GetNoiseValue(x, y);
 
-                        // TIER 0: Empty
                         if (noise < Settings.MinThreshold) continue;
+
                         int spawnCount = 0;
                         float heightMod = 0.1f;
 
-                        // TIER 1: Sparse
-                        if (noise > Settings.MinThreshold)
-                        {
-                            spawnCount = 1;
-                            heightMod = 0.4f;
-                        }
-
-                        // TIER 2: Mid
-                        if (noise > Settings.MidThreshold)
-                        {
-                            spawnCount = 1 * (int)(1 + Settings.SparseDensity);
-                            heightMod = 0.8f; // Young/Short grass
-
-                        }
-                        // TIER 3: Lush
-                        else if (noise > Settings.MaxThreshold)
-                        {
-                            spawnCount = 2;
-                            heightMod = 1.4f;
-                        }
+                        if (noise > Settings.MinThreshold) { spawnCount = 1; heightMod = 0.4f; }
+                        if (noise > Settings.MidThreshold) { spawnCount = 1 * (int)(1 + Settings.SparseDensity); heightMod = 0.8f; }
+                        else if (noise > Settings.MaxThreshold) { spawnCount = 2; heightMod = 1.4f; }
 
                         for (int i = 0; i < spawnCount; i++)
                         {
                             float jitter = step;
                             blades.Add(new BladeData
                             {
-                                Pos = new Vector2(x + (float)(rand.NextDouble() - 0.5) * jitter,
-                                                y + (float)(rand.NextDouble() - 0.5) * jitter),
+                                Pos = new Vector2(
+                                    x + (float)(rand.NextDouble() - 0.5) * jitter,
+                                    y + (float)(rand.NextDouble() - 0.5) * jitter),
                                 Wind = (float)rand.NextDouble() * Settings.WindIntensity,
                                 Height = Settings.GlobalHeightBase * heightMod,
                                 Var = (float)rand.NextDouble(),
-                                Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature * 1.0f
+                                Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature
                             });
                         }
                     }
                 }
             }
 
-            // Sort by Y for proper 2D Depth
+            if (blades.Count == 0)
+            {
+                _bladeCount = 0;
+                if (_vertexBuffer != null) { _vertexBuffer.Dispose(); _vertexBuffer = null; }
+                return;
+            }
+
             blades.Sort((a, b) => a.Pos.Y.CompareTo(b.Pos.Y));
 
             var vertices = new List<GrassVertex>();
-            foreach (var b in blades)
-            {
-                AddBlade(vertices, b);
-            }
+            foreach (var b in blades) AddBlade(vertices, b);
 
             _bladeCount = blades.Count;
             _vertexBuffer = new VertexBuffer(_device, GrassVertex.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
             _vertexBuffer.SetData(vertices.ToArray());
         }
-
         private void AddBlade(List<GrassVertex> vertices, BladeData b)
         {
             Random rand = new Random((int)(b.Pos.X * b.Pos.Y));
@@ -163,8 +154,8 @@ namespace Pixel_Simulations
         float GetNoiseValue(float x, float y)
         {
             // Scale world coords to noise texture coords (tiling)
-            int nx = (int)(x / 2.0f) % noiseWidth;
-            int ny = (int)(y / 2.0f) % noiseHeight;
+            int nx = (int)Math.Floor(x / 2.0f) % noiseWidth;
+            int ny = (int)Math.Floor(y / 2.0f) % noiseHeight;
             if (nx < 0) nx += noiseWidth;
             if (ny < 0) ny += noiseHeight;
 
@@ -180,6 +171,8 @@ namespace Pixel_Simulations
 
         public void Draw(Matrix worldViewProjection)
         {
+            if (_vertexBuffer == null || _bladeCount == 0) return;
+
             _device.SetVertexBuffer(_vertexBuffer);
             _device.DepthStencilState = DepthStencilState.None;
 

@@ -275,7 +275,7 @@ namespace Pixel_Simulations
             _debugCycleOrder = new List<RenderLayer>
             {
                 RenderLayer.Composite,
-                RenderLayer.PostProcess,
+                //RenderLayer.PostProcess,
                 RenderLayer.Albedo,
                 RenderLayer.Dynamic,
                 RenderLayer.VolumeDepth
@@ -299,7 +299,7 @@ namespace Pixel_Simulations
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // 2. SIMULATION LAYER (960x540)
             _targets[RenderLayer.VolumeDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
-                SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8 ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
@@ -318,7 +318,7 @@ namespace Pixel_Simulations
             _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         }
-        public void Begin(RenderLayer layer, Color? clearColor = null)
+        public void Begin(RenderLayer layer, Color? clearColor)
         {
             _graphicsDevice.SetRenderTarget(_targets[layer]);
 
@@ -339,7 +339,7 @@ namespace Pixel_Simulations
             _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, clearColor, 1.0f, 0);
         }
         public RenderTargetBinding GetTarget(RenderLayer layer) => _targets[layer];
-
+        public RenderTarget2D GetRenderTarget(RenderLayer layer) => _targets[layer];
         public void Update()
         {
             var kstate = Keyboard.GetState();

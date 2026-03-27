@@ -14,9 +14,10 @@ using System.Text;
 
 namespace Pixel_Simulations
 {
-    //Stores all game bools used for debug only
-    public enum DebugBool
+    //Stores all game bools used
+    public enum GameBool
     {
+        IsPaused,
         Collision,
         GrassArea
     }
@@ -28,6 +29,7 @@ namespace Pixel_Simulations
         // --- Managers and Services ---
         public Camera GameCamera { get; set; }
         public AssetLibrary Assets { get; }
+        public Dictionary<Point, Texture2D> TerrainMaskChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public TilesetManager TilesetManager { get; }
         public PrefabManager PrefabManager { get; }
         public WeatherSimulator Weather { get; set; }
@@ -41,7 +43,7 @@ namespace Pixel_Simulations
         public int _uKeyPressed = 0;
         private bool _fKeyPressedLastFrame = false;
         //Debug Bool
-        public Dictionary<DebugBool, bool> DebugPool = new Dictionary<DebugBool, bool>();
+        public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
         public GameState()
         {
             GameCamera = new Camera();
@@ -49,7 +51,7 @@ namespace Pixel_Simulations
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
             Weather = new WeatherSimulator();
-            TimeSystem = new DayTimeManager(); // NEW
+            TimeSystem = new DayTimeManager();
             input = new InputManager();
             Physics = new PhysicsManager();
         }
@@ -59,8 +61,9 @@ namespace Pixel_Simulations
         /// </summary>
         public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
         {
-            DebugPool[DebugBool.Collision] = false;
-            DebugPool[DebugBool.GrassArea] = false;
+            DebugPool[GameBool.Collision] = false;
+            DebugPool[GameBool.GrassArea] = false;
+            DebugPool[GameBool.IsPaused] = false;
             // 1. Load all raw texture assets first.
             Assets.LoadCoreContent(content);
 
@@ -75,29 +78,17 @@ namespace Pixel_Simulations
             gameMapPath = Path.Combine(parentDir,"Assets", "Maps", "level1.map");
             System.Diagnostics.Debug.WriteLine($"Map being Read for game to: {gameMapPath}");
             CurrentMap = MapSerializer.Read(gameMapPath);
-            
+            string maskPngPath = gameMapPath.Replace(".map", "_mask.png");
+            TerrainMaskChunks = MapSerializer.LoadGameMaskChunks(maskPngPath, graphicsDevice);
+            System.Diagnostics.Debug.WriteLine($"Loaded Terrain Mask: {maskPngPath}");
             // 3. Create all TileSet instances and register them with the TilesetManager.
             // The manager needs the raw textures from the AssetLibrary to do its job.
             InitializeTilesets(graphicsDevice);
+            Grass = new GrassSystem(graphicsDevice,GrassLibrary.GetPreset(GrassPreset.WheatField));
             Shaders = new ShaderManager(graphicsDevice);
             Shaders.LoadContent(content);
             Physics.LoadMapData(CurrentMap);
-            // --- NEW: GRASS INITIALIZATION ---
-            Grass = new GrassSystem(graphicsDevice, GrassLibrary.GetPreset(GrassPreset.ForestFloor));
-            var grassAreas = new List<RectangleF>();
-
-            // Search all layers for Control rectangles tagged #Grass
-            foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
-            {
-                foreach (var rect in layer.Rectangles)
-                {
-                    if (rect.Tags.Contains("#Grass"))
-                    {
-                        grassAreas.Add(new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y));
-                    }
-                }
-            }
-            Grass.LoadContent(content, grassAreas);
+            
             // ---------------------------------
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
@@ -119,7 +110,6 @@ namespace Pixel_Simulations
             if (wildTexture != null)
                 TilesetManager.RegisterTileSet(new TileSet("Wild", wildTexture, 16, graphicsDevice));
 
-            
             // Add other tilesets here...
         }
 
@@ -147,7 +137,7 @@ namespace Pixel_Simulations
             {
                 if (!_fKeyPressedLastFrame)
                 {
-                    DebugPool[DebugBool.GrassArea] = true;
+                    DebugPool[GameBool.GrassArea] = true;
                 }
                 _fKeyPressedLastFrame = true;
             }
@@ -309,5 +299,6 @@ namespace Pixel_Simulations
 
             return bounds;
         }
+        public bool IsPaused => DebugPool[GameBool.IsPaused];
     }
 }

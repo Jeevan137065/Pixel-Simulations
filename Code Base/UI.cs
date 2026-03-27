@@ -175,62 +175,6 @@ namespace Pixel_Simulations.UI
 
 
     }
-    public class PopupWindow
-    {
-        public Rectangle Bounds { get; }
-        public string Title { get; }
-        public List<string> Items { get; }
-        public string SelectedItem { get; private set; }
-
-        public PopupWindow(string title, List<string> items, LayoutManager layout)
-        {
-            Title = title;
-            Items = items;
-
-            // Center the popup in the main viewport
-            int width = 300;
-            int height = 200;
-            Bounds = new Rectangle(
-                layout.ViewportPanel.X + (layout.ViewportPanel.Width - width) / 2,
-                layout.ViewportPanel.Y + (layout.ViewportPanel.Height - height) / 2,
-                width, height);
-        }
-
-        public void Update(EditorInputState input)
-        {
-            SelectedItem = null;
-            if (!Bounds.Contains(input.MouseWindowPosition)) return;
-
-            if (input.IsNewLeftClick)
-            {
-                int index = (int)((input.MouseWindowPosition.Y - Bounds.Y - 30) / 20); // 30px for title
-                if (index >= 0 && index < Items.Count)
-                {
-                    SelectedItem = Items[index];
-                }
-            }
-        }
-
-        public void Draw(SpriteBatch sb, SpriteFont font)
-        {
-            // Draw a semi-transparent overlay behind the popup
-            sb.FillRectangle(new Rectangle(0, 0, 2000, 2000), Color.Black * 0.5f);
-
-            // Draw the popup window
-            sb.FillRectangle(Bounds, Color.DarkSlateGray);
-            sb.DrawRectangle(Bounds, Color.Black, 2);
-            sb.DrawString(font, Title, Bounds.Location.ToVector2() + new Vector2(5, 5), Color.White);
-
-            // Draw the list of items
-            int yOffset = 30;
-            foreach (var item in Items)
-            {
-                var pos = new Vector2(Bounds.X + 10, Bounds.Y + yOffset);
-                sb.DrawString(font, item, pos, Color.White);
-                yOffset += 20;
-            }
-        }
-    }
     public abstract class BasePanel : IPanel
     {
         protected Rectangle Area { get; }

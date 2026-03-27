@@ -141,14 +141,15 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public TilesetState TilesetPanel { get; } = new TilesetState();
         [JsonIgnore] public PrefabCreatorState PrefabCreator { get; } = new PrefabCreatorState();
         [JsonIgnore] public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
-        [JsonIgnore] public TilesetManager TilesetManager { get; }
         // --- NEW ASSET CORE ---
+        [JsonIgnore] public TilesetManager TilesetManager { get; }
         [JsonIgnore] public EditorLibrary AssetLibrary { get; set; }
         [JsonIgnore] public NoiseManager noiseManager = new NoiseManager();
+        [JsonIgnore] public MaskDataManager MaskData { get; } = new MaskDataManager();
         [JsonIgnore] public PrefabManager PrefabManager { get; }
         [JsonIgnore] public TagManager TagManager { get; } = new TagManager();
-        [JsonIgnore] public bool IsTagManagerOpen { get; set; } = false;
         // Flags for UI state
+        [JsonIgnore] public bool IsTagManagerOpen { get; set; } = false;
         [JsonIgnore] public string ActiveAtlasForCreator { get; set; }
         [JsonIgnore] public bool ShowMaskRed { get; set; } = true;
         [JsonIgnore] public bool ShowMaskGreen { get; set; } = true;

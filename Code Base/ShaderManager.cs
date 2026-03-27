@@ -72,12 +72,13 @@ namespace Pixel_Simulations
             Effects["CloudShadows"] = content.Load<Effect>("CloudShadows");
             Effects["AmbientLighting"] = content.Load<Effect>("AmbientLight");
             Effects["TestWeather"] = content.Load<Effect>("Test");
-
+            Effects["WaterFlood"] = content.Load<Effect>("WaterFlood");
             // Load all Textures
-            Textures["Noise_Perlin"] = content.Load<Texture2D>("PerlinB");
+            Textures["Noise_Perlin"] = content.Load<Texture2D>("WhiteA");
             Textures["Noise_Blue"] = content.Load<Texture2D>("BlueA");
             Textures["Atlas_Weather"] = content.Load<Texture2D>("Particle_atlas");
-
+            Effects["WaterFlood"].SetSafe("WaterLevel", 50f / 255f);
+            Effects["WaterFlood"].SetSafe("WaterColor", new Vector4(0.1f, 0.4f, 0.8f, 0.6f));
             // Assign static textures to effects immediately
             Effects["Gusting"].SetSafe("NoiseTexture", Textures["Noise_Perlin"]);
             Effects["RollingFog"].SetSafe("NoiseTexture", Textures["Noise_Perlin"]);
