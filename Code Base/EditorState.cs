@@ -184,7 +184,7 @@ namespace Pixel_Simulations.Editor
             noiseManager.LoadContent(content);
             AssetLibrary = new EditorLibrary(content);
             //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
-            AssetLibrary.LoadAtlas("BasiR", AtlasType.Tile);
+            AssetLibrary.LoadAtlas("Base", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
 
             AssetLibrary.LoadAtlas("Trees", AtlasType.Object);
@@ -194,6 +194,8 @@ namespace Pixel_Simulations.Editor
             PrefabManager.Load(prefabPath);
             string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
             TagManager.Load(tagsPath);
+            string maskDataPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json");
+            MaskData.Load(maskDataPath);
         }
         public void refresh(GameTime gameTime)
         {

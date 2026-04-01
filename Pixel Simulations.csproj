@@ -31,6 +31,15 @@
     <None Update="Assets\Data\Objects.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Maps\CoastTown.map">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Maps\CoastTown_capture.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Maps\CoastTown_mask.meta">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Maps\level1.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

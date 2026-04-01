@@ -187,7 +187,7 @@ namespace Pixel_Simulations.Data
             {
                 if (toolInput.ActiveLayer is TileLayer tileLayer && (toolInput.ActiveLayer.Type == LayerType.Tile) && toolInput.ActiveBrush != null)
                 {
-                    var cell = new Point((int)System.Math.Floor(toolInput.WorldPosition.X / 16), (int)System.Math.Floor(toolInput.WorldPosition.Y / 16));
+                    var cell = new Point((int)Math.Floor(toolInput.WorldPosition.X / 16), (int)Math.Floor(toolInput.WorldPosition.Y / 16));
                     if (tileLayer.GetTileAt(cell) != null)
                     {
                         var command = new EraseTileCommand(tileLayer, cell);
@@ -640,7 +640,7 @@ namespace Pixel_Simulations.Data
             // --- STEP 3: KEYBOARD NUDGING ---
             if (CurrentSelect != null && _currentMode == InteractionMode.None)
             {
-                HandleKeyboardMovement(CurrentSelect, input);
+                HandleKeyboardMovement(CurrentSelect, input,toolInput.ActiveLayer);
             }
 
             // --- STEP 4: RELEASE & COMMAND ---
@@ -659,35 +659,45 @@ namespace Pixel_Simulations.Data
             }
         }
 
-        private void HandleKeyboardMovement(MapObject obj, EditorInputState input)
+        private void HandleKeyboardMovement(MapObject obj, EditorInputState input, Layer activeLayer)
         {
-            if (_es.UI.FocusedElement is UITextBox) return; // Don't move if typing!
-
-            bool snapMode = input.CurrentKeyboard.CapsLock;
-            float speed = snapMode ? 16f : 1f;
-            Vector2 move = Vector2.Zero;
-
-            bool up = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.W) && input.PreviousKeyboard.IsKeyUp(Keys.W)) : input.CurrentKeyboard.IsKeyDown(Keys.W);
-            bool down = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.S) && input.PreviousKeyboard.IsKeyUp(Keys.S)) : input.CurrentKeyboard.IsKeyDown(Keys.S);
-            bool left = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.A) && input.PreviousKeyboard.IsKeyUp(Keys.A)) : input.CurrentKeyboard.IsKeyDown(Keys.A);
-            bool right = snapMode ? (input.CurrentKeyboard.IsKeyDown(Keys.D) && input.PreviousKeyboard.IsKeyUp(Keys.D)) : input.CurrentKeyboard.IsKeyDown(Keys.D);
-
-            if (up) move.Y -= speed;
-            if (down) move.Y += speed;
-            if (left) move.X -= speed;
-            if (right) move.X += speed;
-
-            if (move != Vector2.Zero)
             {
-                if (obj is ShapeObject poly)
+                if (_es.UI.FocusedElement is UITextBox) return; // Don't move if typing!
+
+                bool snapMode = input.CurrentKeyboard.CapsLock;
+                bool isMovingLayer = (obj == null);
+
+                float speed = snapMode ? 16f : 1f;
+                Vector2 move = Vector2.Zero;
+                bool discrete = snapMode || isMovingLayer;
+                bool up = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.W) && input.PreviousKeyboard.IsKeyUp(Keys.W)) : input.CurrentKeyboard.IsKeyDown(Keys.W);
+                bool down = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.S) && input.PreviousKeyboard.IsKeyUp(Keys.S)) : input.CurrentKeyboard.IsKeyDown(Keys.S);
+                bool left = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.A) && input.PreviousKeyboard.IsKeyUp(Keys.A)) : input.CurrentKeyboard.IsKeyDown(Keys.A);
+                bool right = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.D) && input.PreviousKeyboard.IsKeyUp(Keys.D)) : input.CurrentKeyboard.IsKeyDown(Keys.D);
+
+                if (up) move.Y -= speed;
+                if (down) move.Y += speed;
+                if (left) move.X -= speed;
+                if (right) move.X += speed;
+
+                if (move != Vector2.Zero)
                 {
-                    poly.Shape.Offset(move);
-                    poly.UpdateBoundsFromVertices();
+                    if (obj != null) // Move single selected object
+                    {
+                        if (obj is ShapeObject poly)
+                        {
+                            poly.Shape.Offset(move);
+                            poly.UpdateBoundsFromVertices();
+                        }
+                        else obj.Position += move;
+                    }
+                    else // MOVE ENTIRE LAYER
+                    {
+                        activeLayer.Shift(move, _es.CELL_SIZE);
+                    }
                 }
-                else obj.Position += move;
             }
         }
-
         private int GetHandleAt(MapObject obj, Vector2 mouseWorld, float zoom)
         {
             float handleSize = 8f / zoom;

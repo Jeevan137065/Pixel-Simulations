@@ -75,12 +75,15 @@ namespace Pixel_Simulations
             PrefabManager.Load(prefabPath);
 
             // 3. MAP: Load the actual level data (Binary .map for the game).
-            gameMapPath = Path.Combine(parentDir,"Assets", "Maps", "level1.map");
+            gameMapPath = Path.Combine(parentDir,"Assets", "Maps", "CoastTown.map");
             System.Diagnostics.Debug.WriteLine($"Map being Read for game to: {gameMapPath}");
             CurrentMap = MapSerializer.Read(gameMapPath);
             string maskPngPath = gameMapPath.Replace(".map", "_mask.png");
             TerrainMaskChunks = MapSerializer.LoadGameMaskChunks(maskPngPath, graphicsDevice);
             System.Diagnostics.Debug.WriteLine($"Loaded Terrain Mask: {maskPngPath}");
+            if(CurrentMap == null) {
+                System.Diagnostics.Debug.WriteLine($"Map Read at: {gameMapPath} is NULL");
+            }
             // 3. Create all TileSet instances and register them with the TilesetManager.
             // The manager needs the raw textures from the AssetLibrary to do its job.
             InitializeTilesets(graphicsDevice);
@@ -102,9 +105,9 @@ namespace Pixel_Simulations
 
             // Create a TileSet instance for each atlas we have loaded.
             // In a more advanced system, this would be driven by a manifest file.
-            var basicTexture = Assets.GetAtlas("BasiR");
+            var basicTexture = Assets.GetAtlas("Base");
             if (basicTexture != null)
-                TilesetManager.RegisterTileSet(new TileSet("BasiR", basicTexture, 16, graphicsDevice));
+                TilesetManager.RegisterTileSet(new TileSet("Base", basicTexture, 16, graphicsDevice));
 
             var wildTexture = Assets.GetAtlas("Wild");
             if (wildTexture != null)

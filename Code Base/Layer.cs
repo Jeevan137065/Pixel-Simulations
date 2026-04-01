@@ -14,7 +14,7 @@ namespace Pixel_Simulations.Data
         public bool IsLocked { get; set; } = false;
         public bool IsExpanded { get; set; } = false;
         public abstract LayerType Type { get; }
-
+        public abstract void Shift(Vector2 delta, int cellSize);
         protected Layer(string name) { Name = name; }
         protected Layer() { } // For deserialization
     }
@@ -64,14 +64,69 @@ namespace Pixel_Simulations.Data
         /// Gets the TileInfo at a specific cell, if one exists.
         public TileInfo GetTileAt(Point globalCell)
         {
-            Point chunkCoord = new Point(globalCell.X / Chunk.CHUNK_SIZE, globalCell.Y / Chunk.CHUNK_SIZE);
+            if (IsLocked) return null;
+
+            // 1. Mathematically safe floor division for negatives
+            Point chunkCoord = new Point(
+                (int)Math.Floor((double)globalCell.X / Chunk.CHUNK_SIZE),
+                (int)Math.Floor((double)globalCell.Y / Chunk.CHUNK_SIZE)
+            );
+
             if (Chunks.TryGetValue(chunkCoord, out var chunk))
             {
-                int localX = globalCell.X % Chunk.CHUNK_SIZE;
-                int localY = globalCell.Y % Chunk.CHUNK_SIZE;
+                // 2. Mathematically safe local coordinate extraction
+                int localX = globalCell.X - chunkCoord.X * Chunk.CHUNK_SIZE;
+                int localY = globalCell.Y - chunkCoord.Y * Chunk.CHUNK_SIZE;
+
                 return chunk.GetTileAt(localX, localY);
             }
             return null;
+        }
+        public override void Shift(Vector2 delta, int cellSize)
+        {
+            if (IsLocked) return;
+
+            int dX = (int)Math.Round(delta.X / cellSize);
+            int dY = (int)Math.Round(delta.Y / cellSize);
+            if (dX == 0 && dY == 0) return;
+
+            var newChunks = new Dictionary<Point, Chunk>();
+
+            foreach (var chunkKvp in Chunks)
+            {
+                var oldChunk = chunkKvp.Value;
+                int startGlobalX = oldChunk.ChunkCoordinate.X * Chunk.CHUNK_SIZE;
+                int startGlobalY = oldChunk.ChunkCoordinate.Y * Chunk.CHUNK_SIZE;
+
+                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                {
+                    for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                    {
+                        var tile = oldChunk.Tiles[x, y];
+                        if (tile != null)
+                        {
+                            int newGlobalX = startGlobalX + x + dX;
+                            int newGlobalY = startGlobalY + y + dY;
+
+                            Point newChunkCoord = new Point(
+                                (int)Math.Floor((double)newGlobalX / Chunk.CHUNK_SIZE),
+                                (int)Math.Floor((double)newGlobalY / Chunk.CHUNK_SIZE)
+                            );
+
+                            if (!newChunks.TryGetValue(newChunkCoord, out var newChunk))
+                            {
+                                newChunk = new Chunk(newChunkCoord);
+                                newChunks[newChunkCoord] = newChunk;
+                            }
+
+                            int localX = newGlobalX - newChunkCoord.X * Chunk.CHUNK_SIZE;
+                            int localY = newGlobalY - newChunkCoord.Y * Chunk.CHUNK_SIZE;
+                            newChunk.Tiles[localX, localY] = tile;
+                        }
+                    }
+                }
+            }
+            Chunks = newChunks; // Replace old layout with shifted layout
         }
 
     }
@@ -81,6 +136,11 @@ namespace Pixel_Simulations.Data
         public List<MapObject> Objects = new List<MapObject>();
         public ObjectLayer(string name) : base(name)
         {
+        }
+        public override void Shift(Vector2 delta, int cellSize)
+        {
+            if (IsLocked) return;
+            foreach (var obj in Objects) obj.Position += delta;
         }
         public ObjectLayer() : base() { }
     }
@@ -94,6 +154,19 @@ namespace Pixel_Simulations.Data
 
         public ControlLayer(string name) : base(name) {}
         public ControlLayer() : base() { }
+        public override void Shift(Vector2 delta, int cellSize)
+        {
+            base.Shift(delta, cellSize); // Shifts standard objects
+            if (IsLocked) return;
+
+            foreach (var rect in Rectangles) rect.Position += delta;
+            foreach (var pt in Points) pt.Position += delta;
+            foreach (var shape in Shapes)
+            {
+                shape.Shape.Offset(delta);
+                shape.UpdateBoundsFromVertices();
+            }
+        }
     }
     public class MaskLayer : Layer
     {
@@ -107,7 +180,11 @@ namespace Pixel_Simulations.Data
 
         public MaskLayer(string name) : base(name) { }
         public MaskLayer() : base() { }
-
+        public override void Shift(Vector2 delta, int cellSize)
+        {
+            // Shifting textures across GPU boundaries is complex, 
+            // so we'll leave Mask Layer static for now.
+        }
         // Helper to get or create a chunk on the GPU
         public RenderTarget2D GetOrCreateChunk(Point coord, GraphicsDevice gd)
         {

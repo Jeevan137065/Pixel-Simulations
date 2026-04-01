@@ -89,7 +89,8 @@ namespace Pixel_Simulations
         {
             _content = content;
             // Load Tile Atlases
-            LoadAtlas("BasiR", AtlasType.Tile);
+            LoadAtlas("Base", AtlasType.Tile);
+            //LoadAtlas("BasiR", AtlasType.Tile);
             LoadAtlas("Wild", AtlasType.Tile);
             //LoadAtlas("Temp", AtlasType.Tile);
 

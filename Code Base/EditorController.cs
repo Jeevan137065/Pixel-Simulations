@@ -678,6 +678,10 @@ namespace Pixel_Simulations.Editor
                     if (exportMask != null) MapSerializer.SaveMaskLayer(exportMask, maskPath, _editorState._graphics);
                     System.Diagnostics.Debug.WriteLine($"Map EXPORTED for game to: {gameMapPath}");
                     break;
+                case "Capture":
+                    string capturePath = Path.Combine(assetsPath, "Maps", $"{mapName}_capture.png");
+                    MapSerializer.CaptureToImage(_editorState.ActiveMap, _editorState._graphics, _editorState, capturePath);
+                    break;
             }
         }
         private void LoadNewMap(Map newMap, string filePath)
