@@ -1,20 +1,16 @@
 ﻿using Clipper2Lib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
-using MonoGame.Extended.Collisions.Layers;
-using MonoGame.Extended.Particles.Modifiers;
-using Pixel_Simulations;
-using Pixel_Simulations.Editor;
 using Pixel_Simulations.UI;
+using Pixel_Simulations.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Pixel_Simulations.Data
+namespace Pixel_Simulations.Editor
 {
   
     public interface ITool
@@ -981,18 +977,19 @@ namespace Pixel_Simulations.Data
         }
     }
     public enum PaintChannel { R_Biome, G_SpawnType, B_Elevation, A_SpawnIndex }
+    public enum BrushMode { Solid, DetailAdd, DetailSub }
     public class TerrainBrushTool : ITool
     {
         public string Name => "TerrainBrush";
         public string IconName { get; set; } = "TerrainBrush";
 
         public float BrushRadius { get; set; } = 32f;
-        public int TargetValue { get; set; } = 128; // The 0-255 value for the active channel
+        public int TargetValue { get; set; } = 128;
         public PaintChannel ActiveChannel { get; set; } = PaintChannel.B_Elevation;
+        public BrushMode ActiveMode { get; set; } = BrushMode.Solid;
+        public float DetailIntensity { get; set; } = 2f; // How fast detail builds up per frame
 
-        // "Normalized" elevation (0.0 to 1.0) so we can apply the Bell Curve math smoothly
         private float _normalizedElevation = 0.5f;
-
         private bool _isDrawing = false;
         private Texture2D _brushTexture;
         private bool _brushNeedsUpdate = true;
@@ -1000,21 +997,22 @@ namespace Pixel_Simulations.Data
 
         private Dictionary<Point, Color[]> _strokeBefore;
         private HashSet<Point> _touchedChunksThisStroke;
+        private Vector2 _lastDrawPos;
+        // --- BLEND STATES ---
+        // Solid Opaque Writes (Ignores what's underneath, just Max overwrites)
+        private static readonly BlendState SolidR = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Red };
+        private static readonly BlendState SolidG = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Green };
+        private static readonly BlendState SolidB = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Blue };
+        private static readonly BlendState SolidA = new BlendState { AlphaSourceBlend = Blend.One, AlphaDestinationBlend = Blend.One, AlphaBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Alpha };
 
-        private static readonly BlendState PaintRed = new BlendState { ColorSourceBlend = Blend.SourceAlpha, ColorDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Red };
-        private static readonly BlendState PaintGreen = new BlendState { ColorSourceBlend = Blend.SourceAlpha, ColorDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Green };
-        private static readonly BlendState PaintBlue = new BlendState { ColorSourceBlend = Blend.SourceAlpha, ColorDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Blue };
-        private static readonly BlendState PaintAlpha = new BlendState { AlphaSourceBlend = Blend.SourceAlpha, AlphaDestinationBlend = Blend.InverseSourceAlpha, ColorWriteChannels = ColorWriteChannels.Alpha };
+        private static readonly BlendState DetailAddBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Blue };
+        private static readonly BlendState DetailSubBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.ReverseSubtract, ColorWriteChannels = ColorWriteChannels.Blue };
 
-        private static readonly BlendState EraseChannel = new BlendState
-        {
-            ColorSourceBlend = Blend.Zero,
-            ColorDestinationBlend = Blend.Zero,
-            ColorBlendFunction = BlendFunction.Add,
-            AlphaSourceBlend = Blend.Zero,
-            AlphaDestinationBlend = Blend.Zero,
-            AlphaBlendFunction = BlendFunction.Add
-        };
+        // FIX: Dedicated Erase states for each channel to prevent MonoGame crashes!
+        private static readonly BlendState EraseR = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Red };
+        private static readonly BlendState EraseG = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Green };
+        private static readonly BlendState EraseB = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Blue };
+        private static readonly BlendState EraseA = new BlendState { AlphaSourceBlend = Blend.Zero, AlphaDestinationBlend = Blend.Zero, AlphaBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Alpha };
 
         public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
@@ -1030,21 +1028,19 @@ namespace Pixel_Simulations.Data
                 _brushNeedsUpdate = true;
             }
 
-            // --- CONTROLS ---
-            if (kbs.IsKeyDown(Keys.OemCloseBrackets)) // ']'
+            if (kbs.IsKeyDown(Keys.OemCloseBrackets))
             {
                 if (shift) BrushRadius = MathHelper.Clamp(BrushRadius + 2f, 8f, 256f);
                 else AdjustValue(true);
                 _brushNeedsUpdate = true;
             }
-            if (kbs.IsKeyDown(Keys.OemOpenBrackets)) // '['
+            if (kbs.IsKeyDown(Keys.OemOpenBrackets))
             {
                 if (shift) BrushRadius = MathHelper.Clamp(BrushRadius - 2f, 8f, 256f);
                 else AdjustValue(false);
                 _brushNeedsUpdate = true;
             }
 
-            // --- STROKE TRACKING ---
             if (input.LeftHold)
             {
                 if (!_isDrawing)
@@ -1052,8 +1048,33 @@ namespace Pixel_Simulations.Data
                     _isDrawing = true;
                     _strokeBefore = new Dictionary<Point, Color[]>();
                     _touchedChunksThisStroke = new HashSet<Point>();
+
+                    _lastDrawPos = input.MouseWorldPosition;
+                    PaintStamp(maskLayer, _lastDrawPos, editorState, isErasing);
                 }
-                PaintOnMask(maskLayer, input.MouseWorldPosition, editorState, isErasing);
+                else
+                {
+                    // Calculate distance moved since last stamp
+                    float dist = Vector2.Distance(_lastDrawPos, input.MouseWorldPosition);
+
+                    // We stamp once every 15% of the radius (Smooth but prevents 60fps solid overlap)
+                    float spacing = Math.Max(2f, BrushRadius * 0.15f);
+
+                    if (dist >= spacing)
+                    {
+                        Vector2 dir = Vector2.Normalize(input.MouseWorldPosition - _lastDrawPos);
+                        int steps = (int)Math.Floor(dist / spacing);
+
+                        // Paint intermediate stamps to fill the gap if moved quickly
+                        for (int i = 1; i <= steps; i++)
+                        {
+                            Vector2 stampPos = _lastDrawPos + dir * (spacing * i);
+                            PaintStamp(maskLayer, stampPos, editorState, isErasing);
+                        }
+
+                        _lastDrawPos = _lastDrawPos + dir * (spacing * steps);
+                    }
+                }
             }
             else if (_isDrawing)
             {
@@ -1073,27 +1094,94 @@ namespace Pixel_Simulations.Data
                 _touchedChunksThisStroke = null;
             }
         }
+
         private float SmootherStep(float x) => x * x * x * (x * (x * 6 - 15) + 10);
+
         private void AdjustValue(bool increase)
         {
             if (ActiveChannel == PaintChannel.B_Elevation)
             {
-                // Move the normalized value slightly
                 _normalizedElevation += increase ? 0.005f : -0.005f;
                 _normalizedElevation = MathHelper.Clamp(_normalizedElevation, 0f, 1f);
-
-                // Apply a Sigmoid Curve (Bell Curve Integral)
-                // This makes values near 0.5 expand slowly, and values near 0 or 1 snap quickly.
-                float curve = SmootherStep(_normalizedElevation);
-                TargetValue = (int)Math.Round(curve * 255f);
+                TargetValue = (int)Math.Round(SmootherStep(_normalizedElevation) * 255f);
             }
             else
             {
-                // Linear adjustment for Biomes, Spawn Types, etc.
                 TargetValue = MathHelper.Clamp(TargetValue + (increase ? 1 : -1), 0, 255);
             }
         }
-        private void PaintOnMask(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
+
+        private void EnsureBrushTexture(GraphicsDevice gd, NoiseManager nm)
+        {
+            if (!_brushNeedsUpdate && _brushTexture != null) return;
+
+            int diameter = (int)(BrushRadius * 2);
+            if (diameter < 1) diameter = 1;
+
+            if (_brushTexture != null && _brushTexture.Width != diameter)
+            {
+                _brushTexture.Dispose();
+                _brushTexture = null;
+            }
+
+            if (_brushTexture == null) _brushTexture = new Texture2D(gd, diameter, diameter);
+            Color[] data = new Color[diameter * diameter];
+
+            Texture2D noiseTex = nm.GetActiveNoise();
+            Color[] noiseData = null;
+            if (noiseTex != null)
+            {
+                noiseData = new Color[noiseTex.Width * noiseTex.Height];
+                noiseTex.GetData(noiseData);
+            }
+
+            float radius = diameter / 2f;
+            Vector2 center = new Vector2(radius, radius);
+
+            for (int y = 0; y < diameter; y++)
+            {
+                for (int x = 0; x < diameter; x++)
+                {
+                    if (Vector2.Distance(center, new Vector2(x, y)) <= radius)
+                    {
+                        float noiseVal = 1f;
+                        if (noiseData != null)
+                        {
+                            noiseVal = noiseData[(x % noiseTex.Width) + (y % noiseTex.Height) * noiseTex.Width].R / 255f;
+                        }
+
+                        int pixelValue = TargetValue;
+
+                        if (ActiveMode == BrushMode.Solid)
+                        {
+                            // --- NEW AMPLIFIED NOISE MATH ---
+                            // b + 50 * (noise - 0.5)
+                            if (noiseData != null)
+                            {
+                                float offset = (noiseVal - 0.5f) * 50f;
+                                pixelValue = (int)MathHelper.Clamp(TargetValue + offset, 0, 255);
+                            }
+                        }
+                        else
+                        {
+                            // Detail mode: Value is the tiny intensity to add/subtract
+                            pixelValue = (int)(DetailIntensity * noiseVal);
+                        }
+
+                        // FIX: Alpha is ALWAYS 255. This prevents SpriteBatch premultiplication dark edges!
+                        data[x + y * diameter] = new Color(pixelValue, pixelValue, pixelValue, 255);
+                    }
+                    else
+                    {
+                        data[x + y * diameter] = Color.Transparent;
+                    }
+                }
+            }
+
+            _brushTexture.SetData(data);
+            _brushNeedsUpdate = false;
+        }
+        private void PaintStamp(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
         {
             var gd = es._graphics;
             EnsureBrushTexture(gd, es.noiseManager);
@@ -1126,37 +1214,30 @@ namespace Pixel_Simulations.Data
                         Vector2 localPos = new Vector2(worldPos.X - (x * MaskLayer.CHUNK_PIXEL_SIZE), worldPos.Y - (y * MaskLayer.CHUNK_PIXEL_SIZE));
                         gd.SetRenderTarget(chunkRT);
 
-                        // Select the correct Blend State based on the active channel
-                        BlendState activeState = ActiveChannel switch
-                        {
-                            PaintChannel.R_Biome => PaintRed,
-                            PaintChannel.G_SpawnType => PaintGreen,
-                            PaintChannel.B_Elevation => PaintBlue,
-                            PaintChannel.A_SpawnIndex => PaintAlpha,
-                            _ => PaintBlue
-                        };
-
-                        // If erasing, we override the ColorWriteChannels to act as an eraser for the specific channel
+                        // Select Blend State
+                        BlendState activeState = EraseR;
                         if (isErasing)
                         {
-                            activeState = new BlendState
-                            {
-                                ColorSourceBlend = Blend.Zero,
-                                ColorDestinationBlend = Blend.Zero,
-                                ColorBlendFunction = BlendFunction.Add,
-                                AlphaSourceBlend = Blend.Zero,
-                                AlphaDestinationBlend = Blend.Zero,
-                                AlphaBlendFunction = BlendFunction.Add,
-                                ColorWriteChannels = activeState.ColorWriteChannels // Preserve channel isolation!
-                            };
+                            activeState = ActiveChannel switch { PaintChannel.R_Biome => EraseR, PaintChannel.G_SpawnType => EraseG, PaintChannel.A_SpawnIndex => EraseA, _ => EraseB };
+                        }
+                        else
+                        {
+                            if (ActiveMode == BrushMode.Solid)
+                                activeState = ActiveChannel switch { PaintChannel.R_Biome => SolidR, PaintChannel.G_SpawnType => SolidG, PaintChannel.A_SpawnIndex => SolidA, _ => SolidB };
+                            else if (ActiveChannel == PaintChannel.B_Elevation)
+                                activeState = ActiveMode == BrushMode.DetailAdd ? DetailAddBlue : DetailSubBlue;
+                            else
+                                activeState = SolidR;
                         }
 
+                        // We use NonPremultiplied locally in the SpriteBatch if not erasing, so it doesn't try to multiply our exact RGB values
                         sb.Begin(blendState: activeState);
-                        int val = isErasing ? 0 : TargetValue;
-                        Color paintColor = new Color(val, val, val, val);
+
+                        // If Erasing, draw transparent. Else, draw White (retaining the exact RGB values baked into the brush)
+                        Color tintColor = isErasing ? new Color(0, 0, 0, 0) : Color.White;
 
                         Vector2 origin = new Vector2(_brushTexture.Width / 2f, _brushTexture.Height / 2f);
-                        sb.Draw(_brushTexture, localPos, null, paintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
+                        sb.Draw(_brushTexture, localPos, null, tintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
 
                         sb.End();
                     }
@@ -1166,95 +1247,238 @@ namespace Pixel_Simulations.Data
             gd.SetRenderTargets(prevTargets);
         }
 
-        private void EnsureBrushTexture(GraphicsDevice gd, NoiseManager nm)
-        {
-            if (!_brushNeedsUpdate && _brushTexture != null) return;
-
-            int diameter = (int)(BrushRadius * 2);
-            if (diameter < 1) diameter = 1;
-
-            if (_brushTexture != null && _brushTexture.Width != diameter)
-            {
-                _brushTexture.Dispose();
-                _brushTexture = null;
-            }
-
-            if (_brushTexture == null) _brushTexture = new Texture2D(gd, diameter, diameter);
-            Color[] data = new Color[diameter * diameter];
-
-            Texture2D noiseTex = nm.GetActiveNoise();
-            Color[] noiseData = null;
-            if (noiseTex != null)
-            {
-                noiseData = new Color[noiseTex.Width * noiseTex.Height];
-                noiseTex.GetData(noiseData);
-            }
-
-            float radius = diameter / 2f;
-            Vector2 center = new Vector2(radius, radius);
-            float noiseAmplitude = 50f; // How much the noise swings the value up or down
-
-            for (int y = 0; y < diameter; y++)
-            {
-                for (int x = 0; x < diameter; x++)
-                {
-                    float dist = Vector2.Distance(center, new Vector2(x, y));
-                    if (dist <= radius)
-                    {
-                        int pixelValue = TargetValue;
-
-                        if (noiseData != null && ActiveChannel == PaintChannel.B_Elevation)
-                        {
-                            int nx = x % noiseTex.Width;
-                            int ny = y % noiseTex.Height;
-                            float noiseVal = noiseData[nx + ny * noiseTex.Width].R / 255f;
-
-                            // --- YOUR EXACT FORMULA ---
-                            // b + 50 * (noise - 0.5)
-                            float offset = (noiseVal - 0.5f) * noiseAmplitude;
-                            pixelValue = (int)MathHelper.Clamp(TargetValue + offset, 0, 255);
-                        }
-
-                        // Alpha 255 ensures a hard overwrite using SourceAlpha blending.
-                        data[x + y * diameter] = new Color(pixelValue, pixelValue, pixelValue, 255);
-                    }
-                    else
-                    {
-                        data[x + y * diameter] = Color.Transparent;
-                    }
-                }
-            }
-
-            _brushTexture.SetData(data);
-            _brushNeedsUpdate = false;
-        }
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!(toolInput.ActiveLayer is MaskLayer)) return;
 
             bool isErasing = input.CurrentKeyboard.IsKeyDown(Keys.LeftControl) || input.CurrentKeyboard.IsKeyDown(Keys.RightControl);
-
-            // Change cursor color based on active channel!
-            Color cursorColor = ActiveChannel switch
-            {
-                PaintChannel.R_Biome => Color.Red,
-                PaintChannel.G_SpawnType => Color.LimeGreen,
-                PaintChannel.B_Elevation => Color.DeepSkyBlue,
-                PaintChannel.A_SpawnIndex => Color.White,
-                _ => Color.Cyan
-            };
+            Color cursorColor = ActiveChannel switch { PaintChannel.R_Biome => Color.Red, PaintChannel.G_SpawnType => Color.LimeGreen, PaintChannel.B_Elevation => Color.DeepSkyBlue, PaintChannel.A_SpawnIndex => Color.White, _ => Color.Cyan };
             if (isErasing) cursorColor = Color.Magenta;
 
             sb.DrawCircle(input.MouseWorldPosition, BrushRadius, 32, cursorColor, 2f / input.Zoom);
 
             Vector2 textPos = input.MouseWorldPosition + new Vector2(BrushRadius + 10, -10) / input.Zoom;
-            string modeText = isErasing ? "ERASE ALL" : $"{ActiveChannel}: {TargetValue}";
+            string modeText = isErasing ? $"ERASE ({ActiveChannel})" : $"{ActiveChannel}: {TargetValue} | {ActiveMode}";
 
-            sb.DrawString(UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
-            sb.DrawString(UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+        }
+        public string GetShortcutHints() => "[ / ]: Adjust Value | SHIFT + [ / ]: Radius | CTRL: Erase Channel";
+     }
+    public class ReflectionTool : ITool
+    {
+        public string Name => "ReflectionPlane";
+        public string IconName { get; set; } = "ReflectionPlane"; // Replace with a Mirror icon later
+
+        private Vector2 _startPos;
+        private bool _isDrawing = false;
+
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
+        {
+            // ONLY allow drawing on Control Layers
+            if (toolInput.ActiveLayer.Type != LayerType.Control) return;
+
+            if (input.IsNewLeftClick)
+            {
+                _startPos = input.MouseWorldPosition;
+                if (input.CurrentKeyboard.CapsLock) _startPos = Snap(_startPos);
+                _isDrawing = true;
+            }
+
+            if (_isDrawing && input.CurrentMouse.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
+            {
+                Vector2 endPos = input.MouseWorldPosition;
+                if (input.CurrentKeyboard.CapsLock) endPos = Snap(endPos);
+
+                // Prevent creating 0-size objects
+                if (System.Math.Abs(_startPos.X - endPos.X) > 1 && System.Math.Abs(_startPos.Y - endPos.Y) > 1)
+                {
+                    Polygon drawnPoly = Polygon.FromRectangle(_startPos, endPos);
+
+                    int currentCount = ((ControlLayer)toolInput.ActiveLayer).Shapes.Count;
+
+                    var newReflection = new ShapeObject
+                    {
+                        Shape = drawnPoly,
+                        Name = $"Reflection_{currentCount + 1}",
+                        DebugColor = Color.DeepSkyBlue * 0.4f
+                    };
+
+                    // --- AUTO-POPULATE TAGS AND SHADER PROPERTIES ---
+                    newReflection.Tags.Add("#reflection");
+
+                    // Direction: "Negative" = Floor/Water (Flipped Y). "Positive" = Mirror (Flipped X)
+                    newReflection.Properties.Add("Direction", new MapProperty(PropertyType.Boolean, "True"));
+                    newReflection.Properties.Add("Blur", new MapProperty(PropertyType.Float, "1.5"));
+                    newReflection.Properties.Add("RippleSpeed", new MapProperty(PropertyType.Float, "1.0"));
+                    newReflection.Properties.Add("Offset", new MapProperty(PropertyType.Float, "0.0")); // NEW!
+                    newReflection.Properties.Add("Tint", new MapProperty(PropertyType.String, "128,180,255,200"));
+                    newReflection.UpdateBoundsFromVertices();
+                    eventBus.Publish(new AddPolygonCommand(toolInput.ActiveLayer, newReflection));
+
+                    // Instantly select it so the Inspector opens with the properties ready to edit!
+                    editorState.Selection.SelectedMapObject = newReflection;
+                }
+
+                _isDrawing = false;
+            }
         }
 
-        public string GetShortcutHints() => "[ / ]: Adjust Value | SHIFT + [ / ]: Radius | CTRL: Erase All Channels";
+        private Vector2 Snap(Vector2 pos) => new Vector2((float)System.Math.Floor(pos.X / 16) * 16, (float)System.Math.Floor(pos.Y / 16) * 16);
+
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            if (!_isDrawing) return;
+
+            Vector2 start = _startPos;
+            Vector2 end = input.MouseWorldPosition;
+
+            if (input.CurrentKeyboard.CapsLock)
+            {
+                start = Snap(start);
+                end = Snap(end);
+            }
+
+            var rect = new RectangleF(System.Math.Min(start.X, end.X), System.Math.Min(start.Y, end.Y), System.Math.Abs(start.X - end.X), System.Math.Abs(start.Y - end.Y));
+
+            sb.FillRectangle(rect, Color.DeepSkyBlue * 0.2f);
+            sb.DrawRectangle(rect, Color.DeepSkyBlue, 2f / input.Zoom);
+        }
+
+        public string GetShortcutHints() => "CAPS: Grid Snap | Draw over water or mirrors";
     }
+    public enum LightShapeMode { Circle, Rectangle }
+    public class LightShapeTool : ITool
+    {
+        public string Name => "LightShape";
+        public string IconName { get; set; } = "LightShape"; // Assign an icon in your JSON
+
+        private Vector2 _startPos;
+        private bool _isDrawing = false;
+        private LightShapeMode _currentMode = LightShapeMode.Circle;
+
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
+        {
+            if (toolInput.ActiveLayer.Type != LayerType.Control) return;
+
+            // Toggle Mode (Caps Lock = Rectangle, Off = Circle)
+            _currentMode = input.CurrentKeyboard.CapsLock ? LightShapeMode.Rectangle : LightShapeMode.Circle;
+
+            // --- 1. START DRAWING ---
+            if (input.IsNewLeftClick)
+            {
+                _startPos = input.MouseWorldPosition;
+                if (_currentMode == LightShapeMode.Rectangle) _startPos = Snap(_startPos);
+                _isDrawing = true;
+            }
+
+            // --- 2. FINISH DRAWING ---
+            if (_isDrawing && input.CurrentMouse.LeftButton == ButtonState.Released)
+            {
+                Vector2 endPos = input.MouseWorldPosition;
+                if (_currentMode == LightShapeMode.Rectangle) endPos = Snap(endPos);
+
+                float radius = Vector2.Distance(_startPos, endPos);
+
+                // Prevent tiny/accidental clicks
+                if (radius > 2f || (_currentMode == LightShapeMode.Rectangle && Math.Abs(_startPos.X - endPos.X) > 2))
+                {
+                    GenerateLinkedLightShapes(toolInput.ActiveLayer, _startPos, endPos, radius, eventBus);
+                }
+
+                _isDrawing = false;
+            }
+        }
+
+        private void GenerateLinkedLightShapes(Layer activeLayer, Vector2 start, Vector2 end, float radius, EventBus bus)
+        {
+            int count = ((ControlLayer)activeLayer).Shapes.Count;
+            ShapeObject sourceShape, falloffShape;
+
+            if (_currentMode == LightShapeMode.Rectangle)
+            {
+                Polygon sourcePoly = Polygon.FromRectangle(start, end);
+                Polygon falloffPoly = Polygon.FromRectangle(start + new Vector2(0, 64), end + new Vector2(0, 64));
+
+                sourceShape = CreateShape("LightSource_Rect", sourcePoly, "#light_source");
+                falloffShape = CreateShape("LightFalloff_Rect", falloffPoly, "#light_falloff");
+            }
+            else
+            {
+                Polygon sourcePoly = CreateCirclePolygon(start, radius, 16);
+                Polygon falloffPoly = CreateCirclePolygon(start, radius * 2.5f, 16);
+
+                sourceShape = CreateShape("LightSource_Circ", sourcePoly, "#light_source");
+                falloffShape = CreateShape("LightFalloff_Circ", falloffPoly, "#light_falloff");
+            }
+
+            // --- THE FIX: LINK THEM USING THEIR UNIQUE IDs! ---
+            sourceShape.LinkedObjects.Add(falloffShape.ID);
+            falloffShape.LinkedObjects.Add(sourceShape.ID);
+
+            sourceShape.Properties.Add("Color", new MapProperty(PropertyType.String, "255,220,150,255"));
+            sourceShape.Properties.Add("Intensity", new MapProperty(PropertyType.Float, "1.0"));
+            sourceShape.Properties.Add("Flicker", new MapProperty(PropertyType.Boolean, "False"));
+
+            bus.Publish(new AddPolygonCommand(activeLayer, sourceShape));
+            bus.Publish(new AddPolygonCommand(activeLayer, falloffShape));
+        }
+
+        private ShapeObject CreateShape(string namePrefix, Polygon poly, string tag)
+        {
+            var shape = new ShapeObject
+            {
+                Name = $"{namePrefix}_{Guid.NewGuid().ToString().Substring(0, 4)}",
+                Shape = poly,
+                DebugColor = Color.Yellow * 0.4f
+            };
+            shape.Tags.Add(tag);
+            shape.UpdateBoundsFromVertices();
+            return shape;
+        }
+
+        private Polygon CreateCirclePolygon(Vector2 center, float radius, int segments)
+        {
+            var verts = new List<Vector2>();
+            float angleStep = MathHelper.TwoPi / segments;
+            for (int i = 0; i < segments; i++)
+            {
+                verts.Add(new Vector2(
+                    center.X + (float)Math.Cos(i * angleStep) * radius,
+                    center.Y + (float)Math.Sin(i * angleStep) * radius
+                ));
+            }
+            return new Polygon(verts);
+        }
+
+        private Vector2 Snap(Vector2 pos) => new Vector2((float)Math.Floor(pos.X / 16) * 16, (float)Math.Floor(pos.Y / 16) * 16);
+
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            if (!_isDrawing) return;
+
+            Vector2 end = input.MouseWorldPosition;
+            if (_currentMode == LightShapeMode.Rectangle)
+            {
+                Vector2 s = Snap(_startPos);
+                Vector2 e = Snap(end);
+                var rect = new RectangleF(Math.Min(s.X, e.X), Math.Min(s.Y, e.Y), Math.Abs(s.X - e.X), Math.Abs(s.Y - e.Y));
+                sb.DrawRectangle(rect, Color.Yellow, 2f / input.Zoom);
+            }
+            else
+            {
+                float radius = Vector2.Distance(_startPos, end);
+                sb.DrawCircle(_startPos, radius, 32, Color.Yellow, 2f / input.Zoom);
+            }
+        }
+
+        public string GetShortcutHints() => "CAPS: Draw Rectangle | OFF: Draw Circle";
+    }
+
+
+
+
+
+
 }
 

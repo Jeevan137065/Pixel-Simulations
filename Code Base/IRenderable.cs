@@ -46,6 +46,7 @@ namespace Pixel_Simulations
 
     public struct RenderableSprite
     {
+        public string AtlasName;
         public Texture2D Texture;
         public Vector2 Position;
         public Rectangle SourceRect;
@@ -59,6 +60,10 @@ namespace Pixel_Simulations
 
         // Used for Volumetric Fog/Shadows. The exact physical Y coordinate where it touches the ground.
         public float BaseWorldY;
+        // 1.0f = Affected by Parallax (Trees/Props)
+        // 0.0f = Ignores Parallax (Player/NPCs)
+        public float ParallaxMask;
+
     }
 }
 

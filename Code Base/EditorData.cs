@@ -98,5 +98,43 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public Color DebugColor { get; set; }
     }
     //[JsonObject(MemberSerialization.OptOut)]
+    [JsonObject(MemberSerialization.OptIn)]
+    public class LightBeamObject : MapObject
+    {
+        public override ObjectType Type => ObjectType.Shape; // We treat it as a shape for broad compatibility
 
+        [JsonProperty] public Polygon SourceShape { get; set; } // The "Window" or "Bulb"
+        [JsonProperty] public Polygon TargetShape { get; set; } // The ground area it illuminates
+
+        [JsonProperty] public Color DebugColor { get; set; }
+
+        // Extrusion mapping (Index of Source -> Index of Target)
+        // E.g., [0] = 0 means Source Vertex 0 connects to Target Vertex 0
+        [JsonProperty] public List<int> VertexMap { get; set; } = new List<int>();
+
+        public LightBeamObject()
+        {
+            SourceShape = new Polygon();
+            TargetShape = new Polygon();
+        }
+
+        public void UpdateBounds()
+        {
+            if (SourceShape.Vertices.Count == 0 || TargetShape.Vertices.Count == 0) return;
+
+            // The bounding box must encapsulate BOTH shapes!
+            var b1 = SourceShape.GetBounds();
+            var b2 = TargetShape.GetBounds();
+
+            float minX = System.Math.Min(b1.Left, b2.Left);
+            float minY = System.Math.Min(b1.Top, b2.Top);
+            float maxX = System.Math.Max(b1.Right, b2.Right);
+            float maxY = System.Math.Max(b1.Bottom, b2.Bottom);
+
+            Position = new Vector2(minX, minY);
+            Size = new Vector2(maxX - minX, maxY - minY);
+        }
+
+        [JsonProperty] public Vector2 Size { get; set; }
+    }
 }

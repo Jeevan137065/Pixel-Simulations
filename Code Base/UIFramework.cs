@@ -11,6 +11,14 @@ using System.Linq;
 namespace Pixel_Simulations.UI
 {
     public enum StackDirection { Vertical, Horizontal }
+    // 1. ADD THIS INTERFACE so elements know how to draw icons and check focus without needing EditorUI
+    public interface IUIContext
+    {
+        void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color);
+        void SetFocus(UIElement element);
+        void CheckFocusClick(UIElement root, EditorInputState input);
+        UIElement FocusedElement { get; }
+    }
     // Defines the look of the UI so the Game and Editor can look different.
     public class UITheme
     {
@@ -95,19 +103,17 @@ namespace Pixel_Simulations.UI
         }
 
         // Returns true if this element (or a child) consumed the input
-        public virtual bool Update(EditorInputState input, EventBus bus)
+        public virtual bool Update(EditorInputState input, EventBus bus = null)
         {
             if (!IsVisible) return false;
-
             bool consumed = false;
-            // Reverse loop so top-most elements catch the mouse first
             for (int i = Children.Count - 1; i >= 0; i--)
             {
                 if (Children[i].Update(input, bus)) consumed = true;
             }
             return consumed;
         }
-        public virtual void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
+        public virtual void Draw(SpriteBatch sb, IUIContext context, UITheme theme)
         {
             if (!IsVisible) return;
 
@@ -116,15 +122,16 @@ namespace Pixel_Simulations.UI
             {
                 sb.End();
                 sb.Begin(rasterizerState: new RasterizerState { ScissorTestEnable = true });
-
-                // Prevent crashing if the bounds are outside the screen
                 var clipRect = Rectangle.Intersect(AbsoluteBounds, sb.GraphicsDevice.Viewport.Bounds);
-                if (clipRect.Width > 0 && clipRect.Height > 0)
-                    sb.GraphicsDevice.ScissorRectangle = clipRect;
+                if (clipRect.Width > 0 && clipRect.Height > 0) sb.GraphicsDevice.ScissorRectangle = clipRect;
             }
 
-            // Just draw children normally. AbsoluteBounds now handles the scroll shift perfectly.
-            foreach (var child in Children) child.Draw(sb, ui, theme);
+            foreach (var child in Children)
+            {
+                child.LocalPosition -= ScrollOffset;
+                child.Draw(sb, context, theme);
+                child.LocalPosition += ScrollOffset;
+            }
 
             if (ClipToBounds)
             {
@@ -139,7 +146,7 @@ namespace Pixel_Simulations.UI
     public class UIPanel : UIElement
     {
 
-        public override void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
         {
             if (!IsVisible) return;
 
@@ -212,7 +219,7 @@ namespace Pixel_Simulations.UI
                     Size = Vector2.Zero;
             }
         }
-        public override void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
         {
             if (!IsVisible || string.IsNullOrEmpty(Text)) return;
             sb.DrawString(UITheme.DefaultFont ?? theme.Font, Text, AbsoluteBounds.Location.ToVector2(), TextColor ?? theme.TextColor);
@@ -304,7 +311,7 @@ namespace Pixel_Simulations.UI
             return IsHovered;
         }
 
-        public override void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
         {
             if (!IsVisible) return;
 
@@ -421,7 +428,7 @@ namespace Pixel_Simulations.UI
                 _ => '\0'
             };
         }
-        public override void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
         {
             if (!IsVisible) return;
 
@@ -512,7 +519,7 @@ namespace Pixel_Simulations.UI
             }
         }
 
-        public override void Draw(SpriteBatch sb, EditorUI ui, UITheme theme)
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
         {
             if (!IsVisible) return;
 
@@ -647,6 +654,36 @@ namespace Pixel_Simulations.UI
                 currentPos += draw ? dashLength : spaceLength;
                 draw = !draw; // Toggle between drawing and spacing
             }
+        }
+        public static void FillCircle(SpriteBatch sb, Vector2 center, float radius, Color color)
+        {
+            EnsureTextures(sb.GraphicsDevice); // Re-uses the circle texture we made for the pills!
+
+            // Calculate scale based on our 128x128 memory texture
+            float scale = (radius * 2f) / _circleTexture.Width;
+            Vector2 origin = new Vector2(_circleTexture.Width / 2f, _circleTexture.Height / 2f);
+
+            sb.Draw(_circleTexture, center, null, color, 0f, origin, scale, SpriteEffects.None, 0f);
+        }
+        public static void DrawDirectionalLine(SpriteBatch sb, Vector2 start, Vector2 end, Color color, float thickness = 2f)
+        {
+            // Draw the main line
+            sb.DrawLine(start, end, color, thickness);
+
+            // Calculate arrow head (a triangle pointing towards 'end')
+            Vector2 direction = Vector2.Normalize(end - start);
+
+            // Push the arrow head slightly back from the exact center of the target node
+            Vector2 arrowPos = end - (direction * 20f);
+
+            // Create the two back corners of the arrow head
+            Vector2 perp = new Vector2(-direction.Y, direction.X);
+            Vector2 arrowLeft = arrowPos - (direction * 10f) + (perp * 7f);
+            Vector2 arrowRight = arrowPos - (direction * 10f) - (perp * 7f);
+
+            // Draw arrow head lines
+            sb.DrawLine(arrowPos, arrowLeft, color, thickness);
+            sb.DrawLine(arrowPos, arrowRight, color, thickness);
         }
         public static void DrawPill(SpriteBatch sb, SpriteFont font, Rectangle bounds, string text, Color pillColor, Color textColor)
         {

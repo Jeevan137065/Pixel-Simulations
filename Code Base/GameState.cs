@@ -18,8 +18,11 @@ namespace Pixel_Simulations
     public enum GameBool
     {
         IsPaused,
-        Collision,
-        GrassArea
+        GrassArea,
+        ShowCollision,
+        ShowLinks,
+        ShowShapes,
+        EnableParallax
     }
     public class GameState
     {
@@ -30,18 +33,21 @@ namespace Pixel_Simulations
         public Camera GameCamera { get; set; }
         public AssetLibrary Assets { get; }
         public Dictionary<Point, Texture2D> TerrainMaskChunks { get; private set; } = new Dictionary<Point, Texture2D>();
+        public Dictionary<Point, Texture2D> TerrainNormalChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public TilesetManager TilesetManager { get; }
         public PrefabManager PrefabManager { get; }
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
         public DayTimeManager TimeSystem { get; private set; }
+        public TagManager tagManager { get; private set; }
         public GrassSystem Grass { get; private set; }
         //useful objects
         public InputManager input { get; }
         public PhysicsManager Physics { get; }
         public string gameMapPath;
         public int _uKeyPressed = 0;
-        private bool _fKeyPressedLastFrame = false;
+        public bool _fKeyPressedLastFrame = false;
+        public float ParallaxStrength { get; set; } = 0.15f;
         //Debug Bool
         public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
         public GameState()
@@ -54,6 +60,7 @@ namespace Pixel_Simulations
             TimeSystem = new DayTimeManager();
             input = new InputManager();
             Physics = new PhysicsManager();
+            tagManager = new TagManager();
         }
 
         /// <summary>
@@ -61,9 +68,12 @@ namespace Pixel_Simulations
         /// </summary>
         public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
         {
-            DebugPool[GameBool.Collision] = false;
+            DebugPool[GameBool.ShowCollision] = false;
+            DebugPool[GameBool.ShowLinks] = false;
+            DebugPool[GameBool.ShowShapes] = false;
             DebugPool[GameBool.GrassArea] = false;
             DebugPool[GameBool.IsPaused] = false;
+            DebugPool[GameBool.EnableParallax] = true;
             // 1. Load all raw texture assets first.
             Assets.LoadCoreContent(content);
 
@@ -75,19 +85,40 @@ namespace Pixel_Simulations
             PrefabManager.Load(prefabPath);
 
             // 3. MAP: Load the actual level data (Binary .map for the game).
-            gameMapPath = Path.Combine(parentDir,"Assets", "Maps", "CoastTown.map");
+            string mapName = "CoastTown";
+            gameMapPath = Path.Combine(parentDir,"Assets", "Maps", $"{mapName}.map");
             System.Diagnostics.Debug.WriteLine($"Map being Read for game to: {gameMapPath}");
             CurrentMap = MapSerializer.Read(gameMapPath);
-            string maskPngPath = gameMapPath.Replace(".map", "_mask.png");
-            TerrainMaskChunks = MapSerializer.LoadGameMaskChunks(maskPngPath, graphicsDevice);
-            System.Diagnostics.Debug.WriteLine($"Loaded Terrain Mask: {maskPngPath}");
-            if(CurrentMap == null) {
+            var maskLayer = CurrentMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+
+            if (maskLayer != null)
+            {
+                string maskPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_mask.png");
+                string normalPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_normals.png");
+
+                // Load the Blue/Red/Green Data map
+                TerrainMaskChunks = MapSerializer.LoadGameChunks(maskPath, graphicsDevice, maskLayer.OffsetX, maskLayer.OffsetY);
+
+                // Load the generated Normal Map
+                TerrainNormalChunks = MapSerializer.LoadGameChunks(normalPath, graphicsDevice, maskLayer.OffsetX, maskLayer.OffsetY);
+            }
+            if (CurrentMap == null) {
                 System.Diagnostics.Debug.WriteLine($"Map Read at: {gameMapPath} is NULL");
             }
+
+            string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
+            tagManager.Load(tagsPath);
             // 3. Create all TileSet instances and register them with the TilesetManager.
             // The manager needs the raw textures from the AssetLibrary to do its job.
             InitializeTilesets(graphicsDevice);
             Grass = new GrassSystem(graphicsDevice,GrassLibrary.GetPreset(GrassPreset.WheatField));
+            var grassShapes = new List<RectangleF>();
+            foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
+            {
+                ShapeObject sh = layer.Shapes.Where(s => s.Tags.Contains("#Grass")).FirstOrDefault();
+                    grassShapes.Add(sh.Shape.GetBounds());
+            }
+            Grass.LoadContent(content,grassShapes);
             Shaders = new ShaderManager(graphicsDevice);
             Shaders.LoadContent(content);
             Physics.LoadMapData(CurrentMap);

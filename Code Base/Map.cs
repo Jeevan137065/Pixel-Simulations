@@ -212,7 +212,7 @@ namespace Pixel_Simulations.Data
                             // Do nothing! The base layer info (Name, Visible, Locked) is already written.
                             newLayer = new MaskLayer(name);
                             break;
-                    }
+                     }
                     if (newLayer != null)
                     {
                         newLayer.IsVisible = isVisible;
@@ -574,154 +574,196 @@ namespace Pixel_Simulations.Data
             if (!hasData) return new RectangleF(0, 0, 0, 0);
             return new RectangleF(minX, minY, maxX - minX, maxY - minY);
         }
-        public static void SaveMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd)
+        public static void SaveMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd, Editor.EditorState state)
         {
             if (maskLayer == null || maskLayer.Chunks.Count == 0) return;
 
-            // 1. Find the absolute bounds of all chunks
-            int minX = maskLayer.Chunks.Keys.Min(p => p.X);
+            // 1. Calculate Bounds and save them directly to the MaskLayer instance!
+            maskLayer.OffsetX = maskLayer.Chunks.Keys.Min(p => p.X);
+            maskLayer.OffsetY = maskLayer.Chunks.Keys.Min(p => p.Y);
+
             int maxX = maskLayer.Chunks.Keys.Max(p => p.X);
-            int minY = maskLayer.Chunks.Keys.Min(p => p.Y);
             int maxY = maskLayer.Chunks.Keys.Max(p => p.Y);
 
-            int width = (maxX - minX + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
-            int height = (maxY - minY + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+            int width = (maxX - maskLayer.OffsetX + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+            int height = (maxY - maskLayer.OffsetY + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
 
-            // 2. Create a master RenderTarget
+            var prevRt = gd.GetRenderTargets();
+
+            // --- 2. STITCH RAW MASK ---
             using (var masterRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
             {
                 gd.SetRenderTarget(masterRt);
-                gd.Clear(new Color(0,0,0,255));
+                gd.Clear(new Color(0, 0, 0, 255));
 
-                // 3. Draw all chunks onto the master canvas
                 using (var sb = new SpriteBatch(gd))
                 {
                     sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
                     foreach (var kvp in maskLayer.Chunks)
                     {
-                        Vector2 pos = new Vector2(
-                            (kvp.Key.X - minX) * MaskLayer.CHUNK_PIXEL_SIZE,
-                            (kvp.Key.Y - minY) * MaskLayer.CHUNK_PIXEL_SIZE
-                        );
+                        Vector2 pos = new Vector2((kvp.Key.X - maskLayer.OffsetX) * MaskLayer.CHUNK_PIXEL_SIZE, (kvp.Key.Y - maskLayer.OffsetY) * MaskLayer.CHUNK_PIXEL_SIZE);
                         sb.Draw(kvp.Value, pos, Color.White);
                     }
                     sb.End();
                 }
 
-                gd.SetRenderTarget(null);
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(imagePath));
+                using (var stream = System.IO.File.OpenWrite(imagePath)) { masterRt.SaveAsPng(stream, width, height); }
 
-                // 4. Save to PNG
-                using (var stream = File.OpenWrite(imagePath))
+                // --- 3. GENERATE NORMAL MAP ---
+                string normalPath = imagePath.Replace("_mask.png", "_normals.png");
+                var normalShader = state.normalShader;
+                if (normalShader != null)
                 {
-                    masterRt.SaveAsPng(stream, width, height);
-                }
-            }
+                    using (var normalRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
+                    {
+                        gd.SetRenderTarget(normalRt);
+                        gd.Clear(Color.Transparent); // Clear to empty
 
-            // Save the offset so we know where to place it when loading!
-            string metaPath = imagePath.Replace(".png", ".meta");
-            File.WriteAllText(metaPath, $"{minX},{minY}");
+                        // 1. Pass the Master Mask Texture to the Shader
+                        normalShader.Parameters["MaskTexture"]?.SetValue(masterRt);
+                        normalShader.Parameters["TextureSize"]?.SetValue(new Vector2(width, height));
+                        normalShader.Parameters["HeightScale"]?.SetValue(15.0f); // Tweak bumpiness here!
+
+                        // 2. Setup GPU State for a raw Full-Screen Quad Draw
+                        gd.BlendState = BlendState.Opaque; // Ignore alpha blending, just write the exact pixel
+                        gd.DepthStencilState = DepthStencilState.None;
+                        gd.RasterizerState = RasterizerState.CullNone;
+                        gd.SamplerStates[0] = SamplerState.PointClamp;
+
+                        // 3. Create a Full-Screen Quad in Clip Space (-1.0 to 1.0)
+                        // This perfectly covers the entire RenderTarget without needing a Camera Matrix!
+                        VertexPositionTexture[] quadVerts = new VertexPositionTexture[4];
+                        quadVerts[0] = new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0));  // Top Left
+                        quadVerts[1] = new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0));   // Top Right
+                        quadVerts[2] = new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1)); // Bottom Left
+                        quadVerts[3] = new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1));  // Bottom Right
+
+                        short[] quadIndices = new short[] { 0, 1, 2, 1, 3, 2 };
+
+                        // 4. Draw the Quad!
+                        foreach (var pass in normalShader.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, quadVerts, 0, 4, quadIndices, 0, 2);
+                        }
+
+                        // 5. Save the resulting target to PNG
+                        using (var stream = System.IO.File.OpenWrite(normalPath))
+                        {
+                            normalRt.SaveAsPng(stream, width, height);
+                        }
+                    }
+                }
+                gd.SetRenderTargets(prevRt);
+            }
+            // (Notice: We completely deleted the .meta saving code!)
         }
         public static void LoadMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd)
         {
-            if (!File.Exists(imagePath)) return;
+            if (!System.IO.File.Exists(imagePath)) return;
 
-            string metaPath = imagePath.Replace(".png", ".meta");
-            int offsetX = 0, offsetY = 0;
-            if (File.Exists(metaPath))
+            using (var stream = System.IO.File.OpenRead(imagePath))
+            using (var masterTex = Texture2D.FromStream(gd, stream))
             {
-                var parts = File.ReadAllText(metaPath).Split(',');
-                offsetX = int.Parse(parts[0]);
-                offsetY = int.Parse(parts[1]);
-            }
+                int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
+                int chunksY = masterTex.Height / MaskLayer.CHUNK_PIXEL_SIZE;
 
-            using (var stream = File.OpenRead(imagePath))
-            {
-                using (var masterTex = Texture2D.FromStream(gd, stream))
+                var prevRt = gd.GetRenderTargets();
+                using (var sb = new SpriteBatch(gd))
                 {
-                    int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
-                    int chunksY = masterTex.Height / MaskLayer.CHUNK_PIXEL_SIZE;
-
-                    var prevRt = gd.GetRenderTargets();
-
-                    using (var sb = new SpriteBatch(gd))
-                    {
-                        for (int y = 0; y < chunksY; y++)
-                        {
-                            for (int x = 0; x < chunksX; x++)
-                            {
-                                Point chunkCoord = new Point(x + offsetX, y + offsetY);
-                                var rt = maskLayer.GetOrCreateChunk(chunkCoord, gd);
-
-                                Rectangle sourceRect = new Rectangle(
-                                    x * MaskLayer.CHUNK_PIXEL_SIZE,
-                                    y * MaskLayer.CHUNK_PIXEL_SIZE,
-                                    MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE);
-
-                                gd.SetRenderTarget(rt);
-
-                                sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
-                                sb.Draw(masterTex, Vector2.Zero, sourceRect, Color.White);
-                                sb.End();
-                            }
-                        }
-                    }
-                    gd.SetRenderTargets(prevRt);
-                }
-            }
-        }
-        public static Dictionary<Point, Texture2D> LoadGameMaskChunks(string imagePath, GraphicsDevice gd)
-        {
-            var chunks = new Dictionary<Point, Texture2D>();
-            if (!File.Exists(imagePath)) return chunks;
-
-            string metaPath = imagePath.Replace(".png", ".meta");
-            int offsetX = 0, offsetY = 0;
-
-            if (File.Exists(metaPath))
-            {
-                var parts = File.ReadAllText(metaPath).Split(',');
-                offsetX = int.Parse(parts[0]);
-                offsetY = int.Parse(parts[1]);
-                System.Diagnostics.Debug.WriteLine($"[MASK] Loaded offset: X:{offsetX}, Y:{offsetY}");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"[WARNING] Mask .meta file not found at: {metaPath}. Chunks will be offset to Origin (0,0)!");
-            }
-
-            using (var stream = File.OpenRead(imagePath))
-            {
-                using (var masterTex = Texture2D.FromStream(gd, stream))
-                {
-                    int chunkPixels = MaskLayer.CHUNK_PIXEL_SIZE; // 256
-                    int chunksX = masterTex.Width / chunkPixels;
-                    int chunksY = masterTex.Height / chunkPixels;
-
-                    Color[] masterData = new Color[masterTex.Width * masterTex.Height];
-                    masterTex.GetData(masterData);
-
                     for (int y = 0; y < chunksY; y++)
                     {
                         for (int x = 0; x < chunksX; x++)
                         {
-                            // Apply the loaded offset!
-                            Point coord = new Point(x + offsetX, y + offsetY);
-                            Texture2D chunkTex = new Texture2D(gd, chunkPixels, chunkPixels);
-                            Color[] chunkData = new Color[chunkPixels * chunkPixels];
+                            // FIX B: Use the Offset saved inside the MaskLayer JSON!
+                            Point chunkCoord = new Point(x + maskLayer.OffsetX, y + maskLayer.OffsetY);
+                            var rt = maskLayer.GetOrCreateChunk(chunkCoord, gd);
 
-                            for (int cy = 0; cy < chunkPixels; cy++)
-                            {
-                                for (int cx = 0; cx < chunkPixels; cx++)
-                                {
-                                    int masterX = (x * chunkPixels) + cx;
-                                    int masterY = (y * chunkPixels) + cy;
-                                    chunkData[cx + cy * chunkPixels] = masterData[masterX + masterY * masterTex.Width];
-                                }
-                            }
+                            Rectangle sourceRect = new Rectangle(x * MaskLayer.CHUNK_PIXEL_SIZE, y * MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE);
 
-                            chunkTex.SetData(chunkData);
-                            chunks[coord] = chunkTex;
+                            gd.SetRenderTarget(rt);
+                            sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
+                            sb.Draw(masterTex, Vector2.Zero, sourceRect, Color.White);
+                            sb.End();
                         }
+                    }
+                }
+                gd.SetRenderTargets(prevRt);
+            }
+        }
+        public static Dictionary<Point, Texture2D> LoadGameChunks(string imagePath, GraphicsDevice gd, int offsetX, int offsetY)
+        {
+            var chunks = new Dictionary<Point, Texture2D>();
+            if (!System.IO.File.Exists(imagePath)) return chunks;
+
+            using (var stream = System.IO.File.OpenRead(imagePath))
+            using (var masterTex = Texture2D.FromStream(gd, stream))
+            {
+                int chunkPixels = MaskLayer.CHUNK_PIXEL_SIZE;
+                int chunksX = masterTex.Width / chunkPixels;
+                int chunksY = masterTex.Height / chunkPixels;
+
+                Color[] masterData = new Color[masterTex.Width * masterTex.Height];
+                masterTex.GetData(masterData);
+
+                for (int y = 0; y < chunksY; y++)
+                {
+                    for (int x = 0; x < chunksX; x++)
+                    {
+                        Point coord = new Point(x + offsetX, y + offsetY); // Apply the parsed offset!
+                        Texture2D chunkTex = new Texture2D(gd, chunkPixels, chunkPixels);
+                        Color[] chunkData = new Color[chunkPixels * chunkPixels];
+
+                        for (int cy = 0; cy < chunkPixels; cy++)
+                        {
+                            for (int cx = 0; cx < chunkPixels; cx++)
+                            {
+                                int masterX = (x * chunkPixels) + cx;
+                                int masterY = (y * chunkPixels) + cy;
+                                chunkData[cx + cy * chunkPixels] = masterData[masterX + masterY * masterTex.Width];
+                            }
+                        }
+
+                        chunkTex.SetData(chunkData);
+                        chunks[coord] = chunkTex;
+                    }
+                }
+            }
+            return chunks;
+        }
+        public static Dictionary<Point, Texture2D> LoadGameNormalChunks(string imagePath, GraphicsDevice gd, int offsetX, int offsetY)
+        {
+            var chunks = new Dictionary<Point, Texture2D>();
+            if (!System.IO.File.Exists(imagePath)) return chunks;
+
+            using (var stream = System.IO.File.OpenRead(imagePath))
+            using (var masterTex = Texture2D.FromStream(gd, stream))
+            {
+                int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
+                int chunksY = masterTex.Height / MaskLayer.CHUNK_PIXEL_SIZE;
+                Color[] masterData = new Color[masterTex.Width * masterTex.Height];
+                masterTex.GetData(masterData);
+
+                for (int y = 0; y < chunksY; y++)
+                {
+                    for (int x = 0; x < chunksX; x++)
+                    {
+                        Point coord = new Point(x + offsetX, y + offsetY);
+                        Texture2D chunkTex = new Texture2D(gd, MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE);
+                        Color[] chunkData = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+
+                        for (int cy = 0; cy < MaskLayer.CHUNK_PIXEL_SIZE; cy++)
+                        {
+                            for (int cx = 0; cx < MaskLayer.CHUNK_PIXEL_SIZE; cx++)
+                            {
+                                int mX = (x * MaskLayer.CHUNK_PIXEL_SIZE) + cx;
+                                int mY = (y * MaskLayer.CHUNK_PIXEL_SIZE) + cy;
+                                chunkData[cx + cy * MaskLayer.CHUNK_PIXEL_SIZE] = masterData[mX + mY * masterTex.Width];
+                            }
+                        }
+                        chunkTex.SetData(chunkData);
+                        chunks[coord] = chunkTex;
                     }
                 }
             }

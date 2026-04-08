@@ -72,5 +72,138 @@
       "X": 8,
       "Y": 19
     }
+  },
+  {
+    "ID": "Corner_Building",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 32,
+      "Y": 80,
+      "Width": 320,
+      "Height": 224
+    },
+    "Pivot": "160, 224",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 20,
+      "Y": 14
+    }
+  },
+  {
+    "ID": "Building1",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 896,
+      "Y": 0,
+      "Width": 400,
+      "Height": 224
+    },
+    "Pivot": "200, 224",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 25,
+      "Y": 14
+    }
+  },
+  {
+    "ID": "Building_Complex",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 48,
+      "Y": 368,
+      "Width": 704,
+      "Height": 240
+    },
+    "Pivot": "352, 240",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 44,
+      "Y": 15
+    }
+  },
+  {
+    "ID": "Building3",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 0,
+      "Y": 640,
+      "Width": 512,
+      "Height": 352
+    },
+    "Pivot": "256, 352",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 32,
+      "Y": 22
+    }
+  },
+  {
+    "ID": "Street_Lamp01",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 1184,
+      "Y": 704,
+      "Width": 16,
+      "Height": 144
+    },
+    "Pivot": "8, 144",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 1,
+      "Y": 9
+    }
+  },
+  {
+    "ID": "Street_Lamp02",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 1216,
+      "Y": 656,
+      "Width": 48,
+      "Height": 192
+    },
+    "Pivot": "24, 192",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 3,
+      "Y": 12
+    }
+  },
+  {
+    "ID": "Street_Lamp03",
+    "AtlasName": "Building",
+    "SourceRect": {
+      "X": 1296,
+      "Y": 656,
+      "Width": 48,
+      "Height": 192
+    },
+    "Pivot": "24, 192",
+    "Tags": [
+      "#Building"
+    ],
+    "Properties": {},
+    "SizeInCells": {
+      "X": 3,
+      "Y": 12
+    }
   }
 ]

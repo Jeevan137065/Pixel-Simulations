@@ -12,24 +12,26 @@ namespace Pixel_Simulations
         public Color Color;
         public Vector2 TextureCoordinate;
         public float NormalizedHeight; // 1.0 = Top, 0.0 = Bottom
-
+        public float ParallaxMask;
         // This tells the GPU exactly how to read our struct
         public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
             new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
             new VertexElement(12, VertexElementFormat.Color, VertexElementUsage.Color, 0),
             new VertexElement(16, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
             // We pass NormalizedHeight via TEXCOORD1
-            new VertexElement(24, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1)
+            new VertexElement(24, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
+            new VertexElement(28, VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2)
         );
 
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 
-        public VertexPositionColorTextureHeight(Vector3 position, Color color, Vector2 texCoord, float normalizedHeight)
+        public VertexPositionColorTextureHeight(Vector3 position, Color color, Vector2 texCoord, float normalizedHeight, float parallaxMask)
         {
             Position = position;
             Color = color;
             TextureCoordinate = texCoord;
             NormalizedHeight = normalizedHeight;
+            ParallaxMask = parallaxMask;
         }
     }
     public class ParallaxRenderer
@@ -66,28 +68,36 @@ namespace Pixel_Simulations
             }
         }
 
-        public void Begin(Camera camera, Vector2 viewportSize)
+        public void Begin(Camera camera, Vector2 viewportSize, bool isDepthPass)
         {
             // Replicate SpriteBatch's internal matrix math
             Matrix projection = Matrix.CreateOrthographicOffCenter(0, viewportSize.X, viewportSize.Y, 0, 0, 1);
 
             // NOTE: Depending on your exact Camera class implementation, use NativeFinal or SimFinal or Transform here.
-            Matrix viewProjection = camera.SimFinal * projection;
+            Matrix viewProjection = camera.SimTransform * projection;
 
             _effect.Parameters["MatrixTransform"]?.SetValue(viewProjection);
             _effect.Parameters["CameraPosition"]?.SetValue(camera.Position);
             _effect.Parameters["ParallaxAmount"]?.SetValue(parallaxAmount); // Tweak for strength!
             _effect.Parameters["EnableLighting"]?.SetValue(enableLighting ? 1.0f : 0.0f);
+            _effect.Parameters["IsDepthPass"]?.SetValue(isDepthPass);
+
             _spriteCount = 0;
             _currentTexture = null;
 
             _graphicsDevice.BlendState = BlendState.AlphaBlend;
             _graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
+            //_graphicsDevice.DepthStencilState = new DepthStencilState
+            //{
+            //    DepthBufferEnable = true,
+            //    DepthBufferWriteEnable = true,
+            //    DepthBufferFunction = CompareFunction.LessEqual
+            //};
             _graphicsDevice.DepthStencilState = DepthStencilState.None;
             _graphicsDevice.RasterizerState = RasterizerState.CullNone;
         }
 
-        public void Draw(RenderableSprite sprite)
+        public void Draw(RenderableSprite sprite, Color overrideColor)
         {
             if (sprite.Texture == null) return;
 
@@ -122,19 +132,19 @@ namespace Pixel_Simulations
                 cos = (float)Math.Cos(sprite.Rotation);
                 sin = (float)Math.Sin(sprite.Rotation);
             }
-
-            Vector3 tl = new Vector3(sprite.Position.X + (left * cos - top * sin), sprite.Position.Y + (left * sin + top * cos), 0);
-            Vector3 tr = new Vector3(sprite.Position.X + (right * cos - top * sin), sprite.Position.Y + (right * sin + top * cos), 0);
-            Vector3 bl = new Vector3(sprite.Position.X + (left * cos - bottom * sin), sprite.Position.Y + (left * sin + bottom * cos), 0);
-            Vector3 br = new Vector3(sprite.Position.X + (right * cos - bottom * sin), sprite.Position.Y + (right * sin + bottom * cos), 0);
-
+            //float z = sprite.DrawDepth;
+            float z = 0f;
+            Vector3 tl = new Vector3(sprite.Position.X + (left * cos - top * sin), sprite.Position.Y + (left * sin + top * cos), z);
+            Vector3 tr = new Vector3(sprite.Position.X + (right * cos - top * sin), sprite.Position.Y + (right * sin + top * cos), z);
+            Vector3 bl = new Vector3(sprite.Position.X + (left * cos - bottom * sin), sprite.Position.Y + (left * sin + bottom * cos), z);
+            Vector3 br = new Vector3(sprite.Position.X + (right * cos - bottom * sin), sprite.Position.Y + (right * sin + bottom * cos), z);
             // Add vertices to array (Notice NormalizedHeight: Top = 1f, Bottom = 0f)
             int vIndex = _spriteCount * 4;
-            _vertices[vIndex + 0] = new VertexPositionColorTextureHeight(tl, Color.White, new Vector2(u0, v0), 1f); // Top Left
-            _vertices[vIndex + 1] = new VertexPositionColorTextureHeight(tr, Color.White, new Vector2(u1, v0), 1f); // Top Right
-            _vertices[vIndex + 2] = new VertexPositionColorTextureHeight(bl, Color.White, new Vector2(u0, v1), 0f); // Bottom Left
-            _vertices[vIndex + 3] = new VertexPositionColorTextureHeight(br, Color.White, new Vector2(u1, v1), 0f); // Bottom Right
-
+            // Pass the Mask into the vertices!
+            _vertices[vIndex + 0] = new VertexPositionColorTextureHeight(tl, overrideColor, new Vector2(u0, v0), 1f, sprite.ParallaxMask);
+            _vertices[vIndex + 1] = new VertexPositionColorTextureHeight(tr, overrideColor, new Vector2(u1, v0), 1f, sprite.ParallaxMask);
+            _vertices[vIndex + 2] = new VertexPositionColorTextureHeight(bl, overrideColor, new Vector2(u0, v1), 0f, sprite.ParallaxMask);
+            _vertices[vIndex + 3] = new VertexPositionColorTextureHeight(br, overrideColor, new Vector2(u1, v1), 0f, sprite.ParallaxMask);
             _spriteCount++;
         }
 

@@ -12,8 +12,8 @@ namespace Pixel_Simulations.UI
         private readonly RenderPipeline _pipeline;
         // UI Framework Elements
         private UIPanel _pauseRoot;
-        private UILabel _tabContentLabel;
-        private string _activeTab = "Map";
+        private UIStackPanel _contentArea;
+        private string _activeTab = "Debug";
 
         // Input state required by UIFramework
         public EditorInputState UIInput { get; private set; }
@@ -28,7 +28,6 @@ namespace Pixel_Simulations.UI
         }
         private void BuildPauseMenu()
         {
-            // 1. Root Container (Centered on screen)
             int menuWidth = 600;
             int menuHeight = 400;
             _pauseRoot = new UIPanel
@@ -39,7 +38,7 @@ namespace Pixel_Simulations.UI
                 BorderColor = Color.White
             };
 
-            // 2. Top Navigation Tabs
+            // Top Navigation Tabs
             var tabStack = new UIStackPanel
             {
                 Direction = StackDirection.Horizontal,
@@ -48,10 +47,10 @@ namespace Pixel_Simulations.UI
                 PanelBackground = Color.Transparent
             };
 
-            string[] tabs = { "Map", "Player", "Settings", "Resume" };
+            string[] tabs = { "Map", "Player", "Debug", "Settings", "Resume" };
             foreach (var tab in tabs)
             {
-                string tabName = tab; // Closure safety
+                string tabName = tab;
                 var btn = new UIButton
                 {
                     Size = new Vector2(100, 30),
@@ -61,7 +60,7 @@ namespace Pixel_Simulations.UI
 
                 btn.OnClick = () =>
                 {
-                    if (tabName == "Resume") _state.DebugPool[GameBool.IsPaused] = false;
+                    if (tabName == "Resume") _state.DebugPool[GameBool.IsPaused] = false; // Or however you toggle pause
                     else
                     {
                         _activeTab = tabName;
@@ -71,33 +70,104 @@ namespace Pixel_Simulations.UI
                 tabStack.AddChild(btn);
             }
 
-            // 3. Content Area
-            var contentArea = new UIPanel
+            // Content Area (Now a StackPanel to hold multiple UI Elements cleanly!)
+            _contentArea = new UIStackPanel
             {
+                Direction = StackDirection.Vertical,
                 LocalPosition = new Vector2(10, 50),
                 Size = new Vector2(menuWidth - 20, menuHeight - 60),
-                BackgroundColor = Color.Black * 0.5f,
-                BorderColor = Color.Gray
+                PanelBackground = Color.Black * 0.5f,
+                BorderColor = Color.Gray,
+                Padding = 15f,
+                Spacing = 10f
             };
-
-            _tabContentLabel = new UILabel
-            {
-                LocalPosition = new Vector2(20, 20),
-                Text = "Map Data Here",
-                TextColor = Color.LightGray
-            };
-
-            contentArea.AddChild(_tabContentLabel);
 
             _pauseRoot.AddChild(tabStack);
-            _pauseRoot.AddChild(contentArea);
+            _pauseRoot.AddChild(_contentArea);
+
+            UpdateTabContent(); // Initial build
         }
 
         private void UpdateTabContent()
         {
-            if (_activeTab == "Map") _tabContentLabel.Text = $"Current Map: {_state.CurrentMap?.Layers.Count ?? 0} Layers";
-            else if (_activeTab == "Player") _tabContentLabel.Text = $"Player Position: {_state.Player.Position.X:F0}, {_state.Player.Position.Y:F0}";
-            else if (_activeTab == "Settings") _tabContentLabel.Text = "Settings Menu (Volume, Resolution, etc.)";
+            _contentArea.ClearChildren(); // Remove old tab content
+
+            if (_activeTab == "Map")
+            {
+                _contentArea.AddChild(new UILabel { Text = $"Current Map: {_state.CurrentMap?.Layers.Count ?? 0} Layers", TextColor = Color.White });
+            }
+            else if (_activeTab == "Player")
+            {
+                _contentArea.AddChild(new UILabel { Text = $"Player Position: {_state.Player.Position.X:F0}, {_state.Player.Position.Y:F0}", TextColor = Color.White });
+            }
+            else if (_activeTab == "Debug")
+            {
+                _contentArea.AddChild(new UILabel { Text = "Game Debug Tools", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+
+                // --- TOGGLE BUTTON HELPERS ---
+                var toggleColBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Show Collisions: {_state.DebugPool[GameBool.ShowCollision]}", BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed };
+                toggleColBtn.OnClick = () =>
+                {
+                    _state.DebugPool[GameBool.ShowCollision] = !_state.DebugPool[GameBool.ShowCollision];
+                    UpdateTabContent(); // Refresh button visuals
+                };
+                _contentArea.AddChild(toggleColBtn);
+
+                var toggleLinkBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Show Links: {_state.DebugPool[GameBool.ShowLinks]}", BackgroundColor = _state.DebugPool[GameBool.ShowLinks] ? Color.DarkGreen : Color.DarkRed };
+                toggleLinkBtn.OnClick = () =>
+                {
+                    _state.DebugPool[GameBool.ShowLinks] = !_state.DebugPool[GameBool.ShowLinks];
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleLinkBtn);
+
+                var toggleShapesBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Show All Shapes: {_state.DebugPool[GameBool.ShowShapes]}", BackgroundColor = _state.DebugPool[GameBool.ShowShapes] ? Color.DarkGreen : Color.DarkRed };
+                toggleShapesBtn.OnClick = () =>
+                {
+                    _state.DebugPool[GameBool.ShowShapes] = !_state.DebugPool[GameBool.ShowShapes];
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleShapesBtn);
+
+                // Add some info about the Entity Manager
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                //_contentArea.AddChild(new UILabel { Text = $"Total Cached Entities: {_state..AllEntities.Count}", TextColor = Color.Cyan });
+            }
+            else if (_activeTab == "Settings")
+            {
+                _contentArea.AddChild(new UILabel { Text = "Video Settings", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+
+                // 1. Toggle Parallax
+                var toggleParaBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Enable Parallax: {_state.DebugPool[GameBool.EnableParallax]}", BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed };
+                toggleParaBtn.OnClick = () =>
+                {
+                    _state.DebugPool[GameBool.EnableParallax] = !_state.DebugPool[GameBool.EnableParallax];
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleParaBtn);
+
+                // 2. Adjust Strength Slider (- / +)
+                var strengthRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 10f };
+                strengthRow.AddChild(new UILabel { Text = "Parallax Strength:", TextColor = Color.White });
+
+                var minusBtn = new UIButton { Size = new Vector2(40, 30), Text = "-", BackgroundColor = Color.DarkSlateGray };
+                // Clamps min to 0.0f
+                minusBtn.OnClick = () => { _state.ParallaxStrength = System.Math.Max(0.0f, _state.ParallaxStrength - 0.05f); UpdateTabContent(); };
+
+                var valueLbl = new UILabel { Text = $"{_state.ParallaxStrength:F2}", TextColor = Color.Cyan };
+
+                var plusBtn = new UIButton { Size = new Vector2(40, 30), Text = "+", BackgroundColor = Color.DarkSlateGray };
+                // Clamps max to 0.5f as requested!
+                plusBtn.OnClick = () => { _state.ParallaxStrength = System.Math.Min(0.5f, _state.ParallaxStrength + 0.05f); UpdateTabContent(); };
+
+                strengthRow.AddChild(minusBtn);
+                strengthRow.AddChild(valueLbl);
+                strengthRow.AddChild(plusBtn);
+
+                _contentArea.AddChild(strengthRow);
+            }
         }
         public void Update(GameTime gameTime)
         {
@@ -156,13 +226,13 @@ namespace Pixel_Simulations.UI
                 "--- CAMERA STATE ---\n" +
                 $"Pos: {cam.Position.X:F1}, {cam.Position.Y:F1}\n" +
                 $"Zoom: {cam.Zoom:F2}\n" +
-                $"Cull View: {cam.CameraView}\n\n" +
+                $"Cull View: {cam.SimViewBounds}\n\n" +
 
                 "--- MATRICES ---\n" +
-                $"Native M11(ScaleX): {cam.NativeFinal.M11:F3}\n" +
-                $"Native M41(TransX): {cam.NativeFinal.M41:F3}\n" +
-                $"Sim M11(ScaleX): {cam.SimFinal.M11:F3}\n" +
-                $"Sim M41(TransX): {cam.SimFinal.M41:F3}\n\n" +
+                $"Native M11(ScaleX): {cam.NativeTransform.M11:F3}\n" +
+                $"Native M41(TransX): {cam.SimTransform.M41:F3}\n" +
+                $"Sim M11(ScaleX): {cam.SimTransform.M11:F3}\n" +
+                $"Sim M41(TransX): {cam.SimTransform.M41:F3}\n\n" +
 
                 "--- PLAYER ---\n" +
                 $"Pos: {player.Position.X:F1}, {player.Position.Y:F1}\n" +
@@ -171,7 +241,7 @@ namespace Pixel_Simulations.UI
                 "--- MAP ---\n" +
                 $"Loaded: {_state.CurrentMap != null}\n" +
                 $"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
-                $"Mask Layer ";
+                $"Mask Layer Chunks {_state.TerrainMaskChunks.Count}";
 
             // Draw black shadow for readability
             sb.DrawString(_theme.Font, debugText, new Vector2(11, 11), Color.Black);

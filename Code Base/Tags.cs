@@ -56,8 +56,19 @@ namespace Pixel_Simulations
                 }
             }
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Failed to parse tags.json: {ex.Message}"); }
+            // --- ENFORCE SYSTEM TAGS ---
+            EnsureSystemTag("#reflection", "Reflection Plane", "Draws dynamic reflections", Color.DeepSkyBlue);
+            EnsureSystemTag("#solid", "Solid Collision", "Blocks entity movement", Color.Red);
+            EnsureSystemTag("#portal", "Map Portal", "Transitions to another map", Color.Purple);
+            EnsureSystemTag("#light", "Light Source", "Emits dynamic light", Color.Yellow);
         }
-
+        private void EnsureSystemTag(string id, string name, string desc, Color color)
+        {
+            if (!Tags.ContainsKey(id))
+            {
+                Tags.Add(id, new TagDefinition { HashID = id, Name = name, Description = desc, TagColor = color });
+            }
+        }
         public TagDefinition GetTag(string hashId) => Tags.TryGetValue(hashId, out var t) ? t : null;
     }
 }

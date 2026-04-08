@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Pixel_Simulations.Data
 {
-    public enum LayerType { Tile, Object, Control,Mask }
+    public enum LayerType { Tile, Object, Control,Mask}
     public abstract class Layer
     {
         public string Name { get; set; }
@@ -171,10 +171,10 @@ namespace Pixel_Simulations.Data
     public class MaskLayer : Layer
     {
         public override LayerType Type => LayerType.Mask;
-
         // Each chunk is a 256x256 pixel texture (16x16 standard tiles)
         public const int CHUNK_PIXEL_SIZE = 256;
-
+        public int OffsetX { get; set; } = 0;
+        public int OffsetY { get; set; } = 0;
         [JsonIgnore]
         public Dictionary<Point, RenderTarget2D> Chunks { get; set; } = new Dictionary<Point, RenderTarget2D>();
 

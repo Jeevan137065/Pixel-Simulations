@@ -73,6 +73,7 @@ namespace Pixel_Simulations
             Effects["AmbientLighting"] = content.Load<Effect>("AmbientLight");
             Effects["TestWeather"] = content.Load<Effect>("Test");
             Effects["WaterFlood"] = content.Load<Effect>("WaterFlood");
+            Effects["ReflectionShader"] = content.Load<Effect>("ReflectionShader");
             // Load all Textures
             Textures["Noise_Perlin"] = content.Load<Texture2D>("WhiteA");
             Textures["Noise_Blue"] = content.Load<Texture2D>("BlueA");

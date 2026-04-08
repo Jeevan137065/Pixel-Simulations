@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Pixel_Simulations
     {
-    public enum AtlasType { Tile, Object, Universal }
+    public enum AtlasType { Tile, Object,Normal, Universal }
     public class AtlasMetadata
     {
         public string Name { get; set; }
@@ -97,6 +97,8 @@ namespace Pixel_Simulations
             // Load Object Atlases
             LoadAtlas("Trees", AtlasType.Object);
             LoadAtlas("Building", AtlasType.Object);
+            LoadAtlas("Trees_n", AtlasType.Normal);
+            LoadAtlas("Building_n", AtlasType.Normal);
 
             // Load Universal/UI Atlases
             customFont = content.Load<SpriteFont>("Seattle");
@@ -109,6 +111,18 @@ namespace Pixel_Simulations
         public Texture2D GetAtlas(string name)
         {
             if (_library.TryGetValue(name, out var meta))
+            {
+                return meta.Texture;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested but not loaded.");
+            return null;
+        }
+        
+        public Texture2D GetNormalAtlas(string name)
+        {
+            string normal_atlas = String.Concat(name, "_n");
+            if (_library.TryGetValue(normal_atlas, out var meta))
             {
                 return meta.Texture;
             }

@@ -6,20 +6,22 @@
 #define PS_SHADERMODEL ps_4_0_level_9_1
 #endif
 
-float4x4 MatrixTransform; // View * Projection
+float4x4 MatrixTransform;
 float2 CameraPosition;
-float ParallaxAmount;     // Strength of the 3D effect (e.g., 0.15)
-float EnableLighting;     // 1.0 = True, 0.0 = False
+float ParallaxAmount;
+float EnableLighting;
+bool IsDepthPass; // NEW: True if rendering VolumeDepth, False if rendering Albedo
+
 Texture2D SpriteTexture;
 sampler SpriteSampler = sampler_state{ Texture = <SpriteTexture>; AddressU = Clamp; AddressV = Clamp; MagFilter = Point; MinFilter = Point; MipFilter = Point; };
 
-// Must match our C# struct perfectly!
 struct VSInput
 {
     float4 Position : POSITION0;
     float4 Color : COLOR0;
     float2 TexCoord : TEXCOORD0;
     float NormalizedHeight : TEXCOORD1;
+    float ParallaxMask : TEXCOORD2; // NEW!
 };
 
 struct PSInput
@@ -33,22 +35,15 @@ PSInput MainVS(VSInput input)
 {
     PSInput output;
 
-    // 1. Calculate Parallax Shift
     float2 offset = input.Position.xy - CameraPosition;
 
-    // Bottom vertices (Height=0) stay anchored to the ground. 
-    // Top vertices (Height=1) shift based on camera distance.
-    float2 finalPos = input.Position.xy + (offset * ParallaxAmount * input.NormalizedHeight);
+    // MULTIPLY BY MASK: If ParallaxMask is 0.0 (Player), this becomes + 0.0 (No shift!)
+    float2 finalPos = input.Position.xy + (offset * ParallaxAmount * input.NormalizedHeight * input.ParallaxMask);
 
-    // 2. Apply Camera Matrix
     output.Position = mul(float4(finalPos, input.Position.zw), MatrixTransform);
 
-    // 3. Fake 3D Shading: Tops of trees catch more light
     output.Color = input.Color;
-    float lightMultiplier = 1.0 + (input.NormalizedHeight * ParallaxAmount * 1.5);
-
-    // If EnableLighting is 0.0, it multiplies by 1.0 (no change). 
-    // If EnableLighting is 1.0, it multiplies by lightMultiplier.
+    float lightMultiplier = 1.0 + (input.NormalizedHeight * ParallaxAmount * 1.5 * input.ParallaxMask);
     output.Color.rgb *= lerp(1.0, lightMultiplier, EnableLighting);
 
     output.TexCoord = input.TexCoord;
@@ -59,10 +54,22 @@ float4 MainPS(PSInput input) : SV_TARGET
 {
     float4 texColor = tex2D(SpriteSampler, input.TexCoord);
 
-// Discard transparent pixels so they don't overwrite things behind them
-if (texColor.a < 0.05) discard;
+    if (texColor.a < 0.05) discard;
 
-return texColor * input.Color;
+    // If we are doing the VolumeDepth pass, output ONLY the Vertex Color (which holds the Depth Value in C#)
+    if (IsDepthPass)
+    {
+        return input.Color;
+    }
+
+    return texColor * input.Color;
 }
 
-technique Basic{ pass P0 { VertexShader = compile VS_SHADERMODEL MainVS(); PixelShader = compile PS_SHADERMODEL MainPS(); } }
+technique Basic
+{
+    pass P0
+    {
+        VertexShader = compile VS_SHADERMODEL MainVS();
+        PixelShader = compile PS_SHADERMODEL MainPS();
+    }
+}

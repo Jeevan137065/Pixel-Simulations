@@ -18,7 +18,7 @@ using System.Text;
 namespace Pixel_Simulations.UI
 {
 
-    public class EditorUI
+    public class EditorUI : IUIContext
     {
         private Texture2D _iconsTexture;
         public Dictionary<string, Rectangle> IconSources { get; private set; }
@@ -37,7 +37,7 @@ namespace Pixel_Simulations.UI
         // It will contain a list of all panels: Viewport, ToolPanel, LayerPanel, etc.
         private GridRenderer gridRenderer { get; set; }
         public bool IsMouseOverUI { get; private set; } // Prevents map clicks
-
+        public UIElement FocusedElement => _editorState.UI.FocusedElement;
         public EditorUI(EditorState editorState)
         {
             _editorState = editorState;
@@ -111,33 +111,19 @@ namespace Pixel_Simulations.UI
         }
         public void SetFocus(UIElement element)
         {
-            // 1. Unfocus the old element
-            if (_editorState.UI.FocusedElement != null)
-                _editorState.UI.FocusedElement.IsFocused = false;
-
-            // 2. Update the central state
+            if (_editorState.UI.FocusedElement != null) _editorState.UI.FocusedElement.IsFocused = false;
             _editorState.UI.FocusedElement = element;
-
-            // 3. Focus the new element
-            if (_editorState.UI.FocusedElement != null)
-                _editorState.UI.FocusedElement.IsFocused = true;
+            if (_editorState.UI.FocusedElement != null) _editorState.UI.FocusedElement.IsFocused = true;
         }
 
+        // 4. CheckFocusClick (Already updated, ensure signature matches)
         public void CheckFocusClick(UIElement root, EditorInputState input)
         {
             if (!input.IsNewLeftClick) return;
-
             var hit = FindElementAt(root, input.MouseWindowPosition);
-
-            // If we clicked a textbox, focus it. 
-            // If we clicked empty space (null) or a simple Panel/Label, unfocus.
-            // (We don't unfocus if we click a UIButton, so we can click "Save" while still typing!)
-            if (hit is UITextBox)
-                SetFocus(hit);
-            else if (hit == null || !(hit is UIButton))
-                SetFocus(null);
+            if (hit is UITextBox) SetFocus(hit);
+            else if (hit == null || !(hit is UIButton)) SetFocus(null);
         }
-
         private UIElement FindElementAt(UIElement element, Vector2 mousePos)
         {
             if (!element.IsVisible || !element.AbsoluteBounds.Contains(mousePos)) return null;

@@ -655,10 +655,10 @@ namespace Pixel_Simulations.Editor
             switch (cmd.ActionName)
             {
                 case "Save":
+                    var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                    if (maskToSave != null) MapSerializer.SaveMaskLayer(maskToSave, maskPath, _editorState._graphics, _editorState);
                     MapSerializer.Save(_editorState.ActiveMap, jsonPath);
                     System.Diagnostics.Debug.WriteLine($"Working map SAVED to: {jsonPath}");
-                    var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                    if (maskToSave != null) MapSerializer.SaveMaskLayer(maskToSave, maskPath, _editorState._graphics);
                     break;
                 case "Load":
                     var loadedMap = MapSerializer.Load(jsonPath);
@@ -672,10 +672,10 @@ namespace Pixel_Simulations.Editor
                     System.Diagnostics.Debug.WriteLine($"Map Loaded for game to: {gameMapPath}");
                     break;
                 case "Export":
-                    MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
                     // We usually want to make sure the mask is saved during export too
                     var exportMask = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                    if (exportMask != null) MapSerializer.SaveMaskLayer(exportMask, maskPath, _editorState._graphics);
+                    if (exportMask != null) MapSerializer.SaveMaskLayer(exportMask, maskPath, _editorState._graphics, _editorState);
+                    MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
                     System.Diagnostics.Debug.WriteLine($"Map EXPORTED for game to: {gameMapPath}");
                     break;
                 case "Capture":

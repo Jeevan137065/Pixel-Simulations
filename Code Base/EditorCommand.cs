@@ -39,26 +39,56 @@ namespace Pixel_Simulations.Data
     {
         private readonly ObjectLayer _targetLayer;
         private readonly MapObject _objectToRemove;
+        private MapObject _siblingRemoved;
         public RemoveObjectCommand(ObjectLayer layer, MapObject obj) { _targetLayer = layer; _objectToRemove = obj; }
 
         public void Execute()
         {
-            _targetLayer.Objects.Remove(_objectToRemove);
-            if (_targetLayer is ControlLayer cl)
+            RemoveFromLayer(_objectToRemove);
+
+            // If it's a light, find the connected half and remove it too
+            if (_objectToRemove.Tags.Contains("#light_source") || _objectToRemove.Tags.Contains("#light_falloff"))
             {
-                if (_objectToRemove is ShapeObject s) cl.Shapes.Remove(s);
-                else if (_objectToRemove is RectangleObject r) cl.Rectangles.Remove(r);
-                else if (_objectToRemove is PointObject p) cl.Points.Remove(p);
+                _siblingRemoved = FindSibling();
+                if (_siblingRemoved != null) RemoveFromLayer(_siblingRemoved);
             }
         }
+
         public void Undo()
         {
-            _targetLayer.Objects.Add(_objectToRemove);
+            AddToLayer(_objectToRemove);
+            if (_siblingRemoved != null) AddToLayer(_siblingRemoved);
+        }
+
+        private MapObject FindSibling()
+        {
+            var sibling = _targetLayer.Objects.FirstOrDefault(o => _objectToRemove.LinkedObjects.Contains(o.ID));
+            if (sibling == null && _targetLayer is ControlLayer cl)
+            {
+                sibling = cl.Shapes.FirstOrDefault(s => _objectToRemove.LinkedObjects.Contains(s.ID));
+            }
+            return sibling;
+        }
+
+        private void RemoveFromLayer(MapObject obj)
+        {
+            _targetLayer.Objects.Remove(obj);
             if (_targetLayer is ControlLayer cl)
             {
-                if (_objectToRemove is ShapeObject s) cl.Shapes.Add(s);
-                else if (_objectToRemove is RectangleObject r) cl.Rectangles.Add(r);
-                else if (_objectToRemove is PointObject p) cl.Points.Add(p);
+                if (obj is ShapeObject s) cl.Shapes.Remove(s);
+                else if (obj is RectangleObject r) cl.Rectangles.Remove(r);
+                else if (obj is PointObject p) cl.Points.Remove(p);
+            }
+        }
+
+        private void AddToLayer(MapObject obj)
+        {
+            _targetLayer.Objects.Add(obj);
+            if (_targetLayer is ControlLayer cl)
+            {
+                if (obj is ShapeObject s) cl.Shapes.Add(s);
+                else if (obj is RectangleObject r) cl.Rectangles.Add(r);
+                else if (obj is PointObject p) cl.Points.Add(p);
             }
         }
     }

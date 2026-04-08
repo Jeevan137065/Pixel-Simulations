@@ -11,7 +11,7 @@ namespace Pixel_Simulations
     public class VolumetricDepthRenderer
     {
         private GraphicsDevice _graphicsDevice;
-        private Effect _depthEffect;
+        public Effect _depthEffect;
         private readonly BlendState WriteBlue = new BlendState
         {
             ColorWriteChannels = ColorWriteChannels.Blue,
@@ -38,7 +38,7 @@ namespace Pixel_Simulations
         public void BeginVolumePass(SpriteBatch spriteBatch, Camera camera)
         {
             // Immediate Mode is REQUIRED so shader parameters update per-sprite!
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, _depthEffect, camera.SimFinal);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, _depthEffect, camera.SimTransform);
         }
 
         public void DrawVolumetricSprite(SpriteBatch spriteBatch, RenderableSprite sprite)
@@ -59,10 +59,13 @@ namespace Pixel_Simulations
         }
         public void DrawTerrainDepth(SpriteBatch spriteBatch, Dictionary<Point, Texture2D> maskChunks, RectangleF streamBounds, Camera camera)
         {
-            if (maskChunks == null || maskChunks.Count == 0) return;
+            if (maskChunks == null || maskChunks.Count == 0) 
+                {
+                System.Diagnostics.Debug.WriteLine($"Map mask Read is NULL. fix it");
+                return; }
 
             // Additive Blending overwrites Blue without touching Red/Green
-            spriteBatch.Begin(SpriteSortMode.Immediate, WriteBlue, SamplerState.PointClamp, null, null, null, camera.SimFinal);
+            spriteBatch.Begin(SpriteSortMode.Immediate, WriteBlue, SamplerState.PointClamp, null, null, null, camera.SimTransform);
 
             int chunkSize = 256; // MaskLayer.CHUNK_PIXEL_SIZE
 
@@ -76,7 +79,6 @@ namespace Pixel_Simulations
                     spriteBatch.Draw(kvp.Value, chunkBounds.Position, Color.White);
                 }
             }
-
             spriteBatch.End();
         }
         public void EndPass(SpriteBatch spriteBatch)

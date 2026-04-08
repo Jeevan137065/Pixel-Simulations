@@ -244,7 +244,7 @@ namespace Pixel_Simulations
     }
     public class RenderPipeline
     {
-        private readonly GraphicsDevice _graphicsDevice;
+        public readonly GraphicsDevice _graphicsDevice;
         public MicroRenderTargetPool MicroRTs { get; private set; }
         private readonly int _nativeWidth;
         private readonly int _nativeHeight;
@@ -278,7 +278,10 @@ namespace Pixel_Simulations
                 //RenderLayer.PostProcess,
                 RenderLayer.Albedo,
                 RenderLayer.Dynamic,
-                RenderLayer.VolumeDepth
+                RenderLayer.Normal,
+                RenderLayer.VolumeDepth,
+                RenderLayer.LightMask,
+                //RenderLayer.Shader,
             };
             MicroRTs = new MicroRenderTargetPool(graphicsDevice);
             InitializeTargets();
@@ -308,7 +311,7 @@ namespace Pixel_Simulations
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // LightMask: Using HalfVector4 for HDR (Floating point lighting values)
             _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             
             // This is our Master Shader target. All simulation draws share this buffer.
             _targets[RenderLayer.Shader] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
@@ -370,10 +373,15 @@ namespace Pixel_Simulations
             // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
 
-            spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
+            //spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
 
             spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
+
+            spriteBatch.Draw(_targets[RenderLayer.LightMask], FinalRect, Color.White);
+
+            spriteBatch.End();
             // 2. OUTPUT TO SCREEN
             //_graphicsDevice.SetRenderTarget(null);
             //_graphicsDevice.Clear(Color.Black);

@@ -38,7 +38,7 @@ namespace Pixel_Simulations.Data
                     case LayerType.Tile: DrawTileLayer(sb, layer as TileLayer); break;
                     case LayerType.Object: DrawObjectLayer(sb, layer as ObjectLayer); break;
                     case LayerType.Control: DrawControlLayer(sb, layer as ControlLayer); break;
-                    case LayerType.Mask: DrawMaskLayer(sb, layer as MaskLayer); break; // Add this!
+                    case LayerType.Mask: DrawMaskLayer(sb, layer as MaskLayer); DrawMaskLayer(sb, layer as MaskLayer); break; // Add this!
                 }
             }
         }
@@ -95,73 +95,140 @@ namespace Pixel_Simulations.Data
             if (layer == null) return;
             float lineThickness = 1f / _editorState.camera.Zoom;
 
-
+            Color GetObjColor(MapObject obj)
+            {
+                if (obj.Tags != null && obj.Tags.Count > 0)
+                {
+                    // Just grab the first tag to determine the color
+                    var tagDef = _editorState.TagManager.GetTag(obj.Tags.First());
+                    if (tagDef != null) return tagDef.TagColor;
+                }
+                return Color.Gray; // Default if no tags!
+            }
             foreach (var shapeObj in layer.Shapes)
             {
-
                 if (shapeObj == null || shapeObj.Shape == null) continue;
-                // 1. Draw the filled area (using bounds for a simple transparent tint)
-                var bounds = shapeObj.Shape.GetBounds();
-                sb.FillRectangle(bounds, shapeObj.DebugColor * 0.2f);
 
-                // 2. DRAW THE ACTUAL POLYGON EDGES (The complex "Plus" shape)
-                var verts = shapeObj.Shape.Vertices;
-                for (int i = 0; i < verts.Count; i++)
+                var bounds = shapeObj.Shape.GetBounds();
+                Color objColor = GetObjColor(shapeObj);
+                // --- GRADIENT Light Source PREVIEW ---
+                if (shapeObj.Tags.Contains("#light_source"))
                 {
-                    Vector2 start = verts[i];
-                    Vector2 end = verts[(i + 1) % verts.Count]; // Loop back to start
-                    sb.DrawLine(start, end, shapeObj.DebugColor, lineThickness * 2);
+                    // 1. Find the connected Falloff shape
+                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.Tags.Contains("#light_falloff") && shapeObj.LinkedObjects.Contains(s.ID));
+                    if (falloffShape != null && shapeObj.Shape.Vertices.Count == falloffShape.Shape.Vertices.Count)
+                    {
+                        // 2. Draw lines connecting the vertices (The "Light Shafts")
+                        var srcVerts = shapeObj.Shape.Vertices;
+                        var fallVerts = falloffShape.Shape.Vertices;
+
+                        for (int i = 0; i < srcVerts.Count; i++)
+                        {
+                            // Draw connecting edge
+                            sb.DrawLine(srcVerts[i], fallVerts[i], Color.Yellow * 0.3f, lineThickness);
+
+                            // Draw the source perimeter (Bright)
+                            sb.DrawLine(srcVerts[i], srcVerts[(i + 1) % srcVerts.Count], Color.White, lineThickness * 2);
+
+                            // Draw the falloff perimeter (Dim)
+                            sb.DrawLine(fallVerts[i], fallVerts[(i + 1) % fallVerts.Count], Color.Yellow * 0.2f, lineThickness);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback if sibling is missing
+                        sb.DrawRectangle(bounds, Color.Yellow, lineThickness * 2);
+                    }
+                }
+                else if (shapeObj.Tags.Contains("#light_falloff"))
+                {
+                    // We skip drawing the falloff explicitly, because the #light_source draws the connecting lines to it!
+                    // We just draw a faint outline so you can still click it to select it.
+                    sb.DrawRectangle(bounds, Color.Orange * 0.2f, lineThickness);
+                }
+                // --- GRADIENT REFLECTION PREVIEW ---
+                if (shapeObj.Tags.Contains("#reflection"))
+                {
+                    bool isNegative = true; // Default to floor reflection
+                    if (shapeObj.Properties.TryGetValue("Direction", out var dirProp))
+                        isNegative = (dirProp.Value == "True");
+
+                    // Draw Gradient (using horizontal slices for performance in editor)
+                    int slices = 15;
+                    float sliceHeight = bounds.Height / slices;
+
+                    for (int i = 0; i < slices; i++)
+                    {
+                        float factor = (float)i / (slices - 1);
+
+                        // If Negative (Floor), fade to dark at the BOTTOM (factor increases downwards).
+                        // If Positive (Mirror), fade to dark at the TOP (factor decreases downwards).
+                        float darkness = isNegative ? (1f - factor) : factor;
+
+                        Color sliceColor = objColor * (darkness * 0.5f); // Max 50% opacity
+                        RectangleF sliceRect = new RectangleF(bounds.X, bounds.Y + (i * sliceHeight), bounds.Width, sliceHeight);
+                        sb.FillRectangle(sliceRect, sliceColor);
+                    }
+
+                    // Draw Outer Bounds
+                    sb.DrawRectangle(bounds, objColor, lineThickness * 2);
+                }
+                else
+                {
+                    // Standard Shape
+                    sb.FillRectangle(bounds, objColor * 0.2f);
+                    var verts = shapeObj.Shape.Vertices;
+                    for (int i = 0; i < verts.Count; i++)
+                        sb.DrawLine(verts[i], verts[(i + 1) % verts.Count], objColor, lineThickness * 2);
                 }
             }
             foreach (var rectObj in layer.Rectangles)
             {
+                Color objColor = GetObjColor(rectObj);
                 var bounds = new RectangleF(rectObj.Position, rectObj.Size);
-                sb.FillRectangle(bounds, rectObj.DebugColor * 0.4f);
-                sb.DrawRectangle(bounds, rectObj.DebugColor, lineThickness);
+                sb.FillRectangle(bounds, objColor * 0.4f);
+                sb.DrawRectangle(bounds, objColor, lineThickness);
             }
             foreach (var pointObj in layer.Points)
             {
+                Color objColor = GetObjColor(pointObj);
                 sb.DrawCircle(pointObj.Position, pointObj.Radius, 32, pointObj.DebugColor, lineThickness);
-                sb.DrawLine(pointObj.Position - new Vector2(4, 0), pointObj.Position + new Vector2(4, 0), pointObj.DebugColor * 0.4f, lineThickness);
-                sb.DrawLine(pointObj.Position - new Vector2(0, 4), pointObj.Position + new Vector2(0, 4), pointObj.DebugColor, lineThickness);
+                sb.DrawLine(pointObj.Position - new Vector2(4, 0), pointObj.Position + new Vector2(4, 0), objColor * 0.4f, lineThickness);
+                sb.DrawLine(pointObj.Position - new Vector2(0, 4), pointObj.Position + new Vector2(0, 4), objColor, lineThickness);
             }
         }
         private void DrawMaskLayer(SpriteBatch sb, MaskLayer layer)
         {
-            // Build a dynamic BlendState based on the EditorState toggles
+            // --- 1. DETERMINE WHICH CHANNELS TO SHOW ---
             ColorWriteChannels writeChannels = ColorWriteChannels.None;
             if (_editorState.ShowMaskRed) writeChannels |= ColorWriteChannels.Red;
             if (_editorState.ShowMaskGreen) writeChannels |= ColorWriteChannels.Green;
             if (_editorState.ShowMaskBlue) writeChannels |= ColorWriteChannels.Blue;
-            if (_editorState.ShowMaskAlpha) writeChannels |= ColorWriteChannels.Alpha;
 
-            // If nothing is selected, don't draw anything
             if (writeChannels == ColorWriteChannels.None) return;
 
-            var customBlend = new BlendState
+            // --- 2. DRAW RAW DATA MASK ---
+            // Additive Blending makes differences in values highly visible! 
+            var dataBlendState = new BlendState
             {
                 ColorSourceBlend = Blend.SourceAlpha,
-                ColorDestinationBlend = Blend.One,
+                ColorDestinationBlend = Blend.One, // Additive!
                 ColorWriteChannels = writeChannels
             };
 
-            // We must temporarily end the standard SpriteBatch to apply our custom BlendState
             sb.End();
-            sb.Begin(blendState: customBlend, samplerState: SamplerState.PointClamp, transformMatrix: _editorState.camera.Transform);
+            sb.Begin(blendState: dataBlendState, samplerState: SamplerState.PointClamp, transformMatrix: _editorState.camera.Transform);
 
-            Color overlayColor = Color.White * 0.6f; // 60% opacity so we can see the map underneath
+            // Tint chunks slightly so they don't blow out the screen to pure white
+            Color dataTint = Color.White * 0.8f;
 
             foreach (var kvp in layer.Chunks)
             {
-                Point coord = kvp.Key;
-                RenderTarget2D rt = kvp.Value;
-                Vector2 worldPos = new Vector2(coord.X * MaskLayer.CHUNK_PIXEL_SIZE, coord.Y * MaskLayer.CHUNK_PIXEL_SIZE);
-                sb.Draw(rt, worldPos, overlayColor);
-                sb.Draw(rt, worldPos, overlayColor);
-                sb.Draw(rt, worldPos, overlayColor);
+                Vector2 worldPos = new Vector2(kvp.Key.X * MaskLayer.CHUNK_PIXEL_SIZE, kvp.Key.Y * MaskLayer.CHUNK_PIXEL_SIZE);
+                sb.Draw(kvp.Value, worldPos, dataTint);
             }
 
-            // Restore the standard SpriteBatch for the rest of the Editor
+            // Restore default SpriteBatch state for the rest of the Editor
             sb.End();
             sb.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _editorState.camera.Transform);
         }

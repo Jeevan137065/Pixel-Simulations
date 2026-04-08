@@ -46,7 +46,9 @@ namespace Pixel_Simulations.Editor
                 new FreeRectangleTool(),
                 new ShapeTool(),
                 new SelectionTool(),
-                new PointPlacerTool()
+                new PointPlacerTool(),
+                new LightShapeTool(),
+                new ReflectionTool()
                 // new RectangleTool(this) // Some tools might need a reference back to the state
             };
             //ActiveTool = null;
@@ -155,7 +157,7 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public bool ShowMaskGreen { get; set; } = true;
         [JsonIgnore] public bool ShowMaskBlue { get; set; } = true;
         [JsonIgnore] public bool ShowMaskAlpha { get; set; } = false; // Usually keep alpha hidden in editor
-
+        [JsonIgnore] public Effect normalShader { get; set; }
         public EditorState(LayoutManager layoutManager, GraphicsDevice graphicsDevice)
         {
             // Create a default map to start with
@@ -183,6 +185,7 @@ namespace Pixel_Simulations.Editor
         {
             noiseManager.LoadContent(content);
             AssetLibrary = new EditorLibrary(content);
+            normalShader = content.Load<Effect>("HeightToNormal");
             //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
             AssetLibrary.LoadAtlas("Base", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);

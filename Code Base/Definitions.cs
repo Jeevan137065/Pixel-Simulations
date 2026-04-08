@@ -268,8 +268,9 @@ namespace Pixel_Simulations
                     serializer.Serialize(writer, controlLayer.Points);
                     break;
                 case LayerType.Mask:
-                    // We DON'T write the chunks to JSON! They are saved to the PNG.
-                    // We just need to know the Mask layer exists.
+                    var maskLayer = (MaskLayer)layer;
+                    writer.WritePropertyName("OffsetX"); writer.WriteValue(maskLayer.OffsetX);
+                    writer.WritePropertyName("OffsetY"); writer.WriteValue(maskLayer.OffsetY);
                     break;
             }
 
@@ -321,6 +322,12 @@ namespace Pixel_Simulations
                         colLayer.Rectangles = jo["Rectangles"]?.ToObject<List<RectangleObject>>(serializer) ?? new List<RectangleObject>();
                         colLayer.Shapes = jo["Shapes"]?.ToObject<List<ShapeObject>>(serializer) ?? new List<ShapeObject>();
                         colLayer.Points = jo["Points"]?.ToObject<List<PointObject>>(serializer) ?? new List<PointObject>();
+                        break;
+                    case LayerType.Mask:
+                        var maskL = new MaskLayer();
+                        maskL.OffsetX = jo["OffsetX"]?.Value<int>() ?? 0;
+                        maskL.OffsetY = jo["OffsetY"]?.Value<int>() ?? 0;
+                        target = maskL;
                         break;
                 }
             }
