@@ -28,6 +28,9 @@
     <Folder Include="Assets\Maps\" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Assets\Data\items.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Data\Objects.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

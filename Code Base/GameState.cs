@@ -31,6 +31,8 @@ namespace Pixel_Simulations
         public NewPlayer Player { get; private set; }
         // --- Managers and Services ---
         public Camera GameCamera { get; set; }
+        public ItemManager ItemManager { get; }
+        public bool IsInventoryOpen { get; set; } = false;
         public AssetLibrary Assets { get; }
         public Dictionary<Point, Texture2D> TerrainMaskChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public Dictionary<Point, Texture2D> TerrainNormalChunks { get; private set; } = new Dictionary<Point, Texture2D>();
@@ -61,6 +63,7 @@ namespace Pixel_Simulations
             input = new InputManager();
             Physics = new PhysicsManager();
             tagManager = new TagManager();
+            ItemManager = new ItemManager();
         }
 
         /// <summary>
@@ -126,6 +129,8 @@ namespace Pixel_Simulations
             // ---------------------------------
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
+            string itemPath = Path.Combine(parentDir, "Assets", "Data", "items.json");
+            ItemManager.Load(itemPath);
             Player.LoadContent(content,Physics); // Player loads its own specific content
         }
 

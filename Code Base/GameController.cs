@@ -10,6 +10,7 @@ namespace Pixel_Simulations
         private readonly EntityManager _entityManager;
 
         private bool _fKeyPressedLastFrame = false;
+        private bool _iKeyPressedLastFrame = false;
 
         public GameController(GameState state, EntityManager entityManager)
         {
@@ -37,9 +38,21 @@ namespace Pixel_Simulations
                 _state.DebugPool[GameBool.IsPaused] = !_state.DebugPool[GameBool.IsPaused];
             }
             _fKeyPressedLastFrame = kstate.IsKeyDown(Keys.Escape);
-
+            if (kstate.IsKeyDown(Keys.I) && !_iKeyPressedLastFrame)
+            {
+                _state.IsInventoryOpen = !_state.IsInventoryOpen;
+            }
+            _iKeyPressedLastFrame = kstate.IsKeyDown(Keys.I);
             // If paused, halt all game simulation updates!
             if (_state.DebugPool[GameBool.IsPaused]) return;
+            if (_state.input.NewLeftClick)
+            {
+                // Resolves 1920x1080 screen coordinates against inventory slots
+                _state.Player.Inventory.HandleMouseInteraction(
+                    _state.input.MouseScreenPosition.ToPoint(),
+                    true,
+                    new Vector2(1920, 1080), _state.IsInventoryOpen); // Pass your final screen resolution here
+            }
             if (kstate.IsKeyDown(Keys.F) && !_fKeyPressedLastFrame)
             {
                 var interactBox = _state.Player.GetInteractionBox();

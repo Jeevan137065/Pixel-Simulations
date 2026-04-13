@@ -73,10 +73,10 @@ namespace Pixel_Simulations
             _bodyParts = new List<BodyPart>();
         }
 
-        public  void LoadContent(ContentManager content,PhysicsManager physics)
+        public void LoadContent(ContentManager content, PhysicsManager physics)
         {
             // The AnimationManager will handle loading the texture and JSON
-            _animationManager.LoadContent(content,"BodySheet", "player_animation_data.json");
+            _animationManager.LoadContent(content, "BodySheet", "player_animation_data.json");
 
             // Create the body part instances
             _bodyParts.Add(new BodyPart("Torso"));
@@ -119,7 +119,10 @@ namespace Pixel_Simulations
             if (kbs.IsKeyDown(Keys.D4)) Inventory.SelectSlot(3);
             if (kbs.IsKeyDown(Keys.D5)) Inventory.SelectSlot(4);
             if (kbs.IsKeyDown(Keys.D6)) Inventory.SelectSlot(5);
-
+            if (kbs.IsKeyDown(Keys.D7)) Inventory.SelectSlot(6);
+            if (kbs.IsKeyDown(Keys.D8)) Inventory.SelectSlot(7);
+            if (kbs.IsKeyDown(Keys.D9)) Inventory.SelectSlot(8);
+            if (kbs.IsKeyDown(Keys.D0)) Inventory.SelectSlot(9);
             if (moveDirection != Vector2.Zero)
             {
                 CurrentState = PlayerState.Walking;
@@ -300,26 +303,6 @@ namespace Pixel_Simulations
         public BodyPart(string name)
         {
             Name = name;
-        }
-    }
-    public class Inventory
-    {
-        public const int HotbarSize = 10;
-        public Tool[] Hotbar { get; } = new Tool[HotbarSize];
-        public int SelectedSlot { get; private set; }
-
-        public Inventory()
-        {
-            Hotbar[0] = Tool.Shovel; Hotbar[1] = Tool.Hoe; Hotbar[2] = Tool.LeekSeeds;
-            Hotbar[3] = Tool.CarrotSeeds; Hotbar[4] = Tool.TurnipSeeds; Hotbar[5] = Tool.DiakonSeeds;
-        }
-
-        public void SelectSlot(int slot) { if (slot >= 0 && slot < HotbarSize) SelectedSlot = slot; }
-        public Tool GetSelectedItem() => Hotbar[SelectedSlot];
-        public bool AddItem(Tool itemToAdd)
-        {
-            for (int i = 2; i < HotbarSize; i++) { if (Hotbar[i] == Tool.None) { Hotbar[i] = itemToAdd; return true; } }
-            return false;
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Pixel_Simulations
             _state.Assets.LoadAtlas("emotes", AtlasType.Universal);
 
             // Initialize the HUD with the font and emote texture
-            HUD.LoadContent(_state.Assets.customFont, _state.Assets.GetAtlas("emotes"));
+            HUD.LoadContent(_state.Assets.customFont, _state.Assets.GetAtlas("emotes"),gd);
         }
         public void update(GameTime gameTime)
         {
@@ -298,14 +298,15 @@ namespace Pixel_Simulations
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.SimTransform);
             //_state.Shaders.DrawParticleWeather(spriteBatch, _state.Weather, _state.GameCamera.SimTransform, (float)gameTime.TotalGameTime.TotalSeconds);
             spriteBatch.End();
-            Debug_Draw(spriteBatch);
             // ==========================================
             // PASS 5: POST-PROCESS & COMPOSE
             // ==========================================
             _pipeline.PresentFinal(spriteBatch);
             _pipeline.PostFinal(spriteBatch, null, _state.Shaders.GetActivePostProcessingEffects());
             spriteBatch.Begin(); // Do not pass any matrix here for HUD
+            Debug_Draw(spriteBatch);
             HUD.Draw(spriteBatch); // <--- Add this right here!
+            HUD.DrawInventory(spriteBatch, _state);
             //DrawDebugText();
 
             spriteBatch.End();

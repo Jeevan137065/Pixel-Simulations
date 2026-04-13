@@ -5,7 +5,7 @@ using MonoGame.Extended;
 
 namespace Pixel_Simulations.UI
 {
-    public class GameUI
+    public class GameUI : IUIContext
     {
         private readonly GameState _state;
         private readonly UITheme _theme;
@@ -17,6 +17,8 @@ namespace Pixel_Simulations.UI
 
         // Input state required by UIFramework
         public EditorInputState UIInput { get; private set; }
+        public UIElement FocusedElement { get; private set; }
+
         public GameUI(GameState state, UITheme theme, RenderPipeline pipeline)
         {
             _state = state;
@@ -100,6 +102,7 @@ namespace Pixel_Simulations.UI
             {
                 _contentArea.AddChild(new UILabel { Text = $"Player Position: {_state.Player.Position.X:F0}, {_state.Player.Position.Y:F0}", TextColor = Color.White });
             }
+
             else if (_activeTab == "Debug")
             {
                 _contentArea.AddChild(new UILabel { Text = "Game Debug Tools", TextColor = Color.Yellow });
@@ -133,6 +136,27 @@ namespace Pixel_Simulations.UI
                 // Add some info about the Entity Manager
                 _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
                 //_contentArea.AddChild(new UILabel { Text = $"Total Cached Entities: {_state..AllEntities.Count}", TextColor = Color.Cyan });
+                // --- ITEM SPAWNER ROW ---
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UILabel { Text = "Item Spawner:", TextColor = Color.Cyan });
+
+                var row = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+                var idInput = new UITextBox { Size = new Vector2(100, 30), Placeholder = "ID (e.g. 1)" };
+                var countInput = new UITextBox { Size = new Vector2(100, 30), Placeholder = "Amount" };
+                var spawnBtn = new UIButton { Size = new Vector2(120, 30), Text = "Give Item", BackgroundColor = Color.DarkGreen };
+
+                spawnBtn.OnClick = () => {
+                    if (int.TryParse(idInput.Text, out int id) && int.TryParse(countInput.Text, out int count))
+                    {
+                        int leftover = _state.Player.Inventory.AddItem(id, count, _state.ItemManager);
+                        if (leftover > 0) System.Diagnostics.Debug.WriteLine($"Failed to add {leftover} items.");
+                    }
+                };
+
+                row.AddChild(idInput);
+                row.AddChild(countInput);
+                row.AddChild(spawnBtn);
+                _contentArea.AddChild(row);
             }
             else if (_activeTab == "Settings")
             {
@@ -179,6 +203,7 @@ namespace Pixel_Simulations.UI
 
             if (_state.IsPaused)
             {
+                if (UIInput.IsNewLeftClick) CheckFocusClick(_pauseRoot, UIInput);
                 // Pass null for EditorUI and EventBus since we don't use them in the game side
                 _pauseRoot.Update(UIInput, null);
             }
@@ -238,6 +263,10 @@ namespace Pixel_Simulations.UI
                 $"Pos: {player.Position.X:F1}, {player.Position.Y:F1}\n" +
                 $"Has Texture: {player.Texture != null}\n\n" +
 
+                "--- ITEMS ---\n" +
+                $"Items Loaded: {_state.ItemManager.Items.Count}\n" +
+                //$"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
+                //$"Mask Layer Chunks {_state.TerrainMaskChunks.Count}"+
                 "--- MAP ---\n" +
                 $"Loaded: {_state.CurrentMap != null}\n" +
                 $"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
@@ -247,9 +276,29 @@ namespace Pixel_Simulations.UI
             sb.DrawString(_theme.Font, debugText, new Vector2(11, 11), Color.Black);
             sb.DrawString(_theme.Font, debugText, new Vector2(10, 10), Color.LimeGreen);
         }
-        private void DrawHotbar(SpriteBatch sb)
+        public void SetFocus(UIElement element)
         {
-            // Standard loop rendering the _state.Player.Inventory...
+            if (FocusedElement != null) FocusedElement.IsFocused = false;
+            FocusedElement = element;
+            if (FocusedElement != null) FocusedElement.IsFocused = true;
         }
+
+        public void CheckFocusClick(UIElement root, EditorInputState input)
+        {
+            var hit = FindElementAt(root, input.MouseWindowPosition);
+            if (hit is UITextBox) SetFocus(hit);
+            else if (hit == null || !(hit is UIButton)) SetFocus(null);
+        }
+        private UIElement FindElementAt(UIElement element, Vector2 mousePos)
+        {
+            if (!element.IsVisible || !element.AbsoluteBounds.Contains(mousePos)) return null;
+            for (int i = element.Children.Count - 1; i >= 0; i--)
+            {
+                var hit = FindElementAt(element.Children[i], mousePos);
+                if (hit != null) return hit;
+            }
+            return element;
+        }
+        public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color) { } // Ignored for GameUI
     }
 }

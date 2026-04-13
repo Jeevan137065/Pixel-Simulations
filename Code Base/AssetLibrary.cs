@@ -102,7 +102,7 @@ namespace Pixel_Simulations
 
             // Load Universal/UI Atlases
             customFont = content.Load<SpriteFont>("Seattle");
-            // LoadAtlas("UI_Elements", AtlasType.Universal);
+            LoadAtlas("Items", AtlasType.Universal);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Pixel_Simulations
                 return meta.Texture;
             }
 
-            System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested but not loaded.");
+            //System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested but not loaded.");
             return null;
         }
         
@@ -127,7 +127,7 @@ namespace Pixel_Simulations
                 return meta.Texture;
             }
 
-            System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested but not loaded.");
+            //System.Diagnostics.Debug.WriteLine($"WARNING: Normal Atlas '{name}' requested but not loaded.");
             return null;
         }
 
