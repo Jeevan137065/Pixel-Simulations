@@ -15,7 +15,7 @@ namespace Pixel_Simulations
         public ObjectPrefab Prefab { get; set; } // Null if it's a trigger/shape
         public Vector2 Position { get; set; }
         public bool IsActive { get; set; } = true;
-
+        public HashSet<int> ActiveTags { get; set; } = new HashSet<int>();
         // Helper to grab custom properties easily
         public string GetProperty(string key, string fallback = "")
         {
@@ -44,7 +44,7 @@ namespace Pixel_Simulations
     {
         private readonly List<GameEntity> _allEntities = new List<GameEntity>();
         private readonly Dictionary<string, GameEntity> _entitiesById = new Dictionary<string, GameEntity>();
-        private readonly Dictionary<string, List<GameEntity>> _entitiesByTag = new Dictionary<string, List<GameEntity>>();
+        private readonly Dictionary<int, List<GameEntity>> _entitiesByTag = new Dictionary<int, List<GameEntity>>();
 
         public IReadOnlyList<GameEntity> AllEntities => _allEntities;
         private readonly List<RenderableSprite> _staticSprites = new List<RenderableSprite>();
@@ -85,66 +85,116 @@ namespace Pixel_Simulations
             foreach (var layer in map.Layers)
             {
                 if (layer is ObjectLayer objLayer)
-                    foreach (var obj in objLayer.Objects) RegisterObject(obj, prefabManager);
+                {
+
+                    foreach (var obj in objLayer.Objects)
+                    {
+                        // --- NEW: SKIP IF DESTROYED BY PLAYER ---
+                        if (state.ActiveSave.DestroyedBaseIDs.Contains(obj.ID)) continue;
+
+                        RegisterObject(obj, prefabManager);
+                    }
+                }
 
                 if (layer is ControlLayer ctrlLayer)
-                {
-                    foreach (var rect in ctrlLayer.Rectangles) RegisterObject(rect, prefabManager);
-                    foreach (var shape in ctrlLayer.Shapes) RegisterObject(shape, prefabManager);
-                    foreach (var pt in ctrlLayer.Points) RegisterObject(pt, prefabManager);
-                }
+                    {
+                        foreach (var rect in ctrlLayer.Rectangles)
+                        {
+                            if (state.ActiveSave.DestroyedBaseIDs.Contains(rect.ID)) continue;
+                            RegisterObject(rect, prefabManager);
+                        }
+                        foreach (var shape in ctrlLayer.Shapes)
+                        {
+                            if (state.ActiveSave.DestroyedBaseIDs.Contains(shape.ID)) continue;
+                            RegisterObject(shape, prefabManager);
+                        }
+                        foreach (var pt in ctrlLayer.Rectangles)
+                        {
+                            if (state.ActiveSave.DestroyedBaseIDs.Contains(pt.ID)) continue;
+                            RegisterObject(pt, prefabManager);
+                        }
+                    }
             }
 
-            // 4. Cache Static Sprites for blazing fast rendering
+            // 2. INJECT PLAYER PLACED ITEMS
+            foreach (var placedItem in state.ActiveSave.PlacedItems)
+            {
+                RegisterObject(placedItem, prefabManager);
+            }
+
+            // 3. Cache Static Sprites
+            RebuildStaticSprites(state);
+
+        }
+        public void RebuildStaticSprites(GameState state)
+        {
             _staticSprites.Clear();
             foreach (var entity in _allEntities)
             {
-                if (entity.Prefab != null && entity.IsActive)
+                if (!entity.IsActive) continue;
+
+                // Standard Props from the Map Editor
+                if (entity.BaseData is PropObject prop && entity.Prefab != null)
                 {
                     var tex = state.Assets.GetAtlas(entity.Prefab.AtlasName);
                     if (tex != null)
                     {
-                        // --- AUTOMATIC HEIGHT-BASED PARALLAX ---
-                        float spriteHeight = entity.Prefab.SourceRect.Height * (entity.BaseData is PropObject pr ? pr.Scale.Y : 1f);
-                        float pMask = 0f;
-
-                        // Start applying parallax if taller than a standard tile (e.g. 32px or 64px)
-                        // You mentioned 540 and 1080, but remember your sprites are pixel art!
-                        // Adjust these numbers based on your actual sprite pixel heights.
-                        float minHeight = 240;  // Bushes, benches (No Parallax)
-                        float maxHeight = 520; // Tall Trees, Buildings (Max Parallax)
-
-                        if (spriteHeight > minHeight)
-                        {
-                            // Smoothly lerp the mask from 0.0 to 1.0 based on height
-                            pMask = MathHelper.Clamp((spriteHeight - minHeight) / (maxHeight - minHeight), 0f, 1f);
-                        }
-
-                        // --- EDITOR PROPERTY OVERRIDE ---
-                        // If the user manually set a 'Parallax' property in the Editor Inspector, use that instead!
-                        string manualParallax = entity.GetProperty("Parallax", "");
-                        if (!string.IsNullOrEmpty(manualParallax) && float.TryParse(manualParallax, out float val))
-                        {
-                            pMask = MathHelper.Clamp(val, 0f, 1f);
-                        }
+                        string stateName = entity.GetProperty("CurrentState", "");
+                        Rectangle srcRect = entity.Prefab.SourceRect;
+                        if (!string.IsNullOrEmpty(stateName) && entity.Prefab.AlternateStates.TryGetValue(stateName, out Rectangle stateRect))
+                            srcRect = stateRect;
 
                         _staticSprites.Add(new RenderableSprite
                         {
                             AtlasName = entity.Prefab.AtlasName,
                             Texture = tex,
                             Position = entity.Position,
-                            SourceRect = entity.Prefab.SourceRect,
+                            SourceRect = srcRect,
                             Origin = entity.Prefab.Pivot,
-                            Scale = entity.BaseData is PropObject p ? p.Scale : Vector2.One,
-                            Rotation = entity.BaseData is PropObject r ? r.Rotation : 0f,
+                            Scale = prop.Scale,
+                            Rotation = prop.Rotation,
                             BaseWorldY = entity.Position.Y,
-                            ParallaxMask = pMask
+                            ParallaxMask = 0f
                         });
                     }
                 }
-            }
+                // NEW: Player-Placed Items from the Save File
+                else if (entity.BaseData is PlacedItemObject placedItem)
+                {
+                    var physDef = state.ItemManager.GetPhysicalDef(placedItem.ItemID);
+                    if (physDef != null && physDef.Stages.Count > 0)
+                    {
+                        var tex = state.Assets.GetAtlas(physDef.AtlasName);
+                        if (tex != null)
+                        {
+                            int stageIdx = Math.Min(placedItem.CurrentStageIndex, physDef.Stages.Count - 1);
+                            var stage = physDef.Stages[stageIdx];
 
-            _isFirstLoad = true;
+                            Rectangle srcRect = new Rectangle(stage.SpriteX * 16, stage.SpriteY * 16, physDef.CellWidth * 16, physDef.CellHeight * 16);
+                            Vector2 pivot = new Vector2(srcRect.Width / 2f, srcRect.Height); // Bottom Center
+
+                            _staticSprites.Add(new RenderableSprite
+                            {
+                                AtlasName = physDef.AtlasName,
+                                Texture = tex,
+                                Position = entity.Position,
+                                SourceRect = srcRect,
+                                Origin = pivot,
+                                Scale = Vector2.One,
+                                Rotation = 0f,
+                                BaseWorldY = entity.Position.Y,
+                                ParallaxMask = 0f
+                            });
+                        }
+                    }
+                }
+            }
+            _isFirstLoad = true; // Forces the Y-Sorter to run next frame
+        }
+        public void AddDynamicEntity(MapObject obj, GameState state)
+        {
+            RegisterObject(obj, state.PrefabManager);
+            RebuildStaticSprites(state);
         }
         private void RegisterObject(MapObject obj, PrefabManager prefabManager)
         {
@@ -154,18 +204,15 @@ namespace Pixel_Simulations
                 Position = obj.Position,
                 Prefab = (obj is PropObject prop) ? prefabManager.GetPrefab(prop.PrefabID) : null
             };
-
+            entity.ActiveTags = obj.Tags;
+            if (entity.Prefab != null) entity.ActiveTags.UnionWith(entity.Prefab.Tags);
             _allEntities.Add(entity);
             _entitiesById[obj.ID] = entity;
 
             // Merge Instance tags and Prefab tags
-            var allTags = new HashSet<string>(obj.Tags);
-            if (entity.Prefab != null) allTags.UnionWith(entity.Prefab.Tags);
-
-            foreach (var tag in allTags)
+            foreach (var tag in entity.ActiveTags)
             {
-                if (!_entitiesByTag.ContainsKey(tag))
-                    _entitiesByTag[tag] = new List<GameEntity>();
+                if (!_entitiesByTag.ContainsKey(tag)) _entitiesByTag[tag] = new List<GameEntity>();
                 _entitiesByTag[tag].Add(entity);
             }
         }
@@ -177,17 +224,19 @@ namespace Pixel_Simulations
             // Add Dynamic Entities (Player, NPCs)
             if (state.Player != null)
             {
+                var P = state.Player;
                 _drawList.Add(new RenderableSprite
                 {
                     AtlasName = "Player",
-                    Texture = state.Player.Texture,
-                    Position = state.Player.Position,
-                    SourceRect = state.Player.SourceRect,
-                    Origin = state.Player.Origin,
+                    Texture = P.Texture,
+                    Position = P.Position, // Draw at the exact foot world position!
+                    SourceRect = P.SourceRect,
+                    Origin = P.Origin, // Pivot around the bottom-center of the sprite!
                     Scale = Vector2.One,
                     Rotation = 0f,
-                    BaseWorldY = state.Player.Position.Y,
-                    ParallaxMask = 0.0f // PLAYER REMAINS FLAT
+                    DrawDepth = DepthUtil.Calculate(P.Foot.Y), // Sort by foot
+                    BaseWorldY = P.Foot.Y,
+                    ParallaxMask = 0.0f
                 });
             }
 
@@ -208,7 +257,7 @@ namespace Pixel_Simulations
 
         // --- EXTREMELY FAST QUERIES FOR SHADERS / LOGIC ---
         public GameEntity GetById(string id) => _entitiesById.TryGetValue(id, out var e) ? e : null;
-        public IReadOnlyList<GameEntity> GetByTag(string tag)
+        public IReadOnlyList<GameEntity> GetByTag(int tag)
             => _entitiesByTag.TryGetValue(tag, out var list) ? list : new List<GameEntity>();
         public void Clear()
         {
@@ -260,7 +309,7 @@ namespace Pixel_Simulations
 
             foreach (var entity in _allEntities)
             {
-                if (entity.BaseData is PropObject && !(state.DebugPool[GameBool.ShowCollision] && entity.BaseData.Tags.Contains("#solid")))
+                if (entity.BaseData is PropObject && !(state.DebugPool[GameBool.ShowCollision] && entity.BaseData.Tags.Contains(3)))
                     continue;
 
                 Color tagColor = Color.Magenta;
@@ -270,7 +319,7 @@ namespace Pixel_Simulations
                     if (tagDef != null) tagColor = tagDef.TagColor;
                 }
 
-                if (state.DebugPool[GameBool.ShowShapes] || (state.DebugPool[GameBool.ShowCollision] && entity.BaseData.Tags.Contains("#solid")))
+                if (state.DebugPool[GameBool.ShowShapes] || (state.DebugPool[GameBool.ShowCollision] && entity.BaseData.Tags.Contains(3)))
                 {
                     if (entity.BaseData is RectangleObject r)
                     {
@@ -311,6 +360,38 @@ namespace Pixel_Simulations
                             Pixel_Simulations.UI.UIDrawExtensions.DrawDashedLine(sb, start, end, Color.Cyan, lineThickness * 2, 10f * lineThickness, 5f * lineThickness);
                         }
                     }
+                }
+            }
+        }
+
+        // Inside EntityManager.cs
+        public void RefreshEntityVisuals(string entityId)
+        {
+            var entity = GetById(entityId);
+            if (entity == null || entity.Prefab == null) return;
+
+            for (int i = 0; i < _staticSprites.Count; i++)
+            {
+                if (_staticSprites[i].Position == entity.Position)
+                {
+                    var sprite = _staticSprites[i];
+
+                    // Check if the entity has a "CurrentState" property
+                    string stateName = entity.GetProperty("CurrentState", "");
+
+                    // If it does, and the Prefab has a matching rectangle, use it!
+                    if (!string.IsNullOrEmpty(stateName) && entity.Prefab.AlternateStates.TryGetValue(stateName, out Rectangle stateRect))
+                    {
+                        sprite.SourceRect = stateRect;
+                    }
+                    else
+                    {
+                        sprite.SourceRect = entity.Prefab.SourceRect; // Default fallback
+                    }
+
+                    _staticSprites[i] = sprite;
+                    _isFirstLoad = true; // Force re-sort
+                    break;
                 }
             }
         }
@@ -395,12 +476,21 @@ namespace Pixel_Simulations
         public void DrawDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength)
         {
             if (_drawList.Count == 0 || depthEffect == null) return;
+            //SetupRenderState(gd, camera);
+            gd.BlendState = new BlendState
+            {
+                ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Green,
+                ColorSourceBlend = Blend.One,
+                ColorDestinationBlend = Blend.Zero
+            };
+            gd.DepthStencilState = DepthStencilState.None;
+            gd.RasterizerState = RasterizerState.CullNone;
+            gd.SamplerStates[0] = SamplerState.PointClamp;
 
-            SetupRenderState(gd, camera);
 
             // Setup Custom Shader
             Matrix projection = Matrix.CreateOrthographicOffCenter(0, camera.SimViewBounds.Width * camera.Zoom, camera.SimViewBounds.Height * camera.Zoom, 0, 0, 1);
-            depthEffect.Parameters["MatrixTransform"]?.SetValue(camera.SimTransform * projection);
+            depthEffect.Parameters["MatrixTransform"]?.SetValue(camera.ScreenWVP);
 
             int spriteCount = 0;
             Texture2D currentTexture = null;
@@ -423,11 +513,13 @@ namespace Pixel_Simulations
                 // PACK DEPTH VALUES INTO VERTEX COLOR! (Red = DrawDepth, Green = Physical World Y)
                 Color depthColor = new Color(sprite.DrawDepth, DepthUtil.Calculate(sprite.BaseWorldY), 0, 1f);
 
+                float z = sprite.BaseWorldY; // <--- THIS IS THE FIX! Pass the actual ground Y into the Z coordinate
+
                 int vIdx = spriteCount * 4;
-                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), depthColor, new Vector2(u0, v0));
-                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0), depthColor, new Vector2(u1, v0));
-                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0), depthColor, new Vector2(u0, v1));
-                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0), depthColor, new Vector2(u1, v1));
+                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, z), depthColor, new Vector2(u0, v0));
+                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, z), depthColor, new Vector2(u1, v0));
+                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, z), depthColor, new Vector2(u0, v1));
+                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, z), depthColor, new Vector2(u1, v1));
                 spriteCount++;
             }
             if (spriteCount > 0) FlushBatch(gd, depthEffect, currentTexture, spriteCount);

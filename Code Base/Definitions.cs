@@ -21,16 +21,15 @@ namespace Pixel_Simulations
     public static class SystemTags
     {
         // --- CONTROL/SHAPE TAGS ---
-        public const string SOLID = "#solid";      // Blocks physics movement
-        public const string NAV = "#nav";        // Navigation obstacle
-        public const string WARP = "#warp";       // Level transition trigger
-        public const string WATER = "#water";      // Slows movement / splash effect
+        public const int SOLID = 2;      // Blocks physics movement
+        public const int NAV = 5;        // Navigation obstacle
+        public const int WARP = 6;       // Level transition trigger
+        public const int WATER = 8;      // Slows movement / splash effect
 
         // --- OBJECT/PROP TAGS ---
-        public const string VEG = "#vegetation"; // Wind sway / Growth logic
-        public const string LIGHT = "#light";      // Emits dynamic light
-        public const string CHEST = "#container";  // Inventory logic
-        public const string NPC = "#actor";      // AI logic target
+        public const int VEG = 100; // Wind sway / Growth logic
+        public const int LIGHT = 10;      // Emits dynamic light
+
     }
     public static class ListExtensions
     {
@@ -187,6 +186,7 @@ namespace Pixel_Simulations
                     case ObjectType.Point: target = new PointObject(); break;
                     case ObjectType.Shape: target = new ShapeObject(); break; // ADDED THIS
                     case ObjectType.Prop: target = new PropObject(); break;   // ADDED THIS
+
                 }
                 if (target != null)
                 {

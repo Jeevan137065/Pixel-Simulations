@@ -179,6 +179,7 @@ namespace Pixel_Simulations.UI
                     sb.DrawString(_font, _currentTitle.SubText, subPos, Color.LightGray * _currentTitle.Alpha, 0f, Vector2.Zero, subScale, SpriteEffects.None, 0f);
                 }
             }
+
         }
 
         // --- API METHODS ---
@@ -220,7 +221,67 @@ namespace Pixel_Simulations.UI
             };
         }
 
+        public void DebugDraw(GameState state, SpriteBatch sb)
+        {
+            if (state.DebugPool[GameBool.ShowLinks] && state.HoveredEntity != null)
+            {
+                var entity = state.HoveredEntity;
+                var ms = state.input.CurrentMouse;
+
+                int width = 250;
+                int padding = 10;
+                Vector2 pos = new Vector2(ms.X + 20, ms.Y + 20);
+
+                // Keep it on screen
+                if (pos.X + width > _screenSize.X) pos.X = ms.X - width - 10;
+
+                // Build the debug string
+                System.Text.StringBuilder sbDebug = new System.Text.StringBuilder();
+                sbDebug.AppendLine($"ID: {entity.BaseData.ID.Substring(0, 8)}");
+                sbDebug.AppendLine($"Name: {entity.BaseData.Name}");
+                sbDebug.AppendLine($"Prefab: {entity.Prefab?.ID ?? "None"}");
+
+                sbDebug.AppendLine("\n--- TAGS ---");
+                foreach (var tag in entity.ActiveTags) sbDebug.Append(tag + " ");
+
+                sbDebug.AppendLine("\n\n--- PROPERTIES ---");
+                if (entity.BaseData.Properties.Count == 0 && (entity.Prefab == null || entity.Prefab.Properties.Count == 0))
+                {
+                    sbDebug.AppendLine("None");
+                }
+                else
+                {
+                    // Instance Properties
+                    foreach (var prop in entity.BaseData.Properties)
+                        sbDebug.AppendLine($"[I] {prop.Key}: {prop.Value.Value}");
+
+                    // Prefab Properties
+                    if (entity.Prefab != null)
+                    {
+                        foreach (var prop in entity.Prefab.Properties)
+                            if (!entity.BaseData.Properties.ContainsKey(prop.Key)) // Don't show overridden properties
+                                sbDebug.AppendLine($"[P] {prop.Key}: {prop.Value.Value}");
+                    }
+                }
+
+                string text = sbDebug.ToString();
+                Vector2 size = _font.MeasureString(text);
+                int height = (int)size.Y + (padding * 2);
+
+                // Draw Background
+                Rectangle bgRect = new Rectangle((int)pos.X, (int)pos.Y, width, height);
+                sb.Draw(_pixel, bgRect, Color.Black * 0.8f);
+                sb.Draw(_pixel, new Rectangle(bgRect.X, bgRect.Y, bgRect.Width, 1), Color.LimeGreen);
+                sb.Draw(_pixel, new Rectangle(bgRect.X, bgRect.Bottom - 1, bgRect.Width, 1), Color.LimeGreen);
+                sb.Draw(_pixel, new Rectangle(bgRect.X, bgRect.Y, 1, bgRect.Height), Color.LimeGreen);
+                sb.Draw(_pixel, new Rectangle(bgRect.Right - 1, bgRect.Y, 1, bgRect.Height), Color.LimeGreen);
+
+                // Draw Text
+                sb.DrawString(_font, text, pos + new Vector2(padding, padding), Color.LimeGreen, 0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0f);
+            }
+        }
         // --- RICH TEXT PARSER ---
+        
         // Parses strings like "You found a <c:Yellow>Gold Coin</c>!"
         private void DrawRichText(SpriteBatch sb, SpriteFont font, string text, Vector2 position, Color baseColor, float scale)
         {

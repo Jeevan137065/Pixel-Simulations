@@ -46,7 +46,7 @@ namespace Pixel_Simulations
 
             // We use a fixed step but vary spawn chance based on settings
             float step = Math.Max(1.0f, Settings.DensityStep);
-            int maxAllowedBlades = 50000;
+            int maxAllowedBlades = 500000;
             foreach (var rect in validAreas)
             {
                 // Skip invalid rectangles
@@ -169,7 +169,7 @@ namespace Pixel_Simulations
             PlayerPosition = playerWorldPos;
         }
 
-        public void Draw(Matrix worldViewProjection)
+        public void Draw(Matrix worldViewProjection, Texture2D depthTexture, Vector2 screenRes)
         {
             if (_vertexBuffer == null || _bladeCount == 0) return;
 
@@ -181,6 +181,10 @@ namespace Pixel_Simulations
             _effect.Parameters["Time"]?.SetValue(Time);
             _effect.Parameters["PlayerPos"]?.SetValue(PlayerPosition);
 
+            // --- NEW: Pass the Interleaving Data to the Shader ---
+            _effect.Parameters["ObjectDepthTexture"]?.SetValue(depthTexture);
+            _effect.Parameters["ScreenResolution"]?.SetValue(screenRes);
+
             // 2. Physics Parameters from Settings
             _effect.Parameters["WindSpeed"]?.SetValue(Settings.WindSpeed);
             _effect.Parameters["WindIntensity"]?.SetValue(Settings.WindIntensity);
@@ -188,22 +192,17 @@ namespace Pixel_Simulations
             _effect.Parameters["PlayerPushRadius"]?.SetValue(Settings.PlayerPushRadius);
             _effect.Parameters["PlayerPushStrength"]?.SetValue(Settings.PlayerPushStrength);
 
-            // 3. Artistic Volume Parameters (The "Look")
+            // 3. Artistic Volume Parameters
             _effect.Parameters["Segments"]?.SetValue((float)Settings.Segments);
             _effect.Parameters["RestingCurvature"]?.SetValue(Settings.RestingCurvature);
             _effect.Parameters["BladeThickness"]?.SetValue(Settings.BladeThickness);
             _effect.Parameters["BladeTaper"]?.SetValue(Settings.BladeTaper);
-            // Pass 0: Shadows
-            //_effect.Parameters["PassFlag"].SetValue(0.0f);
+
             foreach (var pass in _effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
                 _device.DrawPrimitives(PrimitiveType.TriangleList, 0, _vertexBuffer.VertexCount / 3);
             }
-
-            // Pass 1: Blades
-            //_effect.Parameters["PassFlag"].SetValue(1.0f);
-            
         }
     }
 }

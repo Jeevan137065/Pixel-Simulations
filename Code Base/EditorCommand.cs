@@ -47,7 +47,7 @@ namespace Pixel_Simulations.Data
             RemoveFromLayer(_objectToRemove);
 
             // If it's a light, find the connected half and remove it too
-            if (_objectToRemove.Tags.Contains("#light_source") || _objectToRemove.Tags.Contains("#light_falloff"))
+            if (_objectToRemove.Tags.Contains(10) || _objectToRemove.Tags.Contains(11))
             {
                 _siblingRemoved = FindSibling();
                 if (_siblingRemoved != null) RemoveFromLayer(_siblingRemoved);
@@ -360,8 +360,8 @@ namespace Pixel_Simulations.Data
     public class AddTagCommand : IUndoableCommand
     {
         private readonly MapObject _obj;
-        private readonly string _tag;
-        public AddTagCommand(MapObject obj, string tag) { _obj = obj; _tag = tag; }
+        private readonly int _tag;
+        public AddTagCommand(MapObject obj, int tag) { _obj = obj; _tag = tag; }
         public void Execute() { _obj.Tags.Add(_tag); }
         public void Undo() { _obj.Tags.Remove(_tag); }
     }

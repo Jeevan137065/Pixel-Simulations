@@ -236,8 +236,17 @@ namespace Pixel_Simulations.Editor
                         Position = pos,
                         Name = GetUniqueName(objLayer, _activePrefab.ID) // Dynamic unique naming
                     };
+                    foreach (var tag in _activePrefab.Tags)
+                    {
+                        instance.Tags.Add(tag);
+                    }
+                    foreach (var prop in _activePrefab.Properties)
+                    {
+                        instance.Properties[prop.Key] = new MapProperty(prop.Value.Type, prop.Value.Value);
+                    }
 
                     eventBus.Publish(new AddObjectCommand(objLayer, instance));
+                    editorState.Selection.SelectedMapObject = instance;
                 }
             }
 
@@ -433,7 +442,6 @@ namespace Pixel_Simulations.Editor
                     var newShape = new ShapeObject
                     {
                         Shape = drawnPoly,
-                        Tag = toolInput.ActiveLayer.Type.ToString(),
                         DebugColor = GetLayerColor(toolInput.ActiveLayer.Type)
                     };
                     // Generate Unique Name: LayerName + ObjectType + Count
@@ -1305,7 +1313,7 @@ namespace Pixel_Simulations.Editor
                     };
 
                     // --- AUTO-POPULATE TAGS AND SHADER PROPERTIES ---
-                    newReflection.Tags.Add("#reflection");
+                    newReflection.Tags.Add(10);
 
                     // Direction: "Negative" = Floor/Water (Flipped Y). "Positive" = Mirror (Flipped X)
                     newReflection.Properties.Add("Direction", new MapProperty(PropertyType.Boolean, "True"));
@@ -1400,16 +1408,16 @@ namespace Pixel_Simulations.Editor
                 Polygon sourcePoly = Polygon.FromRectangle(start, end);
                 Polygon falloffPoly = Polygon.FromRectangle(start + new Vector2(0, 64), end + new Vector2(0, 64));
 
-                sourceShape = CreateShape("LightSource_Rect", sourcePoly, "#light_source");
-                falloffShape = CreateShape("LightFalloff_Rect", falloffPoly, "#light_falloff");
+                sourceShape = CreateShape("LightSource_Rect", sourcePoly, 10);
+                falloffShape = CreateShape("LightFalloff_Rect", falloffPoly, 11);
             }
             else
             {
                 Polygon sourcePoly = CreateCirclePolygon(start, radius, 16);
                 Polygon falloffPoly = CreateCirclePolygon(start, radius * 2.5f, 16);
 
-                sourceShape = CreateShape("LightSource_Circ", sourcePoly, "#light_source");
-                falloffShape = CreateShape("LightFalloff_Circ", falloffPoly, "#light_falloff");
+                sourceShape = CreateShape("LightSource_Circ", sourcePoly, 10);
+                falloffShape = CreateShape("LightFalloff_Circ", falloffPoly, 11);
             }
 
             // --- THE FIX: LINK THEM USING THEIR UNIQUE IDs! ---
@@ -1424,7 +1432,7 @@ namespace Pixel_Simulations.Editor
             bus.Publish(new AddPolygonCommand(activeLayer, falloffShape));
         }
 
-        private ShapeObject CreateShape(string namePrefix, Polygon poly, string tag)
+        private ShapeObject CreateShape(string namePrefix, Polygon poly, int tag)
         {
             var shape = new ShapeObject
             {

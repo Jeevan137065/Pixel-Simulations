@@ -213,13 +213,21 @@ namespace Pixel_Simulations.Editor
         private readonly UIStackPanel _tagLibraryScroll;
         private readonly UIStackPanel _propListScroll;
 
+        // --- NEW FIELDS FOR BUGS/FEATURES ---
+        private UIButton _typeBtn;
+        private UITextBox _stateNameInput;
+        private UIStackPanel _statesListScroll;
+        private UIStackPanel _templateLibraryScroll;
+
         // Atlas Canvas
         private Rectangle _canvasArea;
         private Rectangle _previewArea;
         private readonly UITheme _theme;
+
         // Property Temp State
         private string _newPropKey = "";
         private bool _isTagPickerOpen = false;
+        private bool _isTemplatePickerOpen = false; // NEW
         private PropertyType _newPropType = PropertyType.String;
         public PrefabCreatorPanel(Rectangle area, EditorUI ui, EditorState state) : base(area, ui, state)
         {
@@ -235,55 +243,58 @@ namespace Pixel_Simulations.Editor
             int rightWidth = (int)(area.Width * 0.25f) - 20;
 
             // 2. MIDDLE STACK (Name, Tags, Properties)
-            _middleStack = new UIStackPanel
-            {
-                Direction = StackDirection.Vertical,
-                LocalPosition = new Vector2(midX, 10),
-                Size = new Vector2(midWidth, area.Height - 20),
-                PanelBackground = Color.Transparent,
-                Spacing = 20f // Much more breathing room
-            };
+            _middleStack = new UIStackPanel { Direction = StackDirection.Vertical, LocalPosition = new Vector2(midX, 10), Size = new Vector2(midWidth, area.Height - 20), PanelBackground = Color.Transparent, Spacing = 10f };
+
             _middleStack.AddChild(new UILabel { Text = "Object ID:", TextColor = Color.Yellow });
             _nameInput = new UITextBox { Size = new Vector2(midWidth, 24), Placeholder = "e.g. Tree_Oak" };
             _middleStack.AddChild(_nameInput);
 
+            // --- FEATURE C: TEMPLATES ---
+            var templateRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 10f };
+            templateRow.AddChild(new UILabel { Text = "Template:", TextColor = Color.Cyan });
+            var tmplBtn = new UIButton { Size = new Vector2(120, 20), Text = "Copy Existing...", BackgroundColor = Color.DarkSlateGray };
+            tmplBtn.OnClick = () => { _isTemplatePickerOpen = !_isTemplatePickerOpen; RebuildUI(); };
+            templateRow.AddChild(tmplBtn);
+            _middleStack.AddChild(templateRow);
+
+            _templateLibraryScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(midWidth, 80), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f };
+            _middleStack.AddChild(_templateLibraryScroll);
+
             // Tags Section
             _middleStack.AddChild(new UIPanel { Size = new Vector2(midWidth, 2), BackgroundColor = Color.Gray });
-
-            // Header Row for Tags
             var tagHeaderRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 10f };
             tagHeaderRow.AddChild(new UILabel { Text = "Active Tags:", TextColor = Color.Cyan });
 
-            // The "+" Button
             var addTagBtn = new UIButton { Size = new Vector2(30, 20), Text = "+", BackgroundColor = Color.DarkCyan };
             addTagBtn.OnClick = () => { _isTagPickerOpen = !_isTagPickerOpen; RebuildUI(); };
             tagHeaderRow.AddChild(addTagBtn);
             _middleStack.AddChild(tagHeaderRow);
 
-            // Flow panel for assigned tags (Pills)
-            _activeTagsFlow = new UIFlowPanel { Size = new Vector2(midWidth, 30), BackgroundColor = Color.Black * 0.2f, SpacingX = 10f, SpacingY = 10f };
+            _activeTagsFlow = new UIFlowPanel { Size = new Vector2(midWidth, 30), BackgroundColor = Color.Black * 0.2f, SpacingX = 5f, SpacingY = 5f };
             _middleStack.AddChild(_activeTagsFlow);
 
-            // The Tag Library (Hidden by default)
-            _tagLibraryScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(midWidth, 140), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f }; _middleStack.AddChild(_tagLibraryScroll);
+            _tagLibraryScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(midWidth, 100), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f };
             _middleStack.AddChild(_tagLibraryScroll);
 
             // Properties Section
             _middleStack.AddChild(new UIPanel { Size = new Vector2(midWidth, 2), BackgroundColor = Color.Gray });
             _middleStack.AddChild(new UILabel { Text = "Default Properties:", TextColor = Color.Cyan });
 
-            _propListScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(midWidth, 140), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f };
+            _propListScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(midWidth, 100), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f };
             _middleStack.AddChild(_propListScroll);
 
-            // Add Property Form
             var addPropRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 5f };
             var newKeyInput = new UITextBox { Size = new Vector2(80, 24), Placeholder = "Key...", Text = _newPropKey, DebugName = "PrefabPropKey" };
             newKeyInput.OnTextChanged = (t) => _newPropKey = t;
             addPropRow.AddChild(newKeyInput);
 
-            var typeBtn = new UIButton { Size = new Vector2(40, 24), Text = _newPropType.ToString().Substring(0, 3), BackgroundColor = Color.DarkGoldenrod };
-            typeBtn.OnClick = () => { _newPropType = (PropertyType)(((int)_newPropType + 1) % 4); RebuildUI(); };
-            addPropRow.AddChild(typeBtn);
+            // --- BUG A FIX: Track the button so we can update its Text directly ---
+            _typeBtn = new UIButton { Size = new Vector2(40, 24), Text = _newPropType.ToString().Substring(0, 3), BackgroundColor = Color.DarkGoldenrod };
+            _typeBtn.OnClick = () => {
+                _newPropType = (PropertyType)(((int)_newPropType + 1) % 4);
+                _typeBtn.Text = _newPropType.ToString().Substring(0, 3); // Visual Update!
+            };
+            addPropRow.AddChild(_typeBtn);
 
             var addPropBtn = new UIButton { Size = new Vector2(40, 24), Text = "Add", BackgroundColor = Color.DarkGreen };
             addPropBtn.OnClick = () => {
@@ -301,20 +312,49 @@ namespace Pixel_Simulations.Editor
             // 3. RIGHT STACK (Atlas Select, Preview, Save)
             _rightStack = new UIStackPanel { Direction = StackDirection.Vertical, LocalPosition = new Vector2(rightX, 10), Size = new Vector2(rightWidth, area.Height - 20), PanelBackground = Color.Transparent, Spacing = 10f };
 
-            _previewArea = new Rectangle(rightX, 10, rightWidth, 300);
-            _rightStack.AddChild(new UIPanel { Size = new Vector2(rightWidth, 300), BackgroundColor = Color.Transparent }); // Spacer for drawing preview
+            _previewArea = new Rectangle(rightX, 10, rightWidth, 200);
+            _rightStack.AddChild(new UIPanel { Size = new Vector2(rightWidth, 200), BackgroundColor = Color.Transparent });
 
             _rightStack.AddChild(new UILabel { Text = "Select Atlas:", TextColor = Color.Yellow });
 
-            // Generate Atlas Buttons
-            var atlasScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(rightWidth, 150), AutoSize = false, PanelBackground = Color.Black * 0.3f, ClipToBounds = true, Spacing = 5f, Padding = 5f };
+            var atlasScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(rightWidth, 80), AutoSize = false, PanelBackground = Color.Black * 0.3f, ClipToBounds = true, Spacing = 5f, Padding = 5f };
             foreach (var atlasName in _editorState.AssetLibrary.GetNamesByType(AtlasType.Object))
             {
-                var aBtn = new UIButton { Size = new Vector2(rightWidth - 20, 25), Text = atlasName, BackgroundColor = Color.Black * 0.6f }; // Added Background Color!
+                var aBtn = new UIButton { Size = new Vector2(rightWidth - 20, 25), Text = atlasName, BackgroundColor = Color.Black * 0.6f };
                 aBtn.OnClick = () => { _editorState.PrefabCreator.ActiveAtlasName = atlasName; _editorState.PrefabCreator.AtlasPanOffset = Vector2.Zero; };
                 atlasScroll.AddChild(aBtn);
             }
             _rightStack.AddChild(atlasScroll);
+
+            // --- BUG B FIX: Alternate States Form & List ---
+            _rightStack.AddChild(new UIPanel { Size = new Vector2(rightWidth, 2), BackgroundColor = Color.Gray });
+            var mainSpriteBtn = new UIButton { Size = new Vector2(rightWidth, 25), Text = "Set MAIN Sprite", BackgroundColor = Color.DarkGreen };
+            mainSpriteBtn.OnClick = () => {
+                _editorState.PrefabCreator.BaseSourceRect = _editorState.PrefabCreator.SelectionRect;
+            };
+            _rightStack.AddChild(mainSpriteBtn);
+            _rightStack.AddChild(new UILabel { Text = "Alternate States:", TextColor = Color.Cyan });
+
+            var stateRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 5f };
+            _stateNameInput = new UITextBox { Size = new Vector2(90, 25), Placeholder = "Name...", DebugName = "StateNameInput" };
+            _stateNameInput.OnTextChanged = (t) => _editorState.PrefabCreator.NewStateName = t;
+            stateRow.AddChild(_stateNameInput);
+
+            var addStateBtn = new UIButton { Size = new Vector2(90, 25), Text = "Capture Rect", BackgroundColor = Color.DarkCyan };
+            addStateBtn.OnClick = () => {
+                var ctx = _editorState.PrefabCreator;
+                if (!string.IsNullOrWhiteSpace(ctx.NewStateName))
+                {
+                    ctx.TempAlternateStates[ctx.NewStateName.Trim()] = ctx.SelectionRect;
+                    ctx.NewStateName = "";
+                    RebuildUI();
+                }
+            };
+            stateRow.AddChild(addStateBtn);
+            _rightStack.AddChild(stateRow);
+
+            _statesListScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(rightWidth, 70), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f };
+            _rightStack.AddChild(_statesListScroll);
 
             // Save Row
             var saveRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 10f };
@@ -324,53 +364,76 @@ namespace Pixel_Simulations.Editor
             saveRow.AddChild(new UIButton { Size = new Vector2(60, 30), Text = "Exit", Command = new TogglePrefabCreatorCommand(), BackgroundColor = Color.Black * 0.6f });
             _rightStack.AddChild(saveRow);
 
-
             _rootPanel.AddChild(_middleStack);
             _rootPanel.AddChild(_rightStack);
         }
+
         private void RebuildUI()
         {
             var ctx = _editorState.PrefabCreator;
 
-            // 1. Rebuild Active Tags
-            _activeTagsFlow.ClearChildren();
-            foreach (var tag in ctx.TempTags.ToList())
+            // 1. Rebuild Templates (Feature C)
+            _templateLibraryScroll.IsVisible = _isTemplatePickerOpen;
+            if (_isTemplatePickerOpen)
             {
-                string safeTag = tag;
-                var def = _editorState.TagManager.GetTag(tag);
+                _templateLibraryScroll.ClearChildren();
+                foreach (var prefab in _editorState.PrefabManager.Prefabs.Values)
+                {
+                    var btn = new UIButton { Size = new Vector2(_templateLibraryScroll.Size.X - 20, 24), Text = prefab.ID, BackgroundColor = Color.DarkSlateGray };
+                    btn.OnClick = () => {
+                        // Copy Tags
+                        foreach (var tag in prefab.Tags) if (!ctx.TempTags.Contains(tag)) ctx.TempTags.Add(tag);
+                        // Copy Properties
+                        foreach (var prop in prefab.Properties) ctx.TempProperties[prop.Key] = new MapProperty(prop.Value.Type, prop.Value.Value);
+                        // Copy Alternate States
+                        foreach (var alt in prefab.AlternateStates) ctx.TempAlternateStates[alt.Key] = alt.Value;
 
-                // Dynamic Pill Size
-                Vector2 tSize = UITheme.DefaultFont != null ? UITheme.DefaultFont.MeasureString(tag) : new Vector2(50, 20);
+                        _isTemplatePickerOpen = false;
+                        RebuildUI();
+                    };
+                    _templateLibraryScroll.AddChild(btn);
+                }
+            }
 
-                var btn = new UIButton { Size = new Vector2(tSize.X + 16, 24), Text = tag, BackgroundColor = def?.TagColor ?? Color.Gray };
-                btn.OnClick = () => { ctx.TempTags.Remove(safeTag); RebuildUI(); }; // Remove on click
+            // 2. Rebuild Active Tags
+            _activeTagsFlow.ClearChildren();
+            foreach (int tagId in ctx.TempTags.ToList())
+            {
+                int safeTag = tagId;
+                var def = _editorState.TagManager.GetTag(tagId);
+                string displayText = def != null ? $"{tagId}: {def.Name}" : tagId.ToString();
+
+                Vector2 tSize = UITheme.DefaultFont != null ? UITheme.DefaultFont.MeasureString(displayText) : new Vector2(50, 20);
+                var btn = new UIButton { Size = new Vector2(tSize.X + 16, 24), Text = displayText, BackgroundColor = def?.TagColor ?? Color.Gray };
+
+                btn.OnClick = () => { ctx.TempTags.Remove(safeTag); RebuildUI(); };
                 _activeTagsFlow.AddChild(btn);
             }
 
-            // 2. Rebuild Tag Library (Only if the expander is open!)
+            // 3. Rebuild Tag Library
             _tagLibraryScroll.IsVisible = _isTagPickerOpen;
             if (_isTagPickerOpen)
             {
                 _tagLibraryScroll.ClearChildren();
                 foreach (var tag in _editorState.TagManager.Tags.Values)
                 {
-                    if (ctx.TempTags.Contains(tag.HashID)) continue; // Don't show tags we already have!
+                    // Skip tags we already have
+                    if (ctx.TempTags.Contains(tag.ID)) continue;
 
-                    string safeHash = tag.HashID;
-                    var btn = new UIButton { Size = new Vector2(_tagLibraryScroll.Size.X - 20, 24), Text = $"{tag.HashID} ({tag.Name})", BackgroundColor = tag.TagColor * 0.4f };
+                    int safeId = tag.ID;
+                    var btn = new UIButton { Size = new Vector2(_tagLibraryScroll.Size.X - 20, 24), Text = $"{tag.ID}: {tag.Name}", BackgroundColor = tag.TagColor * 0.4f };
 
                     btn.OnClick = () => {
-                        ctx.TempTags.Add(safeHash);
-                        _isTagPickerOpen = false; // Auto-close library after picking
+                        ctx.TempTags.Add(safeId);
+                        _isTagPickerOpen = false;
                         RebuildUI();
                     };
                     _tagLibraryScroll.AddChild(btn);
                 }
-                if (_tagLibraryScroll.Children.Count == 0)
-                    _tagLibraryScroll.AddChild(new UILabel { Text = "All tags applied.", TextColor = Color.Gray });
+                if (_tagLibraryScroll.Children.Count == 0) _tagLibraryScroll.AddChild(new UILabel { Text = "All tags applied.", TextColor = Color.Gray });
             }
 
-            // 3. Rebuild Properties
+            // 4. Rebuild Properties
             _propListScroll.ClearChildren();
             foreach (var kvp in ctx.TempProperties)
             {
@@ -400,8 +463,29 @@ namespace Pixel_Simulations.Editor
                 _propListScroll.AddChild(pRow);
             }
             if (ctx.TempProperties.Count == 0) _propListScroll.AddChild(new UILabel { Text = "No default properties.", TextColor = Color.Gray });
+
+            // 5. Rebuild Alternate States (Bug B Fix)
+            _statesListScroll.ClearChildren();
+            foreach (var kvp in ctx.TempAlternateStates)
+            {
+                string safeKey = kvp.Key;
+                var sRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 5f };
+
+                var showBtn = new UIButton { Size = new Vector2(130, 20), Text = safeKey, BackgroundColor = Color.DarkSlateGray };
+                showBtn.OnClick = () => { ctx.SelectionRect = kvp.Value; }; // Click to preview the rect!
+                sRow.AddChild(showBtn);
+
+                var delBtn = new UIButton { Size = new Vector2(25, 20), Text = "X", BackgroundColor = Color.DarkRed };
+                delBtn.OnClick = () => { ctx.TempAlternateStates.Remove(safeKey); RebuildUI(); };
+                sRow.AddChild(delBtn);
+
+                _statesListScroll.AddChild(sRow);
+            }
+            if (ctx.TempAlternateStates.Count == 0) _statesListScroll.AddChild(new UILabel { Text = "No alternate states.", TextColor = Color.Gray });
+
             _activeTagsFlow.UpdateLayout();
             _middleStack.UpdateLayout();
+            _rightStack.UpdateLayout();
         }
 
         public override void Update(EditorInputState input, EventBus bus)
@@ -413,9 +497,13 @@ namespace Pixel_Simulations.Editor
                 RebuildUI();
                 ctx.NeedsUIRebuild = false;
             }
-            // Sync Text Input
+
+            // Sync Text Inputs
             if (!_nameInput.IsFocused) _nameInput.Text = ctx.TempName;
             _nameInput.OnTextChanged = (t) => ctx.TempName = t;
+
+            // --- BUG B FIX: Ensure Alternate State Name syncs! ---
+            if (!_stateNameInput.IsFocused) _stateNameInput.Text = ctx.NewStateName;
 
             // Initialize Rebuild if first frame
             if (_activeTagsFlow.Children.Count == 0 && ctx.TempTags.Count > 0) RebuildUI();
@@ -423,11 +511,10 @@ namespace Pixel_Simulations.Editor
             _editorUI.CheckFocusClick(_rootPanel, input);
             _rootPanel.Update(input, bus);
 
-            // Handle Global Scrolling for UI elements inside this panel
             ApplyGlobalScrolling(_rootPanel, input);
 
-            // --- CANVAS PANNING (Arrow Keys) ---
-            if (_editorState.UI.FocusedElement == null) // Only pan if not typing!
+            // --- CANVAS PANNING ---
+            if (_editorState.UI.FocusedElement == null)
             {
                 var kbs = input.CurrentKeyboard;
                 float panSpeed = 5f;
@@ -442,7 +529,6 @@ namespace Pixel_Simulations.Editor
 
             if (absCanvas.Contains(input.MouseWindowPosition))
             {
-                // Calculate mouse position relative to the PANNED texture
                 Vector2 mouseLocal = input.MouseWindowPosition - absCanvas.Location.ToVector2() - ctx.AtlasPanOffset;
                 Vector2 snapped = new Vector2((float)System.Math.Floor(mouseLocal.X / 16) * 16, (float)System.Math.Floor(mouseLocal.Y / 16) * 16);
 
@@ -486,28 +572,34 @@ namespace Pixel_Simulations.Editor
             Rectangle absCanvas = new Rectangle(Area.X + _canvasArea.X, Area.Y + _canvasArea.Y, _canvasArea.Width, _canvasArea.Height);
             Rectangle absPreview = new Rectangle(Area.X + _previewArea.X, Area.Y + _previewArea.Y, _previewArea.Width, _previewArea.Height);
 
-            // 1. Draw Canvas (With Clipping!)
+            // 1. Draw Canvas
             sb.FillRectangle(absCanvas, Color.Black * 0.8f);
             sb.DrawRectangle(absCanvas, Color.White, 1);
 
             var tex = _editorState.AssetLibrary.GetAtlas(ctx.ActiveAtlasName);
             if (tex != null)
             {
-                // Clip the rendering so the panned image doesn't bleed out of the box
                 Rectangle prevScissor = sb.GraphicsDevice.ScissorRectangle;
                 sb.End();
                 sb.Begin(rasterizerState: new RasterizerState { ScissorTestEnable = true });
                 sb.GraphicsDevice.ScissorRectangle = absCanvas;
 
-                // Draw Texture with Pan Offset
                 Vector2 drawPos = absCanvas.Location.ToVector2() + ctx.AtlasPanOffset;
                 sb.Draw(tex, drawPos, Color.White);
 
-                // Draw Grid (Optional, but helpful)
                 for (int x = 0; x < tex.Width; x += 16) sb.DrawLine(drawPos.X + x, drawPos.Y, drawPos.X + x, drawPos.Y + tex.Height, Color.White * 0.1f);
                 for (int y = 0; y < tex.Height; y += 16) sb.DrawLine(drawPos.X, drawPos.Y + y, drawPos.X + tex.Width, drawPos.Y + y, Color.White * 0.1f);
 
-                // Draw Selection Box with Pan Offset
+                Rectangle baseSelect = new Rectangle(
+                    (int)drawPos.X + ctx.BaseSourceRect.X,
+                    (int)drawPos.Y + ctx.BaseSourceRect.Y,
+                    ctx.BaseSourceRect.Width, ctx.BaseSourceRect.Height);
+
+                // Draw the Saved Main Sprite in Green
+                sb.DrawRectangle(baseSelect, Color.LimeGreen, 2);
+                sb.FillRectangle(baseSelect, Color.LimeGreen * 0.2f);
+
+                // Draw the Current Selection Box in Yellow
                 Rectangle drawSelect = new Rectangle((int)drawPos.X + ctx.SelectionRect.X, (int)drawPos.Y + ctx.SelectionRect.Y, ctx.SelectionRect.Width, ctx.SelectionRect.Height);
                 sb.DrawRectangle(drawSelect, Color.Yellow, 2);
                 sb.FillRectangle(drawSelect, Color.Yellow * 0.2f);
@@ -533,242 +625,7 @@ namespace Pixel_Simulations.Editor
                 sb.Draw(tex, centerPos, ctx.SelectionRect, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
         }
-        public override string GetDebugInfo()
-        {
-            var ctx = _editorState.PrefabCreator;
-            return $"Atlas: {ctx.ActiveAtlasName}\n" +
-                   $"Selection: {ctx.SelectionRect}\n" +
-                   $"Dragging: {ctx.IsDragging}";
-        }
-    }
-    public class TagManagerPanel : BasePanel
-    {
-        private readonly UIPanel _rootPanel;
-        private readonly UIStackPanel _listStack;
-        private readonly UIStackPanel _formStack;
-        private readonly UITheme _theme;
-
-        // Form fields
-        private UITextBox _idInput, _nameInput, _descInput;
-        private UIButton _colorBtn;
-        // Simple color cycle (Click to change color)
-        private Color[] _presetColors = { Color.Gray, Color.Crimson, Color.SeaGreen, Color.RoyalBlue, Color.Goldenrod, Color.Purple, Color.Teal };
-        private int _colorIndex = 0;
-        private int _cachedTagCount = -1; // Used to prevent rebuilding list every frame
-
-        public TagManagerPanel(Rectangle area, EditorUI ui, EditorState state) : base(area, ui, state)
-        {
-            _theme = new UITheme { Font = ui.DebugFont };
-
-            _rootPanel = new UIPanel { LocalPosition = area.Location.ToVector2(), Size = new Vector2(area.Width, area.Height), BackgroundColor = _theme.PanelBackground, BorderColor = Color.White };
-
-            // TOP: Tag List (Fixed Height, no AutoSize)
-            int listHeight = 300;
-            _listStack = new UIStackPanel
-            {
-                Direction = StackDirection.Vertical,
-                LocalPosition = new Vector2(10, 10),
-                Size = new Vector2(area.Width - 20, listHeight),
-                AutoSize = false, // FIX: Prevent spilling
-                ClipToBounds = true,
-                PanelBackground = Color.Black * 0.5f,
-                Spacing = 15f,
-                Padding = 5f
-            };
-
-            // BOTTOM: Creation Form
-            _formStack = new UIStackPanel
-            {
-                Direction = StackDirection.Vertical,
-                LocalPosition = new Vector2(10, listHeight + 20),
-                Size = new Vector2(area.Width - 20, area.Height - listHeight - 30),
-                AutoSize = false, // FIX: Prevent spilling
-                PanelBackground = Color.DarkSlateGray,
-                Padding = 15f,
-                Spacing = 10f
-            };
-
-            _formStack.AddChild(new UILabel { Text = "Create / Edit Tag:", TextColor = Color.Yellow });
-
-            _idInput = new UITextBox { Size = new Vector2(_formStack.Size.X - 30, 30), Placeholder = "Hash ID (e.g. #tree)" };
-            _nameInput = new UITextBox { Size = new Vector2(_formStack.Size.X - 30, 30), Placeholder = "Display Name (e.g. Tree)" };
-            _descInput = new UITextBox { Size = new Vector2(_formStack.Size.X - 30, 30), Placeholder = "Dev Notes (e.g. Harvestable Wood)" };
-
-            var btnRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 10f };
-
-            _colorBtn = new UIButton { Size = new Vector2(80, 30), Text = "Color", BackgroundColor = _presetColors[0] };
-            _colorBtn.OnClick = () => {
-                _colorIndex = (_colorIndex + 1) % _presetColors.Length;
-                _colorBtn.BackgroundColor = _presetColors[_colorIndex];
-            };
-
-            var addBtn = new UIButton { Size = new Vector2(100, 30), Text = "Save Tag", BackgroundColor = Color.DarkGreen };
-            addBtn.OnClick = SaveTagLogic;
-
-            var exitBtn = new UIButton { Size = new Vector2(100, 30), Text = "Close", Command = new ToggleTagManagerCommand(), BackgroundColor = Color.DarkRed };
-
-            btnRow.AddChild(_colorBtn);
-            btnRow.AddChild(addBtn);
-            btnRow.AddChild(exitBtn);
-
-            _formStack.AddChild(_idInput);
-            _formStack.AddChild(_nameInput);
-            _formStack.AddChild(_descInput);
-            _formStack.AddChild(btnRow);
-
-            _rootPanel.AddChild(_listStack);
-            _rootPanel.AddChild(_formStack);
-        }
-        private void SaveTagLogic()
-        {
-            if (string.IsNullOrWhiteSpace(_idInput.Text)) return;
-            string id = _idInput.Text.StartsWith("#") ? _idInput.Text : "#" + _idInput.Text;
-
-            var newTag = new TagDefinition
-            {
-                HashID = id,
-                Name = string.IsNullOrWhiteSpace(_nameInput.Text) ? id : _nameInput.Text,
-                Description = _descInput.Text,
-                TagColor = _presetColors[_colorIndex]
-            };
-
-            _editorState.TagManager.Tags[id] = newTag;
-            _editorState.TagManager.Save(Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json"));
-
-            // Clear Form & Force Rebuild
-            _idInput.Text = ""; _nameInput.Text = ""; _descInput.Text = "";
-            _editorUI.SetFocus(null);
-            _cachedTagCount = -1;
-        }
-        public override void Update(EditorInputState input, EventBus bus)
-        {
-            if (!_editorState.IsTagManagerOpen) return;
-
-            // Only rebuild visual list if tag count changed
-            if (_cachedTagCount != _editorState.TagManager.Tags.Count)
-            {
-                BuildTagList();
-                _cachedTagCount = _editorState.TagManager.Tags.Count;
-            }
-
-            if (Area.Contains(input.MouseWindowPosition))
-            {
-                int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
-                if (scrollDelta != 0) _listStack.ScrollOffset = new Vector2(0, System.Math.Max(0, _listStack.ScrollOffset.Y - scrollDelta * 0.5f));
-
-                _editorUI.CheckFocusClick(_rootPanel, input);
-                _rootPanel.Update(input, bus);
-            }
-        }
-
-        private void BuildTagList()
-        {
-            _listStack.ClearChildren();
-
-            foreach (var tag in _editorState.TagManager.Tags.Values)
-            {
-                string localId = tag.HashID; // closure safe copy
-
-                var row = new UIButton
-                {
-                    Size = new Vector2(_listStack.Size.X - 20, 50),
-                    BackgroundColor = Color.Black * 0.4f,
-                    BorderColor = Color.Transparent
-                }; 
-                row.OnClick = () => {
-                    _idInput.Text = tag.HashID;
-                    _nameInput.Text = tag.Name;
-                    _descInput.Text = tag.Description;
-
-                    // Find matching color index to sync the color button
-                    _colorIndex = System.Array.IndexOf(_presetColors, tag.TagColor);
-                    if (_colorIndex == -1) _colorIndex = 0;
-                    _colorBtn.BackgroundColor = _presetColors[_colorIndex];
-                };
-                var delBtn = new UIButton
-                {
-                    Size = new Vector2(30, 30),
-                    LocalPosition = new Vector2(row.Size.X - 40, 10),
-                    IconName = "Delete",
-                    BackgroundColor = Color.DarkRed
-                };
-
-                delBtn.OnClick = () => {
-                    _editorState.TagManager.Tags.Remove(localId);
-                    _editorState.TagManager.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json"));
-
-                    // Clear inputs if we deleted the currently editing tag
-                    if (_idInput.Text == localId) { _idInput.Text = ""; _nameInput.Text = ""; _descInput.Text = ""; }
-
-                    _cachedTagCount = -1;
-                };
-
-                row.AddChild(delBtn);
-                _listStack.AddChild(row);
-            }
-        }
-
-        public void ProcessSaveCommand()
-        {
-            if (string.IsNullOrWhiteSpace(_idInput.Text)) return;
-            string id = _idInput.Text.StartsWith("#") ? _idInput.Text : "#" + _idInput.Text;
-
-            var newTag = new TagDefinition
-            {
-                HashID = id,
-                Name = string.IsNullOrWhiteSpace(_nameInput.Text) ? id : _nameInput.Text,
-                Description = _descInput.Text,
-                TagColor = _presetColors[_colorIndex]
-            };
-
-            _editorState.TagManager.Tags[id] = newTag;
-            _editorState.TagManager.Save(Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json"));
-
-            // Clear form
-            _idInput.Text = ""; _nameInput.Text = ""; _descInput.Text = "";
-            _editorUI.SetFocus(null);
-        }
-
-        public void ProcessDeleteCommand(string hashId)
-        {
-            if (_editorState.TagManager.Tags.Remove(hashId))
-                _editorState.TagManager.Save(Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json"));
-        }
-
-        public override void Draw(SpriteBatch sb)
-        {
-            if (!_editorState.IsTagManagerOpen) return;
-            _rootPanel.Draw(sb, (IUIContext)_editorUI, _theme);
-
-            // CUSTOM DRAWING: Draw the pills and text over the rows
-            int i = 0;
-            foreach (var tag in _editorState.TagManager.Tags.Values)
-            {
-                if (i >= _listStack.Children.Count) break;
-                var row = _listStack.Children[i];
-
-                Vector2 pos = row.AbsoluteBounds.Location.ToVector2() + new Vector2(10, 5);
-
-                // Ensure drawing stays within bounds if scrolled
-                if (row.AbsoluteBounds.Bottom > _listStack.AbsoluteBounds.Top && row.AbsoluteBounds.Top < _listStack.AbsoluteBounds.Bottom)
-                {
-                    Rectangle pillBounds = new Rectangle((int)pos.X, (int)pos.Y + 10, 100, 20);
-                    UIDrawExtensions.DrawPill(sb, _theme.Font, pillBounds, tag.HashID, tag.TagColor, Color.White);
-
-                    sb.DrawString(_theme.Font, $"{tag.Name}", pos + new Vector2(120, 5), Color.White);
-                    sb.DrawString(_theme.Font, tag.Description, pos + new Vector2(120, 25), Color.Gray);
-                }
-                i++;
-            }
-        }
-
-
-        public override string GetDebugInfo()
-        {
-            return $"Total Tags: {_editorState.TagManager.Tags.Count}\n" +
-                   $"Color Idx: {_colorIndex} ({_presetColors[_colorIndex].ToString()})\n" +
-                   $"Scroll Y: {_listStack.ScrollOffset.Y:F0}";
-        }
+        public override string GetDebugInfo() => "";
     }
     public class ToolPanel : BasePanel
     {
@@ -858,9 +715,9 @@ namespace Pixel_Simulations.Editor
             {
                 Direction = StackDirection.Horizontal,
                 LocalPosition = new Vector2(15, 10),
-                Size = new Vector2(area.Width - 30, area.Height - 20),
+                Size = new Vector2(area.Width - 10, area.Height - 10),
                 PanelBackground = Color.Transparent,
-                Spacing = 25f
+                Spacing = 5f
             };
 
             _linkingNotice = new UILabel { LocalPosition = new Vector2(15, 10), Text = " LINKING MODE: Click a target on the map. (ESC to Cancel)", ColorOverride = Color.Cyan, IsVisible = false };
@@ -935,7 +792,7 @@ namespace Pixel_Simulations.Editor
 
             if (_editorState.UI.IsLinkingMode || obj == null) return;
             // CRASH FIX: Ensure collections are initialized (fixes old save files)
-            obj.Tags ??= new System.Collections.Generic.HashSet<string>();
+            obj.Tags ??= new System.Collections.Generic.HashSet<int>();
             obj.Properties ??= new System.Collections.Generic.Dictionary<string, MapProperty>();
             // --- COL 1: BASE INFO (200px) ---
             var col1 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 20f, AutoSize = false, Size = new Vector2(200, 160) };
@@ -997,46 +854,52 @@ namespace Pixel_Simulations.Editor
             tagHeaderRow.AddChild(addTagBtn);
             col3.AddChild(tagHeaderRow);
 
-            var tagFlow = new UIFlowPanel { Size = new Vector2(250, 24), BackgroundColor = Color.Black * 0.2f, BorderColor = Color.Transparent, SpacingX = 8f, SpacingY = 8f, Padding = 5f };
+            // --- BUG FIX: Make the Tag Flow Panel scrollable if there are many tags ---
+            var tagFlowScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(250, 80), AutoSize = false, ClipToBounds = true, PanelBackground = Color.Transparent };
 
-            // Inherited Tags
+            var tagFlow = new UIFlowPanel { Size = new Vector2(250, 40), BackgroundColor = Color.Black * 0.2f, BorderColor = Color.Transparent, SpacingX = 8f, SpacingY = 0f, Padding = 2f };
+
+            // Inherited Tags (from Prefab)
             if (obj is PropObject prop)
             {
                 var prefab = _editorState.PrefabManager.GetPrefab(prop.PrefabID);
                 if (prefab != null)
                 {
-                    foreach (var pTag in prefab.Tags)
+                    foreach (int pTag in prefab.Tags)
                     {
                         var def = _editorState.TagManager.GetTag(pTag);
-                        // SAFE MEASUREMENT
-                        Vector2 tSize = (UITheme.DefaultFont != null && !string.IsNullOrEmpty(pTag)) ? UITheme.DefaultFont.MeasureString(pTag) : new Vector2(50, 20);
-                        tagFlow.AddChild(new UIButton { Size = new Vector2(tSize.X + 16, 24), Text = pTag, BackgroundColor = (def?.TagColor ?? Color.Gray) * 0.5f, TextColor = Color.LightGray });
+                        string displayText = def != null ? $"{pTag}: {def.Name}" : pTag.ToString();
+
+                        Vector2 tSize = (UITheme.DefaultFont != null) ? UITheme.DefaultFont.MeasureString(displayText) : new Vector2(50, 20);
+                        tagFlow.AddChild(new UIButton { Size = new Vector2(tSize.X + 16, 24), Text = displayText, BackgroundColor = (def?.TagColor ?? Color.Gray) * 0.5f, TextColor = Color.LightGray });
                     }
                 }
             }
 
-            // Instance Tags
-            foreach (var iTag in obj.Tags)
+            // Instance Tags (on the Object)
+            foreach (int iTag in obj.Tags)
             {
-                string localTag = iTag;
+                int localTag = iTag;
                 var def = _editorState.TagManager.GetTag(iTag);
-                // SAFE MEASUREMENT
-                Vector2 tSize = (UITheme.DefaultFont != null && !string.IsNullOrEmpty(iTag)) ? UITheme.DefaultFont.MeasureString(iTag) : new Vector2(50, 20);
-                var btn = new UIButton { Size = new Vector2(tSize.X + 16, 24), Text = iTag, BackgroundColor = def?.TagColor ?? Color.Gray };
+                string displayText = def != null ? $"{iTag}: {def.Name}" : iTag.ToString();
+
+                Vector2 tSize = (UITheme.DefaultFont != null) ? UITheme.DefaultFont.MeasureString(displayText) : new Vector2(50, 20);
+                var btn = new UIButton { Size = new Vector2(tSize.X + 16, 24), Text = displayText, BackgroundColor = def?.TagColor ?? Color.Gray };
                 btn.OnClick = () => { obj.Tags.Remove(localTag); _needsInspectorRebuild = true; };
                 tagFlow.AddChild(btn);
             }
-            col3.AddChild(tagFlow);
 
-            // Tag Library Expander
-            // Tag Library Expander
+            tagFlowScroll.AddChild(tagFlow);
+            col3.AddChild(tagFlowScroll);
+
+            // Tag Library Expander (The picker list)
             var tagLibraryScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(250, 100), AutoSize = false, PanelBackground = Color.Black * 0.4f, ClipToBounds = true, Spacing = 4f, Padding = 5f };
             tagLibraryScroll.IsVisible = _isTagPickerOpen;
 
             if (_isTagPickerOpen)
             {
-                // 1. Get all tags that haven't been applied yet
-                var availableTags = _editorState.TagManager.Tags.Values.Where(t => !obj.Tags.Contains(t.HashID)).ToList();
+                // Get all tags that haven't been applied yet
+                var availableTags = _editorState.TagManager.Tags.Values.Where(t => !obj.Tags.Contains(t.ID)).ToList();
 
                 if (availableTags.Count == 0)
                 {
@@ -1044,7 +907,6 @@ namespace Pixel_Simulations.Editor
                 }
                 else
                 {
-                    // 2. Loop through them in steps of 2 (Creating 2 columns!)
                     for (int i = 0; i < availableTags.Count; i += 2)
                     {
                         var row = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
@@ -1054,12 +916,12 @@ namespace Pixel_Simulations.Editor
                             if (i + j < availableTags.Count)
                             {
                                 var tag = availableTags[i + j];
-                                string safeHash = tag.HashID;
+                                int safeId = tag.ID;
 
-                                // Width 115px perfectly fits 2 columns inside a 250px panel with 5px padding/spacing
-                                var btn = new UIButton { Size = new Vector2(115, 24), Text = $"{tag.HashID}", BackgroundColor = tag.TagColor * 0.4f };
+                                // Display "ID: Name"
+                                var btn = new UIButton { Size = new Vector2(115, 24), Text = $"{tag.ID}: {tag.Name}", BackgroundColor = tag.TagColor * 0.4f };
                                 btn.OnClick = () => {
-                                    obj.Tags.Add(safeHash);
+                                    obj.Tags.Add(safeId);
                                     _isTagPickerOpen = false;
                                     _needsInspectorRebuild = true;
                                 };

@@ -43,7 +43,7 @@ namespace Pixel_Simulations
             _state.GameCamera.Follow(_state.Player.Position, 1f);
             pt = new PixelTexture(gd, 1);
             var grassAreas = new List<RectangleF>();
-            var grassEntities = _entityManager.GetByTag("#Grass");
+            var grassEntities = _entityManager.GetByTag(100);
             _entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, gd);
 
             _state.Assets.LoadAtlas("emotes", AtlasType.Universal);
@@ -91,7 +91,7 @@ namespace Pixel_Simulations
             _reflectionRegions.Clear();
 
             // Query the fast dictionary for exactly what we need!
-            var reflectionEntities = _entityManager.GetByTag("#reflection");
+            var reflectionEntities = _entityManager.GetByTag(10);
 
             foreach (var entity in reflectionEntities)
             {
@@ -192,105 +192,57 @@ namespace Pixel_Simulations
             _state.Shaders.UpdateParticles(gameTime, _state.Weather, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height));
             _state.Shaders.UpdatePostProcessing(_state.Weather, _state.TimeSystem, gameTime);
             _entityManager.UpdateRenderList(_state);
+
             bool useParallax = _state.DebugPool[GameBool.EnableParallax];
             float strength = _state.ParallaxStrength;
-            RectangleF streamBounds = _state.GetStreamingBounds(_pipeline.NativeRect.Width, _pipeline.NativeRect.Height);
+
+            // Test everywhere the camera can see!
+            RectangleF streamBounds = _state.GameCamera.GetVisibleWorldBounds(_pipeline.SimRect);
+            Vector2 simRes = new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height);
             // ==========================================
             // PASS 1: MULTI-CHANNEL DEPTH GENERATION
             // ==========================================
             _pipeline.Begin(RenderLayer.VolumeDepth, Color.Transparent);
-            _depthRenderer.DrawTerrainDepth(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera);
-
+            _depthRenderer.DrawChunks(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White,_state.MaskOffset);
             // DEDICATED DEPTH CALL
             _entityManager.DrawDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, useParallax, strength);
 
-
             // ==========================================
-            // PASS 2: ALBEDO (NativeFinal Matrix - 480p)
+            // PASS 3: ALBEDO BACKGROUND (480p)
             // ==========================================
             _pipeline.Begin(RenderLayer.Albedo, Color.Transparent);
-
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
             _mapRenderer.Draw(spriteBatch, LayerType.Tile);
             spriteBatch.End();
-            // ==========================================
-            // PASS 3: NORMALS (960x540)
-            // ==========================================
-            //_pipeline.Begin(RenderLayer.Normal, new Color(128, 128, 255, 255));
-            _pipeline.Begin(RenderLayer.Normal, new Color(0, 0, 0, 0));
-            _depthRenderer.DrawTerrainDepth(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera);
-            // A. Draw the Pre-Baked Terrain Normal Chunks!
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.SimTransform);
 
-            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE; // 256
-            foreach (var kvp in _state.TerrainNormalChunks)
-            {
-                RectangleF chunkBounds = new RectangleF(kvp.Key.X * chunkSize, kvp.Key.Y * chunkSize, chunkSize, chunkSize);
+            // ==========================================
+            // PASS 3: TERRAIN NORMALS (FIX A: Draw to Normal RT ONLY)
+            // ==========================================
+            _pipeline.Begin(RenderLayer.Normal, Color.Transparent);
 
-                // Culling: Only draw the chunk if it's on screen!
-                if (streamBounds.Intersects(chunkBounds))
-                {
-                    spriteBatch.Draw(kvp.Value, chunkBounds.Position, Color.White);
-                }
-            }
-            spriteBatch.End();
+            _depthRenderer.DrawChunks(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
+            
+            // ==========================================
+            // PASS 4: OBJECTS (MRT: DYNAMIC & NORMAL)
+            // ==========================================
+            // Now bind BOTH targets for the objects. The shader handles outputting to COLOR0 and COLOR1
+            _pipeline._graphicsDevice.SetRenderTargets(
+                new RenderTargetBinding(_pipeline.GetRenderTarget(RenderLayer.Dynamic)),
+                new RenderTargetBinding(_pipeline.GetRenderTarget(RenderLayer.Normal)));
+
+            _pipeline._graphicsDevice.Clear(Color.Transparent);
+
             _entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength);
-
-            // ==========================================
-            // PASS 3: DYNAMIC ALBEDO (Props, Player, Grass)
-            // ==========================================
-            _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent);
-
-            Matrix grassWVP = _state.GameCamera.SimTransform * Matrix.CreateOrthographicOffCenter(0, _pipeline.SimRect.Width, _pipeline.SimRect.Height, 0, 0, 1);
-            _state.Grass.Draw(grassWVP);
-
-            // DEDICATED ALBEDO CALL
             _entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength);
+
             // ==========================================
-            // PASS 4: REFLECTIONS
+            // PASS 4: DEPTH-TESTED GRASS
             // ==========================================
-            _pipeline.Begin(RenderLayer.LightMask, Color.Transparent);
-
-            if (_reflectionRegions.Count > 0)
-            {
-                var refShader = _state.Shaders.Effects["ReflectionShader"];
-                var gd = _pipeline._graphicsDevice;
-
-                gd.BlendState = BlendState.AlphaBlend;
-                gd.DepthStencilState = DepthStencilState.None;
-                gd.RasterizerState = RasterizerState.CullNone;
-
-                RectangleF camBounds = _state.GameCamera.GetVisibleWorldBounds(_pipeline.SimRect);
-                RenderTarget2D dynamicTarget = _pipeline.GetRenderTarget(RenderLayer.Dynamic);
-
-                foreach (var region in _reflectionRegions)
-                {
-                    if (!region.Bounds.Intersects(camBounds)) continue;
-
-                    if (refShader != null)
-                    {
-                        // CRITICAL FIX: Just grab the perfect WVP matrix from the camera!
-                        refShader.Parameters["WorldViewProjection"]?.SetValue(_state.GameCamera.SimWVP);
-
-                        refShader.Parameters["ScreenResolution"]?.SetValue(new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height));
-                        refShader.Parameters["Time"]?.SetValue((float)gameTime.TotalGameTime.TotalSeconds);
-                        refShader.Parameters["BlurAmount"]?.SetValue(region.Blur);
-                        refShader.Parameters["RippleSpeed"]?.SetValue(region.RippleSpeed);
-                        refShader.Parameters["ReflectionOffset"]?.SetValue(region.Offset);
-                        refShader.Parameters["IsNegative"]?.SetValue(region.IsNegative ? 1f : 0f);
-                        refShader.Parameters["TintColor"]?.SetValue(region.Tint.ToVector4());
-                        refShader.Parameters["DynamicTexture"]?.SetValue(dynamicTarget);
-
-                        foreach (var pass in refShader.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            gd.DrawUserPrimitives(region.PrimitiveType, region.Vertices, 0, region.PrimitiveCount);
-                        }
-                    }
-                }
-            }
+            // Grass draws DIRECTLY over objects. Discards blades behind objects using the VolumeDepth map!
+            _pipeline._graphicsDevice.BlendState = BlendState.AlphaBlend;
+            _state.Grass.Draw(_state.GameCamera.SimWVP, _pipeline.GetRenderTarget(RenderLayer.VolumeDepth), simRes);
             // ==========================================
-            // PASS 4: SHADERS & OVERLAYS (SimFinal Matrix)
+            // PASS 6: SHADERS / WATER FLOOD
             // ==========================================
             _pipeline.Begin(RenderLayer.Shader, Color.Transparent);
             //_state.Shaders.DrawWeatherOverlays(spriteBatch, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height), _state.Weather, depthTarget);
@@ -303,35 +255,43 @@ namespace Pixel_Simulations
             // ==========================================
             _pipeline.PresentFinal(spriteBatch);
             _pipeline.PostFinal(spriteBatch, null, _state.Shaders.GetActivePostProcessingEffects());
+            
             spriteBatch.Begin(); // Do not pass any matrix here for HUD
-            Debug_Draw(spriteBatch);
             HUD.Draw(spriteBatch); // <--- Add this right here!
             HUD.DrawInventory(spriteBatch, _state);
-            //DrawDebugText();
-
+            spriteBatch.End();
+            
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.ScreenTransform);
+            HUD.DebugDraw(_state, spriteBatch);
+            Debug_Draw(spriteBatch);
             spriteBatch.End();
         }
         public void Debug_Draw(SpriteBatch spriteBatch)
         {
             if (_state.DebugPool[GameBool.ShowCollision] || _state.DebugPool[GameBool.ShowLinks] || _state.DebugPool[GameBool.ShowShapes])
             {
-                spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.SimTransform);
-                float lineThickness = 1f / _state.GameCamera.Zoom;
 
-                // 1. Draw Player Interaction Boxes
+
                 if (_state.DebugPool[GameBool.ShowCollision])
                 {
-                    RectangleF pCol = new RectangleF(_state.Player.Position.X - 8, _state.Player.Position.Y + 16, 16, 16);
-                    spriteBatch.DrawRectangle(pCol, Color.LimeGreen, lineThickness);
+                    float lineThickness = 1f / _state.GameCamera.Zoom;
+
+                    // 1. Draw Full Sprite Bounds (Cyan)
+                    RectangleF fullBoundsb = new RectangleF(_state.Player.Position.X, _state.Player.Position.Y, _state.Player.SourceRect.Width, _state.Player.SourceRect.Height);
+                    spriteBatch.DrawRectangle(_state.Player.CollisionBounds, Color.Azure, lineThickness);
+
+                    // 2. Draw Foot Collision Box (Red)
+                    spriteBatch.DrawRectangle(_state.Player.FootBounds, Color.Red, lineThickness);
+
+                    // 3. Draw Interaction Box (Yellow)
                     spriteBatch.DrawRectangle(_state.Player.GetInteractionBox(), Color.Yellow, lineThickness);
                 }
 
                 // 2. Delegate map debug drawing to the EntityManager!
                 _entityManager.DrawDebugOverlays(spriteBatch, _state);
 
-                spriteBatch.End();
             }
         }
-        
+
     }
 }

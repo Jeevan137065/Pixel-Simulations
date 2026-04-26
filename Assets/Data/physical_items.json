@@ -1,0 +1,630 @@
+{
+  "10": {
+    "ItemID": 10,
+    "AtlasName": "Machines",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": true,
+    "Type": "Pile",
+    "CellWidth": 2,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 32,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "State_0",
+        "SpriteX": 1,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "State_1",
+        "SpriteX": 3,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "24": {
+    "ItemID": 24,
+    "AtlasName": "Machines",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": true,
+    "Type": "Pile",
+    "CellWidth": 3,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 48,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "State_0",
+        "SpriteX": 24,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "State_1",
+        "SpriteX": 27,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "101": {
+    "ItemID": 101,
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Crop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 0,
+        "SpriteY": 2,
+        "ThresholdInt1": 1,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Seedling",
+        "SpriteX": 1,
+        "SpriteY": 2,
+        "ThresholdInt1": 1,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 2,
+        "SpriteY": 2,
+        "ThresholdInt1": 1,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 3,
+        "SpriteY": 2,
+        "ThresholdInt1": 1,
+        "ThresholdInt2": 317,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 4,
+        "SpriteY": 2,
+        "ThresholdInt1": 1,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 5,
+        "SpriteY": 2,
+        "ThresholdInt1": 1,
+        "ThresholdInt2": 305,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 6,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ],
+    "AtlasName": " Crop_A"
+  },
+  "103": {
+    "ItemID": 103,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Crop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 0,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Lead",
+        "SpriteX": 1,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 7,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 318,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 8,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 9,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 306,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 10,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "104": {
+    "ItemID": 104,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Crop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 0,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 1,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 11,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 319,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 12,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 13,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 307,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 14,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "105": {
+    "ItemID": 105,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Crop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 0,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 1,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 15,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 320,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 16,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 17,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 308,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 18,
+        "SpriteY": 2,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "106": {
+    "ItemID": 106,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Crop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 0,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 1,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 2,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 3,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 4,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 309,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 5,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "107": {
+    "ItemID": 107,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Prop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 6,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 7,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 8,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 13,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 14,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 311,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 15,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "109": {
+    "ItemID": 109,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Prop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 6,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 7,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 8,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Minor",
+        "SpriteX": 9,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 10,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 11,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 310,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 12,
+        "SpriteY": 4,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  },
+  "110": {
+    "ItemID": 110,
+    "AtlasName": " Crop_A",
+    "CanBeDropped": true,
+    "IsPlaceable": true,
+    "HasCollision": false,
+    "Type": "Prop",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "W": 16,
+      "H": 32
+    },
+    "Stages": [
+      {
+        "Name": "Seed",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "New Leaf",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Baby",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Minor",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Major",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Adult",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      },
+      {
+        "Name": "Ripe",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 312,
+        "ThresholdBool": true
+      },
+      {
+        "Name": "Rotten",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "ThresholdInt1": 0,
+        "ThresholdInt2": 0,
+        "ThresholdBool": false
+      }
+    ]
+  }
+}

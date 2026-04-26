@@ -344,8 +344,9 @@ namespace Pixel_Simulations.UI
         public string Text { get; set; } = "";
         public string Placeholder { get; set; } = "Type here...";
         public Action<string> OnTextChanged;
+        public Action<string> OnSubmit;
         private int _backspaceFrames = 0; // Frame counter for holding backspace
-
+        private bool _wasFocused = false;
         public override bool Update(EditorInputState input, EventBus bus)
         {
             if (!IsVisible) return false;
@@ -358,8 +359,12 @@ namespace Pixel_Simulations.UI
                 // We will handle global focus setting in EditorUI
                 return true;
             }
-
             if (IsFocused) HandleTyping(input);
+            if (_wasFocused && !IsFocused)
+            {
+                OnSubmit?.Invoke(Text);
+            }
+            _wasFocused = IsFocused;
 
             return IsHovered;
         }
@@ -622,23 +627,18 @@ namespace Pixel_Simulations.UI
             }
             if (_circleTexture == null)
             {
-                int radius = 64; // High-res enough for scaling down smoothly
-                int diam = radius * 2;
+                int diam = 64;
                 _circleTexture = new Texture2D(gd, diam, diam);
                 Color[] data = new Color[diam * diam];
                 for (int x = 0; x < diam; x++)
-                {
                     for (int y = 0; y < diam; y++)
-                    {
-                        float dist = Vector2.Distance(new Vector2(x, y), new Vector2(radius, radius));
-                        data[x + y * diam] = dist <= radius ? Color.White : Color.Transparent;
-                    }
-                }
+                        data[x + y * diam] = Vector2.Distance(new Vector2(x, y), new Vector2(32, 32)) <= 32 ? Color.White : Color.Transparent;
                 _circleTexture.SetData(data);
             }
         }
-        public static void DrawDashedLine(SpriteBatch sb, Vector2 start, Vector2 end, Color color, float thickness = 4f, float dashLength = 5f, float spaceLength = 5f)
+        public static void DrawDashedLine(SpriteBatch sb, Vector2 start, Vector2 end, Color color, float thickness = 2f, float dashLength = 5f, float spaceLength = 5f)
         {
+            EnsureTextures(sb.GraphicsDevice);
             float distance = Vector2.Distance(start, end);
             Vector2 direction = Vector2.Normalize(end - start);
             float currentPos = 0;
@@ -646,68 +646,98 @@ namespace Pixel_Simulations.UI
 
             while (currentPos < distance)
             {
-                float length = Math.Min(dashLength, distance - currentPos);
+                float length = System.Math.Min(dashLength, distance - currentPos);
                 if (draw)
                 {
                     sb.DrawLine(start + direction * currentPos, start + direction * (currentPos + length), color, thickness);
                 }
                 currentPos += draw ? dashLength : spaceLength;
-                draw = !draw; // Toggle between drawing and spacing
+                draw = !draw; // Toggle
             }
         }
-        public static void FillCircle(SpriteBatch sb, Vector2 center, float radius, Color color)
+        private static Vector2 GetControlPoint(Vector2 pos, Pixel_Simulations.Studio.NodePort port, float offset)
         {
-            EnsureTextures(sb.GraphicsDevice); // Re-uses the circle texture we made for the pills!
-
-            // Calculate scale based on our 128x128 memory texture
-            float scale = (radius * 2f) / _circleTexture.Width;
-            Vector2 origin = new Vector2(_circleTexture.Width / 2f, _circleTexture.Height / 2f);
-
-            sb.Draw(_circleTexture, center, null, color, 0f, origin, scale, SpriteEffects.None, 0f);
+            return port switch
+            {
+                Pixel_Simulations.Studio.NodePort.Top => pos + new Vector2(0, -offset),
+                Pixel_Simulations.Studio.NodePort.Bottom => pos + new Vector2(0, offset),
+                Pixel_Simulations.Studio.NodePort.Left => pos + new Vector2(-offset, 0),
+                Pixel_Simulations.Studio.NodePort.Right => pos + new Vector2(offset, 0),
+                _ => pos
+            };
         }
-        public static void DrawDirectionalLine(SpriteBatch sb, Vector2 start, Vector2 end, Color color, float thickness = 2f)
-        {
-            // Draw the main line
-            sb.DrawLine(start, end, color, thickness);
 
-            // Calculate arrow head (a triangle pointing towards 'end')
-            Vector2 direction = Vector2.Normalize(end - start);
-
-            // Push the arrow head slightly back from the exact center of the target node
-            Vector2 arrowPos = end - (direction * 20f);
-
-            // Create the two back corners of the arrow head
-            Vector2 perp = new Vector2(-direction.Y, direction.X);
-            Vector2 arrowLeft = arrowPos - (direction * 10f) + (perp * 7f);
-            Vector2 arrowRight = arrowPos - (direction * 10f) - (perp * 7f);
-
-            // Draw arrow head lines
-            sb.DrawLine(arrowPos, arrowLeft, color, thickness);
-            sb.DrawLine(arrowPos, arrowRight, color, thickness);
-        }
-        public static void DrawPill(SpriteBatch sb, SpriteFont font, Rectangle bounds, string text, Color pillColor, Color textColor)
+        public static void DrawBezierCurve(SpriteBatch sb, SpriteFont font, Vector2 start, Vector2 end, Pixel_Simulations.Studio.NodePort startPort, Pixel_Simulations.Studio.NodePort endPort, Color color, float thickness, Pixel_Simulations.Studio.LineStyle style, string label)
         {
             EnsureTextures(sb.GraphicsDevice);
 
+            float distance = Vector2.Distance(start, end);
+            float controlOffset = System.Math.Max(distance * 0.5f, 30f);
+
+            Vector2 cp1 = GetControlPoint(start, startPort, controlOffset);
+            Vector2 cp2 = GetControlPoint(end, endPort, controlOffset);
+
+            int segments = 40;
+            Vector2 previousPoint = start;
+            float distanceTraveled = 0;
+            float dashLength = style == Pixel_Simulations.Studio.LineStyle.Dashed ? 10f : 4f;
+
+            for (int i = 1; i <= segments; i++)
+            {
+                float t = i / (float)segments;
+                float u = 1 - t;
+                Vector2 p = (u * u * u * start) + (3 * u * u * t * cp1) + (3 * u * t * t * cp2) + (t * t * t * end);
+
+                distanceTraveled += Vector2.Distance(previousPoint, p);
+
+                bool shouldDraw = true;
+                if (style == Pixel_Simulations.Studio.LineStyle.Dashed || style == Pixel_Simulations.Studio.LineStyle.Dotted)
+                {
+                    shouldDraw = (distanceTraveled % (dashLength * 2)) < dashLength;
+                }
+
+                if (shouldDraw) sb.DrawLine(previousPoint, p, color, thickness);
+                previousPoint = p;
+            }
+
+            // Draw Arrowhead
+            Vector2 dir = Vector2.Normalize(end - cp2);
+            Vector2 perp = new Vector2(-dir.Y, dir.X);
+            Vector2 arrowBase = end - (dir * 12f);
+            sb.DrawLine(end, arrowBase + (perp * 6f), color, thickness + 1);
+            sb.DrawLine(end, arrowBase - (perp * 6f), color, thickness + 1);
+
+            // Draw Label
+            if (!string.IsNullOrEmpty(label) && font != null)
+            {
+                Vector2 midPoint = (start + cp1 + cp2 + end) * 0.25f;
+                Vector2 textSize = font.MeasureString(label);
+                Rectangle labelBounds = new Rectangle((int)midPoint.X - (int)textSize.X / 2 - 10, (int)midPoint.Y - (int)textSize.Y / 2 - 5, (int)textSize.X + 20, (int)textSize.Y + 10);
+                DrawPill(sb, font, labelBounds, label, Color.Black * 0.8f, color);
+            }
+        }
+
+        public static void FillCircle(SpriteBatch sb, Vector2 center, float radius, Color color)
+        {
+            EnsureTextures(sb.GraphicsDevice);
+            float scale = (radius * 2f) / _circleTexture.Width;
+            sb.Draw(_circleTexture, center, null, color, 0f, new Vector2(32, 32), scale, SpriteEffects.None, 0f);
+        }
+
+        public static void DrawPill(SpriteBatch sb, SpriteFont font, Rectangle bounds, string text, Color pillColor, Color textColor)
+        {
+            EnsureTextures(sb.GraphicsDevice);
             int radius = bounds.Height / 2;
             int diam = radius * 2;
-
-            // Draw Left Circle (Scale the 128x128 texture down to our target diameter)
             float scale = (float)diam / _circleTexture.Width;
             sb.Draw(_circleTexture, new Vector2(bounds.X, bounds.Y), null, pillColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-
-            // Draw Right Circle
             sb.Draw(_circleTexture, new Vector2(bounds.Right - diam, bounds.Y), null, pillColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-
-            // Draw Center Rectangle
             sb.Draw(_pixelTexture, new Rectangle(bounds.X + radius, bounds.Y, bounds.Width - diam, bounds.Height), pillColor);
 
-            // Draw Text centered
             if (!string.IsNullOrEmpty(text) && font != null)
             {
                 Vector2 tSize = font.MeasureString(text);
-                Vector2 tPos = new Vector2(bounds.Center.X - tSize.X / 2, bounds.Center.Y - tSize.Y / 2);
-                sb.DrawString(font, text, tPos, textColor);
+                sb.DrawString(font, text, new Vector2(bounds.Center.X - tSize.X / 2, bounds.Center.Y - tSize.Y / 2), textColor);
             }
         }
     }

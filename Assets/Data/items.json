@@ -1,573 +1,974 @@
-﻿[
-    {
-        "ID": 0,
-        "Name": "DEBUG AXE",
-        "Description": "This Item had ID 0. DEBUG ONLY",
-        "Category": "DEBUG",
-        "ItemTags": [  ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 0,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 1,
-        "Name": "Stone Axe",
-        "Description": "An Axe made of stone. Used to chop trees, logs",
-        "Category": "Tool",
-        "ItemTags": [ "Stone_Tool", "Starting" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 0,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 2,
-        "Name": "Stone Pickaxe",
-        "Description": "A Pickaxe made of stone. Used to mine rocks",
-        "Category": "Tool",
-        "ItemTags": [ "Stone_Tool", "Starting" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 1,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 3,
-        "Name": "Stone Shovel",
-        "Description": "A shovel made of stone. Used for Digging Dirt, Clay.",
-        "Category": "Tool",
-        "ItemTags": [ "Stone_Tool", "Starting" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 2,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 4,
-        "Name": "Stone Hoe",
-        "Description": "A Hoe made of stone. Used for Digging Farmland, Removing weeds.",
-        "Category": "Tool",
-        "ItemTags": [ "Stone_Tool", "Starting" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 3,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 5,
-        "Name": "Watering Can",
-        "Description": "A Watering can with nozzle at top. Used for Watering plants.",
-        "Category": "Tool",
-        "ItemTags": [ "Stone_Tool", "Starting" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 4,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 6,
-        "Name": "Stone Scythe",
-        "Description": "A Scythe made of stone. Used for Clearing fiberous vines, grass.",
-        "Category": "Tool",
-        "ItemTags": [ "Stone_Tool", "Starting" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 5,
-            "Y": 0
-        }
-    },
-    {
-        "ID": 7,
-        "Name": "Fishing Pole",
-        "Description": "Simple Fishing pole made of Spruce, Nylon fibre and a bobber. Used for catching fish.",
-        "Category": "Tool",
-        "ItemTags": [ "Spruce", "Starting", "wood" ],
-        "MinWeight": 0.5,
-        "MaxWeight": 0.8,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 6,
-            "Y": 0
-        }
-    },
-    /////////////////////MATERIALS///////////////////////
-    {
-        "ID": 10,
-        "Name": "Wood",
-        "Description": "A log from the tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 0,
-            "Y": 1
-        }
-    },
-
-    {
-        "ID": 11,
-        "Name": "Pile of logs",
-        "Description": "A log from the tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 1,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 12,
-        "Name": "Spruce",
-        "Description": "A log from Sitka Spruce Tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 2,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 13,
-        "Name": "Pine",
-        "Description": "A log from Western White Pine tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 3,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 14,
-        "Name": "Cedar",
-        "Description": "A log from Western Red Cedar tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 4,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 15,
-        "Name": "Yew",
-        "Description": "A log from Pacific Yew tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 5,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 16,
-        "Name": "Hemlock",
-        "Description": "A log from Western Hemlock tree.",
-        "Category": "Material",
-        "ItemTags": [ "Softwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 6,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 17,
-        "Name": "Alder",
-        "Description": "A log from Red Alder tree.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 7,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 18,
-        "Name": "Maple",
-        "Description": "A log from Big leaf Maple tree.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 8,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 19,
-        "Name": "Willow",
-        "Description": "A log from Pacific Willow tree.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 9,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 20,
-        "Name": "Cherry",
-        "Description": "A log from Bitter Cherry tree.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 10,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 21,
-        "Name": "Mahogany",
-        "Description": "A log from Pacific Coast Mahogany tree.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 11,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 22,
-        "Name": "Plywood",
-        "Description": "A Plywood log manufactured.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "Commercial", "wood" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 12,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 23,
-        "Name": "Glulam",
-        "Description": "A Glulam log manufactured.",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood", "Commercial" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 13,
-            "Y": 1
-        }
-    },
-    {
-        "ID": 24,
-        "Name": "Bamboo",
-        "Description": "A Bamboo log. Native to East Asia",
-        "Category": "Material",
-        "ItemTags": [ "Hardwood", "crafting", "wood", "Commercial" ],
-        "MinWeight": 1.5,
-        "MaxWeight": 2.5,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 14,
-            "Y": 1
-        }
-    },
-
-
-
-
-
-
-    //{
-    //    "ID": 2,
-    //    "Name": "Stone Block",
-    //    "Description": "A heavy rock mined from the earth.",
-    //    "Category": "Material",
-    //    "ItemTags": [ "heavy", "crafting", "stone" ],
-    //    "MinWeight": 1.5,
-    //    "MaxWeight": 2.5,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 1,
-    //        "Y": 0
-    //    }
-    //},
-    //{
-    //    "ID": 3,
-    //    "Name": "Iron Ore",
-    //    "Description": "Unrefined metal that needs to be smelted.",
-    //    "Category": "Material",
-    //    "ItemTags": [ "ore", "smeltable", "metal" ],
-    //    "MinWeight": 2.0,
-    //    "MaxWeight": 3.0,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 2,
-    //        "Y": 0
-    //    }
-    //},
-    /////////////////////SEEDS///////////////////////
-    {
-        "ID": 100,
-        "Name": "Seeds",
-        "Description": "Empty Seed Packet.",
-        "Category": "Seed",
-        "ItemTags": [ "crop_family_root", "spring_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 0,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 101,
-        "Name": "Carrot Seeds",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 1,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 103,
-        "Name": "Carrot Seeds (Violet)",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 2,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 104,
-        "Name": "Carrot Seeds (Yellow)",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 4,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 105,
-        "Name": "Carrot Seed (Red)s",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 5,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 106,
-        "Name": "Turnip Seeds",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 6,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 107,
-        "Name": "Radish Seeds",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 7,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 109,
-        "Name": "Daikon Seeds",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 8,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 110,
-        "Name": "Beet Seeds",
-        "Description": "Plant in Spring or Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Carrot Family", "spring_crop", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 9,
-            "Y": 3
-        }
-    },
-    {
-        "ID": 111,
-        "Name": "Tomato Seeds",
-        "Description": "Plant in Summer. Grows in 5 days.",
-        "Category": "Seed",
-        "ItemTags": [ "Night_Shades_Family", "summer_crop", "plantable" ],
-        "MinWeight": 0.01,
-        "MaxWeight": 0.02,
-        "IconSource": "Items",
-        "Coord": {
-            "X": 1,
-            "Y": 4
-        }
+[
+  {
+    "ID": 0,
+    "Name": "DEBUG AXE",
+    "Description": "This Item had ID 0. DEBUG ONLY",
+    "Category": "DEBUG",
+    "ItemTags": [],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 0
     }
-    //{
-    //    "ID": 102,
-    //    "Name": "Carrot Seeds",
-    //    "Description": "Plant in Spring or Summer. Grows in 5 days.",
-    //    "Category": "Seed",
-    //    "ItemTags": [ "crop_family_root", "spring_crop", "summer_crop", "plantable" ],
-    //    "MinWeight": 0.01,
-    //    "MaxWeight": 0.02,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 2,
-    //        "Y": 2
-    //    }
-    //},
-    //{
-    //    "ID": 102,
-    //    "Name": "Carrot Seeds",
-    //    "Description": "Plant in Spring or Summer. Grows in 5 days.",
-    //    "Category": "Seed",
-    //    "ItemTags": [ "crop_family_root", "spring_crop", "summer_crop", "plantable" ],
-    //    "MinWeight": 0.01,
-    //    "MaxWeight": 0.02,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 2,
-    //        "Y": 2
-    //    }
-    //},
-    //{
-    //    "ID": 102,
-    //    "Name": "Carrot Seeds",
-    //    "Description": "Plant in Spring or Summer. Grows in 5 days.",
-    //    "Category": "Seed",
-    //    "ItemTags": [ "crop_family_root", "spring_crop", "summer_crop", "plantable" ],
-    //    "MinWeight": 0.01,
-    //    "MaxWeight": 0.02,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 2,
-    //        "Y": 2
-    //    }
-    //},
-
-    //{
-    //    "ID": 101,
-    //    "Name": "Turnip",
-    //    "Description": "A crisp, spicy root vegetable. Good in stews.",
-    //    "Category": "Crop",
-    //    "ItemTags": [ "crop_family_root", "edible", "vegetable" ],
-    //    "MinWeight": 0.3,
-    //    "MaxWeight": 0.6,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 1,
-    //        "Y": 2
-    //    }
-    //},
-
-    //{
-    //    "ID": 203,
-    //    "Name": "Carrot",
-    //    "Description": "A crunchy, orange vegetable. Good for your eyesight.",
-    //    "Category": "Crop",
-    //    "ItemTags": [ "crop_family_root", "edible", "vegetable" ],
-    //    "MinWeight": 0.2,
-    //    "MaxWeight": 0.4,
-    //    "IconSource": "Items",
-    //    "Coord": {
-    //        "X": 3,
-    //        "Y": 2
-    //    }
-    //}
+  },
+  {
+    "ID": 1,
+    "Name": "Stone Axe",
+    "Description": "An Axe made of stone. Used to chop trees, logs",
+    "Category": "Tool",
+    "ItemTags": [
+      "Stone_Tool",
+      "Starting",
+      "Tool",
+      "AXE",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 2,
+    "Name": "Stone Pickaxe",
+    "Description": "A Pickaxe made of stone. Used to mine rocks",
+    "Category": "Tool",
+    "ItemTags": [
+      "Stone_Tool",
+      "Starting",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 3,
+    "Name": "Stone Shovel",
+    "Description": "A shovel made of stone. Used for Digging Dirt, Clay.",
+    "Category": "Tool",
+    "ItemTags": [
+      "Stone_Tool",
+      "Starting",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 4,
+    "Name": "Stone Hoe",
+    "Description": "A Hoe made of stone. Used for Digging Farmland, Removing weeds.",
+    "Category": "Tool",
+    "ItemTags": [
+      "Stone_Tool",
+      "Starting",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 3,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 5,
+    "Name": "Watering Can",
+    "Description": "A Watering can with nozzle at top. Used for Watering plants.",
+    "Category": "Tool",
+    "ItemTags": [
+      "Stone_Tool",
+      "Starting",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 4,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 6,
+    "Name": "Stone Scythe",
+    "Description": "A Scythe made of stone. Used for Clearing fiberous vines, grass.",
+    "Category": "Tool",
+    "ItemTags": [
+      "Stone_Tool",
+      "Starting",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 7,
+    "Name": "Fishing Pole",
+    "Description": "Simple Fishing pole made of Spruce, Nylon fibre and a bobber. Used for catching fish.",
+    "Category": "Tool",
+    "ItemTags": [
+      "Spruce",
+      "Starting",
+      "wood",
+      "Equippable"
+    ],
+    "MinWeight": 0.5,
+    "MaxWeight": 0.8,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 0
+    }
+  },
+  {
+    "ID": 10,
+    "Name": "Wood",
+    "Description": "A log from the tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 11,
+    "Name": "Pile of logs",
+    "Description": "A log from the tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 12,
+    "Name": "Spruce",
+    "Description": "A log from Sitka Spruce Tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 13,
+    "Name": "Pine",
+    "Description": "A log from Western White Pine tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 3,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 14,
+    "Name": "Cedar",
+    "Description": "A log from Western Red Cedar tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 4,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 15,
+    "Name": "Yew",
+    "Description": "A log from Pacific Yew tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 16,
+    "Name": "Hemlock",
+    "Description": "A log from Western Hemlock tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Softwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 17,
+    "Name": "Alder",
+    "Description": "A log from Red Alder tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 7,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 18,
+    "Name": "Maple",
+    "Description": "A log from Big leaf Maple tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 8,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 19,
+    "Name": "Willow",
+    "Description": "A log from Pacific Willow tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 9,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 20,
+    "Name": "Cherry",
+    "Description": "A log from Bitter Cherry tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 10,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 21,
+    "Name": "Mahogany",
+    "Description": "A log from Pacific Coast Mahogany tree.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 11,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 22,
+    "Name": "Plywood",
+    "Description": "A Plywood log manufactured.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "Commercial",
+      "wood"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 12,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 23,
+    "Name": "Glulam",
+    "Description": "A Glulam log manufactured.",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood",
+      "Commercial"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 13,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 24,
+    "Name": "Bamboo",
+    "Description": "A Bamboo log. Native to East Asia",
+    "Category": "Material",
+    "ItemTags": [
+      "Hardwood",
+      "crafting",
+      "wood",
+      "Commercial"
+    ],
+    "MinWeight": 1.5,
+    "MaxWeight": 2.5,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 14,
+      "Y": 1
+    }
+  },
+  {
+    "ID": 100,
+    "Name": "Seeds",
+    "Description": "Empty Seed Packet.",
+    "Category": "Seed",
+    "ItemTags": [
+      "crop_family_root",
+      "spring_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 101,
+    "Name": "Carrot Seeds",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 103,
+    "Name": "Carrot Seeds (Violet)",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 104,
+    "Name": "Carrot Seeds (Yellow)",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 4,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 105,
+    "Name": "Carrot Seed (Red)s",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 106,
+    "Name": "Turnip Seeds",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 107,
+    "Name": "Radish Seeds",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 7,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 109,
+    "Name": "Daikon Seeds",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 8,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 110,
+    "Name": "Beet Seeds",
+    "Description": "Plant in Spring or Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Carrot Family",
+      "spring_crop",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 9,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 111,
+    "Name": "Tomato Seeds",
+    "Description": "Plant in Summer. Grows in 5 days.",
+    "Category": "Seed",
+    "ItemTags": [
+      "Night_Shades_Family",
+      "summer_crop",
+      "plantable"
+    ],
+    "MinWeight": 0.01,
+    "MaxWeight": 0.02,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 4
+    }
+  },
+  {
+    "ID": 201,
+    "Name": "SlamonBerry",
+    "Description": "A tart wild berry",
+    "Category": "Forage",
+    "ItemTags": [
+      "Forage",
+      "Edible",
+      "Berry"
+    ],
+    "MinWeight": 0.25,
+    "MaxWeight": 0.25,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 5
+    }
+  },
+  {
+    "ID": 303,
+    "Name": "Leek",
+    "Description": "Simple Pungent Leek used for Cooking",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 304,
+    "Name": "Onion",
+    "Description": "Pungent Root vegetable used as base for many dishes",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 305,
+    "Name": "Carrot",
+    "Description": "Strachy Root vegetable",
+    "Category": "Material",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 308,
+    "Name": "Red Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 306,
+    "Name": "Violet Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 3,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 307,
+    "Name": "Golden Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 4,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 309,
+    "Name": "Turnip",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 310,
+    "Name": "Daikon",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 7,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 311,
+    "Name": "Radish",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 8,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 312,
+    "Name": "Beet",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 9,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 313,
+    "Name": "Red Beet",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 10,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 314,
+    "Name": "Yellow Beet",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 11,
+      "Y": 6
+    }
+  },
+  {
+    "ID": 315,
+    "Name": "Baby Leek",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 316,
+    "Name": "Baby onion",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 317,
+    "Name": "Baby Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 318,
+    "Name": "Babay Violet Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 3,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 319,
+    "Name": "Baby Yellow Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 4,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 320,
+    "Name": "Baby Red Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 321,
+    "Name": "Parsnip",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 322,
+    "Name": "Wild Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 7,
+      "Y": 7
+    }
+  },
+  {
+    "ID": 323,
+    "Name": "Corn",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 8
+    }
+  },
+  {
+    "ID": 324,
+    "Name": "Cauliflower",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 8,
+      "Y": 8
+    }
+  },
+  {
+    "ID": 325,
+    "Name": "Cabbage",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 9,
+      "Y": 8
+    }
+  },
+  {
+    "ID": 326,
+    "Name": "Red Cabbage",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 10,
+      "Y": 8
+    }
+  },
+  {
+    "ID": 327,
+    "Name": "Lettece",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 11,
+      "Y": 8
+    }
+  }
 ]

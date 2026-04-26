@@ -112,10 +112,10 @@ namespace Pixel_Simulations.Data
                 var bounds = shapeObj.Shape.GetBounds();
                 Color objColor = GetObjColor(shapeObj);
                 // --- GRADIENT Light Source PREVIEW ---
-                if (shapeObj.Tags.Contains("#light_source"))
+                if (shapeObj.Tags.Contains(200))
                 {
                     // 1. Find the connected Falloff shape
-                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.Tags.Contains("#light_falloff") && shapeObj.LinkedObjects.Contains(s.ID));
+                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.Tags.Contains(200) && shapeObj.LinkedObjects.Contains(s.ID));
                     if (falloffShape != null && shapeObj.Shape.Vertices.Count == falloffShape.Shape.Vertices.Count)
                     {
                         // 2. Draw lines connecting the vertices (The "Light Shafts")
@@ -140,14 +140,14 @@ namespace Pixel_Simulations.Data
                         sb.DrawRectangle(bounds, Color.Yellow, lineThickness * 2);
                     }
                 }
-                else if (shapeObj.Tags.Contains("#light_falloff"))
+                else if (shapeObj.Tags.Contains(200))
                 {
                     // We skip drawing the falloff explicitly, because the #light_source draws the connecting lines to it!
                     // We just draw a faint outline so you can still click it to select it.
                     sb.DrawRectangle(bounds, Color.Orange * 0.2f, lineThickness);
                 }
                 // --- GRADIENT REFLECTION PREVIEW ---
-                if (shapeObj.Tags.Contains("#reflection"))
+                if (shapeObj.Tags.Contains(201))
                 {
                     bool isNegative = true; // Default to floor reflection
                     if (shapeObj.Properties.TryGetValue("Direction", out var dirProp))

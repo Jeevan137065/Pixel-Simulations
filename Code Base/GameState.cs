@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions.Layers;
+using Newtonsoft.Json;
 using Pixel_Simulations.Data;
 using Pixel_Simulations.Editor;
 using System;
@@ -18,8 +19,8 @@ namespace Pixel_Simulations
     public enum GameBool
     {
         IsPaused,
-        GrassArea,
         ShowCollision,
+        ShowPlayerBounds,
         ShowLinks,
         ShowShapes,
         EnableParallax
@@ -28,6 +29,7 @@ namespace Pixel_Simulations
     {
         // --- Core Data Objects ---
         public Map CurrentMap { get; private set; }
+        public MapSaveData ActiveSave { get; private set; } = new MapSaveData();
         public NewPlayer Player { get; private set; }
         // --- Managers and Services ---
         public Camera GameCamera { get; set; }
@@ -41,15 +43,18 @@ namespace Pixel_Simulations
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
         public DayTimeManager TimeSystem { get; private set; }
+        public InteractionManager Interactions { get; }
         public TagManager tagManager { get; private set; }
         public GrassSystem Grass { get; private set; }
         //useful objects
         public InputManager input { get; }
         public PhysicsManager Physics { get; }
         public string gameMapPath;
-        public int _uKeyPressed = 0;
+        public GameEntity HoveredEntity { get; set; }
+
         public bool _fKeyPressedLastFrame = false;
         public float ParallaxStrength { get; set; } = 0.15f;
+        public Vector2 MaskOffset { get; set; }
         //Debug Bool
         public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
         public GameState()
@@ -64,6 +69,7 @@ namespace Pixel_Simulations
             Physics = new PhysicsManager();
             tagManager = new TagManager();
             ItemManager = new ItemManager();
+            Interactions = new InteractionManager();
         }
 
         /// <summary>
@@ -74,7 +80,7 @@ namespace Pixel_Simulations
             DebugPool[GameBool.ShowCollision] = false;
             DebugPool[GameBool.ShowLinks] = false;
             DebugPool[GameBool.ShowShapes] = false;
-            DebugPool[GameBool.GrassArea] = false;
+            DebugPool[GameBool.ShowPlayerBounds] = false;
             DebugPool[GameBool.IsPaused] = false;
             DebugPool[GameBool.EnableParallax] = true;
             // 1. Load all raw texture assets first.
@@ -104,11 +110,24 @@ namespace Pixel_Simulations
 
                 // Load the generated Normal Map
                 TerrainNormalChunks = MapSerializer.LoadGameChunks(normalPath, graphicsDevice, maskLayer.OffsetX, maskLayer.OffsetY);
+                int maskOffsetX = maskLayer.OffsetX;
+                int maskOffsetY = maskLayer.OffsetY;
+                MaskOffset = new Vector2(maskOffsetX, maskOffsetY);
+                System.Diagnostics.Debug.WriteLine($"Mask offset as: {MaskOffset}");
             }
             if (CurrentMap == null) {
                 System.Diagnostics.Debug.WriteLine($"Map Read at: {gameMapPath} is NULL");
             }
-
+            string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Saves", "CoastTown_Save.json");
+            if (File.Exists(savePath))
+            {
+                string json = File.ReadAllText(savePath);
+                ActiveSave = JsonConvert.DeserializeObject<MapSaveData>(json) ?? new MapSaveData();
+            }
+            else
+            {
+                ActiveSave = new MapSaveData(); // Fresh save
+            }
             string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
             tagManager.Load(tagsPath);
             // 3. Create all TileSet instances and register them with the TilesetManager.
@@ -118,8 +137,10 @@ namespace Pixel_Simulations
             var grassShapes = new List<RectangleF>();
             foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
             {
-                ShapeObject sh = layer.Shapes.Where(s => s.Tags.Contains("#Grass")).FirstOrDefault();
+                foreach (var sh in layer.Shapes.Where(s => s.Tags.Contains(40)))
+                {
                     grassShapes.Add(sh.Shape.GetBounds());
+                }
             }
             Grass.LoadContent(content,grassShapes);
             Shaders = new ShaderManager(graphicsDevice);
@@ -130,7 +151,9 @@ namespace Pixel_Simulations
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
             string itemPath = Path.Combine(parentDir, "Assets", "Data", "items.json");
-            ItemManager.Load(itemPath);
+            ItemManager.Load(itemPath, itemPath);
+            string interactionsPath = Path.Combine(parentDir, "Assets", "Data", "interactions.json");
+            Interactions.Load(interactionsPath);
             Player.LoadContent(content,Physics); // Player loads its own specific content
         }
 
@@ -172,14 +195,6 @@ namespace Pixel_Simulations
                 }
                 _fKeyPressedLastFrame = true;
             }
-            if (keyboardState.IsKeyDown(Keys.G))
-            {
-                if (!_fKeyPressedLastFrame)
-                {
-                    DebugPool[GameBool.GrassArea] = true;
-                }
-                _fKeyPressedLastFrame = true;
-            }
             else if (keyboardState.IsKeyDown(Keys.Y))
             {
                 // Simple debounce so it doesn't cycle 60 times a second
@@ -207,7 +222,7 @@ namespace Pixel_Simulations
 
             // Update the weather math
             TimeSystem.Update(gameTime, Weather.CurrentSeason, Weather.Phase);
-            Grass.Update(gameTime, new Vector2(Player.Position.X, Player.Position.Y + 24));
+            Grass.Update(gameTime, Player.Foot);
             Weather.Update(gameTime, TimeSystem.TimeOfDay);
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
             Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);
@@ -339,5 +354,39 @@ namespace Pixel_Simulations
             return bounds;
         }
         public bool IsPaused => DebugPool[GameBool.IsPaused];
+        public void SaveGame()
+        {
+            string savePath = System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Saves", "CoastTown_Save.json"); System.IO.Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+
+            string json = JsonConvert.SerializeObject(ActiveSave, Formatting.Indented);
+            System.IO.File.WriteAllText(savePath, json);
+            System.Diagnostics.Debug.WriteLine("Game Progress Saved!");
+        }
+        public void GrowCrops()
+        {
+            bool visualChanged = false;
+
+            // We no longer loop over the map layers! We only loop over the player's placed items.
+            foreach (var placed in ActiveSave.PlacedItems)
+            {
+                var physDef = ItemManager.GetPhysicalDef(placed.ItemID);
+                if (physDef != null && physDef.Type == PlacementType.Crop)
+                {
+                    placed.DaysAlive++;
+
+                    int nextStage = placed.CurrentStageIndex + 1;
+                    if (nextStage < physDef.Stages.Count)
+                    {
+                        if (placed.DaysAlive >= physDef.Stages[nextStage].ThresholdInt1)
+                        {
+                            placed.CurrentStageIndex = nextStage;
+                            visualChanged = true;
+                        }
+                    }
+                }
+            }
+
+            if (visualChanged) System.Diagnostics.Debug.WriteLine("Crops Grew! (Needs Visual Refresh)");
+        }
     }
 }

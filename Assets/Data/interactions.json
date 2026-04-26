@@ -1,0 +1,108 @@
+﻿[
+    {
+        "RuleID": "harvest_berry_bush",
+        "RequiredTargetTags": [
+            "#bush",
+            "#harvestable"
+        ],
+        "RequiredTargetProperties": {
+            "HasFruit": "True"
+        },
+        "RequiredToolTags": [
+            "empty_hand"
+        ],
+        "LootPropertyKey": "FruitID",
+        "DefaultLootID": 201,
+        "LootAmount": 2,
+        "DestroyTarget": false,
+        "SetProperties": {
+            "HasFruit": "False",
+            "CurrentState": "Empty"
+        },
+        "SpriteOffset": {
+            "X": 0,
+            "Y": 0
+        }
+    },
+    {
+        "RuleID": "chop_down_bush",
+        "RequiredTargetTags": [
+            "#bush"
+        ],
+        "RequiredTargetProperties": {},
+        "RequiredToolTags": [
+            "axe"
+        ],
+        "LootPropertyKey": "DropID",
+        "DefaultLootID": 1,
+        "LootAmount": 1,
+        "DestroyTarget": true,
+        "SetProperties": {},
+        "SpriteOffset": {
+            "X": 0,
+            "Y": 0
+        }
+    },
+    {
+        "RuleID": "chop_down_tree",
+        "RequiredTargetTags": [
+            "#tree"
+        ],
+        "RequiredTargetProperties": {},
+        "RequiredToolTags": [
+            "axe"
+        ],
+        "LootPropertyKey": "DropID",
+        "DefaultLootID": 1,
+        "LootAmount": 3,
+        "DestroyTarget": true,
+        "SetProperties": {},
+        "SpriteOffset": {
+            "X": 0,
+            "Y": 0
+        }
+    },
+    {
+        "RuleID": "mine_rock",
+        "RequiredTargetTags": [
+            "#rock"
+        ],
+        "RequiredTargetProperties": {},
+        "RequiredToolTags": [
+            "pickaxe"
+        ],
+        "LootPropertyKey": "DropID",
+        "DefaultLootID": 2,
+        "LootAmount": 2,
+        "DestroyTarget": true,
+        "SetProperties": {},
+        "SpriteOffset": {
+            "X": 0,
+            "Y": 0
+        }
+    },
+    {
+        "RuleID": "water_crop",
+        "RequiredTargetTags": [
+            "#crop"
+        ],
+        "RequiredTargetProperties": {
+            "IsWatered": "False"
+        },
+        "RequiredToolTags": [
+            "liquid_container"
+        ],
+        "LootPropertyKey": null,
+        "DefaultLootID": -1,
+        "LootAmount": 0,
+        "DestroyTarget": false,
+        "SetProperties": {
+            "IsWatered": "True",
+            "CurrentState": "Watered"
+        },
+        "SpriteOffset": {
+            "X": 0,
+            "Y": 0
+        }
+    }
+]

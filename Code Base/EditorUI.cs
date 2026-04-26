@@ -26,7 +26,6 @@ namespace Pixel_Simulations.UI
         public TopPanel TopPanel { get; set; }
         public TilesetPanel TilesetPanel { get; set; }
         public PrefabCreatorPanel PrefabPanel { get; set; }
-        public TagManagerPanel TagManagerPanel { get; set; }
         public ToolPanel ToolPanel { get; set; }
         public InspectorPanel InspectorPanel { get; set; }
         public MaskEditorPanel MaskEditorPanel { get; set; }
@@ -68,7 +67,6 @@ namespace Pixel_Simulations.UI
             ToolPanel = new ToolPanel(_editorState._layoutmanager.ToolPanel, this, _editorState);
             InspectorPanel = new InspectorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
             MaskEditorPanel = new MaskEditorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
-            TagManagerPanel = new TagManagerPanel(_editorState._layoutmanager.tagModalBounds, this, _editorState);
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
         }
 
@@ -97,8 +95,7 @@ namespace Pixel_Simulations.UI
                 InspectorPanel.Draw(spriteBatch);
             }
 
-            if (_editorState.IsTagManagerOpen) TagManagerPanel.Draw(spriteBatch);
-            else LayerPanel.Draw(spriteBatch);
+            LayerPanel.Draw(spriteBatch);
 
             if (_editorState.PrefabCreator.IsOpen) PrefabPanel.Draw(spriteBatch);
         }
@@ -163,7 +160,7 @@ namespace Pixel_Simulations.UI
             int tilesetWidth = 400;
             int layerWidth = 80;
             int topPanelHeight = 60;
-            int inspectorHeight = 180; // Big, spacious bottom panel
+            int inspectorHeight = 260; // Big, spacious bottom panel
 
             UpscaleFactor = editorUpscaler.Scale;
             // Calculate the positions and sizes

@@ -29,7 +29,6 @@
               }
             ]
           },
-          "Tag": null,
           "Size": {
             "X": 1187.4985,
             "Y": 152.10928
@@ -42,7 +41,7 @@
             "Y": 493.84946
           },
           "Tags": [
-            "#reflection"
+            40
           ],
           "LinkedObjects": [],
           "Properties": {
@@ -90,7 +89,6 @@
               }
             ]
           },
-          "Tag": null,
           "Size": {
             "X": 1148.0015,
             "Y": 162.0
@@ -102,9 +100,7 @@
             "X": -383.20935,
             "Y": -490.7104
           },
-          "Tags": [
-            "#reflection"
-          ],
+          "Tags": [],
           "LinkedObjects": [],
           "Properties": {
             "Direction": {
@@ -134,37 +130,114 @@
           "Shape": {
             "Vertices": [
               {
-                "X": -392.70667,
-                "Y": -322.896
+                "X": -416.0,
+                "Y": 144.0
               },
               {
-                "X": -143.70667,
-                "Y": -322.896
+                "X": -145.47485,
+                "Y": 144.0
               },
               {
-                "X": -143.70667,
-                "Y": -70.8186
+                "X": -145.47485,
+                "Y": 302.19305
               },
               {
-                "X": -392.70667,
-                "Y": -70.8186
+                "X": -416.0,
+                "Y": 302.19305
               }
             ]
           },
-          "Tag": "Control",
           "Size": {
-            "X": 249.0,
-            "Y": 252.0774
+            "X": 270.52515,
+            "Y": 158.19305
           },
           "DebugColor": "255,0,0,255",
-          "ID": "69ea0606",
+          "ID": "466298d4",
           "Name": "Control_Shape_3",
           "Position": {
-            "X": -392.70667,
-            "Y": -322.896
+            "X": -416.0,
+            "Y": 144.0
           },
           "Tags": [
-            "#Grass"
+            40
+          ],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 2,
+          "Shape": {
+            "Vertices": [
+              {
+                "X": -465.5204,
+                "Y": -253.5199
+              },
+              {
+                "X": -145.72485,
+                "Y": -253.5199
+              },
+              {
+                "X": -145.72485,
+                "Y": -65.72415
+              },
+              {
+                "X": -465.5204,
+                "Y": -65.72415
+              }
+            ]
+          },
+          "Size": {
+            "X": 319.79553,
+            "Y": 187.79575
+          },
+          "DebugColor": "255,0,0,255",
+          "ID": "891ffb08",
+          "Name": "Control_Shape_4",
+          "Position": {
+            "X": -465.5204,
+            "Y": -253.5199
+          },
+          "Tags": [
+            40
+          ],
+          "LinkedObjects": [],
+          "Properties": {}
+        },
+        {
+          "Type": 2,
+          "Shape": {
+            "Vertices": [
+              {
+                "X": 65.20886,
+                "Y": -318.1211
+              },
+              {
+                "X": 829.1111,
+                "Y": -318.1211
+              },
+              {
+                "X": 829.1111,
+                "Y": -66.22397
+              },
+              {
+                "X": 65.20886,
+                "Y": -66.22397
+              }
+            ]
+          },
+          "Size": {
+            "X": 763.9022,
+            "Y": 251.89713
+          },
+          "DebugColor": "255,0,0,255",
+          "ID": "c9224c3b",
+          "Name": "Control_Shape_5",
+          "Position": {
+            "X": 65.20886,
+            "Y": -318.1211
+          },
+          "Tags": [
+            40
           ],
           "LinkedObjects": [],
           "Properties": {}
@@ -465,6 +538,114 @@
           "Tags": [],
           "LinkedObjects": [],
           "Properties": {}
+        },
+        {
+          "Type": 0,
+          "PrefabID": "BerryBush",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "12388b5b",
+          "Name": "BerryBush_1",
+          "Position": {
+            "X": -270.4804,
+            "Y": -110.98071
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {
+            "FruitID": {
+              "Type": 2,
+              "Value": "201"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "True"
+            }
+          }
+        },
+        {
+          "Type": 0,
+          "PrefabID": "BerryBush",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "d0b075f3",
+          "Name": "BerryBush_2",
+          "Position": {
+            "X": -350.4804,
+            "Y": -217.98071
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {
+            "FruitID": {
+              "Type": 2,
+              "Value": "201"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "True"
+            }
+          }
+        },
+        {
+          "Type": 0,
+          "PrefabID": "BerryBush",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "f8ae52c4",
+          "Name": "BerryBush_3",
+          "Position": {
+            "X": -246.48041,
+            "Y": -287.4807
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {
+            "FruitID": {
+              "Type": 2,
+              "Value": "201"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "True"
+            }
+          }
+        },
+        {
+          "Type": 0,
+          "PrefabID": "BerryBush",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "a9785c79",
+          "Name": "BerryBush_4",
+          "Position": {
+            "X": -189.98041,
+            "Y": -202.48071
+          },
+          "Tags": [],
+          "LinkedObjects": [],
+          "Properties": {
+            "FruitID": {
+              "Type": 2,
+              "Value": "201"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "True"
+            }
+          }
         }
       ]
     },
@@ -21000,7 +21181,7 @@
     },
     {
       "$type": "Mask",
-      "Name": "Mask",
+      "Name": null,
       "IsVisible": true,
       "IsLocked": false,
       "OffsetX": -2,

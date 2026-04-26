@@ -262,9 +262,10 @@ namespace Pixel_Simulations.UI
                 "--- PLAYER ---\n" +
                 $"Pos: {player.Position.X:F1}, {player.Position.Y:F1}\n" +
                 $"Has Texture: {player.Texture != null}\n\n" +
-
+                $"Mouse in World: {_state.input.MouseWorldPosition}"+
                 "--- ITEMS ---\n" +
                 $"Items Loaded: {_state.ItemManager.Items.Count}\n" +
+                $"Grass Count {_state.Grass._bladeCount}"+
                 //$"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
                 //$"Mask Layer Chunks {_state.TerrainMaskChunks.Count}"+
                 "--- MAP ---\n" +

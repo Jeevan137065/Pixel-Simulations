@@ -6,28 +6,6 @@
       "IsVisible": true,
       "IsLocked": false,
       "Chunks": []
-    },
-    {
-      "$type": "Tile",
-      "Name": "Ground",
-      "IsVisible": true,
-      "IsLocked": false,
-      "Chunks": []
-    },
-    {
-      "$type": "Mask",
-      "Name": null,
-      "IsVisible": true,
-      "IsLocked": false,
-      "OffsetX": 0,
-      "OffsetY": -1
-    },
-    {
-      "$type": "Tile",
-      "Name": "Ground",
-      "IsVisible": true,
-      "IsLocked": false,
-      "Chunks": []
     }
   ]
 }

@@ -111,7 +111,7 @@ namespace Pixel_Simulations
 
             // Calculate World Position (Transform screen mouse by camera inverse)
             // Note: Use NativeView because it represents the 480x270 coordinates
-            Matrix invView = Matrix.Invert(camera.SimTransform);
+            Matrix invView = Matrix.Invert(camera.ScreenTransform);
             MouseWorldPosition = Vector2.Transform(MouseScreenPosition, invView);
 
             // Double Click Detection

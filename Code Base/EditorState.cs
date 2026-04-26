@@ -86,14 +86,16 @@ namespace Pixel_Simulations.Editor
     {
         public bool IsOpen = false;
         public string ActiveAtlasName { get; set; }
-        public Rectangle SelectionRect { get; set; }
+        public Rectangle SelectionRect { get; set; } // The yellow drag box
+        public Rectangle BaseSourceRect { get; set; }
         public bool NeedsUIRebuild { get; set; } = false;
         public string TempName { get; set; } = "New_Object";
 
         // --- CHANGED to List and Dictionary! ---
-        public List<string> TempTags { get; set; } = new List<string>();
+        public List<int> TempTags { get; set; } = new List<int>();
         public Dictionary<string, MapProperty> TempProperties { get; set; } = new Dictionary<string, MapProperty>();
-
+        public Dictionary<string, Rectangle> TempAlternateStates { get; set; } = new Dictionary<string, Rectangle>();
+        public string NewStateName { get; set; } = "";
         public Vector2 DragStart { get; set; }
         public bool IsDragging { get; set; }
 
@@ -151,7 +153,6 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public PrefabManager PrefabManager { get; }
         [JsonIgnore] public TagManager TagManager { get; } = new TagManager();
         // Flags for UI state
-        [JsonIgnore] public bool IsTagManagerOpen { get; set; } = false;
         [JsonIgnore] public string ActiveAtlasForCreator { get; set; }
         [JsonIgnore] public bool ShowMaskRed { get; set; } = true;
         [JsonIgnore] public bool ShowMaskGreen { get; set; } = true;

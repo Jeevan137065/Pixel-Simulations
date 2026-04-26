@@ -69,12 +69,6 @@ namespace Pixel_Simulations.Editor
                 // Block keys from reaching the map/camera while typing name
                 return;
             }
-            if (_editorState.IsTagManagerOpen)
-            {
-                _uiManager.TagManagerPanel.Update(input, _eventBus);
-                // Block keys from reaching the map/camera while typing name
-                return;
-            }
             if (_editorState.UI.ActivePanelName == "Viewport" && !_editorState.UI.IsLinkingMode)
             {
                 var activeTool = _editorState.ToolState.ActiveTool;
@@ -462,9 +456,6 @@ namespace Pixel_Simulations.Editor
             eventBus.Subscribe<SavePrefabCommand>(HandleSavePrefab);
             eventBus.Subscribe<ClosePrefabCreatorCommand>(HandleCloseCreator);
             eventBus.Subscribe<DeletePrefabCommand>(HandleDeletePrefab);
-            eventBus.Subscribe<ToggleTagManagerCommand>(cmd => _editorState.IsTagManagerOpen = !_editorState.IsTagManagerOpen);
-            eventBus.Subscribe<SaveTagCommand>(cmd => editorUI.TagManagerPanel.ProcessSaveCommand());
-            eventBus.Subscribe<DeleteTagCommand>(cmd => editorUI.TagManagerPanel.ProcessDeleteCommand(cmd.HashID));
         }
 
         private void HandleCreateTileset(CreateTilesetCommand cmd)
@@ -537,21 +528,32 @@ namespace Pixel_Simulations.Editor
                 var ctx = _editorState.PrefabCreator;
                 ctx.TempName = prefab.ID;
 
-                // --- FIX: Copy Lists and Dictionaries safely ---
-                ctx.TempTags = new List<string>(prefab.Tags);
+                // Copy Lists and Dictionaries safely
+                ctx.TempTags = new List<int>(prefab.Tags);
+
                 ctx.TempProperties = new Dictionary<string, MapProperty>();
                 foreach (var kvp in prefab.Properties)
                 {
                     ctx.TempProperties[kvp.Key] = new MapProperty(kvp.Value.Type, kvp.Value.Value);
                 }
 
+                // --- NEW: Copy Alternate States safely ---
+                ctx.TempAlternateStates = new Dictionary<string, Rectangle>();
+                if (prefab.AlternateStates != null)
+                {
+                    foreach (var kvp in prefab.AlternateStates)
+                    {
+                        ctx.TempAlternateStates[kvp.Key] = kvp.Value;
+                    }
+                }
+
                 ctx.SelectionRect = prefab.SourceRect;
+                ctx.BaseSourceRect = prefab.SourceRect;
                 ctx.ActiveAtlasName = prefab.AtlasName;
                 ctx.NeedsUIRebuild = true;
-                // Reset pan offset so it doesn't spawn off-screen
                 ctx.AtlasPanOffset = Vector2.Zero;
 
-                // Automatically switch to the Object Placer tool so you can paint it immediately!
+                // Switch to the Object Placer tool
                 _eventBus.Publish(new ChangeToolCommand { ToolName = "ObjectPlacer" });
             }
         }
@@ -565,9 +567,10 @@ namespace Pixel_Simulations.Editor
             {
                 // RESET the context for a fresh object
                 ctx.TempName = "New_Object_" + (_editorState.PrefabManager.Prefabs.Count + 1);
-                ctx.TempTags = new List<string>(); // We will use a List now instead of a string!
+                ctx.TempTags = new List<int>(); // We will use a List now instead of a string!
                 ctx.TempProperties = new Dictionary<string, MapProperty>(); // NEW
                 ctx.SelectionRect = new Rectangle(0, 0, 16, 16);
+                ctx.BaseSourceRect = new Rectangle(0, 0, 16, 16);
                 ctx.ActiveAtlasName = cmd.DefaultAtlasName ?? "Basic";
                 ctx.AtlasPanOffset = Vector2.Zero; // Reset camera
 
@@ -589,19 +592,26 @@ namespace Pixel_Simulations.Editor
             {
                 ID = ctx.TempName,
                 AtlasName = ctx.ActiveAtlasName,
-                SourceRect = ctx.SelectionRect,
-
-                // FIX: Copy Lists and Dictionaries safely from the UI context
-                Tags = new List<string>(ctx.TempTags),
+                SourceRect = ctx.BaseSourceRect.IsEmpty ? ctx.SelectionRect : ctx.BaseSourceRect,
+                Tags = new List<int>(ctx.TempTags),
                 Properties = new Dictionary<string, MapProperty>(),
+
+                // --- NEW: Copy the temporary states to the final prefab ---
+                AlternateStates = new Dictionary<string, Rectangle>(),
 
                 Pivot = new Vector2(ctx.SelectionRect.Width / 2, ctx.SelectionRect.Height)
             };
 
-            // Deep copy the properties so editing them later doesn't break the original
+            // Deep copy the properties
             foreach (var kvp in ctx.TempProperties)
             {
                 prefab.Properties[kvp.Key] = new MapProperty(kvp.Value.Type, kvp.Value.Value);
+            }
+
+            // Deep copy the Alternate States
+            foreach (var kvp in ctx.TempAlternateStates)
+            {
+                prefab.AlternateStates[kvp.Key] = kvp.Value;
             }
 
             _editorState.PrefabManager.Prefabs[prefab.ID] = prefab;

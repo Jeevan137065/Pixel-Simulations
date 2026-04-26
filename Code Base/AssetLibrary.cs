@@ -97,7 +97,7 @@ namespace Pixel_Simulations
             // Load Object Atlases
             LoadAtlas("Trees", AtlasType.Object);
             LoadAtlas("Building", AtlasType.Object);
-            LoadAtlas("Trees_n", AtlasType.Normal);
+            LoadAtlas("Trees_n", AtlasType.Object);
             LoadAtlas("Building_n", AtlasType.Normal);
 
             // Load Universal/UI Atlases
@@ -127,7 +127,7 @@ namespace Pixel_Simulations
                 return meta.Texture;
             }
 
-            //System.Diagnostics.Debug.WriteLine($"WARNING: Normal Atlas '{name}' requested but not loaded.");
+            if(name != "Player") System.Diagnostics.Debug.WriteLine($"WARNING: Normal Atlas '{name}' requested but not loaded.");
             return null;
         }
 

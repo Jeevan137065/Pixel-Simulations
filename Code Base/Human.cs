@@ -29,14 +29,18 @@ namespace Pixel_Simulations
         public bool IsMoving => Velocity != Vector2.Zero;
 
         // --- Visual & Shader Properties for GameRenderer ---
+        public Point Size = new Point(32, 64);
+        public Vector2 Origin => new Vector2(Size.X/2, Size.Y/2);
+        public Rectangle SourceRect => new Rectangle(0, 0, Size.X, Size.Y);
+        public Vector2 ProxyPosition => new Vector2(Position.X - Size.X/2, Position.Y - Size.Y/2); //Use to offset bounds to the centered player sprite
+        public Rectangle CollisionBounds => new Rectangle((int)ProxyPosition.X, (int)ProxyPosition.Y, SourceRect.Width, SourceRect.Height);
+        public Vector2 CameraCenter => ProxyPosition + new Vector2(Size.X / 2f, Size.Y / 2f);
+        public Vector2 PlayerCenter => new Vector2(ProxyPosition.X +Origin.X, ProxyPosition.Y + Origin.Y);
+        public Vector2 Foot => new Vector2(ProxyPosition.X + Size.X/2, ProxyPosition.Y + Size.Y); // Exactly the bottom-center-Edge
+        public RectangleF FootBounds => new RectangleF(ProxyPosition.X, Foot.Y - 8, SourceRect.Width, 8);
         public Texture2D Texture => _compositeTarget;
-        public Rectangle SourceRect => new Rectangle(0, 0, 48, 64);
-        public Vector2 Origin => new Vector2(24, 48); // Local pivot inside the 48x64 texture
-        public Vector2 Foot => Position; // World position of the feet
-
-        // FootBounds represents the physical space the player occupies on the ground.
-        // Used for Physics, Grass flattening (Green Channel), and Interaction.
-        public RectangleF FootBounds => new RectangleF(Position.X - 8, Position.Y - 4, 16, 8);
+        // The exact pixel in the 32x64 texture that touches the ground at the center
+        //Center of the sprite
 
         // --- Internal Components ---
         private AnimationManager _animationManager;
@@ -231,24 +235,17 @@ namespace Pixel_Simulations
             // Determine mirroring based on direction
             SpriteEffects effect = (FacingDirection == Direction.West) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-            // Draw all parts relative to the center of the 48x64 render target
-            Vector2 centerOrigin = new Vector2(24, 32);
-
-            // The parts in the spritesheet have their own origin. 
-            // Usually, the origin is the center of the frame (16, 24 for a 32x48 frame).
-            Vector2 partOrigin = new Vector2(24, 32);
-
             foreach (var part in _bodyParts)
             {
                 if (part.SourceRectangle != Rectangle.Empty)
                 {
                     _localSpriteBatch.Draw(
                         _animationManager.SpriteSheet,
-                        centerOrigin,        // Draw at the center of the RenderTarget
+                        CameraCenter,        // Draw at the center of the RenderTarget
                         part.SourceRectangle,
                         Color.White,
                         0f,
-                        partOrigin,          // The origin point within the source frame
+                        PlayerCenter,          // The origin point within the source frame
                         1f,
                         effect,
                         0f
@@ -263,9 +260,8 @@ namespace Pixel_Simulations
         }
         public RectangleF GetInteractionBox()
         {
-            // True center of the player's feet
-            float centerX = Position.X;
-            float feetY = Position.Y + 24;
+            float centerX = Foot.X;
+            float feetY = Foot.Y;
 
             float w = 16;
             float h = 16;
@@ -273,13 +269,9 @@ namespace Pixel_Simulations
 
             return FacingDirection switch
             {
-                // Reach UP from feet
                 Direction.North => new RectangleF(centerX - w / 2, feetY - h - reach, w, reach),
-                // Reach DOWN from feet
                 Direction.South => new RectangleF(centerX - w / 2, feetY, w, reach),
-                // Reach LEFT from center
                 Direction.West => new RectangleF(centerX - w / 2 - reach, feetY - h, reach, h),
-                // Reach RIGHT from center
                 Direction.East => new RectangleF(centerX + w / 2, feetY - h, reach, h),
                 _ => new RectangleF(centerX - w / 2, feetY - h, w, h)
             };
@@ -287,11 +279,6 @@ namespace Pixel_Simulations
 
         // The source rect is the entire composite target
         public Rectangle CurrentFrameRect => new Rectangle(0, 0, _compositeTarget.Width, _compositeTarget.Height);
-
-
-        // The exact Y coordinate of the player's feet touching the ground
-        public float BaseY => Position.Y + 48f;
-
     }
 
     // A simple class to hold the state of a single body part

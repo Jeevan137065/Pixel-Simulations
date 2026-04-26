@@ -102,6 +102,15 @@ namespace Pixel_Simulations.Data
             }
         }
     }
+    [JsonObject(MemberSerialization.OptIn)]
+    public class MapSaveData
+    {
+        // 1. Tracks IDs of base map objects (like trees) the player chopped down
+        [JsonProperty] public HashSet<string> DestroyedBaseIDs { get; set; } = new HashSet<string>();
+
+        // 2. Tracks everything the player has placed on the ground
+        [JsonProperty] public List<PlacedItemObject> PlacedItems { get; set; } = new List<PlacedItemObject>();
+    }
     public static class MapSerializer
     {
         private static readonly JsonSerializerSettings _jsonSettings;
@@ -413,8 +422,8 @@ namespace Pixel_Simulations.Data
 
             // Read Tags
             int tagCount = reader.ReadInt32();
-            obj.Tags = new HashSet<string>();
-            for (int i = 0; i < tagCount; i++) obj.Tags.Add(reader.ReadString());
+            obj.Tags = new HashSet<int>();
+            for (int i = 0; i < tagCount; i++) obj.Tags.Add(reader.ReadInt32());
 
             // --- NEW: READ PROPERTIES ---
             int propCount = reader.ReadInt32();

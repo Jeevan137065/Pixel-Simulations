@@ -1,46 +1,20 @@
 [
   {
-    "HashID": "#Tree",
-    "Name": "Tree",
-    "Description": "",
-    "TagColor": {
-      "B": 87,
-      "G": 139,
-      "R": 46,
-      "A": 255
-    }
+    "ID": 2,
+    "Name": "Hard Collision",
+    "Description": "Hard Defined Boundaries to Stop anything beyond...",
+    "TagColor": "255,0,0,255"
   },
   {
-    "HashID": "#Building",
-    "Name": "Building",
-    "Description": "can be entered",
-    "TagColor": {
-      "B": 225,
-      "G": 105,
-      "R": 65,
-      "A": 255
-    }
+    "ID": 3,
+    "Name": "Soft Collision",
+    "Description": "Normal Collision that are used to Block Player Hitbox for normal things like walls, fences, etc...",
+    "TagColor": "255,112,112,255"
   },
   {
-    "HashID": "#Pine",
-    "Name": "Pine Tree",
-    "Description": "",
-    "TagColor": {
-      "B": 128,
-      "G": 128,
-      "R": 0,
-      "A": 255
-    }
-  },
-  {
-    "HashID": "#Grass",
-    "Name": "#Grass",
-    "Description": "For Spawning Grass",
-    "TagColor": {
-      "B": 87,
-      "G": 139,
-      "R": 46,
-      "A": 255
-    }
+    "ID": 40,
+    "Name": "Grass",
+    "Description": "Use to spawn default green grass",
+    "TagColor": "81,245,122,255"
   }
 ]

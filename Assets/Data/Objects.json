@@ -10,9 +10,9 @@
     },
     "Pivot": "88, 224",
     "Tags": [
-      "tree"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 11,
       "Y": 14
@@ -30,6 +30,7 @@
     "Pivot": "40, 48",
     "Tags": [],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 5,
       "Y": 3
@@ -46,9 +47,9 @@
     },
     "Pivot": "40, 304",
     "Tags": [
-      "#Tree"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 5,
       "Y": 19
@@ -65,9 +66,9 @@
     },
     "Pivot": "64, 304",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 8,
       "Y": 19
@@ -84,9 +85,9 @@
     },
     "Pivot": "160, 224",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 20,
       "Y": 14
@@ -103,9 +104,9 @@
     },
     "Pivot": "200, 224",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 25,
       "Y": 14
@@ -122,9 +123,9 @@
     },
     "Pivot": "352, 240",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 44,
       "Y": 15
@@ -141,9 +142,9 @@
     },
     "Pivot": "256, 352",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 32,
       "Y": 22
@@ -160,9 +161,9 @@
     },
     "Pivot": "8, 144",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 1,
       "Y": 9
@@ -179,9 +180,9 @@
     },
     "Pivot": "24, 192",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 3,
       "Y": 12
@@ -198,12 +199,47 @@
     },
     "Pivot": "24, 192",
     "Tags": [
-      "#Building"
     ],
     "Properties": {},
+    "AlternateStates": {},
     "SizeInCells": {
       "X": 3,
       "Y": 12
+    }
+  },
+  {
+    "ID": "BerryBush",
+    "AtlasName": "Trees",
+    "SourceRect": {
+      "X": 64,
+      "Y": 0,
+      "Width": 64,
+      "Height": 64
+    },
+    "Pivot": "32, 64",
+    "Tags": [
+    ],
+    "Properties": {
+      "FruitID": {
+        "Type": 2,
+        "Value": "201"
+      },
+      "HasFruit": {
+        "Type": 3,
+        "Value": "True"
+      }
+    },
+    "AlternateStates": {
+      "Empty": {
+        "X": 0,
+        "Y": 0,
+        "Width": 64,
+        "Height": 64
+      }
+    },
+    "SizeInCells": {
+      "X": 4,
+      "Y": 4
     }
   }
 ]

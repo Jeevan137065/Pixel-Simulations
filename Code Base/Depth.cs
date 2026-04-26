@@ -57,6 +57,31 @@ namespace Pixel_Simulations
 
             spriteBatch.Draw(sprite.Texture, sprite.Position, sprite.SourceRect, Color.White, sprite.Rotation, sprite.Origin, sprite.Scale, SpriteEffects.None, 0f);
         }
+        //use this same function to draw both mask and normal chunks..
+        public void DrawChunks(SpriteBatch sb, Dictionary<Point, Texture2D> chunks, RectangleF streamBounds, Camera camera, BlendState blendState, Color tint, Vector2 offset)
+        {
+            if (chunks == null || chunks.Count == 0) return;
+
+            // Use SimTransform so it aligns perfectly with the 960p Dynamic/Normal layers
+            sb.Begin(SpriteSortMode.Deferred, blendState, SamplerState.PointClamp, null, null, null, camera.SimTransform);
+
+            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE; // 256
+            foreach (var kvp in chunks)
+            {
+                // FIX B: Subtract the offset from the Key to get the correct World Position!
+                // (Because the dictionary Key is the absolute chunk coordinate, but we want to draw it relative to world 0,0)
+                float worldX = (kvp.Key.X + offset.X) * chunkSize;
+                float worldY = (kvp.Key.Y + offset.Y) * chunkSize;
+
+                RectangleF chunkBounds = new RectangleF(worldX, worldY, chunkSize, chunkSize);
+
+                if (streamBounds.Intersects(chunkBounds))
+                {
+                    sb.Draw(kvp.Value, new Vector2(worldX, worldY), tint);
+                }
+            }
+            sb.End();
+        }
         public void DrawTerrainDepth(SpriteBatch spriteBatch, Dictionary<Point, Texture2D> maskChunks, RectangleF streamBounds, Camera camera)
         {
             if (maskChunks == null || maskChunks.Count == 0) 

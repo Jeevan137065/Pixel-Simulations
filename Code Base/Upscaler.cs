@@ -302,7 +302,7 @@ namespace Pixel_Simulations
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // 2. SIMULATION LAYER (960x540)
             _targets[RenderLayer.VolumeDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8 ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory

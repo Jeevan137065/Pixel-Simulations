@@ -1,0 +1,296 @@
+{
+  "CharacterName": "NewHero",
+  "AtlasName": "BodySheet",
+  "StateMachineID": "New_StateMachine",
+  "FrameSize": {
+    "X": 32,
+    "Y": 64
+  },
+  "BodyParts": [
+    "Torso",
+    "Head",
+    "LeftArm",
+    "RightArm",
+    "LeftLeg",
+    "RightLeg"
+  ],
+  "DrawOrders": {
+    "South": {},
+    "East": {
+      "Torso": 1,
+      "LeftArm": 2,
+      "LeftLeg": 3,
+      "RightLeg": 1,
+      "RightArm": 4
+    },
+    "West": {}
+  },
+  "Clips": {
+    "Idle_South": {
+      "Name": "Idle_South",
+      "FPS": 12,
+      "IsLooping": true,
+      "Frames": [
+        {
+          "Parts": {
+            "Torso": {
+              "X": 0,
+              "Y": 384,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 0,
+              "Y": 576,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 0,
+              "Y": 512,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 0,
+              "Y": 448,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 0,
+              "Y": 320,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        }
+      ]
+    },
+    "Idle_East": {
+      "Name": "Idle_East",
+      "FPS": 12,
+      "IsLooping": true,
+      "Frames": [
+        {
+          "Parts": {
+            "Torso": {
+              "X": 64,
+              "Y": 384,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 64,
+              "Y": 576,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 320,
+              "Y": 448,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 64,
+              "Y": 448,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 64,
+              "Y": 320,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        },
+        {
+          "Parts": {
+            "Torso": {
+              "X": 32,
+              "Y": 64,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 32,
+              "Y": 256,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 32,
+              "Y": 192,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 32,
+              "Y": 128,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 32,
+              "Y": 0,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        },
+        {
+          "Parts": {
+            "Torso": {
+              "X": 64,
+              "Y": 64,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 64,
+              "Y": 256,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 64,
+              "Y": 128,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 64,
+              "Y": 0,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 64,
+              "Y": 192,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        },
+        {
+          "Parts": {
+            "Torso": {
+              "X": 96,
+              "Y": 64,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 96,
+              "Y": 256,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 96,
+              "Y": 128,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 96,
+              "Y": 0,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 96,
+              "Y": 192,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        },
+        {
+          "Parts": {
+            "Torso": {
+              "X": 128,
+              "Y": 64,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 128,
+              "Y": 256,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 128,
+              "Y": 128,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 128,
+              "Y": 0,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 128,
+              "Y": 192,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        },
+        {
+          "Parts": {
+            "Torso": {
+              "X": 160,
+              "Y": 64,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftArm": {
+              "X": 160,
+              "Y": 256,
+              "Width": 32,
+              "Height": 64
+            },
+            "LeftLeg": {
+              "X": 160,
+              "Y": 128,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightLeg": {
+              "X": 160,
+              "Y": 0,
+              "Width": 32,
+              "Height": 64
+            },
+            "RightArm": {
+              "X": 160,
+              "Y": 192,
+              "Width": 32,
+              "Height": 64
+            }
+          },
+          "Pivot": "16, 32",
+          "DurationMultiplier": 1.0
+        }
+      ]
+    }
+  }
+}

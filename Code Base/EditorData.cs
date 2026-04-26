@@ -34,7 +34,7 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public string Name { get; set; }
         [JsonProperty] public Vector2 Position { get; set; }
         [JsonProperty] public abstract ObjectType Type { get; }
-        [JsonProperty] public HashSet<string> Tags { get; set; } = new HashSet<string>();
+        [JsonProperty] public HashSet<int> Tags { get; set; } = new HashSet<int>();
         [JsonProperty] public List<string> LinkedObjects { get; set; } = new List<string>();
         [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
     }
@@ -45,8 +45,9 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public string AtlasName { get; set; }
         [JsonProperty] public Rectangle SourceRect { get; set; }
         [JsonProperty] public Vector2 Pivot { get; set; }
-        [JsonProperty] public List<string> Tags { get; set; } = new List<string>();
+        [JsonProperty] public List<int> Tags { get; set; } = new List<int>();
         [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
+        [JsonProperty] public Dictionary<string, Rectangle> AlternateStates { get; set; } = new Dictionary<string, Rectangle>();
         [JsonProperty] public Point SizeInCells => new Point(SourceRect.Width / 16, SourceRect.Height / 16);
     }
     [JsonObject(MemberSerialization.OptIn)]
@@ -54,7 +55,6 @@ namespace Pixel_Simulations.Data
     {
         public override ObjectType Type => ObjectType.Shape; // Add "Shape" to the enum
         [JsonProperty] public Polygon Shape { get; set; }
-        [JsonProperty] public string Tag { get; set; }
         [JsonProperty] public Vector2 Size { get; set; }
         [JsonProperty] public Color DebugColor { get; set; }
 
@@ -136,5 +136,15 @@ namespace Pixel_Simulations.Data
         }
 
         [JsonProperty] public Vector2 Size { get; set; }
+    }
+    [JsonObject(MemberSerialization.OptIn)]
+    public class PlacedItemObject : MapObject
+    {
+        [JsonProperty] public override ObjectType Type => ObjectType.Prop; // Pretend it's a prop for the base engine
+
+        [JsonProperty] public int ItemID { get; set; }
+        [JsonProperty] public int Amount { get; set; } = 1; // Used for Piles
+        [JsonProperty] public int DaysAlive { get; set; } = 0; // Used for Crops
+        [JsonProperty] public int CurrentStageIndex { get; set; } = 0;
     }
 }

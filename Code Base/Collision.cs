@@ -20,8 +20,11 @@ namespace Pixel_Simulations
             foreach (var layer in map.Layers.OfType<ControlLayer>())
             {
                 // Cache Polygons (Shapes)
-                foreach (var shape in layer.Shapes)
-                    _collisionBounds.Add(shape.Shape.GetBounds());
+                    foreach (var shape in layer.Shapes.Where(s => s.Tags.Contains(2)))
+                {
+
+                    if (shape != null) _collisionBounds.Add(shape.Shape.GetBounds());
+                }
 
                 // Cache Rectangles
                 //foreach (var rect in layer.Rectangles)

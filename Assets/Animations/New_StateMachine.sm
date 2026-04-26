@@ -1,0 +1,54 @@
+{
+  "ID": "New_StateMachine",
+  "DefaultState": "Idle",
+  "Variables": {},
+  "States": {
+    "Idle": {
+      "Name": "Idle",
+      "Animations": {},
+      "Transitions": [
+        {
+          "ID": "4b8b9347",
+          "TargetState": "State_515a",
+          "HasExitTime": false,
+          "Conditions": [],
+          "SourcePort": 1,
+          "TargetPort": 1,
+          "LineColor": {
+            "B": 255,
+            "G": 255,
+            "R": 0,
+            "A": 255
+          },
+          "Style": 0,
+          "CustomLabel": ""
+        }
+      ],
+      "GraphPosition": "130, 150",
+      "Size": "160, 45",
+      "NodeColor": {
+        "B": 45,
+        "G": 40,
+        "R": 40,
+        "A": 255
+      },
+      "Shape": 0
+    },
+    "State_515a": {
+      "Name": "State_515a",
+      "Animations": {},
+      "Transitions": [],
+      "GraphPosition": "520, 60",
+      "Size": "160, 45",
+      "NodeColor": {
+        "B": 45,
+        "G": 40,
+        "R": 40,
+        "A": 255
+      },
+      "Shape": 0
+    }
+  },
+  "GraphPanOffset": "-125.500015, -144.99988",
+  "GraphZoom": 3.0
+}
