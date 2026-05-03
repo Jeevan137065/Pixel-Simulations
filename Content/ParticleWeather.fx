@@ -21,7 +21,9 @@ float2 SpriteSize;       // World size (e.g., 8x16 for rain, 8x8 for snow)
 float4 AtlasRect;        // UV Rect for the current weather (X, Y, Width, Height)
 float2 AtlasGrid;        // How many sprites in the rect (Columns, Rows). e.g., (4, 1)
 float2 WindDirection;    // For rotating Rain/Snow
-
+float3 LeafColor1;
+float3 LeafColor2;
+int WeatherType; // 0=Rain, 1=Snow, 2=Dust, 3=Leaf, 4=Hail
 // Input from C# Vertex Buffer
 struct VertexShaderInput
 {
@@ -84,9 +86,27 @@ PixelShaderInput MainVS(VertexShaderInput input)
 
 float4 MainPS(PixelShaderInput input) : SV_TARGET
 {
-    float4 color = tex2D(AtlasSampler, input.TexCoord);
-    color.a *= input.Alpha;
-    return color;
+float4 color = tex2D(AtlasSampler, input.TexCoord);
+
+// If this is a LEAF (WeatherType == 3), we tint the grayscale atlas texture
+if (WeatherType == 3)
+{
+    // Use the particle's X position to randomly assign Color1 or Color2
+    float randomBlend = frac(input.Position.x * 0.123);
+    float3 targetColor = lerp(LeafColor1, LeafColor2, randomBlend);
+
+    // Tint the white texture
+    color.rgb *= targetColor;
+}
+// If HAIL (WeatherType == 4), make it pure white and slightly opaque
+else if (WeatherType == 4)
+{
+    color.rgb = float3(1.0, 1.0, 1.0);
+    color.a *= 0.9;
+}
+
+color.a *= input.Alpha;
+return color;
 }
 
 technique Basic{ pass P0 { VertexShader = compile VS_SHADERMODEL MainVS(); PixelShader = compile PS_SHADERMODEL MainPS(); } }

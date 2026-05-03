@@ -743,7 +743,74 @@ namespace Pixel_Simulations.UI
     }
 
 
+    public class UISlider : UIElement
+    {
+        public float Min { get; set; } = 0f;
+        public float Max { get; set; } = 1f;
+        public float Value { get; set; } = 0.5f;
+        public Action<float> OnValueChanged;
 
+        private bool _isDragging = false;
+
+        public override bool Update(EditorInputState input, EventBus bus)
+        {
+            if (!IsVisible) return false;
+
+            IsHovered = AbsoluteBounds.Contains(input.MouseWindowPosition);
+
+            // Start drag
+            if (IsHovered && input.IsNewLeftClick)
+            {
+                _isDragging = true;
+                // Optionally set focus here if you want to lock it
+            }
+
+            // Process drag
+            if (_isDragging)
+            {
+                if (!input.LeftHold)
+                {
+                    _isDragging = false;
+                }
+                else
+                {
+                    // Calculate value based on mouse X relative to bounds
+                    float localX = input.MouseWindowPosition.X - AbsoluteBounds.X;
+                    float percentage = MathHelper.Clamp(localX / AbsoluteBounds.Width, 0f, 1f);
+
+                    float newValue = Min + (percentage * (Max - Min));
+                    if (Value != newValue)
+                    {
+                        Value = newValue;
+                        OnValueChanged?.Invoke(Value);
+                    }
+                }
+            }
+
+            return IsHovered || _isDragging;
+        }
+
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
+        {
+            if (!IsVisible) return;
+
+            // Draw Track Background
+            sb.FillRectangle(new Rectangle(AbsoluteBounds.X, AbsoluteBounds.Center.Y - 2, AbsoluteBounds.Width, 4), Color.Black);
+
+            // Draw Filled Track
+            float percentage = (Value - Min) / (Max - Min);
+            int filledWidth = (int)(AbsoluteBounds.Width * percentage);
+            sb.FillRectangle(new Rectangle(AbsoluteBounds.X, AbsoluteBounds.Center.Y - 2, filledWidth, 4), Color.LimeGreen);
+
+            // Draw Handle
+            int handleX = AbsoluteBounds.X + filledWidth - 5;
+            Rectangle handleRect = new Rectangle(handleX, AbsoluteBounds.Center.Y - 8, 10, 16);
+            sb.FillRectangle(handleRect, _isDragging ? Color.White : Color.LightGray);
+            sb.DrawRectangle(handleRect, Color.Black, 1);
+
+            base.Draw(sb, ui, theme);
+        }
+    }
 
 
 

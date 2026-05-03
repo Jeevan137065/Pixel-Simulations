@@ -9,159 +9,174 @@ using System.Text.RegularExpressions;
 
 namespace Pixel_Simulations
 {
+
     public class GrassSystem
     {
-        // --- Inner Structures for Organization ---
-
         private GraphicsDevice _device;
         private Effect _effect;
-        private VertexBuffer _vertexBuffer;
-        public int _bladeCount = 0;
-        private Texture2D _noiseMap;
+        private VertexBuffer _bladeBuffer;
+        private VertexBuffer _flowerBuffer;
+        public int _bladeVertCount = 0;
+        private int _flowerVertCount = 0;
+
+        private Texture2D _noiseA;
+        private Texture2D _noiseB;
+        private Color[] _dataA, _dataB;
 
         public GrassSettings Settings;
         public Vector2 PlayerPosition;
         public float Time;
 
-        private Color[] noiseData;
-        int noiseWidth, noiseHeight;
-        public GrassSystem(GraphicsDevice device, GrassSettings initialSettings)
-        {
-            _device = device;
-            Settings = initialSettings;
-        }
+        public GrassSystem(GraphicsDevice device) { _device = device; }
 
-        public void LoadContent(ContentManager content, List<RectangleF> validAreas)
+        public void LoadContent(ContentManager content,NoiseManager noiseManager, List<RectangleF> validAreas)
         {
             _effect = content.Load<Effect>("grass");
-            _noiseMap = content.Load<Texture2D>("WhiteA");
-            LoadNoiseMap(_noiseMap);
+
+            // --- USE THE NOISE MANAGER! ---
+            // Make sure these names match the keys you load in NoiseManager.cs!
+            _noiseA = noiseManager.Noises.ContainsKey("Perlin") ? noiseManager.Noises["Perlin"] : null;
+            _noiseB = noiseManager.Noises.ContainsKey("Streak") ? noiseManager.Noises["Streak"] : null;
+
+            if (_noiseA != null) { _dataA = new Color[_noiseA.Width * _noiseA.Height]; _noiseA.GetData(_dataA); }
+            if (_noiseB != null) { _dataB = new Color[_noiseB.Width * _noiseB.Height]; _noiseB.GetData(_dataB); }
+
+            // --- LOAD JSON DICTIONARY ---
+            string presetPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Data", "GrassPresetsMaster.json");
+            if (System.IO.File.Exists(presetPath))
+            {
+                string json = System.IO.File.ReadAllText(presetPath);
+
+                // Deserialize into a Dictionary
+                var allPresets = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, GrassSettings>>(json);
+
+                if (allPresets != null)
+                {
+                    // Pick the biome you want to spawn! 
+                    // In the future, this string could be passed in dynamically per-map.
+                    string targetBiome = "Spring Grass";
+
+                    if (allPresets.TryGetValue(targetBiome, out var loadedSettings))
+                    {
+                        Settings = loadedSettings;
+                        System.Diagnostics.Debug.WriteLine($"Successfully loaded Grass Biome: {targetBiome}");
+                    }
+                    else
+                    {
+                        // Fallback to the first one in the list if the name is misspelled
+                        Settings = System.Linq.Enumerable.FirstOrDefault(allPresets.Values) ?? new GrassSettings();
+                        System.Diagnostics.Debug.WriteLine($"Target biome not found. Fell back to default.");
+                    }
+                }
+            }
+            else
+            {
+                Settings = new GrassSettings(); // Absolute Fallback
+            }
+
             InitializeField(validAreas);
+        }
+
+        private float SampleNoise(Color[] data, int w, int h, float x, float y)
+        {
+            int nx = (int)Math.Floor(x) % w;
+            int ny = (int)Math.Floor(y) % h;
+            if (nx < 0) nx += w; if (ny < 0) ny += h;
+            return data[ny * w + nx].R / 255.0f;
+        }
+
+        private float GetDualNoise(float x, float y)
+        {
+            float sA = SampleNoise(_dataA, _noiseA.Width, _noiseA.Height, x, y);
+            float sB = SampleNoise(_dataB, _noiseB.Width, _noiseB.Height, x * 1.618f + 50f, y * 1.618f + 50f);
+            return (sA + sB) * 0.5f;
+        }
+
+        private float Hash(float x, float y)
+        {
+            float h = (float)Math.Sin(x * 12.9898f + y * 78.233f) * 43758.5453f;
+            return h - (float)Math.Floor(h);
         }
 
         private void InitializeField(List<RectangleF> validAreas)
         {
-            List<BladeData> blades = new List<BladeData>();
-            Random rand = new Random();
+            var bladeVerts = new List<GrassVertex>();
+            var flowerVerts = new List<GrassVertex>();
 
-            // We use a fixed step but vary spawn chance based on settings
-            float step = Math.Max(1.0f, Settings.DensityStep);
-            int maxAllowedBlades = 500000;
             foreach (var rect in validAreas)
             {
-                // Skip invalid rectangles
-                if (rect.Width <= 0 || rect.Height <= 0) continue;
-
-                for (float x = rect.Left; x < rect.Right; x += step)
+                for (float y = rect.Top; y < rect.Bottom; y += Settings.DensityStep)
                 {
-                    for (float y = rect.Top; y < rect.Bottom; y += step)
+                    for (float x = rect.Left; x < rect.Right; x += Settings.DensityStep)
                     {
-                        if (blades.Count >= maxAllowedBlades) break; ; // Break out completely
+                        float nVal = GetDualNoise(x * 0.2f, y * 0.2f);
+                        if (nVal < Settings.MinThreshold) continue;
 
-                        float noise = GetNoiseValue(x, y);
+                        int count = nVal > Settings.MaxThreshold ? 3 : nVal > Settings.MidThreshold ? 2 : 1;
+                        float heightMod = nVal > Settings.MaxThreshold ? 1.4f : nVal > Settings.MidThreshold ? 0.8f : 0.4f;
 
-                        if (noise < Settings.MinThreshold) continue;
-
-                        int spawnCount = 0;
-                        float heightMod = 0.1f;
-
-                        if (noise > Settings.MinThreshold) { spawnCount = 1; heightMod = 0.4f; }
-                        if (noise > Settings.MidThreshold) { spawnCount = 1 * (int)(1 + Settings.SparseDensity); heightMod = 0.8f; }
-                        else if (noise > Settings.MaxThreshold) { spawnCount = 2; heightMod = 1.4f; }
-
-                        for (int i = 0; i < spawnCount; i++)
+                        for (int i = 0; i < count; i++)
                         {
-                            float jitter = step;
-                            blades.Add(new BladeData
+                            float h = Hash(x + i, y);
+                            float px = x + (h - 0.5f) * Settings.DensityStep;
+                            float py = y + (Hash(x, y + i) - 0.5f) * Settings.DensityStep;
+
+                            float hMod = heightMod * (0.8f + h * 0.4f);
+                            float wOff = h * MathHelper.TwoPi;
+                            float lean = (Hash(x, y * 2) - 0.5f) * 20f;
+                            float var = Hash(x * y, i);
+
+                            int fType = (Settings.FlowerType > 0 && hMod > 0.8f && Hash(x * 3, y * 3) < Settings.FlowerProbability) ? Settings.FlowerType : 0;
+                            float fSize = Settings.FlowerMinSize + Hash(x * 4, y * 4) * (Settings.FlowerMaxSize - Settings.FlowerMinSize);
+
+                            Vector2 root = new Vector2(px, py);
+
+                            // Generate Blade Quads
+                            for (int s = 0; s < Settings.Segments; s++)
                             {
-                                Pos = new Vector2(
-                                    x + (float)(rand.NextDouble() - 0.5) * jitter,
-                                    y + (float)(rand.NextDouble() - 0.5) * jitter),
-                                Wind = (float)rand.NextDouble() * Settings.WindIntensity,
-                                Height = Settings.GlobalHeightBase * heightMod,
-                                Var = (float)rand.NextDouble(),
-                                Lean = (float)(rand.NextDouble() - 0.5) * Settings.RestingCurvature
-                            });
+                                float t0 = (float)s / Settings.Segments;
+                                float t1 = (float)(s + 1) / Settings.Segments;
+
+                                // Tri 1
+                                bladeVerts.Add(new GrassVertex(root, t0, -1f, wOff, hMod, var, lean, Color.White, 0, 0));
+                                bladeVerts.Add(new GrassVertex(root, t1, -1f, wOff, hMod, var, lean, Color.White, 0, 0));
+                                bladeVerts.Add(new GrassVertex(root, t0, 1f, wOff, hMod, var, lean, Color.White, 0, 0));
+                                // Tri 2
+                                bladeVerts.Add(new GrassVertex(root, t0, 1f, wOff, hMod, var, lean, Color.White, 0, 0));
+                                bladeVerts.Add(new GrassVertex(root, t1, -1f, wOff, hMod, var, lean, Color.White, 0, 0));
+                                bladeVerts.Add(new GrassVertex(root, t1, 1f, wOff, hMod, var, lean, Color.White, 0, 0));
+                            }
+
+                            // Generate Flower Quad (Only if it has one)
+                            if (fType > 0)
+                            {
+                                flowerVerts.Add(new GrassVertex(root, 0, -1f, wOff, hMod, var, lean, Color.White, fType, fSize)); // TL
+                                flowerVerts.Add(new GrassVertex(root, 0, 1f, wOff, hMod, var, lean, Color.White, fType, fSize));  // TR
+                                flowerVerts.Add(new GrassVertex(root, 1f, -1f, wOff, hMod, var, lean, Color.White, fType, fSize)); // BL
+
+                                flowerVerts.Add(new GrassVertex(root, 1f, -1f, wOff, hMod, var, lean, Color.White, fType, fSize)); // BL
+                                flowerVerts.Add(new GrassVertex(root, 0, 1f, wOff, hMod, var, lean, Color.White, fType, fSize));  // TR
+                                flowerVerts.Add(new GrassVertex(root, 1f, 1f, wOff, hMod, var, lean, Color.White, fType, fSize));  // BR
+                            }
                         }
                     }
                 }
-            }
 
-            if (blades.Count == 0)
-            {
-                _bladeCount = 0;
-                if (_vertexBuffer != null) { _vertexBuffer.Dispose(); _vertexBuffer = null; }
-                return;
-            }
-
-            blades.Sort((a, b) => a.Pos.Y.CompareTo(b.Pos.Y));
-
-            var vertices = new List<GrassVertex>();
-            foreach (var b in blades) AddBlade(vertices, b);
-
-            _bladeCount = blades.Count;
-            _vertexBuffer = new VertexBuffer(_device, GrassVertex.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
-            _vertexBuffer.SetData(vertices.ToArray());
-        }
-        private void AddBlade(List<GrassVertex> vertices, BladeData b)
-        {
-            Random rand = new Random((int)(b.Pos.X * b.Pos.Y));
-            int tuftSize = Settings.TuftSize;
-            int segCount = Settings.Segments;
-
-            for (int n = 0; n < tuftSize; n++)
-            {
-                // Unique personality for each blade in the clump
-                float individualLean = b.Lean + (float)(rand.NextDouble() - 0.5) * Settings.TuftSpread;
-                float individualHeight = b.Height * (0.8f + (float)rand.NextDouble() * 0.4f);
-                float individualWind = b.Wind + (float)rand.NextDouble();
-                float individualVar = (float)rand.NextDouble();
-
-                for (int i = 0; i < segCount; i++)
+                _bladeVertCount = bladeVerts.Count;
+                if (_bladeVertCount > 0)
                 {
-                    float t0 = i / (float)segCount;
-                    float t1 = (i + 1) / (float)segCount;
+                    _bladeBuffer = new VertexBuffer(_device, GrassVertex.VertexDeclaration, _bladeVertCount, BufferUsage.WriteOnly);
+                    _bladeBuffer.SetData(bladeVerts.ToArray());
+                }
 
-                    // Goal C: Smoothly transition colors between segments
-                    Color c0 = Color.Lerp(Settings.RootColor, Settings.TipColor, t0);
-                    Color c1 = Color.Lerp(Settings.RootColor, Settings.TipColor, t1);
-
-                    AddSegmentVertices(vertices, b.Pos, t0, t1, individualWind, individualHeight, individualVar, individualLean, c0, c1);
+                _flowerVertCount = flowerVerts.Count;
+                if (_flowerVertCount > 0)
+                {
+                    _flowerBuffer = new VertexBuffer(_device, GrassVertex.VertexDeclaration, _flowerVertCount, BufferUsage.WriteOnly);
+                    _flowerBuffer.SetData(flowerVerts.ToArray());
                 }
             }
         }
-        private void AddSegmentVertices(List<GrassVertex> verts, Vector2 root, float t0, float t1, float wind, float height, float var, float lean, Color c0, Color c1)
-        {
-            // A segment is a quad made of two triangles (6 vertices)
-            // Triangle 1
-            verts.Add(new GrassVertex(root, t0, -1.0f, wind, height, var, lean, c0));
-            verts.Add(new GrassVertex(root, t1, -1.0f, wind, height, var, lean, c1));
-            verts.Add(new GrassVertex(root, t0, 1.0f, wind, height, var, lean, c0));
-
-            // Triangle 2
-            verts.Add(new GrassVertex(root, t0, 1.0f, wind, height, var, lean, c0));
-            verts.Add(new GrassVertex(root, t1, -1.0f, wind, height, var, lean, c1));
-            verts.Add(new GrassVertex(root, t1, 1.0f, wind, height, var, lean, c1));
-        }
-        void LoadNoiseMap(Texture2D noiseTexture)
-        {
-            noiseWidth = noiseTexture.Width;
-            noiseHeight = noiseTexture.Height;
-            noiseData = new Color[noiseWidth * noiseHeight];
-            noiseTexture.GetData(noiseData);
-        }
-
-        float GetNoiseValue(float x, float y)
-        {
-            // Scale world coords to noise texture coords (tiling)
-            int nx = (int)Math.Floor(x / 2.0f) % noiseWidth;
-            int ny = (int)Math.Floor(y / 2.0f) % noiseHeight;
-            if (nx < 0) nx += noiseWidth;
-            if (ny < 0) ny += noiseHeight;
-
-            return noiseData[nx + ny * noiseWidth].R / 255.0f;
-        }
-
 
         public void Update(GameTime gameTime, Vector2 playerWorldPos)
         {
@@ -169,39 +184,52 @@ namespace Pixel_Simulations
             PlayerPosition = playerWorldPos;
         }
 
-        public void Draw(Matrix worldViewProjection, Texture2D depthTexture, Vector2 screenRes)
+        public void Draw(Matrix worldViewProjection, Texture2D depthTexture)
         {
-            if (_vertexBuffer == null || _bladeCount == 0) return;
+            if (_bladeVertCount == 0) return;
 
-            _device.SetVertexBuffer(_vertexBuffer);
             _device.DepthStencilState = DepthStencilState.None;
 
-            // 1. Core Transform & Time
             _effect.Parameters["WorldViewProjection"]?.SetValue(worldViewProjection);
             _effect.Parameters["Time"]?.SetValue(Time);
             _effect.Parameters["PlayerPos"]?.SetValue(PlayerPosition);
-
-            // --- NEW: Pass the Interleaving Data to the Shader ---
             _effect.Parameters["ObjectDepthTexture"]?.SetValue(depthTexture);
-            _effect.Parameters["ScreenResolution"]?.SetValue(screenRes);
 
-            // 2. Physics Parameters from Settings
-            _effect.Parameters["WindSpeed"]?.SetValue(Settings.WindSpeed);
-            _effect.Parameters["WindIntensity"]?.SetValue(Settings.WindIntensity);
-            _effect.Parameters["Stiffness"]?.SetValue(Settings.Stiffness);
-            _effect.Parameters["PlayerPushRadius"]?.SetValue(Settings.PlayerPushRadius);
-            _effect.Parameters["PlayerPushStrength"]?.SetValue(Settings.PlayerPushStrength);
+            _effect.Parameters["u_baseH"]?.SetValue(Settings.GlobalHeightBase * 0.15f);
+            _effect.Parameters["u_baseW"]?.SetValue(Settings.BladeThickness * 0.15f);
+            _effect.Parameters["u_taper"]?.SetValue(Settings.Taper);
+            _effect.Parameters["u_curve"]?.SetValue(Settings.RestingCurvature);
 
-            // 3. Artistic Volume Parameters
-            _effect.Parameters["Segments"]?.SetValue((float)Settings.Segments);
-            _effect.Parameters["RestingCurvature"]?.SetValue(Settings.RestingCurvature);
-            _effect.Parameters["BladeThickness"]?.SetValue(Settings.BladeThickness);
-            _effect.Parameters["BladeTaper"]?.SetValue(Settings.BladeTaper);
+            _effect.Parameters["u_wSpd"]?.SetValue(Settings.WindSpeed);
+            _effect.Parameters["u_wInt"]?.SetValue(Settings.WindIntensity);
+            _effect.Parameters["u_stiff"]?.SetValue(Settings.Stiffness);
+            _effect.Parameters["u_pushRad"]?.SetValue(Settings.PlayerPushRadius);
+            _effect.Parameters["u_pushStr"]?.SetValue(Settings.PlayerPushStrength);
 
+            _effect.Parameters["u_cRoot"]?.SetValue(Settings.RootColor.ToVector3());
+            _effect.Parameters["u_cTip"]?.SetValue(Settings.TipColor.ToVector3());
+            _effect.Parameters["u_cFlower"]?.SetValue(Settings.FlowerColor.ToVector3());
+            _effect.Parameters["u_cFlower2"]?.SetValue(Settings.FlowerColor2.ToVector3());
+
+            // 1. Draw Blades
+            _effect.Parameters["u_isFlower"]?.SetValue(0);
+            _device.SetVertexBuffer(_bladeBuffer);
             foreach (var pass in _effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                _device.DrawPrimitives(PrimitiveType.TriangleList, 0, _vertexBuffer.VertexCount / 3);
+                _device.DrawPrimitives(PrimitiveType.TriangleList, 0, _bladeVertCount / 3);
+            }
+
+            // 2. Draw Flowers
+            if (_flowerVertCount > 0)
+            {
+                _effect.Parameters["u_isFlower"]?.SetValue(1);
+                _device.SetVertexBuffer(_flowerBuffer);
+                foreach (var pass in _effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    _device.DrawPrimitives(PrimitiveType.TriangleList, 0, _flowerVertCount / 3);
+                }
             }
         }
     }

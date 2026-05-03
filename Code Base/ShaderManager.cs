@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Pixel_Simulations
 {
@@ -36,7 +37,7 @@ namespace Pixel_Simulations
 
         // --- The Three Sub-Systems ---
         public GPUParticleSystem Particles { get; private set; }
-        public WeatherOverlayRenderer Overlays { get; private set; }
+        public WeatherOverlayRenderer Overlays { get; set; }
         public PostProcessController PostFX { get; private set; }
         public VertexPositionTexture[] FullScreenQuad { get; private set; }
         public ShaderManager(GraphicsDevice graphicsDevice)
@@ -61,30 +62,33 @@ namespace Pixel_Simulations
             };
         }
 
-        public void LoadContent(ContentManager content)
+        public void LoadContent(ContentManager content, NoiseManager ns)
         {
             // Load all Effects
             Effects["ParallaxSprite"] = content.Load<Effect>("ParallaxSprite");
+            Effects["AmbientLighting"] = content.Load<Effect>("AmbientLight");
             Effects["ColorGrading"] = content.Load<Effect>("ColorGrading");
             Effects["Gusting"] = content.Load<Effect>("Gusting");
             Effects["RollingFog"] = content.Load<Effect>("RollingFog");
             Effects["ParticleUpdate"] = content.Load<Effect>("ParticleUpdate");
             Effects["CloudShadows"] = content.Load<Effect>("CloudShadows");
-            Effects["AmbientLighting"] = content.Load<Effect>("AmbientLight");
             Effects["TestWeather"] = content.Load<Effect>("Test");
             Effects["WaterFlood"] = content.Load<Effect>("WaterFlood");
             Effects["ReflectionShader"] = content.Load<Effect>("ReflectionShader");
+            Effects["WindTrails"] = content.Load<Effect>("WindTrails");
+            // Assign your swirl/streak texture to it
             // Load all Textures
             Textures["Noise_Perlin"] = content.Load<Texture2D>("WhiteA");
             Textures["Noise_Blue"] = content.Load<Texture2D>("BlueA");
-            Textures["Atlas_Weather"] = content.Load<Texture2D>("Particle_atlas");
             Effects["WaterFlood"].SetSafe("WaterLevel", 50f / 255f);
             Effects["WaterFlood"].SetSafe("WaterColor", new Vector4(0.1f, 0.4f, 0.8f, 0.6f));
             // Assign static textures to effects immediately
-            Effects["Gusting"].SetSafe("NoiseTexture", Textures["Noise_Perlin"]);
-            Effects["RollingFog"].SetSafe("NoiseTexture", Textures["Noise_Perlin"]);
-            Effects["CloudShadows"].SetSafe("NoiseTexture", Textures["Noise_Perlin"]);
-            Effects["TestWeather"].SetSafe("NoiseTexture", Textures["Noise_Perlin"]);
+            Effects["Gusting"].SetSafe("NoiseTexture", ns.Noises["Perlin"]);
+            Effects["CloudShadows"].SetSafe("NoiseTexture", ns.Noises["Perlin"]);
+            Effects["WindTrails"].SetSafe("NoiseTexture", ns.Noises["Streak"]);
+            Effects["TestWeather"].SetSafe("NoiseTexture", ns.Noises["Perlin"]);
+            Effects["RollingFog"].SetSafe("NoiseTextureA", ns.Noises["Perlin"]);
+            Effects["RollingFog"].SetSafe("NoiseTextureB", Textures["Noise_Blue"]);
         }
 
         // --- Routing methods to keep Game1.cs unchanged ---
@@ -176,68 +180,104 @@ namespace Pixel_Simulations
 
         public void Draw(SpriteBatch spriteBatch, WeatherSimulator weatherSim, Matrix cameraTransform, float totalSeconds)
         {
-            float intensity = weatherSim.CurrentWeather == WeatherType.DustStorm ? weatherSim.Visuals.FogDensity :
-                              weatherSim.CurrentWeather == WeatherType.Snow || weatherSim.CurrentWeather == WeatherType.Blizzard ? weatherSim.Visuals.SnowIntensity :
-                              weatherSim.Visuals.RainIntensity;
+            float rainInt = 0, snowInt = 0, leafInt = 0, hailInt = 0;
+            var type = weatherSim.CurrentWeather;
 
+            // 1. Map Weather to Particle Types
+            if (type == WeatherType.Rain || type == WeatherType.Thunderstorm) rainInt = weatherSim.Visuals.RainIntensity;
+            else if (type == WeatherType.Drizzle) rainInt = weatherSim.Visuals.RainIntensity;
+            else if (type == WeatherType.Snow || type == WeatherType.Blizzard || type == WeatherType.Sleet) snowInt = weatherSim.Visuals.SnowIntensity;
+            else if (type == WeatherType.Hail) hailInt = weatherSim.Visuals.RainIntensity;
+
+            // Wind Leaves
+            if (type == WeatherType.Windy && weatherSim.Visuals.WindVector.X > 20f)
+            {
+                if (weatherSim.CurrentSeason == Season.Autumn || weatherSim.CurrentSeason == Season.Fall) leafInt = 1.0f;
+                if (weatherSim.CurrentSeason == Season.Spring) leafInt = 1.0f;
+            }
+
+            float intensity = Math.Max(rainInt, Math.Max(snowInt, Math.Max(hailInt, leafInt)));
             if (intensity <= 0.01f) return;
 
             int particlesToDraw = (int)(_maxParticles * intensity);
-            float visualWindSpeed = (weatherSim.CurrentClimate.WindKph / 150f) * 200f;
+            float visualWindSpeed = weatherSim.Visuals.WindVector.X;
             float rotation = (float)Math.Atan2(visualWindSpeed, 400f);
 
+            // 2. Seasonal Leaf Colors
+            Color leafCol1 = new Color(211, 84, 0); // Autumn Orange
+            Color leafCol2 = new Color(241, 196, 15); // Autumn Yellow
+
+            if (weatherSim.CurrentSeason == Season.Spring)
+            {
+                leafCol1 = new Color(255, 182, 193); // Pink blossom
+                leafCol2 = new Color(168, 230, 207); // Light green
+            }
+            else if (weatherSim.CurrentSeason == Season.Monsoon || weatherSim.CurrentSeason == Season.Summer)
+            {
+                leafCol1 = new Color(27, 67, 50); // Dark Green
+                leafCol2 = new Color(45, 106, 79); // Mid Green
+            }
+
+            // 3. Draw Procedurally using the 1x1 Pixel
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, cameraTransform);
 
-            var atlas = _manager.Textures["Atlas_Weather"];
-            var type = weatherSim.CurrentWeather;
+            Texture2D pixel = _manager.PixelTexture;
+            Vector2 centerOrigin = new Vector2(0.5f, 0.5f);
 
             for (int i = 0; i < particlesToDraw; i++)
             {
                 Vector4 data = _particleData[i];
-                if (data.W < 0.5f && data.Z < 0) continue;
+                if (data.W < 0.5f && data.Z < 0) continue; // Dead particle
 
-                int baseFrame = (i * 7 + 13) % 4;
-                int animFrame = (baseFrame + (int)(totalSeconds * 12f)) % 4;
-                Rectangle src = default;
-                Vector2 origin = new Vector2(4, 4);
-                float rot = rotation;
                 Vector2 pos = new Vector2(data.X, data.Y);
+                if (data.W < 0.5f) pos.Y -= data.Z; // Apply falling height Z-axis
 
-                if (data.W < 0.5f) // Falling
+                bool isSplashing = (data.W > 0.5f);
+                float splashProgress = isSplashing ? MathHelper.Clamp(-data.Z, 0f, 1f) : 0f;
+
+                // --- DRAW LEAVES ---
+                if (leafInt > 0 && i < particlesToDraw * 0.2f) // Less leaves than rain
                 {
-                    pos.Y -= data.Z;
-                    switch (type)
-                    {
-                        case WeatherType.Rain: src = new Rectangle(animFrame * 8, 0, 8, 16); origin = new Vector2(4, 8); break;
-                        case WeatherType.Snow: src = new Rectangle(32 + (animFrame % 2) * 8, (animFrame / 2) * 8, 8, 8); rot += totalSeconds * (i % 2 == 0 ? 1 : -1); break;
-                        case WeatherType.DustStorm: src = new Rectangle(48 + (animFrame % 2) * 8, (animFrame / 2) * 8, 8, 8); rot += totalSeconds * 2f; break;
-                        case WeatherType.Drizzle: src = new Rectangle(64 + (animFrame % 2) * 8, (animFrame / 2) * 8, 8, 8); rot = 0f; break;
-                        case WeatherType.Thunderstorm:
-                            if (i % 5 == 0) src = new Rectangle(80 + (animFrame % 2) * 8, 0, 8, 8);
-                            else { src = new Rectangle(animFrame * 8, 0, 8, 16); origin = new Vector2(4, 8); }
-                            break;
-                        case WeatherType.Blizzard:
-                            src = i % 5 == 0 ? new Rectangle(80 + (animFrame % 2) * 8, 8, 8, 8) : new Rectangle(32 + (animFrame % 2) * 8, (animFrame / 2) * 8, 8, 8);
-                            rot += totalSeconds * 2f;
-                            break;
-                    }
+                    if (isSplashing) continue; // Leaves don't splash
+                    Color c = (i % 2 == 0) ? leafCol1 : leafCol2;
+                    float leafRot = rotation + (totalSeconds * 5f * (i % 2 == 0 ? 1 : -1)); // Spin
+                    float size = 4f + (i % 4);
+
+                    spriteBatch.Draw(pixel, pos, null, c, leafRot, centerOrigin, new Vector2(size * 1.5f, size), SpriteEffects.None, 0f);
                 }
-                else // Splashing
+                // --- DRAW HAIL ---
+                else if (hailInt > 0)
                 {
-                    float splashProgress = MathHelper.Clamp(-data.Z, 0f, 1f);
-                    rot = 0f; pos = new Vector2(data.X, data.Y);
-                    if (type == WeatherType.Rain || type == WeatherType.Thunderstorm || type == WeatherType.Drizzle)
+                    if (isSplashing) continue;
+                    float size = 4f + (i % 3);
+                    spriteBatch.Draw(pixel, pos, null, Color.White, 0f, centerOrigin, size, SpriteEffects.None, 0f);
+                }
+                // --- DRAW SNOW ---
+                else if (snowInt > 0)
+                {
+                    if (isSplashing) continue;
+                    float size = 2f + (i % 3);
+                    float snowRot = rotation + (totalSeconds * (i % 2 == 0 ? 1 : -1));
+                    spriteBatch.Draw(pixel, pos, null, Color.White * 0.8f, snowRot, centerOrigin, size, SpriteEffects.None, 0f);
+                }
+                // --- DRAW RAIN / DRIZZLE ---
+                else if (rainInt > 0)
+                {
+                    if (isSplashing)
                     {
-                        int sAnim = Math.Min((int)(splashProgress * 4f), 3);
-                        src = new Rectangle(64 + (sAnim % 2) * 8, (sAnim / 2) * 8, 8, 8);
+                        // Draw a tiny expanding splash line horizontally
+                        float splashSize = splashProgress * 6f;
+                        spriteBatch.Draw(pixel, pos, null, Color.White * (1f - splashProgress), 0f, centerOrigin, new Vector2(splashSize, 1.5f), SpriteEffects.None, 0f);
                     }
                     else
                     {
-                        src = new Rectangle((type == WeatherType.DustStorm ? 48 : 32) + (baseFrame % 2) * 8, (baseFrame / 2) * 8, 8, 8);
+                        // Draw Rain Streak
+                        Color rainColor = new Color(150, 200, 255) * 0.6f;
+                        spriteBatch.Draw(pixel, pos, null, rainColor, rotation, centerOrigin, new Vector2(1.5f, 15f), SpriteEffects.None, 0f);
                     }
                 }
-                spriteBatch.Draw(atlas, pos, src, Color.White, rot, origin, 1.0f, SpriteEffects.None, 0f);
             }
+
             spriteBatch.End();
         }
 
@@ -250,7 +290,7 @@ namespace Pixel_Simulations
     public class WeatherOverlayRenderer
     {
         private ShaderManager _manager;
-
+        public Vector3 fogColor = new Vector3(0f, 0f, 0f);
         public WeatherOverlayRenderer(ShaderManager manager) { _manager = manager; }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 cameraPos, Vector2 viewport, WeatherSimulator weatherSim, RenderTarget2D volumeDepth)
@@ -268,50 +308,52 @@ namespace Pixel_Simulations
                 shadows.SetSafe("WindDirection", windDir);
                 shadows.SetSafe("CloudCover", weatherSim.Visuals.CloudCover);
 
-                _manager.GraphicsDevice.BlendState = BlendState.Opaque;
-
-                // 2. Apply the shader
+                _manager.GraphicsDevice.BlendState = BlendState.AlphaBlend; // Use AlphaBlend for shadows
                 shadows.CurrentTechnique.Passes[0].Apply();
-
-                // 3. Draw the Quad! No SpriteBatch needed.
-                _manager.GraphicsDevice.DrawUserPrimitives(
-                    PrimitiveType.TriangleStrip,
-                    _manager.FullScreenQuad,
-                    0,
-                    2
-                );
+                _manager.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _manager.FullScreenQuad, 0, 2);
             }
 
             // 2. FOG
-            if (_manager.Effects.TryGetValue("RollingFog", out Effect fog))
+            float density = weatherSim.Visuals.FogDensity; // 0.0 to 1.0 from WeatherSimulator
+
+            if (density > 0.01f && _manager.Effects.TryGetValue("RollingFog", out Effect fog))
             {
-                fog.SetSafe("CameraPosition", cameraPos);
                 fog.SetSafe("ViewportSize", viewport);
+                fog.SetSafe("Time", time);
+                fog.SetSafe("WindDirection", windDir);
                 fog.SetSafe("VolumeDepthTexture", volumeDepth);
-                fog.SetSafe("MaxAltitude", 150f); // Must match Volumetric Depth pass!
-                fog.SetSafe("FogTopAltitude", 50f);
 
-                float density = Math.Max(weatherSim.Visuals.FogDensity, weatherSim.Visuals.RainIntensity);
-                fog.SetSafe("FogDensity", 1.5f);
+                fog.SetSafe("MaxAltitude", 350f); // Must match your DepthRenderer
+                fog.SetSafe("FogTopAltitude", 120f); // Fog settles in the lower 120 pixels
 
-                Vector3 color = weatherSim.CurrentWeather == WeatherType.DustStorm ? new Vector3(0.6f, 0.4f, 0.2f) : new Vector3(0.5f, 0.55f, 0.6f);
-                fog.SetSafe("FogColor", color);
+                // Push density curve to make it thicker
+                fog.SetSafe("FogDensity", density * 1.5f);
 
-                _manager.GraphicsDevice.BlendState = BlendState.Opaque;
+                // Pick color based on weather
+                fogColor = new Vector3(0.7f, 0.75f, 0.8f);
+                if (weatherSim.CurrentWeather == WeatherType.DustStorm)
+                    fogColor = new Vector3(0.8f, 0.6f, 0.4f);
 
-                // 2. Apply the shader
+                fog.SetSafe("FogColor", fogColor);
+
+                // Draw Full Screen Quad
+                _manager.GraphicsDevice.BlendState = BlendState.AlphaBlend;
                 fog.CurrentTechnique.Passes[0].Apply();
+                _manager.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _manager.FullScreenQuad, 0, 2);
+            }
+            if (weatherSim.CurrentWeather == WeatherType.Windy || weatherSim.CurrentWeather == WeatherType.DustStorm)
+            {
+                if (_manager.Effects.TryGetValue("WindTrails", out Effect windFX))
+                {
+                    windFX.SetSafe("Time", time);
+                    windFX.SetSafe("WindDirection", windDir);
+                    windFX.SetSafe("WindSpeed", weatherSim.CurrentClimate.WindKph * 0.05f);
+                    windFX.SetSafe("Intensity", 1.0f);
 
-                // 3. Draw the Quad! No SpriteBatch needed.
-                _manager.GraphicsDevice.DrawUserPrimitives(
-                    PrimitiveType.TriangleStrip,
-                    _manager.FullScreenQuad,
-                    0,
-                    2
-                );
-                //spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.PointClamp, null, null, fog);
-                //spriteBatch.Draw(_manager.PixelTexture, bounds, Color.White);
-                //spriteBatch.End();
+                    _manager.GraphicsDevice.BlendState = BlendState.Additive; // Additive makes the wind glow slightly
+                    windFX.CurrentTechnique.Passes[0].Apply();
+                    _manager.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, _manager.FullScreenQuad, 0, 2);
+                }
             }
             if (_manager.Effects.TryGetValue("TestWeather", out Effect test))
             {
@@ -408,12 +450,34 @@ namespace Pixel_Simulations
             CurrentTint = tTint;
 
             // --- Ambient Lighting (Day/Night) ---
-            Vector3 ambientLight = timeManager.CurrentAmbientColor;
-            if (weatherSim.CurrentWeather == WeatherType.Thunderstorm) ambientLight *= new Vector3(0.6f, 0.6f, 0.7f);
-            else if (climate.Humidity > 60f) ambientLight *= new Vector3(MathHelper.Lerp(1.0f, 0.7f, weatherSim.Visuals.CloudCover));
-            if (_lightningFlashAmount > 0) ambientLight = Vector3.Lerp(ambientLight, new Vector3(2.0f, 2.0f, 2.5f), _lightningFlashAmount);
+            // --- AMBIENT LIGHTING (DUAL GRADIENT) ---
+            Vector3 topColor = timeManager.CurrentAmbientColorTop.ToVector3();
+            Vector3 bottomColor = timeManager.CurrentAmbientColorBottom.ToVector3();
 
-            _manager.Effects["AmbientLighting"].SetSafe("AmbientColor", ambientLight);
+            // Darken ambient light slightly during heavy weather
+            if (weatherSim.CurrentWeather == WeatherType.Thunderstorm)
+            {
+                topColor *= new Vector3(0.6f, 0.6f, 0.7f);
+                bottomColor *= new Vector3(0.6f, 0.6f, 0.7f);
+            }
+            else if (weatherSim.CurrentClimate.Humidity > 60f)
+            {
+                float cloudDim = MathHelper.Lerp(1.0f, 0.7f, weatherSim.Visuals.CloudCover);
+                topColor *= cloudDim;
+                bottomColor *= cloudDim;
+            }
+
+            // Apply Lightning flash pop
+            if (_lightningFlashAmount > 0)
+            {
+                topColor = Vector3.Lerp(topColor, new Vector3(2.0f, 2.0f, 2.5f), _lightningFlashAmount);
+                bottomColor = Vector3.Lerp(bottomColor, new Vector3(2.0f, 2.0f, 2.5f), _lightningFlashAmount);
+            }
+
+            // Set Shader Parameters
+            _manager.Effects["AmbientLighting"].SetSafe("AmbientColorTop", topColor);
+            _manager.Effects["AmbientLighting"].SetSafe("AmbientColorBottom", bottomColor);
+            _manager.Effects["AmbientLighting"].SetSafe("GradientStyle", timeManager.CurrentGradientStyle);
         }
 
         public Effect[] GetActiveEffects()

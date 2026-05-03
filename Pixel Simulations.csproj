@@ -31,6 +31,9 @@
     <Folder Include="Assets\Maps\" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Assets\Data\GrassPresetsMaster.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Data\interactions.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -41,6 +44,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Data\tags.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Data\TimeofDay.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Maps\CoastTown.map">

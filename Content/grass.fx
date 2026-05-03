@@ -1,118 +1,174 @@
-﻿float4x4 WorldViewProjection;
+﻿#if OPENGL
+#define VS_SHADERMODEL vs_3_0
+#define PS_SHADERMODEL ps_3_0
+#else
+#define VS_SHADERMODEL vs_4_0_level_9_1
+#define PS_SHADERMODEL ps_4_0_level_9_1
+#endif
+
+float4x4 WorldViewProjection;
 float Time;
 float2 PlayerPos;
-float WindSpeed, WindIntensity, Stiffness;
-float PlayerPushStrength, PlayerPushRadius;
-float Segments, RestingCurvature, BladeThickness, BladeTaper;
 
-float2 ScreenResolution;
+// Params
+float u_baseH, u_baseW, u_taper, u_curve;
+float u_wSpd, u_wInt, u_stiff;
+float u_pushRad, u_pushStr;
+float3 u_cRoot, u_cTip, u_cFlower, u_cFlower2;
+int u_isFlower;
+
 Texture2D ObjectDepthTexture;
 sampler2D DepthSampler = sampler_state{ Texture = <ObjectDepthTexture>; AddressU = Clamp; AddressV = Clamp; };
 
 struct VertexInput {
-    float4 RootPos : POSITION0;
+    float3 RootPos : POSITION0;
     float2 T_Side : TEXCOORD0;
     float2 Wind_Height : TEXCOORD1;
     float Variation : TEXCOORD2;
     float4 Color : COLOR0;
+    float4 FloraData : TEXCOORD3; // x=Type, y=Size
 };
 
 struct PixelInput {
-    float4 Position : POSITION0;
-    float4 Color : COLOR0;
-    float DepthValue : TEXCOORD1;
-    float4 ScreenPos : TEXCOORD2;
-    float2 RootUV : TEXCOORD3; // --- NEW: Track where the root is on screen ---
+    float4 Position : SV_POSITION;
+    float DepthValue : TEXCOORD0;
+    float4 ScreenPos : TEXCOORD1;
+    float2 RootUV : TEXCOORD2;
+
+    // Extracted pass-throughs
+    float v_t : TEXCOORD3;
+    float v_var : TEXCOORD4;
+    float2 v_uv : TEXCOORD5;
+    float v_fType : TEXCOORD6;
 };
 
-struct PixelShaderOutput {
-    float4 Color : COLOR0;
-    float4 Normal : COLOR1;
-};
-
-float2 GetBezier(float2 p0, float2 p1, float2 p2, float t) {
-    float invT = 1.0 - t;
-    return invT * invT * p0 + 2.0 * invT * t * p1 + t * t * p2;
+float2 getBezier(float2 p0, float2 p1, float2 p2, float t) {
+    float u = 1.0 - t;
+    return u * u * p0 + 2.0 * u * t * p1 + t * t * p2;
 }
 
 PixelInput MainVS(VertexInput input) {
-    PixelInput output;
+    PixelInput output = (PixelInput)0;
 
     float t = input.T_Side.x;
     float side = input.T_Side.y;
     float2 p0 = input.RootPos.xy;
     float lean = input.RootPos.z;
-    float windOffset = input.Wind_Height.x;
-    float heightScale = input.Wind_Height.y;
+    float windOff = input.Wind_Height.x;
+    float hMod = input.Wind_Height.y;
 
-    float height = 10.0 * heightScale;
-    float sway = sin(Time * WindSpeed + windOffset) * (WindIntensity * height);
+    output.v_var = input.Variation;
+    output.v_fType = input.FloraData.x;
+    float fSize = input.FloraData.y;
+
+    float actualH = u_baseH * hMod;
+    float sway = sin(Time * u_wSpd + windOff) * (u_wInt * actualH);
+    float droop = u_curve * (actualH / 100.0);
 
     float dist = distance(p0, PlayerPos);
     float2 push = float2(0, 0);
-
-    if (dist < PlayerPushRadius) {
-        float force = (PlayerPushRadius - dist) / PlayerPushRadius;
-        push = normalize(p0 - PlayerPos) * (force * 18.0 * PlayerPushStrength);
+    if (dist < u_pushRad) {
+        float force = (u_pushRad - dist) / u_pushRad;
+        push = normalize(p0 - PlayerPos) * (force * 18.0 * u_pushStr);
     }
 
-    float stepT = floor(t * Segments) / Segments;
-    float droop = RestingCurvature * (height / 10.0);
-    float2 p2 = p0 + float2(lean + sway + push.x + droop, -height + abs(push.y * 0.5));
-    float2 p1 = lerp(p0, p2, Stiffness) + float2(droop * 0.2, 2.0);
+    float2 p2 = p0 + float2(lean + sway + push.x + droop, -actualH + abs(sway * 0.1));
+    float2 p1 = p0 + float2(((p2.x - p0.x) * (1.0 - u_stiff)) + (droop * 0.2), -(actualH * 0.5));
 
-    float2 pos = GetBezier(p0, p1, p2, stepT);
-    pos.x += side * (1.0 - (t * BladeTaper)) * BladeThickness;
+    float2 finalPos;
 
-    output.Position = mul(float4(pos, 0, 1), WorldViewProjection);
+    if (u_isFlower == 1) {
+        output.v_uv = float2(side, t);
+        finalPos = p2 + float2(side * fSize, (t - 0.5) * fSize * 2.0);
+    }
+    else {
+        output.v_t = t;
+        finalPos = getBezier(p0, p1, p2, t);
+        float w = u_baseW * (1.0 - (t * u_taper));
+        finalPos.x += side * (w / 2.0);
+    }
+
+    output.Position = mul(float4(finalPos, 0.0, 1.0), WorldViewProjection);
     output.ScreenPos = output.Position;
 
-    // --- NEW: Calculate the Screen UV specifically for the ROOT of the grass! ---
-    float4 rootScreenPos = mul(float4(p0, 0, 1), WorldViewProjection);
+    float4 rootScreenPos = mul(float4(p0, 0.0, 1.0), WorldViewProjection);
     output.RootUV = (rootScreenPos.xy / rootScreenPos.w) * 0.5 + 0.5;
     output.RootUV.y = 1.0 - output.RootUV.y;
-
-    // Depth matching DepthUtil.MAX_WORLD_HEIGHT (32768.0)
     output.DepthValue = p0.y / 32768.0;
-
-    float4 grassColor = input.Color;
-    if (input.Variation > 0.8) grassColor.rgb += float3(0.05, 0.1, -0.05);
-
-    float playerShadow = saturate(dist / (PlayerPushRadius * 0.8));
-    float4 finalGrassColor = lerp(grassColor * 0.1, grassColor, playerShadow);
-
-    output.Color = lerp(finalGrassColor * 0.3, finalGrassColor, t);
 
     return output;
 }
 
-PixelShaderOutput MainPS(PixelInput input) {
-    PixelShaderOutput output;
-    clip(input.Color.a - 0.5);
+float4 MainPS(PixelInput input) : COLOR0{
 
-    // Calculate Screen Space UV for reading Depth
+    // Depth Sorting
     float2 screenUV = (input.ScreenPos.xy / input.ScreenPos.w) * 0.5 + 0.5;
     screenUV.y = 1.0 - screenUV.y;
 
-    // --- 1. REJECT GRASS ON TOP OF OBJECTS ---
-    // Check the Altitude of the pixel where the grass ROOT is touching the ground
     float rootAltitude = tex2D(DepthSampler, input.RootUV).r;
+    if (rootAltitude > 0.03) clip(-1);
 
-    // If the root is sitting higher than 0.03 altitude, it is spawning inside a tree trunk/rock!
-    if (rootAltitude > 0.03) discard;
-
-    // --- 2. REJECT GRASS BEHIND OBJECTS ---
-    // Read the Object's physical Y-Depth from the Green channel
     float objDepth = tex2D(DepthSampler, screenUV).g;
+    if (objDepth > 0.001 && input.DepthValue < objDepth - 0.0005) clip(-1);
 
-    // If an object is blocking this pixel, and the grass is further back (smaller depth), discard!
-    // Adding a tiny bias (0.0005) prevents floating-point Z-fighting on exact edges.
-    if (objDepth > 0.001 && input.DepthValue < objDepth - 0.0005) discard;
+    float4 outColor = float4(0,0,0,0);
 
-    output.Color = input.Color;
-    output.Normal = float4(0.5, 0.4, 1.0, 0.001);
+    if (u_isFlower == 1) {
+        int type = (int)input.v_fType;
+        if (type == 0) clip(-1);
 
-    return output;
+        float alpha = 0.0;
+        float2 c = input.v_uv;
+        float mixFac = 0.0;
+
+        if (type == 1) {
+            alpha = length(c) < 1.0 ? 1.0 : 0.0;
+            mixFac = step(0.5, length(c));
+        }
+ else if (type == 2) {
+  float2 pod = c * float2(2.5, 0.8);
+  alpha = length(max(abs(pod) - float2(0.0, 0.5), 0.0)) < 0.3 ? 1.0 : 0.0;
+  mixFac = step(0.5, c.y);
+}
+else if (type == 3) {
+ float clusters = sin(c.y * 15.0) * 0.2;
+ alpha = abs(c.x) < 0.3 + clusters && abs(c.y) < 0.9 ? 1.0 : 0.0;
+ mixFac = step(0.15, abs(c.x));
+}
+else if (type == 4) {
+ float zigzag = abs(frac(c.y * 4.0) - 0.5);
+ alpha = abs(c.x) < 0.2 + zigzag * 0.4 && abs(c.y) < 0.9 ? 1.0 : 0.0;
+ mixFac = step(0.2, zigzag);
+}
+else if (type == 5) {
+ alpha = (c.y > 0.2 && length(c - float2(sin(c.y * 3.0) * 0.3, 0.0)) < 0.6) ? 1.0 : 0.0;
+ mixFac = step(0.5, c.y);
+}
+else if (type == 6) {
+ float a = atan2(c.y, c.x);
+ float r = 0.4 + 0.6 * cos(a * 5.0);
+ alpha = length(c) < r ? 1.0 : 0.0;
+ mixFac = step(0.5, length(c) / r);
+}
+else if (type == 7) {
+ alpha = (1.0 - abs(c.x) * 4.0) > c.y + 0.5 ? 1.0 : 0.0;
+ mixFac = step(0.3, abs(c.x) * 4.0);
 }
 
-technique GrassDraw{ pass P0 { VertexShader = compile vs_3_0 MainVS(); PixelShader = compile ps_3_0 MainPS(); } }
+if (alpha < 0.5) clip(-1);
+outColor = float4(lerp(u_cFlower2, u_cFlower, mixFac), 1.0);
+
+}
+else {
+ float3 tip = u_cTip;
+ if (input.v_var > 0.8) tip += float3(0.05, 0.1, -0.05);
+
+ float3 baseColor = lerp(u_cRoot, tip, input.v_t);
+ float3 shadedColor = lerp(baseColor * 0.3, baseColor, input.v_t);
+ outColor = float4(shadedColor, 1.0);
+}
+
+return outColor;
+}
+
+technique GrassDraw{ pass P0 { VertexShader = compile VS_SHADERMODEL MainVS(); PixelShader = compile PS_SHADERMODEL MainPS(); } }

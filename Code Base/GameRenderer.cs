@@ -21,9 +21,13 @@ namespace Pixel_Simulations
         private ParallaxRenderer _parallaxRenderer;
         public HUDManager HUD;
         private GraphicsDevice _gd;
-        private PixelTexture pt;
         private readonly List<CachedRenderRegion> _reflectionRegions = new List<CachedRenderRegion>();
-
+        private readonly BlendState WriteBlue = new BlendState
+        {
+            ColorWriteChannels = ColorWriteChannels.Blue,
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.Zero
+        };
         public GameRenderer(GameState state, EntityManager entityManager, RenderPipeline pipeline, int width, int height)
         {
             _state = state;
@@ -41,7 +45,6 @@ namespace Pixel_Simulations
             _parallaxRenderer = new ParallaxRenderer(gd, _state.Shaders.Effects["ParallaxSprite"]);
             _state.GameCamera.Setcamera(_pipeline.NativeRect, _pipeline.SimRect, _pipeline.FinalRect);
             _state.GameCamera.Follow(_state.Player.Position, 1f);
-            pt = new PixelTexture(gd, 1);
             var grassAreas = new List<RectangleF>();
             var grassEntities = _entityManager.GetByTag(100);
             _entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, gd);
@@ -188,17 +191,21 @@ namespace Pixel_Simulations
 
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            // --- 1. PRE-PASSES (e.g. Grass, Particles) ---
-            _state.Shaders.UpdateParticles(gameTime, _state.Weather, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height));
+            // ==========================================
+            // 0. LOGIC PRE-PASSES
+            // ==========================================
+            Vector2 simRes = new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height);
+
+            _state.Shaders.UpdateParticles(gameTime, _state.Weather, _state.GameCamera.Position, simRes);
+
+            // This grabs the interpolated TimeOfDay color from the JSON DB!
             _state.Shaders.UpdatePostProcessing(_state.Weather, _state.TimeSystem, gameTime);
+
             _entityManager.UpdateRenderList(_state);
 
             bool useParallax = _state.DebugPool[GameBool.EnableParallax];
             float strength = _state.ParallaxStrength;
-
-            // Test everywhere the camera can see!
-            RectangleF streamBounds = _state.GameCamera.GetVisibleWorldBounds(_pipeline.SimRect);
-            Vector2 simRes = new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height);
+            RectangleF streamBounds = _state.GetStreamingBounds(_pipeline.NativeRect.Width, _pipeline.NativeRect.Height);
             // ==========================================
             // PASS 1: MULTI-CHANNEL DEPTH GENERATION
             // ==========================================
@@ -240,15 +247,16 @@ namespace Pixel_Simulations
             // ==========================================
             // Grass draws DIRECTLY over objects. Discards blades behind objects using the VolumeDepth map!
             _pipeline._graphicsDevice.BlendState = BlendState.AlphaBlend;
-            _state.Grass.Draw(_state.GameCamera.SimWVP, _pipeline.GetRenderTarget(RenderLayer.VolumeDepth), simRes);
+            Texture2D depthTex = _pipeline.GetRenderTarget(RenderLayer.VolumeDepth);
+            // We pass the SimWVP matrix to correctly scale and position the grass
+            _state.Grass.Draw(_state.GameCamera.NativeWVP, depthTex);
             // ==========================================
             // PASS 6: SHADERS / WATER FLOOD
             // ==========================================
             _pipeline.Begin(RenderLayer.Shader, Color.Transparent);
-            //_state.Shaders.DrawWeatherOverlays(spriteBatch, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height), _state.Weather, depthTarget);
-
+            _state.Shaders.DrawWeatherOverlays(spriteBatch, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height), _state.Weather, _pipeline.GetRenderTarget(RenderLayer.VolumeDepth));
+            _state.Shaders.DrawParticleWeather(spriteBatch, _state.Weather, _state.GameCamera.SimWVP, (float)gameTime.TotalGameTime.TotalSeconds);
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.SimTransform);
-            //_state.Shaders.DrawParticleWeather(spriteBatch, _state.Weather, _state.GameCamera.SimTransform, (float)gameTime.TotalGameTime.TotalSeconds);
             spriteBatch.End();
             // ==========================================
             // PASS 5: POST-PROCESS & COMPOSE

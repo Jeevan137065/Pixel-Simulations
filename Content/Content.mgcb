@@ -3443,3 +3443,9 @@
 /processorParam:TextureFormat=Color
 /build:Wild.png
 
+#begin WindTrails.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:WindTrails.fx
+

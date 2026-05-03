@@ -8,45 +8,43 @@ float2 CameraPosition;
 float2 ViewportSize;
 float Time;
 float2 WindDirection;
-
-// 0.0 = Clear Sky, 1.0 = Completely Overcast
-float CloudCover;
+float CloudCover; // 0.0 (Clear) to 1.0 (Overcast)
 
 Texture2D NoiseTexture;
 sampler NoiseSampler = sampler_state{ Texture = <NoiseTexture>; AddressU = Wrap; AddressV = Wrap; };
 
 float4 MainPS(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : SV_TARGET
 {
-    // 1. World Position
+    // Convert to world space to keep clouds anchored to the world, not the screen
     float2 worldPos = CameraPosition + (texCoord * ViewportSize);
 
-// 2. Scale the noise massively so a single cloud covers multiple screens
-float2 uv = worldPos / 2500.0;
+// 1. Layer 1: Massive, slow base clouds
+float2 uv1 = (worldPos / 3000.0) + (WindDirection * Time * 0.01);
+float n1 = tex2D(NoiseSampler, uv1).r;
 
-// 3. Clouds move high in the atmosphere. We use the wind direction, 
-// but they move smoothly and slowly across the map.
-float2 offset = WindDirection * Time * 0.02;
+// 2. Layer 2: Medium, slightly faster detail clouds
+float2 uv2 = (worldPos / 1500.0) + (WindDirection * Time * 0.02);
+float n2 = tex2D(NoiseSampler, uv2).r;
 
-// 4. Two-Layer FBM for fluffy cloud edge shapes
-float n1 = tex2D(NoiseSampler, uv - offset).r;
-float n2 = tex2D(NoiseSampler, (uv * 2.0) - (offset * 1.5)).r;
-float rawNoise = (n1 * 0.7) + (n2 * 0.3);
+// 3. Layer 3: Small, fast wispy clouds
+float2 uv3 = (worldPos / 500.0) + (WindDirection * Time * 0.035);
+float n3 = tex2D(NoiseSampler, uv3).r;
 
-// 5. Apply Cloud Cover Threshold
-// If CloudCover is low, only the absolute highest peaks of noise become shadows.
-// If CloudCover is high, almost all noise becomes shadow.
-float threshold = 1.0 - CloudCover;
+// Combine using FBM (Fractal Brownian Motion) ratios
+float totalNoise = (n1 * 0.5) + (n2 * 0.3) + (n3 * 0.2);
 
-// Smoothstep gives the shadows soft, blurry edges on the ground
-float shadowAlpha = smoothstep(threshold, threshold + 0.3, rawNoise);
+// Map the CloudCover (0-1) to a threshold.
+// If CloudCover is 1.0, threshold is low (everything is shadowed).
+// If CloudCover is 0.1, threshold is high (only thickest clouds cast shadows).
+float threshold = 1.0 - (CloudCover * 1.2);
 
-// 6. Max Darkness
-// Clouds don't cast pitch-black shadows. We cap the darkness (e.g., 40% opacity max)
-float maxDarkness = 0.4;
-shadowAlpha *= maxDarkness;
+// Smoothstep creates soft, blurry edges for the shadows
+float shadowMask = smoothstep(threshold, threshold + 0.3, totalNoise);
 
-// Output pure black with the calculated alpha
-return float4(0.0, 0.0, 0.0, shadowAlpha);
+// Max shadow opacity is 40% (0.4) so we don't pitch-black the game
+float finalAlpha = shadowMask * 0.4;
+
+return float4(0.0, 0.0, 0.0, finalAlpha);
 }
 
 technique Basic{ pass P0 { PixelShader = compile PS_SHADERMODEL MainPS(); } }

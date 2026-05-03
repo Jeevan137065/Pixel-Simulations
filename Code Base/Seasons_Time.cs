@@ -10,7 +10,11 @@ namespace Pixel_Simulations
     public enum WeatherType
     {
         Clear, PartlyCloudy, Overcast, Fog, Drizzle, Rain, Thunderstorm,
-        Hail, Snow, Blizzard, Sleet, DustStorm
+        Hail, Snow, Blizzard, Sleet, DustStorm, Windy // NEW: Added Windy
+    }
+    public class DailyForecast
+    {
+        public ClimateState Morning, Day, Afternoon, Evening;
     }
 
     public struct ClimateState
@@ -23,14 +27,13 @@ namespace Pixel_Simulations
     }
     public struct SeasonalProfile
     {
-        public Vector2 TempRange;       // Min/Max Temperature (Celsius)
-        public Vector2 HumidityRange;   // Min/Max Humidity (%)
-        public Vector2 WindRange;       // Min/Max Wind (Kph)
-        public Vector2 PressureRange;   // Min/Max Pressure (hPa)
-        public Vector2 InstabilityRange;// Min/Max Instability (0-100)
-
-        // The probability (0.0 to 1.0) of a major weather event (Storm Front, Heatwave, etc.)
-        public float StormProbability;
+        public Vector2 TempRange { get; set; }
+        public Vector2 HumidityRange { get; set; }
+        public Vector2 WindRange { get; set; }
+        public Vector2 PressureRange { get; set; }
+        public Vector2 InstabilityRange { get; set; }
+        public float StormProbability { get; set; }
+        public float FogProbability { get; set; }
     }
     public enum Season
     {

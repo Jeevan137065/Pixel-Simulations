@@ -42,10 +42,12 @@ namespace Pixel_Simulations
         public PrefabManager PrefabManager { get; }
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
+        public TimeManager Calendar { get; private set; }
         public DayTimeManager TimeSystem { get; private set; }
         public InteractionManager Interactions { get; }
         public TagManager tagManager { get; private set; }
         public GrassSystem Grass { get; private set; }
+        public NoiseManager ns { get; set; }
         //useful objects
         public InputManager input { get; }
         public PhysicsManager Physics { get; }
@@ -55,15 +57,18 @@ namespace Pixel_Simulations
         public bool _fKeyPressedLastFrame = false;
         public float ParallaxStrength { get; set; } = 0.15f;
         public Vector2 MaskOffset { get; set; }
+        public int WorldSeed { get; set; } = 42;
         //Debug Bool
         public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
         public GameState()
         {
             GameCamera = new Camera();
             Assets = new AssetLibrary();
+            ns = new NoiseManager();
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
             Weather = new WeatherSimulator();
+            Calendar = new TimeManager();
             TimeSystem = new DayTimeManager();
             input = new InputManager();
             Physics = new PhysicsManager();
@@ -85,7 +90,7 @@ namespace Pixel_Simulations
             DebugPool[GameBool.EnableParallax] = true;
             // 1. Load all raw texture assets first.
             Assets.LoadCoreContent(content);
-
+            ns.LoadContent(content);
             // 2. Load the map data from the file.
             var parentDir = Directory.GetParent(content.RootDirectory)?.FullName ?? content.RootDirectory;
 
@@ -130,10 +135,20 @@ namespace Pixel_Simulations
             }
             string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
             tagManager.Load(tagsPath);
+            string timePath = Path.Combine(parentDir, "Assets", "Data", "TimeOfDay.json");
+            TimeSystem.LoadContent(timePath);
+            // 3. Hook the Calendar to the Weather!
+            // Every time the day changes, the weather generates a new seeded forecast
+            Calendar.OnDayChanged += () => {
+                Weather.GenerateDailyForecast(WorldSeed, Calendar.Year, Calendar.CurrentSeason, Calendar.Day);
+            };
+
+            // Trigger Day 1 explicitly to generate the first weather profile
+            Weather.GenerateDailyForecast(WorldSeed, Calendar.Year, Calendar.CurrentSeason, Calendar.Day);
             // 3. Create all TileSet instances and register them with the TilesetManager.
             // The manager needs the raw textures from the AssetLibrary to do its job.
             InitializeTilesets(graphicsDevice);
-            Grass = new GrassSystem(graphicsDevice,GrassLibrary.GetPreset(GrassPreset.WheatField));
+            Grass = new GrassSystem(graphicsDevice);
             var grassShapes = new List<RectangleF>();
             foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
             {
@@ -142,9 +157,9 @@ namespace Pixel_Simulations
                     grassShapes.Add(sh.Shape.GetBounds());
                 }
             }
-            Grass.LoadContent(content,grassShapes);
+            Grass.LoadContent(content,ns,grassShapes);
             Shaders = new ShaderManager(graphicsDevice);
-            Shaders.LoadContent(content);
+            Shaders.LoadContent(content,ns);
             Physics.LoadMapData(CurrentMap);
             
             // ---------------------------------
@@ -180,7 +195,6 @@ namespace Pixel_Simulations
             input.Update(gameTime,GameCamera);
             Player.Update(gameTime);
             UpdateCameraInput(gameTime);
-            //GameCamera.Follow(Player, 1.0f);
 
             // 3. Update the camera with the desired target
             // Assuming you don't have a single-fire trigger yet, this basic check works:
@@ -191,19 +205,11 @@ namespace Pixel_Simulations
                 // Simple debounce so it doesn't cycle 60 times a second
                 if (!_fKeyPressedLastFrame)
                 {
-                    Weather.CycleWeather();
+                    //Weather.GenerateDailyForecast(42, TimeSystem.Year, TimeSystem.CurrentSeason, TimeSystem.Day);
                 }
                 _fKeyPressedLastFrame = true;
             }
-            else if (keyboardState.IsKeyDown(Keys.Y))
-            {
-                // Simple debounce so it doesn't cycle 60 times a second
-                if (!_fKeyPressedLastFrame)
-                {
-                    Weather.CyclePhase();
-                }
-                _fKeyPressedLastFrame = true;
-            }
+
             if (keyboardState.IsKeyDown(Keys.F))
             {
                 if (!_fKeyPressedLastFrame) TryInteract(); // Fire once per press
@@ -213,19 +219,20 @@ namespace Pixel_Simulations
             {
                 _fKeyPressedLastFrame = false;
             }
-            if(keyboardState.IsKeyDown(Keys.OemCloseBrackets))
-                TimeSystem.AddHours(1f);
-
-            // Press '[' to jump backwards 1 hour
-            if (keyboardState.IsKeyDown(Keys.OemOpenBrackets))
-                TimeSystem.AddHours(-1f);
 
             // Update the weather math
-            TimeSystem.Update(gameTime, Weather.CurrentSeason, Weather.Phase);
-            Grass.Update(gameTime, Player.Foot);
+            float prevTime = TimeSystem.TimeOfDay;
+            TimeSystem.Update(gameTime, Calendar.CurrentSeason, Calendar.GetCurrentPhase());
+            if (prevTime > 23f && TimeSystem.TimeOfDay < 1f)
+            {
+                Calendar.AdvanceDay();
+                GrowCrops(); // Assuming you have this from earlier
+            }
             Weather.Update(gameTime, TimeSystem.TimeOfDay);
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
             Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);
+            
+            Grass.Update(gameTime, Player.Foot);
         }
         private void TryInteract()
         {

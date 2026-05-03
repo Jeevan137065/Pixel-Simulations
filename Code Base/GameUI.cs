@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using System;
 
 namespace Pixel_Simulations.UI
 {
@@ -105,58 +106,91 @@ namespace Pixel_Simulations.UI
 
             else if (_activeTab == "Debug")
             {
-                _contentArea.AddChild(new UILabel { Text = "Game Debug Tools", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UILabel { Text = "Environment Simulation", TextColor = Color.Yellow });
                 _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
 
-                // --- TOGGLE BUTTON HELPERS ---
-                var toggleColBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Show Collisions: {_state.DebugPool[GameBool.ShowCollision]}", BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed };
-                toggleColBtn.OnClick = () =>
-                {
-                    _state.DebugPool[GameBool.ShowCollision] = !_state.DebugPool[GameBool.ShowCollision];
-                    UpdateTabContent(); // Refresh button visuals
+                // --- 1. CALENDAR CONTROLS ---
+                var calRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+
+                var seasonBtn = new UIButton { Size = new Vector2(160, 30), Text = $"Season: {_state.Calendar.CurrentSeason}", BackgroundColor = Color.DarkSlateGray };
+                seasonBtn.OnClick = () => {
+                    int nextS = ((int)_state.Calendar.CurrentSeason + 1) % 6;
+                    _state.Calendar.DebugSetDate((Season)nextS, 1); // Jump to Day 1 of next season
+                    UpdateTabContent();
                 };
+
+                var dayBtn = new UIButton { Size = new Vector2(160, 30), Text = $"Day: {_state.Calendar.Day} ({_state.Calendar.GetCurrentPhase()})", BackgroundColor = Color.DarkSlateGray };
+                dayBtn.OnClick = () => {
+                    int nextD = _state.Calendar.Day + 7; // Jump by a week
+                    if (nextD > 28) nextD = 1;
+                    _state.Calendar.DebugSetDate(_state.Calendar.CurrentSeason, nextD);
+                    UpdateTabContent();
+                };
+
+                calRow.AddChild(seasonBtn);
+                calRow.AddChild(dayBtn);
+                _contentArea.AddChild(calRow);
+
+                // --- 2. TIME SCRUBBER ---
+                var timeRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 15f, PanelBackground = Color.Transparent, Padding = 10f };
+
+                int hrs = (int)_state.TimeSystem.TimeOfDay;
+                int mins = (int)((_state.TimeSystem.TimeOfDay - hrs) * 60);
+                var timeLabel = new UILabel { Text = $"Time: {hrs:D2}:{mins:D2}", TextColor = Color.White };
+
+                var timeSlider = new UISlider
+                {
+                    Size = new Vector2(300, 20),
+                    Min = 0f,
+                    Max = 23.99f,
+                    Value = _state.TimeSystem.TimeOfDay
+                };
+
+                timeSlider.OnValueChanged = (val) => {
+                    _state.TimeSystem.SetTime(val);
+                    int h = (int)val; int m = (int)((val - h) * 60);
+                    timeLabel.Text = $"Time: {h:D2}:{m:D2}";
+                };
+
+                timeRow.AddChild(timeSlider);
+                timeRow.AddChild(timeLabel);
+                _contentArea.AddChild(timeRow);
+
+                // --- 3. WEATHER OVERRIDES ---
+                var weatherRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+
+                string wText = _state.Weather.ForcedWeather.HasValue ? _state.Weather.ForcedWeather.Value.ToString() : "Auto";
+                var toggleWeatherBtn = new UIButton { Size = new Vector2(250, 30), Text = $"Force Weather: {wText}", BackgroundColor = _state.Weather.ForcedWeather.HasValue ? Color.DarkCyan : Color.DarkSlateGray };
+
+                toggleWeatherBtn.OnClick = () => {
+                    if (!_state.Weather.ForcedWeather.HasValue) _state.Weather.ForcedWeather = (WeatherType)0;
+                    else
+                    {
+                        int next = (int)_state.Weather.ForcedWeather.Value + 1;
+                        if (next >= Enum.GetValues(typeof(WeatherType)).Length) _state.Weather.ForcedWeather = null;
+                        else _state.Weather.ForcedWeather = (WeatherType)next;
+                    }
+                    UpdateTabContent();
+                };
+
+                // Live Readout Label
+                var wLiveLabel = new UILabel { Text = $"Live: {_state.Weather.CurrentWeather} ({_state.Weather.CurrentClimate.TempC:F0}C)", TextColor = Color.LimeGreen };
+
+                weatherRow.AddChild(toggleWeatherBtn);
+                weatherRow.AddChild(wLiveLabel);
+                _contentArea.AddChild(weatherRow);
+
+                // --- 4. DEBUG TOGGLES ---
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UILabel { Text = "Visual Debug Toggles:", TextColor = Color.Cyan });
+
+                var toggleColBtn = new UIButton { Size = new Vector2(200, 30), Text = $"Hitboxes: {_state.DebugPool[GameBool.ShowCollision]}", BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed };
+                toggleColBtn.OnClick = () => { _state.DebugPool[GameBool.ShowCollision] = !_state.DebugPool[GameBool.ShowCollision]; UpdateTabContent(); };
                 _contentArea.AddChild(toggleColBtn);
 
-                var toggleLinkBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Show Links: {_state.DebugPool[GameBool.ShowLinks]}", BackgroundColor = _state.DebugPool[GameBool.ShowLinks] ? Color.DarkGreen : Color.DarkRed };
-                toggleLinkBtn.OnClick = () =>
-                {
-                    _state.DebugPool[GameBool.ShowLinks] = !_state.DebugPool[GameBool.ShowLinks];
-                    UpdateTabContent();
-                };
-                _contentArea.AddChild(toggleLinkBtn);
-
-                var toggleShapesBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Show All Shapes: {_state.DebugPool[GameBool.ShowShapes]}", BackgroundColor = _state.DebugPool[GameBool.ShowShapes] ? Color.DarkGreen : Color.DarkRed };
-                toggleShapesBtn.OnClick = () =>
-                {
-                    _state.DebugPool[GameBool.ShowShapes] = !_state.DebugPool[GameBool.ShowShapes];
-                    UpdateTabContent();
-                };
-                _contentArea.AddChild(toggleShapesBtn);
-
-                // Add some info about the Entity Manager
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
-                //_contentArea.AddChild(new UILabel { Text = $"Total Cached Entities: {_state..AllEntities.Count}", TextColor = Color.Cyan });
-                // --- ITEM SPAWNER ROW ---
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
-                _contentArea.AddChild(new UILabel { Text = "Item Spawner:", TextColor = Color.Cyan });
-
-                var row = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
-                var idInput = new UITextBox { Size = new Vector2(100, 30), Placeholder = "ID (e.g. 1)" };
-                var countInput = new UITextBox { Size = new Vector2(100, 30), Placeholder = "Amount" };
-                var spawnBtn = new UIButton { Size = new Vector2(120, 30), Text = "Give Item", BackgroundColor = Color.DarkGreen };
-
-                spawnBtn.OnClick = () => {
-                    if (int.TryParse(idInput.Text, out int id) && int.TryParse(countInput.Text, out int count))
-                    {
-                        int leftover = _state.Player.Inventory.AddItem(id, count, _state.ItemManager);
-                        if (leftover > 0) System.Diagnostics.Debug.WriteLine($"Failed to add {leftover} items.");
-                    }
-                };
-
-                row.AddChild(idInput);
-                row.AddChild(countInput);
-                row.AddChild(spawnBtn);
-                _contentArea.AddChild(row);
+                var toggleParaBtn = new UIButton { Size = new Vector2(200, 30), Text = $"Parallax: {_state.DebugPool[GameBool.EnableParallax]}", BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed };
+                toggleParaBtn.OnClick = () => { _state.DebugPool[GameBool.EnableParallax] = !_state.DebugPool[GameBool.EnableParallax]; UpdateTabContent(); };
+                _contentArea.AddChild(toggleParaBtn);
             }
             else if (_activeTab == "Settings")
             {
@@ -253,19 +287,23 @@ namespace Pixel_Simulations.UI
                 $"Zoom: {cam.Zoom:F2}\n" +
                 $"Cull View: {cam.SimViewBounds}\n\n" +
 
-                "--- MATRICES ---\n" +
-                $"Native M11(ScaleX): {cam.NativeTransform.M11:F3}\n" +
-                $"Native M41(TransX): {cam.SimTransform.M41:F3}\n" +
-                $"Sim M11(ScaleX): {cam.SimTransform.M11:F3}\n" +
-                $"Sim M41(TransX): {cam.SimTransform.M41:F3}\n\n" +
-
+                "--- WEATHER ---\n" +
+                $"CurrentTime: {_state.TimeSystem.TimeOfDay:F3}, {_state.TimeSystem.GetDebugInfo()}\n" +
+                //$"Weather Data: {_state.Weather.CurrentSeason}, {_state.Weather.CurrentClimate}, {_state.Weather.CurrentWeather}\n" +
+                $"Shaders Loaded: {_state.Shaders.Effects.Count}\n" +
+                $"Weather info: {_state.Weather.GetDebugInfo(_state.TimeSystem.TimeOfDay)}\n\n" +
+                //"--- MATRICES ---\n" +
+                //$"Native M11(ScaleX): {cam.NativeTransform.M11:F3}\n" +
+                //$"Native M41(TransX): {cam.SimTransform.M41:F3}\n" +
+                //$"Sim M11(ScaleX): {cam.SimTransform.M11:F3}\n" +
+                //$"Sim M41(TransX): {cam.SimTransform.M41:F3}\n\n" +
                 "--- PLAYER ---\n" +
                 $"Pos: {player.Position.X:F1}, {player.Position.Y:F1}\n" +
                 $"Has Texture: {player.Texture != null}\n\n" +
                 $"Mouse in World: {_state.input.MouseWorldPosition}"+
                 "--- ITEMS ---\n" +
                 $"Items Loaded: {_state.ItemManager.Items.Count}\n" +
-                $"Grass Count {_state.Grass._bladeCount}"+
+                $"Grass Count {_state.Grass._bladeVertCount}"+
                 //$"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
                 //$"Mask Layer Chunks {_state.TerrainMaskChunks.Count}"+
                 "--- MAP ---\n" +
