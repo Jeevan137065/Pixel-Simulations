@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using MonoGame.Extended.ECS;
 using Pixel_Simulations.Data;
 using Pixel_Simulations.UI;
 using System;
@@ -13,8 +14,9 @@ namespace Pixel_Simulations
 {
     public class GameRenderer
     {
+        PixelTexture pt;
         private readonly GameState _state;
-        private readonly EntityManager _entityManager;
+
         private readonly RenderPipeline _pipeline;
         private readonly GameMapRenderer _mapRenderer;
         private readonly VolumetricDepthRenderer _depthRenderer;
@@ -28,10 +30,10 @@ namespace Pixel_Simulations
             ColorSourceBlend = Blend.One,
             ColorDestinationBlend = Blend.Zero
         };
-        public GameRenderer(GameState state, EntityManager entityManager, RenderPipeline pipeline, int width, int height)
+        public GameRenderer(GameState state,  RenderPipeline pipeline, int width, int height)
         {
             _state = state;
-            _entityManager = entityManager;
+           
             _pipeline = pipeline;
             _mapRenderer = new GameMapRenderer(state, width, height);
             _depthRenderer = new VolumetricDepthRenderer();
@@ -43,11 +45,12 @@ namespace Pixel_Simulations
             _gd = gd;
             _depthRenderer.LoadContent(gd, content);
             _parallaxRenderer = new ParallaxRenderer(gd, _state.Shaders.Effects["ParallaxSprite"]);
+            pt = new PixelTexture(gd, 1);
             _state.GameCamera.Setcamera(_pipeline.NativeRect, _pipeline.SimRect, _pipeline.FinalRect);
             _state.GameCamera.Follow(_state.Player.Position, 1f);
             var grassAreas = new List<RectangleF>();
-            var grassEntities = _entityManager.GetByTag(100);
-            _entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, gd);
+            var grassEntities = _state._entityManager.GetByTag(100);
+            _state._entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, gd);
 
             _state.Assets.LoadAtlas("emotes", AtlasType.Universal);
 
@@ -94,7 +97,7 @@ namespace Pixel_Simulations
             _reflectionRegions.Clear();
 
             // Query the fast dictionary for exactly what we need!
-            var reflectionEntities = _entityManager.GetByTag(10);
+            var reflectionEntities = _state._entityManager.GetByTag(10);
 
             foreach (var entity in reflectionEntities)
             {
@@ -201,7 +204,7 @@ namespace Pixel_Simulations
             // This grabs the interpolated TimeOfDay color from the JSON DB!
             _state.Shaders.UpdatePostProcessing(_state.Weather, _state.TimeSystem, gameTime);
 
-            _entityManager.UpdateRenderList(_state);
+            _state._entityManager.UpdateRenderList(_state);
 
             bool useParallax = _state.DebugPool[GameBool.EnableParallax];
             float strength = _state.ParallaxStrength;
@@ -212,8 +215,8 @@ namespace Pixel_Simulations
             _pipeline.Begin(RenderLayer.VolumeDepth, Color.Transparent);
             _depthRenderer.DrawChunks(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White,_state.MaskOffset);
             // DEDICATED DEPTH CALL
-            _entityManager.DrawDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, useParallax, strength);
-
+            _state._entityManager.DrawDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, useParallax, strength, _state._entityManager._drawList);
+            _state._entityManager.DrawDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, false, 0f, _state._entityManager._simulationSprites);
             // ==========================================
             // PASS 3: ALBEDO BACKGROUND (480p)
             // ==========================================
@@ -228,28 +231,34 @@ namespace Pixel_Simulations
             _pipeline.Begin(RenderLayer.Normal, Color.Transparent);
 
             _depthRenderer.DrawChunks(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
-            
-            // ==========================================
-            // PASS 4: OBJECTS (MRT: DYNAMIC & NORMAL)
-            // ==========================================
-            // Now bind BOTH targets for the objects. The shader handles outputting to COLOR0 and COLOR1
-            _pipeline._graphicsDevice.SetRenderTargets(
-                new RenderTargetBinding(_pipeline.GetRenderTarget(RenderLayer.Dynamic)),
-                new RenderTargetBinding(_pipeline.GetRenderTarget(RenderLayer.Normal)));
 
+            // ==========================================
+            // PASS 4: OBJECTS DYNAMIC (ALBEDO)
+            // ==========================================
+            _pipeline._graphicsDevice.SetRenderTarget(_pipeline.GetRenderTarget(RenderLayer.Dynamic));
             _pipeline._graphicsDevice.Clear(Color.Transparent);
 
-            _entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength);
-            _entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength);
+            // Draw the Albedo pass
+            _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
+
+            // ==========================================
+            // PASS 4.1: OBJECTS NORMAL
+            // ==========================================
+            _pipeline._graphicsDevice.SetRenderTarget(_pipeline.GetRenderTarget(RenderLayer.Normal));
+            _pipeline._graphicsDevice.Clear(Color.Transparent); // Clear to empty (flat normals)
+
+            // Draw the Normal pass
+            _state._entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength, _state._entityManager._drawList);
 
             // ==========================================
             // PASS 4: DEPTH-TESTED GRASS
             // ==========================================
+            _pipeline._graphicsDevice.SetRenderTarget(_pipeline.GetRenderTarget(RenderLayer.Dynamic));
             // Grass draws DIRECTLY over objects. Discards blades behind objects using the VolumeDepth map!
             _pipeline._graphicsDevice.BlendState = BlendState.AlphaBlend;
             Texture2D depthTex = _pipeline.GetRenderTarget(RenderLayer.VolumeDepth);
             // We pass the SimWVP matrix to correctly scale and position the grass
-            _state.Grass.Draw(_state.GameCamera.NativeWVP, depthTex);
+            _state.Grass.Draw(_state.GameCamera.SimWVP, depthTex);
             // ==========================================
             // PASS 6: SHADERS / WATER FLOOD
             // ==========================================
@@ -276,6 +285,12 @@ namespace Pixel_Simulations
         }
         public void Debug_Draw(SpriteBatch spriteBatch)
         {
+            if (!_state.IsInventoryOpen)
+            {
+                //spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.ScreenWVP);
+                _state.Player.DrawPlacementPreview(spriteBatch, _state, pt.GetPixelTexture(false));
+                //spriteBatch.End();
+            }
             if (_state.DebugPool[GameBool.ShowCollision] || _state.DebugPool[GameBool.ShowLinks] || _state.DebugPool[GameBool.ShowShapes])
             {
 
@@ -296,7 +311,7 @@ namespace Pixel_Simulations
                 }
 
                 // 2. Delegate map debug drawing to the EntityManager!
-                _entityManager.DrawDebugOverlays(spriteBatch, _state);
+                _state._entityManager.DrawDebugOverlays(spriteBatch, _state);
 
             }
         }

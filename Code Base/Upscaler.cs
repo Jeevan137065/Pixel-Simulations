@@ -10,6 +10,7 @@ namespace Pixel_Simulations
         Albedo,         // 480x270: Static background
         VolumeDepth,    // 960x540: Store Altitude depth of world
         Dynamic,        // 960x540: Grass, Player, NPCs (The G-Buffer Color)
+        Simulation,     // NEW: For Physical/Interactable Items
         Normal,         // 960x540: Normal maps for lighting
         LightMask,      // 960x540: HDR Lighting calculation
         Shader,         // 960p: Weather and Atmospheric Shader
@@ -278,6 +279,7 @@ namespace Pixel_Simulations
                 //RenderLayer.PostProcess,
                 RenderLayer.Albedo,
                 RenderLayer.Dynamic,
+                RenderLayer.Simulation,
                 RenderLayer.Normal,
                 RenderLayer.VolumeDepth,
                 RenderLayer.LightMask,
@@ -306,6 +308,8 @@ namespace Pixel_Simulations
             
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8 ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
+            _targets[RenderLayer.Simulation] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
             // Normals: Used for deferred lighting
             _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
@@ -372,7 +376,7 @@ namespace Pixel_Simulations
 
             // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
-
+            spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, Color.White);
             //spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
 
             spriteBatch.End();

@@ -43,6 +43,9 @@
     <None Update="Assets\Data\Objects.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Data\physical_items.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Data\tags.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

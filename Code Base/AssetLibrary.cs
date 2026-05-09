@@ -103,6 +103,17 @@ namespace Pixel_Simulations
             // Load Universal/UI Atlases
             customFont = content.Load<SpriteFont>("Seattle");
             LoadAtlas("Items", AtlasType.Universal);
+            LoadAtlas("CropA", AtlasType.Universal);
+
+            LoadAtlas("CropB", AtlasType.Universal);
+            LoadAtlas("CropC", AtlasType.Universal);
+            LoadAtlas("Machines", AtlasType.Universal);
+
+            LoadAtlas("CropA_n", AtlasType.Normal);
+            LoadAtlas("CropB_n", AtlasType.Normal);
+            LoadAtlas("CropC_n", AtlasType.Normal);
+            LoadAtlas("Machines_n", AtlasType.Normal);
+
         }
 
         /// <summary>
@@ -112,6 +123,7 @@ namespace Pixel_Simulations
         {
             if (_library.TryGetValue(name, out var meta))
             {
+                //System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested and loaded.");
                 return meta.Texture;
             }
 

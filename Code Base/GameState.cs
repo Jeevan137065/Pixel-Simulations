@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions.Layers;
+using MonoGame.Extended.ECS;
 using Newtonsoft.Json;
 using Pixel_Simulations.Data;
 using Pixel_Simulations.Editor;
@@ -29,7 +30,9 @@ namespace Pixel_Simulations
     {
         // --- Core Data Objects ---
         public Map CurrentMap { get; private set; }
+        public EntityManager _entityManager;
         public MapSaveData ActiveSave { get; private set; } = new MapSaveData();
+        public EventBus Bus { get; private set; }
         public NewPlayer Player { get; private set; }
         // --- Managers and Services ---
         public Camera GameCamera { get; set; }
@@ -60,11 +63,12 @@ namespace Pixel_Simulations
         public int WorldSeed { get; set; } = 42;
         //Debug Bool
         public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
-        public GameState()
+        public GameState(EntityManager entityManager, EventBus eventBus)
         {
             GameCamera = new Camera();
             Assets = new AssetLibrary();
             ns = new NoiseManager();
+            Bus = eventBus;
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
             Weather = new WeatherSimulator();
@@ -75,6 +79,7 @@ namespace Pixel_Simulations
             tagManager = new TagManager();
             ItemManager = new ItemManager();
             Interactions = new InteractionManager();
+            _entityManager = entityManager;
         }
 
         /// <summary>
@@ -141,6 +146,9 @@ namespace Pixel_Simulations
             // Every time the day changes, the weather generates a new seeded forecast
             Calendar.OnDayChanged += () => {
                 Weather.GenerateDailyForecast(WorldSeed, Calendar.Year, Calendar.CurrentSeason, Calendar.Day);
+
+                // THE EMITTER: Broadcast the New Day to the entire game
+                Bus.Publish(new DayAdvancedCommand { DaysPassed = 1 });
             };
 
             // Trigger Day 1 explicitly to generate the first weather profile
@@ -166,7 +174,8 @@ namespace Pixel_Simulations
             // 4. Create the player object.
             Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
             string itemPath = Path.Combine(parentDir, "Assets", "Data", "items.json");
-            ItemManager.Load(itemPath, itemPath);
+            string physicalPath = Path.Combine(parentDir, "Assets", "Data", "physical_items.json");
+            ItemManager.Load(itemPath, physicalPath);
             string interactionsPath = Path.Combine(parentDir, "Assets", "Data", "interactions.json");
             Interactions.Load(interactionsPath);
             Player.LoadContent(content,Physics); // Player loads its own specific content
@@ -226,12 +235,10 @@ namespace Pixel_Simulations
             if (prevTime > 23f && TimeSystem.TimeOfDay < 1f)
             {
                 Calendar.AdvanceDay();
-                GrowCrops(); // Assuming you have this from earlier
             }
             Weather.Update(gameTime, TimeSystem.TimeOfDay);
             Shaders.UpdateParticles(gameTime, Weather,GameCamera.Position,new Vector2(960,540));
             Shaders.UpdatePostProcessing(Weather,TimeSystem,gameTime);
-            
             Grass.Update(gameTime, Player.Foot);
         }
         private void TryInteract()
@@ -369,31 +376,74 @@ namespace Pixel_Simulations
             System.IO.File.WriteAllText(savePath, json);
             System.Diagnostics.Debug.WriteLine("Game Progress Saved!");
         }
-        public void GrowCrops()
+
+        public void AdvanceDailySimulation()
         {
             bool visualChanged = false;
+            List<PlacedItemObject> itemsToDestroy = new List<PlacedItemObject>();
 
-            // We no longer loop over the map layers! We only loop over the player's placed items.
             foreach (var placed in ActiveSave.PlacedItems)
             {
                 var physDef = ItemManager.GetPhysicalDef(placed.ItemID);
-                if (physDef != null && physDef.Type == PlacementType.Crop)
-                {
-                    placed.DaysAlive++;
+                if (physDef == null || placed.CurrentStageIndex >= physDef.Stages.Count) continue;
 
-                    int nextStage = placed.CurrentStageIndex + 1;
-                    if (nextStage < physDef.Stages.Count)
+                var currentStage = physDef.Stages[placed.CurrentStageIndex];
+
+                // --- CROP LOGIC ---
+                if (physDef.Type == PlacementType.Crop)
+                {
+                    // If we are not in the final stage (Rotten/Harvestable)
+                    if (placed.CurrentStageIndex < physDef.Stages.Count - 1)
                     {
-                        if (placed.DaysAlive >= physDef.Stages[nextStage].ThresholdInt1)
+                        placed.DaysInCurrentStage++;
+
+                        // Int1 = Growth Days Required
+                        if (placed.DaysInCurrentStage >= currentStage.ThresholdInt1)
                         {
-                            placed.CurrentStageIndex = nextStage;
+                            placed.DaysInCurrentStage = 0;
+                            placed.CurrentStageIndex++;
                             visualChanged = true;
+                        }
+                    }
+                }
+                // --- PILE DECAY LOGIC ---
+                else if (physDef.Type == PlacementType.Pile)
+                {
+                    // Bool = Can Decay?
+                    if (currentStage.ThresholdBool)
+                    {
+                        placed.DaysInCurrentStage++;
+
+                        // Int2 = Half-Life Decay Days
+                        if (placed.DaysInCurrentStage >= currentStage.ThresholdInt2)
+                        {
+                            placed.Amount = (int)Math.Floor(placed.Amount / 2f); // Halve the amount
+                            placed.DaysInCurrentStage = 0;
+                            visualChanged = true;
+
+                            if (placed.Amount <= 0) itemsToDestroy.Add(placed);
+                            else
+                            {
+                                // Demote visual stage if amount dropped below threshold
+                                while (placed.CurrentStageIndex > 1 && placed.Amount < physDef.Stages[placed.CurrentStageIndex].ThresholdInt1)
+                                {
+                                    placed.CurrentStageIndex--;
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            if (visualChanged) System.Diagnostics.Debug.WriteLine("Crops Grew! (Needs Visual Refresh)");
+            // Clean up destroyed piles
+            foreach (var item in itemsToDestroy)
+            {
+                ActiveSave.PlacedItems.Remove(item);
+                // We will rely on the EntityManager clearing it next frame or you can remove it directly
+            }
+
+            if (visualChanged) System.Diagnostics.Debug.WriteLine("Daily Simulation Complete. Visuals Updated.");
         }
+
     }
 }

@@ -222,19 +222,26 @@ namespace Pixel_Simulations.UI
         }
         public void Draw(SpriteBatch spriteBatch, EditorCamera camera, Rectangle viewportBounds)
         {
-            // Get the visible area of the world from the camera
             RectangleF visibleWorld = camera.GetVisibleWorldBounds(viewportBounds);
             float lineThickness = 1f / camera.Zoom;
 
+            // 1. Draw 16x16 Tile Grid
             if (camera.Zoom >= 0.5f)
             {
                 DrawGridLines(spriteBatch, visibleWorld, CELL_SIZE, _gridColor, lineThickness);
             }
 
+            // 2. NEW: Draw 8x8 Sub-Cell Grid (Only visible when zoomed in closely!)
+            if (camera.Zoom >= 2.0f)
+            {
+                DrawGridLines(spriteBatch, visibleWorld, GridHelper.SUB_CELL_SIZE, Color.White * 0.05f, lineThickness);
+            }
+
+            // 3. Draw Chunk Grid
             int chunkSizePixels = Chunk.CHUNK_SIZE * CELL_SIZE;
             DrawGridLines(spriteBatch, visibleWorld, chunkSizePixels, _chunkGridColor, lineThickness * 2f);
 
-            // Always draw the origin lines.
+            // Origin lines
             spriteBatch.DrawLine(0, visibleWorld.Top, 0, visibleWorld.Bottom, Color.Red * 0.5f, lineThickness * 3f);
             spriteBatch.DrawLine(visibleWorld.Left, 0, visibleWorld.Right, 0, Color.LimeGreen * 0.5f, lineThickness * 3f);
         }

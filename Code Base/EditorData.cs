@@ -140,11 +140,15 @@ namespace Pixel_Simulations.Data
     [JsonObject(MemberSerialization.OptIn)]
     public class PlacedItemObject : MapObject
     {
-        [JsonProperty] public override ObjectType Type => ObjectType.Prop; // Pretend it's a prop for the base engine
-
+        [JsonProperty] public override ObjectType Type => ObjectType.Prop;
         [JsonProperty] public int ItemID { get; set; }
-        [JsonProperty] public int Amount { get; set; } = 1; // Used for Piles
-        [JsonProperty] public int DaysAlive { get; set; } = 0; // Used for Crops
-        [JsonProperty] public int CurrentStageIndex { get; set; } = 0;
+
+        // Stack / Pile Amount
+        [JsonProperty] public int Amount { get; set; } = 1;
+
+        // Simulation Tracking
+        [JsonProperty] public int CurrentStageIndex { get; set; } = 1; // Starts at 1! (0 is Preview)
+        [JsonProperty] public int DaysInCurrentStage { get; set; } = 0; // For Crops & Piles
+        [JsonProperty] public float ProcessingTimer { get; set; } = 0f; // For Machines (In-Game Hours)
     }
 }

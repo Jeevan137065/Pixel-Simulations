@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using Pixel_Simulations.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -217,7 +218,90 @@ namespace Pixel_Simulations
                 .CompareTo(_animationManager.GetDrawOrder(b.Name, FacingDirection, _isTurning))
             );
         }
+        // Inside NewPlayer.cs
+        public void DrawPlacementPreview(SpriteBatch spriteBatch, GameState state, Texture2D pixelTexture)
+        {
+            var heldStack = Inventory.GetSelectedItem();
+            if (heldStack == null || heldStack.Count <= 0 || state.IsInventoryOpen) return;
 
+            var physDef = state.ItemManager.GetPhysicalDef(heldStack.ItemID);
+            if (physDef == null || !physDef.IsPlaceable || physDef.Stages.Count == 0) return;
+
+            Vector2 pivot = new Vector2((physDef.CellWidth * 16) / 2f, physDef.CellHeight * 16);
+            Vector2 lookPos = GetInteractionBox().Center;
+
+            // 1. CHECK IF WE ARE HOVERING AN EXISTING ITEM
+            GameEntity hoveredEntity = state._entityManager.AllEntities.FirstOrDefault(e =>
+            {
+                if (e.BaseData is PlacedItemObject placed)
+                {
+                    var otherDef = state.ItemManager.GetPhysicalDef(placed.ItemID);
+                    if (otherDef != null)
+                    {
+                        Vector2 otherPivot = new Vector2((otherDef.CellWidth * 16) / 2f, otherDef.CellHeight * 16);
+                        RectangleF otherBounds = new RectangleF(e.Position.X - otherPivot.X, e.Position.Y - otherPivot.Y, otherDef.CellWidth * 16, otherDef.CellHeight * 16);
+                        return otherBounds.Contains(lookPos); // Precise mouse intersection
+                    }
+                }
+                return false;
+            });
+
+            float gridLinesThick = 1f;
+
+            // If hovering an item, highlight it and STOP drawing the hologram!
+            if (hoveredEntity != null && hoveredEntity.BaseData is PlacedItemObject hoveredObj)
+            {
+                var otherDef = state.ItemManager.GetPhysicalDef(hoveredObj.ItemID);
+                Vector2 otherPivot = new Vector2((otherDef.CellWidth * 16) / 2f, otherDef.CellHeight * 16);
+                RectangleF highlightBounds = new RectangleF(hoveredEntity.Position.X - otherPivot.X, hoveredEntity.Position.Y - otherPivot.Y, otherDef.CellWidth * 16, otherDef.CellHeight * 16);
+
+                spriteBatch.DrawRectangle(highlightBounds, Color.Yellow * 0.8f, gridLinesThick * 2f);
+                spriteBatch.FillRectangle(highlightBounds, Color.Yellow * 0.2f);
+                return;
+            }
+
+            // 2. NORMAL HOLOGRAM DRAWING (If no item is hovered)
+            Vector2 snapPos = GridHelper.GetPlacementPosition(lookPos, physDef.PrecisionPlacement);
+            Color gridCol = Color.White * 0.15f;
+            float sZ = physDef.PrecisionPlacement ? GridHelper.SUB_CELL_SIZE : GridHelper.TILE_SIZE;
+
+            float startX = snapPos.X - (sZ * 1.5f);
+            float startY = snapPos.Y - sZ;
+            float endX = startX + (sZ * 3);
+            float endY = startY + (sZ * 3);
+
+            for (float x = startX; x <= endX; x += sZ) spriteBatch.DrawLine(x, startY, x, endY, gridCol, gridLinesThick);
+            for (float y = startY; y <= endY; y += sZ) spriteBatch.DrawLine(startX, y, endX, y, gridCol, gridLinesThick);
+
+            var atlas = state.Assets.GetAtlas(physDef.AtlasName);
+            if (atlas != null)
+            {
+                var previewStage = physDef.Stages[0];
+                Rectangle srcRect = new Rectangle(previewStage.SpriteX * 16, previewStage.SpriteY * 16, physDef.CellWidth * 16, physDef.CellHeight * 16);
+
+                RectangleF footprint = new RectangleF(snapPos.X - pivot.X, snapPos.Y - pivot.Y, srcRect.Width, srcRect.Height);
+                bool isBlocked = state.Physics.ResolveMovement(footprint, Vector2.Zero) == Vector2.Zero;
+
+                // Check overlaps with other placed items
+                isBlocked |= state._entityManager.AllEntities.Any(e => {
+                    if (e.BaseData is PlacedItemObject placed)
+                    {
+                        var oDef = state.ItemManager.GetPhysicalDef(placed.ItemID);
+                        if (oDef != null)
+                        {
+                            Vector2 oPivot = new Vector2((oDef.CellWidth * 16) / 2f, oDef.CellHeight * 16);
+                            return footprint.Intersects(new RectangleF(e.Position.X - oPivot.X, e.Position.Y - oPivot.Y, oDef.CellWidth * 16, oDef.CellHeight * 16));
+                        }
+                    }
+                    return false;
+                });
+
+                Color ghostColor = isBlocked ? (Color.Red * 0.5f) : (Color.LimeGreen * 0.6f);
+
+                spriteBatch.Draw(atlas, snapPos, srcRect, ghostColor, 0f, pivot, 1f, SpriteEffects.None, 0f);
+                spriteBatch.DrawRectangle(footprint, ghostColor, gridLinesThick * 2f);
+            }
+        }
         private void ComposeTexture()
         {
             // 1. Store the current render target so we can restore it later

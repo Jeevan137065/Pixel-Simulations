@@ -112,23 +112,31 @@ namespace Pixel_Simulations.UI
                 // --- 1. CALENDAR CONTROLS ---
                 var calRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
 
+                var prevDayBtn = new UIButton { Size = new Vector2(40, 30), Text = "<", BackgroundColor = Color.DarkSlateGray };
+                prevDayBtn.OnClick = () => {
+                    _state.Calendar.DebugSetDate(_state.Calendar.CurrentSeason, _state.Calendar.Day - 1);
+                    UpdateTabContent();
+                };
+
                 var seasonBtn = new UIButton { Size = new Vector2(160, 30), Text = $"Season: {_state.Calendar.CurrentSeason}", BackgroundColor = Color.DarkSlateGray };
                 seasonBtn.OnClick = () => {
                     int nextS = ((int)_state.Calendar.CurrentSeason + 1) % 6;
-                    _state.Calendar.DebugSetDate((Season)nextS, 1); // Jump to Day 1 of next season
+                    _state.Calendar.DebugSetDate((Season)nextS, 1);
                     UpdateTabContent();
                 };
 
                 var dayBtn = new UIButton { Size = new Vector2(160, 30), Text = $"Day: {_state.Calendar.Day} ({_state.Calendar.GetCurrentPhase()})", BackgroundColor = Color.DarkSlateGray };
-                dayBtn.OnClick = () => {
-                    int nextD = _state.Calendar.Day + 7; // Jump by a week
-                    if (nextD > 28) nextD = 1;
-                    _state.Calendar.DebugSetDate(_state.Calendar.CurrentSeason, nextD);
+
+                var nextDayBtn = new UIButton { Size = new Vector2(40, 30), Text = ">", BackgroundColor = Color.DarkGreen };
+                nextDayBtn.OnClick = () => {
+                    _state.Calendar.AdvanceDay(); // This also naturally advances the season if > 28
                     UpdateTabContent();
                 };
 
+                calRow.AddChild(prevDayBtn);
                 calRow.AddChild(seasonBtn);
                 calRow.AddChild(dayBtn);
+                calRow.AddChild(nextDayBtn);
                 _contentArea.AddChild(calRow);
 
                 // --- 2. TIME SCRUBBER ---
@@ -182,15 +190,51 @@ namespace Pixel_Simulations.UI
 
                 // --- 4. DEBUG TOGGLES ---
                 _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
                 _contentArea.AddChild(new UILabel { Text = "Visual Debug Toggles:", TextColor = Color.Cyan });
 
-                var toggleColBtn = new UIButton { Size = new Vector2(200, 30), Text = $"Hitboxes: {_state.DebugPool[GameBool.ShowCollision]}", BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed };
+                var toggleRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+                var toggleColBtn = new UIButton { Size = new Vector2(150, 30), Text = $"Hitboxes: {_state.DebugPool[GameBool.ShowCollision]}", BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed };
                 toggleColBtn.OnClick = () => { _state.DebugPool[GameBool.ShowCollision] = !_state.DebugPool[GameBool.ShowCollision]; UpdateTabContent(); };
-                _contentArea.AddChild(toggleColBtn);
+                toggleRow.AddChild(toggleColBtn);
 
-                var toggleParaBtn = new UIButton { Size = new Vector2(200, 30), Text = $"Parallax: {_state.DebugPool[GameBool.EnableParallax]}", BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed };
+                var toggleParaBtn = new UIButton { Size = new Vector2(150, 30), Text = $"Parallax: {_state.DebugPool[GameBool.EnableParallax]}", BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed };
                 toggleParaBtn.OnClick = () => { _state.DebugPool[GameBool.EnableParallax] = !_state.DebugPool[GameBool.EnableParallax]; UpdateTabContent(); };
-                _contentArea.AddChild(toggleParaBtn);
+                toggleRow.AddChild(toggleParaBtn);
+
+                _contentArea.AddChild(toggleRow);
+
+                // --- 5. ITEM SPAWNER (NEW!) ---
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UILabel { Text = "Item Spawner:", TextColor = Color.Yellow });
+
+                var spawnRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+
+                var idInput = new UITextBox { Size = new Vector2(60, 30), Text = "1", Placeholder = "ID" };
+                // Ensure the text updates as we type
+                idInput.OnTextChanged = (t) => idInput.Text = t;
+
+                var amtInput = new UITextBox { Size = new Vector2(60, 30), Text = "1", Placeholder = "Amt" };
+                amtInput.OnTextChanged = (t) => amtInput.Text = t;
+
+                var spawnBtn = new UIButton { Size = new Vector2(120, 30), Text = "Give to Player", BackgroundColor = Color.DarkGreen };
+                spawnBtn.OnClick = () => {
+                    if (int.TryParse(idInput.Text, out int id) && int.TryParse(amtInput.Text, out int amt))
+                    {
+                        int left = _state.Player.Inventory.AddItem(id, amt, _state.ItemManager);
+                        if (left < amt) System.Diagnostics.Debug.WriteLine($"Spawned {amt - left}x of Item {id}");
+                        else System.Diagnostics.Debug.WriteLine("Inventory is full or Item ID does not exist!");
+                    }
+                };
+
+                spawnRow.AddChild(new UILabel { Text = "ID:", TextColor = Color.LightGray });
+                spawnRow.AddChild(idInput);
+                spawnRow.AddChild(new UILabel { Text = "Amt:", TextColor = Color.LightGray });
+                spawnRow.AddChild(amtInput);
+                spawnRow.AddChild(spawnBtn);
+
+                _contentArea.AddChild(spawnRow);
+
             }
             else if (_activeTab == "Settings")
             {
@@ -302,7 +346,7 @@ namespace Pixel_Simulations.UI
                 $"Has Texture: {player.Texture != null}\n\n" +
                 $"Mouse in World: {_state.input.MouseWorldPosition}"+
                 "--- ITEMS ---\n" +
-                $"Items Loaded: {_state.ItemManager.Items.Count}\n" +
+                $"Items Loaded: {_state.ItemManager.Items.Count} , Physical Items : {_state.ItemManager.PhysicalItems.Count}\n" +
                 $"Grass Count {_state.Grass._bladeVertCount}"+
                 //$"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
                 //$"Mask Layer Chunks {_state.TerrainMaskChunks.Count}"+

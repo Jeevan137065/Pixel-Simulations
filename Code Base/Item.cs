@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Xna.Framework;
 
 namespace Pixel_Simulations
 {
@@ -19,7 +20,7 @@ namespace Pixel_Simulations
 
         [JsonProperty] public float MinWeight { get; set; }
         [JsonProperty] public float MaxWeight { get; set; }
-
+        [JsonProperty("SellValue")] public int SellValue { get; set; } = -1;
         [JsonProperty] public string IconSource { get; set; } // Atlas Name
         [JsonProperty] public Point Coord { get; set; } // Multiplied by 32 in renderer
     }
@@ -28,14 +29,12 @@ namespace Pixel_Simulations
     [JsonObject(MemberSerialization.OptIn)]
     public class PhysicalStage
     {
-        [JsonProperty] public string Name { get; set; }
-        [JsonProperty] public int SpriteX { get; set; }
-        [JsonProperty] public int SpriteY { get; set; }
-
-        // Thresholds
-        public int ThresholdInt1 { get; set; } // Pile: Min Count | Crop: Growth Days
-        public int ThresholdInt2 { get; set; } // Crop: Harvest Item ID | Standard: Item ID
-        public bool ThresholdBool { get; set; } // Crop: Is Ripe | Standard: Is Occupied
+        [JsonProperty("Name")] public string Name { get; set; }
+        [JsonProperty("SpriteX")] public int SpriteX { get; set; }
+        [JsonProperty("SpriteY")] public int SpriteY { get; set; }
+        [JsonProperty("ThresholdInt1")] public int ThresholdInt1 { get; set; }
+        [JsonProperty("ThresholdInt2")] public int ThresholdInt2 { get; set; }
+        [JsonProperty("ThresholdBool")] public bool ThresholdBool { get; set; }
     }
     public class PhysicalItem
     {
@@ -68,22 +67,29 @@ namespace Pixel_Simulations
         }
     }
 
-        [JsonObject(MemberSerialization.OptIn)]
+    [JsonObject(MemberSerialization.OptIn)]
     public class PhysicalItemDefinition
     {
-        [JsonProperty] public int ItemID { get; set; }
-        [JsonProperty] public string AtlasName { get; set; }
-        [JsonProperty] public bool CanBeDropped { get; set; }
-        [JsonProperty] public bool IsPlaceable { get; set; }
-        [JsonProperty] public bool HasCollision { get; set; }
+        // Explicitly map the exact string keys from the JSON
+        [JsonProperty("ItemID")] public int ItemID { get; set; }
+        [JsonProperty("AtlasName")] public string AtlasName { get; set; }
+        [JsonProperty("CanBeDropped")] public bool CanBeDropped { get; set; }
+        [JsonProperty("IsPlaceable")] public bool IsPlaceable { get; set; }
+        [JsonProperty("HasCollision")] public bool HasCollision { get; set; }
 
-        [JsonProperty] public PlacementType Type { get; set; }
+        // This converter tells C# to read "Crop", "Prop", etc., as strings and convert them to the Enum
+        [JsonProperty("IsMultiHarvest")] public bool IsMultiHarvest { get; set; } = false;
+        [JsonProperty("HarvestRevertStage")] public int HarvestRevertStage { get; set; } = 1;
+        [JsonProperty("Type")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PlacementType Type { get; set; }
+        [JsonProperty("PrecisionPlacement")] public bool PrecisionPlacement { get; set; } = false;
 
-        [JsonProperty] public int CellWidth { get; set; }
-        [JsonProperty] public int CellHeight { get; set; }
-        [JsonProperty] public Rectangle Bounds { get; set; }
+        [JsonProperty("CellWidth")] public int CellWidth { get; set; }
+        [JsonProperty("CellHeight")] public int CellHeight { get; set; }
+        [JsonProperty("Bounds")] public Rectangle Bounds { get; set; }
 
-        [JsonProperty] public List<PhysicalStage> Stages { get; set; } = new List<PhysicalStage>();
+        [JsonProperty("Stages")] public List<PhysicalStage> Stages { get; set; } = new List<PhysicalStage>();
     }
     // Represents a stack of items in an inventory slot
     public class ItemStack

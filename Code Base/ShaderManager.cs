@@ -78,8 +78,6 @@ namespace Pixel_Simulations
             Effects["WindTrails"] = content.Load<Effect>("WindTrails");
             // Assign your swirl/streak texture to it
             // Load all Textures
-            Textures["Noise_Perlin"] = content.Load<Texture2D>("WhiteA");
-            Textures["Noise_Blue"] = content.Load<Texture2D>("BlueA");
             Effects["WaterFlood"].SetSafe("WaterLevel", 50f / 255f);
             Effects["WaterFlood"].SetSafe("WaterColor", new Vector4(0.1f, 0.4f, 0.8f, 0.6f));
             // Assign static textures to effects immediately
@@ -88,7 +86,7 @@ namespace Pixel_Simulations
             Effects["WindTrails"].SetSafe("NoiseTexture", ns.Noises["Streak"]);
             Effects["TestWeather"].SetSafe("NoiseTexture", ns.Noises["Perlin"]);
             Effects["RollingFog"].SetSafe("NoiseTextureA", ns.Noises["Perlin"]);
-            Effects["RollingFog"].SetSafe("NoiseTextureB", Textures["Noise_Blue"]);
+            Effects["RollingFog"].SetSafe("NoiseTextureB", ns.Noises["Crater"]);
         }
 
         // --- Routing methods to keep Game1.cs unchanged ---

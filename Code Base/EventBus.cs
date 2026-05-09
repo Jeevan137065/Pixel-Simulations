@@ -1,9 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Pixel_Simulations.Data;
 
-namespace Pixel_Simulations.Data
+namespace Pixel_Simulations
 {
+    public struct InteractionPayload
+    {
+        public string ActionType;       // e.g., "Use", "DayTick"
+        public ItemDefinition Medium;    // The tool or item in hand
+        public int IntValue;            // e.g., Days passed
+        public Point TargetCell;        // The grid cell being targeted
+        public TileInfo TargetTile;      // The tile at the target cell
+    }
+
+    public struct DayAdvancedCommand : ICommand
+    {
+        public int DaysPassed;
+    }
     public class EventBus
     {
         public readonly Dictionary<Type, List<Action<ICommand>>> _subscribers;
@@ -52,3 +69,4 @@ namespace Pixel_Simulations.Data
         }
     }
 }
+

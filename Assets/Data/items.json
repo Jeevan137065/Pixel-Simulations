@@ -1,17 +1,18 @@
 [
   {
     "ID": 0,
-    "Name": "DEBUG AXE",
-    "Description": "This Item had ID 0. DEBUG ONLY",
+    "Name": "DEBUG STONE",
+    "Description": "GREAT JOB. SOME THING IS BROKEN IN GAME CODE TO HAVE THIS GIVEN TO YOU",
     "Category": "DEBUG",
     "ItemTags": [],
-    "MinWeight": 0.5,
-    "MaxWeight": 0.8,
+    "MinWeight": 0.1,
+    "MaxWeight": 0.3,
     "IconSource": "Items",
     "Coord": {
-      "X": 0,
-      "Y": 0
-    }
+      "X": 1,
+      "Y": 2
+    },
+    "SellValue": -1
   },
   {
     "ID": 1,
@@ -158,7 +159,8 @@
     "Coord": {
       "X": 0,
       "Y": 1
-    }
+    },
+    "SellValue": 2
   },
   {
     "ID": 11,
@@ -176,7 +178,8 @@
     "Coord": {
       "X": 1,
       "Y": 1
-    }
+    },
+    "SellValue": 10
   },
   {
     "ID": 12,
@@ -194,7 +197,8 @@
     "Coord": {
       "X": 2,
       "Y": 1
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 13,
@@ -212,7 +216,8 @@
     "Coord": {
       "X": 3,
       "Y": 1
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 14,
@@ -230,7 +235,8 @@
     "Coord": {
       "X": 4,
       "Y": 1
-    }
+    },
+    "SellValue": 8
   },
   {
     "ID": 15,
@@ -248,7 +254,8 @@
     "Coord": {
       "X": 5,
       "Y": 1
-    }
+    },
+    "SellValue": 15
   },
   {
     "ID": 16,
@@ -266,7 +273,8 @@
     "Coord": {
       "X": 6,
       "Y": 1
-    }
+    },
+    "SellValue": 8
   },
   {
     "ID": 17,
@@ -284,7 +292,8 @@
     "Coord": {
       "X": 7,
       "Y": 1
-    }
+    },
+    "SellValue": 15
   },
   {
     "ID": 18,
@@ -302,7 +311,8 @@
     "Coord": {
       "X": 8,
       "Y": 1
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 19,
@@ -320,7 +330,8 @@
     "Coord": {
       "X": 9,
       "Y": 1
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 20,
@@ -338,7 +349,8 @@
     "Coord": {
       "X": 10,
       "Y": 1
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 21,
@@ -356,7 +368,8 @@
     "Coord": {
       "X": 11,
       "Y": 1
-    }
+    },
+    "SellValue": 30
   },
   {
     "ID": 22,
@@ -375,7 +388,8 @@
     "Coord": {
       "X": 12,
       "Y": 1
-    }
+    },
+    "SellValue": 12
   },
   {
     "ID": 23,
@@ -394,7 +408,8 @@
     "Coord": {
       "X": 13,
       "Y": 1
-    }
+    },
+    "SellValue": 15
   },
   {
     "ID": 24,
@@ -413,7 +428,23 @@
     "Coord": {
       "X": 14,
       "Y": 1
-    }
+    },
+    "SellValue": 8
+  },
+  {
+    "ID": 30,
+    "Name": "Stone",
+    "Description": "",
+    "Category": "Material",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 2
+    },
+    "SellValue": 2
   },
   {
     "ID": 100,
@@ -431,10 +462,11 @@
     "Coord": {
       "X": 0,
       "Y": 3
-    }
+    },
+    "SellValue": 1
   },
   {
-    "ID": 101,
+    "ID": 102,
     "Name": "Carrot Seeds",
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
@@ -448,9 +480,10 @@
     "MaxWeight": 0.02,
     "IconSource": "Items",
     "Coord": {
-      "X": 1,
+      "X": 2,
       "Y": 3
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 103,
@@ -467,9 +500,10 @@
     "MaxWeight": 0.02,
     "IconSource": "Items",
     "Coord": {
-      "X": 2,
+      "X": 3,
       "Y": 3
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 104,
@@ -488,11 +522,12 @@
     "Coord": {
       "X": 4,
       "Y": 3
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 105,
-    "Name": "Carrot Seed (Red)s",
+    "Name": "Carrot Seed (Red)",
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
@@ -507,7 +542,8 @@
     "Coord": {
       "X": 5,
       "Y": 3
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 106,
@@ -526,7 +562,8 @@
     "Coord": {
       "X": 6,
       "Y": 3
-    }
+    },
+    "SellValue": 7
   },
   {
     "ID": 107,
@@ -545,7 +582,8 @@
     "Coord": {
       "X": 7,
       "Y": 3
-    }
+    },
+    "SellValue": 8
   },
   {
     "ID": 109,
@@ -564,7 +602,8 @@
     "Coord": {
       "X": 8,
       "Y": 3
-    }
+    },
+    "SellValue": 8
   },
   {
     "ID": 110,
@@ -583,11 +622,12 @@
     "Coord": {
       "X": 9,
       "Y": 3
-    }
+    },
+    "SellValue": 8
   },
   {
     "ID": 111,
-    "Name": "Tomato Seeds",
+    "Name": "Onion Seed",
     "Description": "Plant in Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
@@ -599,15 +639,121 @@
     "MaxWeight": 0.02,
     "IconSource": "Items",
     "Coord": {
+      "X": 10,
+      "Y": 3
+    },
+    "SellValue": 4
+  },
+  {
+    "ID": 130,
+    "Name": "Potato Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 4
+    },
+    "SellValue": 5
+  },
+  {
+    "ID": 131,
+    "Name": "Tomato Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
       "X": 1,
       "Y": 4
-    }
+    },
+    "SellValue": 6
+  },
+  {
+    "ID": 132,
+    "Name": "Egg Plant Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 4
+    },
+    "SellValue": 6
+  },
+  {
+    "ID": 135,
+    "Name": "Corn Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 4
+    },
+    "SellValue": 7
+  },
+  {
+    "ID": 136,
+    "Name": "Cauliflower Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 6,
+      "Y": 4
+    },
+    "SellValue": 9
+  },
+  {
+    "ID": 137,
+    "Name": "Cabbage Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 7,
+      "Y": 4
+    },
+    "SellValue": 10
+  },
+  {
+    "ID": 138,
+    "Name": "Red Cabbage Seed",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 8,
+      "Y": 4
+    },
+    "SellValue": 15
   },
   {
     "ID": 201,
     "Name": "SlamonBerry",
     "Description": "A tart wild berry",
-    "Category": "Forage",
+    "Category": "Crop",
     "ItemTags": [
       "Forage",
       "Edible",
@@ -619,7 +765,8 @@
     "Coord": {
       "X": 2,
       "Y": 5
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 303,
@@ -633,7 +780,8 @@
     "Coord": {
       "X": 0,
       "Y": 6
-    }
+    },
+    "SellValue": 12
   },
   {
     "ID": 304,
@@ -647,7 +795,8 @@
     "Coord": {
       "X": 1,
       "Y": 6
-    }
+    },
+    "SellValue": 15
   },
   {
     "ID": 305,
@@ -661,21 +810,8 @@
     "Coord": {
       "X": 2,
       "Y": 6
-    }
-  },
-  {
-    "ID": 308,
-    "Name": "Red Carrot",
-    "Description": "",
-    "Category": "Crop",
-    "ItemTags": [],
-    "MinWeight": 1,
-    "MaxWeight": 1,
-    "IconSource": "Items",
-    "Coord": {
-      "X": 5,
-      "Y": 6
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 306,
@@ -689,7 +825,8 @@
     "Coord": {
       "X": 3,
       "Y": 6
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 307,
@@ -703,7 +840,23 @@
     "Coord": {
       "X": 4,
       "Y": 6
-    }
+    },
+    "SellValue": 20
+  },
+  {
+    "ID": 308,
+    "Name": "Red Carrot",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 5,
+      "Y": 6
+    },
+    "SellValue": 20
   },
   {
     "ID": 309,
@@ -717,7 +870,8 @@
     "Coord": {
       "X": 6,
       "Y": 6
-    }
+    },
+    "SellValue": 25
   },
   {
     "ID": 310,
@@ -731,7 +885,8 @@
     "Coord": {
       "X": 7,
       "Y": 6
-    }
+    },
+    "SellValue": 25
   },
   {
     "ID": 311,
@@ -745,7 +900,8 @@
     "Coord": {
       "X": 8,
       "Y": 6
-    }
+    },
+    "SellValue": 15
   },
   {
     "ID": 312,
@@ -759,7 +915,8 @@
     "Coord": {
       "X": 9,
       "Y": 6
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 313,
@@ -773,7 +930,8 @@
     "Coord": {
       "X": 10,
       "Y": 6
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 314,
@@ -787,7 +945,8 @@
     "Coord": {
       "X": 11,
       "Y": 6
-    }
+    },
+    "SellValue": 20
   },
   {
     "ID": 315,
@@ -801,7 +960,8 @@
     "Coord": {
       "X": 0,
       "Y": 7
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 316,
@@ -815,7 +975,8 @@
     "Coord": {
       "X": 1,
       "Y": 7
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 317,
@@ -829,7 +990,8 @@
     "Coord": {
       "X": 2,
       "Y": 7
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 318,
@@ -843,7 +1005,8 @@
     "Coord": {
       "X": 3,
       "Y": 7
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 319,
@@ -857,7 +1020,8 @@
     "Coord": {
       "X": 4,
       "Y": 7
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 320,
@@ -871,7 +1035,8 @@
     "Coord": {
       "X": 5,
       "Y": 7
-    }
+    },
+    "SellValue": 5
   },
   {
     "ID": 321,
@@ -885,7 +1050,8 @@
     "Coord": {
       "X": 6,
       "Y": 7
-    }
+    },
+    "SellValue": 18
   },
   {
     "ID": 322,
@@ -899,10 +1065,56 @@
     "Coord": {
       "X": 7,
       "Y": 7
-    }
+    },
+    "SellValue": 9
   },
   {
-    "ID": 323,
+    "ID": 340,
+    "Name": "Potato",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 0,
+      "Y": 8
+    },
+    "SellValue": 16
+  },
+  {
+    "ID": 341,
+    "Name": "Tomato",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 8
+    },
+    "SellValue": 25
+  },
+  {
+    "ID": 342,
+    "Name": "Egg Plant",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 8
+    },
+    "SellValue": 20
+  },
+  {
+    "ID": 346,
     "Name": "Corn",
     "Description": "",
     "Category": "Crop",
@@ -913,10 +1125,11 @@
     "Coord": {
       "X": 6,
       "Y": 8
-    }
+    },
+    "SellValue": 25
   },
   {
-    "ID": 324,
+    "ID": 348,
     "Name": "Cauliflower",
     "Description": "",
     "Category": "Crop",
@@ -927,10 +1140,11 @@
     "Coord": {
       "X": 8,
       "Y": 8
-    }
+    },
+    "SellValue": 40
   },
   {
-    "ID": 325,
+    "ID": 349,
     "Name": "Cabbage",
     "Description": "",
     "Category": "Crop",
@@ -941,10 +1155,11 @@
     "Coord": {
       "X": 9,
       "Y": 8
-    }
+    },
+    "SellValue": 40
   },
   {
-    "ID": 326,
+    "ID": 350,
     "Name": "Red Cabbage",
     "Description": "",
     "Category": "Crop",
@@ -955,11 +1170,12 @@
     "Coord": {
       "X": 10,
       "Y": 8
-    }
+    },
+    "SellValue": 40
   },
   {
-    "ID": 327,
-    "Name": "Lettece",
+    "ID": 351,
+    "Name": "Lettuce",
     "Description": "",
     "Category": "Crop",
     "ItemTags": [],
@@ -969,6 +1185,22 @@
     "Coord": {
       "X": 11,
       "Y": 8
-    }
+    },
+    "SellValue": 42
+  },
+  {
+    "ID": 352,
+    "Name": "Brocolli",
+    "Description": "",
+    "Category": "Crop",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 12,
+      "Y": 8
+    },
+    "SellValue": 35
   }
 ]

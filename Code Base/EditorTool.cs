@@ -222,10 +222,11 @@ namespace Pixel_Simulations.Editor
                 // Handle Snapping if CapsLock is on
                 if (input.CurrentKeyboard.CapsLock)
                 {
-                    pos = new Vector2(
-                        (float)Math.Floor(pos.X / 16) * 16,
-                        (float)Math.Floor(pos.Y / 16) * 16
-                    );
+                    //pos = new Vector2(
+                    //    (float)Math.Floor(pos.X / 16) * 16,
+                    //    (float)Math.Floor(pos.Y / 16) * 16
+                    //);
+                    pos = GridHelper.SnapToSubCell(pos, _activePrefab.Pivot);
                 }
 
                 if (toolInput.ActiveLayer is ObjectLayer objLayer)
@@ -280,7 +281,7 @@ namespace Pixel_Simulations.Editor
                 Vector2 pos = input.MouseWorldPosition;
                 if (input.CurrentKeyboard.CapsLock)
                 {
-                    pos = new Vector2((float)Math.Floor(pos.X / 16) * 16, (float)Math.Floor(pos.Y / 16) * 16);
+                    pos = GridHelper.SnapToSubCell(pos, _activePrefab.Pivot);
                 }
 
                 // FIX: Use the Pivot as the origin so the "Ghost" matches the final placement
@@ -319,7 +320,8 @@ namespace Pixel_Simulations.Editor
                 if (input.IsNewLeftClick)
                 {
                     _startWorldPos = toolInput.WorldPosition;
-                    if (Mode) { _startWorldPos = new Vector2((float)Math.Floor(_startWorldPos.X / 16) * 16, (float)Math.Floor(_startWorldPos.Y / 16) * 16); }
+                    //if (Mode) { _startWorldPos = new Vector2((float)Math.Floor(_startWorldPos.X / 16) * 16, (float)Math.Floor(_startWorldPos.Y / 16) * 16); }
+                    if (Mode) { _startWorldPos = GridHelper.SnapCoordinate(_startWorldPos); }
                     _isDrawing = true;
                 }
 
@@ -329,8 +331,8 @@ namespace Pixel_Simulations.Editor
                     Vector2 start = _startWorldPos;
                     Vector2 end = toolInput.WorldPosition;
 
-                    if (Mode) { end = new Vector2((float)Math.Floor(end.X / 16) * 16, (float)Math.Floor(end.Y / 16) * 16); }
-
+                    //if (Mode) { end = new Vector2((float)Math.Floor(end.X / 16) * 16, (float)Math.Floor(end.Y / 16) * 16); }
+                    if (Mode) { end = GridHelper.SnapCoordinate(toolInput.WorldPosition); }
                 var rectObject = new RectangleObject
                 {
                     Position = new Vector2(System.Math.Min(start.X, end.X), System.Math.Min(start.Y, end.Y)),
@@ -410,14 +412,15 @@ namespace Pixel_Simulations.Editor
             if (input.IsNewLeftClick)
             {
                 _startPos = toolInput.WorldPosition;
-                if (input.CurrentKeyboard.CapsLock) _startPos = Snap(_startPos);
+                //if (input.CurrentKeyboard.CapsLock) _startPos = Snap(_startPos);
+                if (Mode) { _startPos = GridHelper.SnapCoordinate(_startPos); }
                 _isDrawing = true;
             }
 
             if (_isDrawing && input.CurrentMouse.LeftButton == ButtonState.Released)
             {
                 Vector2 endPos = toolInput.WorldPosition;
-                if (input.CurrentKeyboard.CapsLock) endPos = Snap(endPos);
+                if (Mode) { endPos = GridHelper.SnapCoordinate(toolInput.WorldPosition); }
 
                 Polygon drawnPoly = Polygon.FromRectangle(_startPos, endPos);
                 bool performedOp = false;
@@ -488,7 +491,7 @@ namespace Pixel_Simulations.Editor
         private ShapeOperation HandleKeys(EditorInputState input)
         {
             var kbs = input.CurrentKeyboard;
-
+            if (input.CurrentKeyboard.CapsLock) { Mode = true; } else { Mode = false; }
             if (kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift))
                 return ShapeOperation.Union;
             else if (kbs.IsKeyDown(Keys.LeftControl) || kbs.IsKeyDown(Keys.RightControl))
@@ -498,10 +501,7 @@ namespace Pixel_Simulations.Editor
             else
                 return ShapeOperation.None;
         }
-        private Vector2 Snap(Vector2 pos)
-        {
-            return new Vector2((float)Math.Floor(pos.X / 16) * 16, (float)Math.Floor(pos.Y / 16) * 16);
-        }
+        private Vector2 Snap(Vector2 pos) => GridHelper.SnapCoordinate(pos);
 
         private bool IsValidLayer(Layer l) => l is ControlLayer;
 

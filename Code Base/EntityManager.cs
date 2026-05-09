@@ -45,10 +45,10 @@ namespace Pixel_Simulations
         private readonly List<GameEntity> _allEntities = new List<GameEntity>();
         private readonly Dictionary<string, GameEntity> _entitiesById = new Dictionary<string, GameEntity>();
         private readonly Dictionary<int, List<GameEntity>> _entitiesByTag = new Dictionary<int, List<GameEntity>>();
-
+        public readonly List<RenderableSprite> _simulationSprites = new List<RenderableSprite>();
         public IReadOnlyList<GameEntity> AllEntities => _allEntities;
-        private readonly List<RenderableSprite> _staticSprites = new List<RenderableSprite>();
-        private readonly List<RenderableSprite> _drawList = new List<RenderableSprite>();
+        public readonly List<RenderableSprite> _staticSprites = new List<RenderableSprite>();
+        public readonly List<RenderableSprite> _drawList = new List<RenderableSprite>();
         private bool _isFirstLoad = true;
 
         // Hardware Drawing Buffers
@@ -129,6 +129,7 @@ namespace Pixel_Simulations
         public void RebuildStaticSprites(GameState state)
         {
             _staticSprites.Clear();
+            _simulationSprites.Clear();
             foreach (var entity in _allEntities)
             {
                 if (!entity.IsActive) continue;
@@ -171,9 +172,10 @@ namespace Pixel_Simulations
                             var stage = physDef.Stages[stageIdx];
 
                             Rectangle srcRect = new Rectangle(stage.SpriteX * 16, stage.SpriteY * 16, physDef.CellWidth * 16, physDef.CellHeight * 16);
-                            Vector2 pivot = new Vector2(srcRect.Width / 2f, srcRect.Height); // Bottom Center
+                            Vector2 pivot = new Vector2(srcRect.Width / 2f, srcRect.Height);
 
-                            _staticSprites.Add(new RenderableSprite
+                            // Add Placed Items to the NEW Simulation list!
+                            _simulationSprites.Add(new RenderableSprite
                             {
                                 AtlasName = physDef.AtlasName,
                                 Texture = tex,
@@ -183,6 +185,7 @@ namespace Pixel_Simulations
                                 Scale = Vector2.One,
                                 Rotation = 0f,
                                 BaseWorldY = entity.Position.Y,
+                                DrawDepth = DepthUtil.Calculate(entity.Position.Y),
                                 ParallaxMask = 0f
                             });
                         }
@@ -220,6 +223,7 @@ namespace Pixel_Simulations
         {
             _drawList.Clear();
             _drawList.AddRange(_staticSprites);
+            _drawList.AddRange(_simulationSprites); // MERGE HERE FOR PERFECT SORTING!
 
             // Add Dynamic Entities (Player, NPCs)
             if (state.Player != null)
@@ -229,18 +233,18 @@ namespace Pixel_Simulations
                 {
                     AtlasName = "Player",
                     Texture = P.Texture,
-                    Position = P.Position, // Draw at the exact foot world position!
+                    Position = P.Position,
                     SourceRect = P.SourceRect,
-                    Origin = P.Origin, // Pivot around the bottom-center of the sprite!
+                    Origin = P.Origin,
                     Scale = Vector2.One,
                     Rotation = 0f,
-                    DrawDepth = DepthUtil.Calculate(P.Foot.Y), // Sort by foot
+                    DrawDepth = DepthUtil.Calculate(P.Foot.Y),
                     BaseWorldY = P.Foot.Y,
                     ParallaxMask = 0.0f
                 });
             }
 
-            // Sort Back-To-Front based on BaseWorldY
+            // Now everything is sorted perfectly together!
             SpriteSorter.Sort(_drawList, !_isFirstLoad);
             _isFirstLoad = false;
         }
@@ -398,15 +402,15 @@ namespace Pixel_Simulations
         // ==========================================
         // 1. DEDICATED ALBEDO PASS (Standard Colors)
         // ==========================================
-        public void DrawAlbedoPass(GraphicsDevice gd, Camera camera, bool enableParallax, float parallaxStrength)
+        public void DrawAlbedoPass(GraphicsDevice gd, Camera camera, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
         {
-            if (_drawList.Count == 0) return;
+            if (renderList.Count == 0) return;
             SetupRenderState(gd, camera);
 
             int spriteCount = 0;
             Texture2D currentTexture = null;
 
-            foreach (var sprite in _drawList)
+            foreach (var sprite in renderList)
             {
                 if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
                 {
@@ -431,21 +435,59 @@ namespace Pixel_Simulations
             if (spriteCount > 0) FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
         }
 
+        public void DrawSimulationPass(GraphicsDevice gd, Camera camera)
+        {
+            if (_simulationSprites.Count == 0) return;
+            SetupRenderState(gd, camera);
+
+            // Sort Simulation Sprites by Y-Depth so they overlap each other correctly
+            SpriteSorter.Sort(_simulationSprites, false);
+
+            int spriteCount = 0;
+            Texture2D currentTexture = null;
+
+            foreach (var sprite in _simulationSprites)
+            {
+                if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
+                {
+                    FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
+                    spriteCount = 0;
+                }
+                currentTexture = sprite.Texture;
+
+                CalculateSpriteGeometry(sprite, camera, false, 0f, out Vector2 tl, out Vector2 tr, out Vector2 bl, out Vector2 br);
+
+                float texW = 1f / currentTexture.Width; float texH = 1f / currentTexture.Height;
+                float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW); float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
+                float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW); float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
+
+                int vIdx = spriteCount * 4;
+                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), Color.White, new Vector2(u0, v0));
+                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0), Color.White, new Vector2(u1, v0));
+                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0), Color.White, new Vector2(u0, v1));
+                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0), Color.White, new Vector2(u1, v1));
+                spriteCount++;
+            }
+            if (spriteCount > 0) FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
+        }
         // ==========================================
         // 2. DEDICATED NORMAL PASS
         // ==========================================
-        public void DrawNormalPass(GraphicsDevice gd, Camera camera, AssetLibrary assets, bool enableParallax, float parallaxStrength)
+        public void DrawNormalPass(GraphicsDevice gd, Camera camera, AssetLibrary assets, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
         {
-            if (_drawList.Count == 0) return;
+            if (renderList.Count == 0) return;
             SetupRenderState(gd, camera);
 
             int spriteCount = 0;
             Texture2D currentTexture = null;
 
-            foreach (var sprite in _drawList)
+            foreach (var sprite in renderList)
             {
-                // LOOKUP THE NORMAL MAP! Fallback to original texture if missing.
-                Texture2D targetTex = assets.GetNormalAtlas(sprite.AtlasName) ?? sprite.Texture;
+                Texture2D targetTex = assets.GetNormalAtlas(sprite.AtlasName);
+
+                // FIX: If there is no normal map (like the player), SKIP IT!
+                // This prevents the albedo texture from bleeding into the lighting engine.
+                if (targetTex == null) continue;
 
                 if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != targetTex))
                 {
@@ -473,9 +515,9 @@ namespace Pixel_Simulations
         // ==========================================
         // 3. DEDICATED VOLUME DEPTH PASS
         // ==========================================
-        public void DrawDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength)
+        public void DrawDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
         {
-            if (_drawList.Count == 0 || depthEffect == null) return;
+            if (renderList.Count == 0 || depthEffect == null) return;
             //SetupRenderState(gd, camera);
             gd.BlendState = new BlendState
             {
@@ -495,7 +537,7 @@ namespace Pixel_Simulations
             int spriteCount = 0;
             Texture2D currentTexture = null;
 
-            foreach (var sprite in _drawList)
+            foreach (var sprite in renderList)
             {
                 if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
                 {
