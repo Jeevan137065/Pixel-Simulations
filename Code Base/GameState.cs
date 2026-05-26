@@ -31,6 +31,7 @@ namespace Pixel_Simulations
         // --- Core Data Objects ---
         public Map CurrentMap { get; private set; }
         public EntityManager _entityManager;
+        public GraphicsDevice _gd;
         public MapSaveData ActiveSave { get; private set; } = new MapSaveData();
         public EventBus Bus { get; private set; }
         public NewPlayer Player { get; private set; }
@@ -42,6 +43,7 @@ namespace Pixel_Simulations
         public Dictionary<Point, Texture2D> TerrainMaskChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public Dictionary<Point, Texture2D> TerrainNormalChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public TilesetManager TilesetManager { get; }
+        public AutoTileManager AutoTileManager { get; } = new AutoTileManager();
         public PrefabManager PrefabManager { get; }
         public WeatherSimulator Weather { get; set; }
         public ShaderManager Shaders { get; private set; }
@@ -61,6 +63,9 @@ namespace Pixel_Simulations
         public float ParallaxStrength { get; set; } = 0.15f;
         public Vector2 MaskOffset { get; set; }
         public int WorldSeed { get; set; } = 42;
+        public string Debug_LastPayload { get; set; } = "None";
+        public string Debug_FarmableStatus { get; set; } = "Unknown";
+        public string Debug_LastCommand { get; set; } = "None";
         //Debug Bool
         public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
         public GameState(EntityManager entityManager, EventBus eventBus)
@@ -87,13 +92,19 @@ namespace Pixel_Simulations
         /// </summary>
         public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
         {
-            DebugPool[GameBool.ShowCollision] = false;
+            _gd = graphicsDevice;
+            DebugPool[GameBool.ShowCollision] = true;
             DebugPool[GameBool.ShowLinks] = false;
-            DebugPool[GameBool.ShowShapes] = false;
+            DebugPool[GameBool.ShowShapes] = true;
             DebugPool[GameBool.ShowPlayerBounds] = false;
             DebugPool[GameBool.IsPaused] = false;
             DebugPool[GameBool.EnableParallax] = true;
             // 1. Load all raw texture assets first.
+            foreach (var rt in TerrainMaskChunks.Values) rt?.Dispose();
+            foreach (var rt in TerrainNormalChunks.Values) rt?.Dispose();
+            TerrainMaskChunks.Clear();
+            TerrainNormalChunks.Clear();
+            CurrentMap?.Dispose(); // Dispose old map just in case
             Assets.LoadCoreContent(content);
             ns.LoadContent(content);
             // 2. Load the map data from the file.
@@ -156,11 +167,14 @@ namespace Pixel_Simulations
             // 3. Create all TileSet instances and register them with the TilesetManager.
             // The manager needs the raw textures from the AssetLibrary to do its job.
             InitializeTilesets(graphicsDevice);
+
+            AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
+
             Grass = new GrassSystem(graphicsDevice);
             var grassShapes = new List<RectangleF>();
             foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
             {
-                foreach (var sh in layer.Shapes.Where(s => s.Tags.Contains(40)))
+                foreach (var sh in layer.Shapes.Where(s => s.Tags.Contains(80)))
                 {
                     grassShapes.Add(sh.Shape.GetBounds());
                 }
@@ -195,7 +209,16 @@ namespace Pixel_Simulations
             var wildTexture = Assets.GetAtlas("Wild");
             if (wildTexture != null)
                 TilesetManager.RegisterTileSet(new TileSet("Wild", wildTexture, 16, graphicsDevice));
-
+            var farmTexture = Assets.GetAtlas("Farm");
+            if (farmTexture != null)
+            {
+                // Must match the exact string we used in InteractionEngine: "farm"
+                TilesetManager.RegisterTileSet(new TileSet("Farm", farmTexture, 16, graphicsDevice));
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("CRITICAL WARNING: 'farm' atlas not loaded! Tilled dirt will be invisible!");
+            }
             // Add other tilesets here...
         }
 
@@ -278,9 +301,9 @@ namespace Pixel_Simulations
                 targetLayer.Objects.Remove(targetProp);
 
                 // 2. Destroy all Linked Objects (the collision boxes!)
-                foreach (string targetID in targetProp.LinkedObjects)
+                foreach (ObjectLink targetID in targetProp.Links)
                 {
-                    RemoveObjectFromMap(targetID);
+                    RemoveObjectFromMap(targetID.TargetID);
                 }
 
                 // 3. Refresh the Physics Engine so the collision actually disappears!

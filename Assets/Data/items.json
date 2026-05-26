@@ -4,7 +4,10 @@
     "Name": "DEBUG STONE",
     "Description": "GREAT JOB. SOME THING IS BROKEN IN GAME CODE TO HAVE THIS GIVEN TO YOU",
     "Category": "DEBUG",
-    "ItemTags": [],
+    "ItemTags": [
+      "test",
+      "debug"
+    ],
     "MinWeight": 0.1,
     "MaxWeight": 0.3,
     "IconSource": "Items",
@@ -18,13 +21,11 @@
     "ID": 1,
     "Name": "Stone Axe",
     "Description": "An Axe made of stone. Used to chop trees, logs",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Stone_Tool",
-      "Starting",
-      "Tool",
-      "AXE",
-      "Equippable"
+      "chopping",
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -32,17 +33,18 @@
     "Coord": {
       "X": 0,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 2,
     "Name": "Stone Pickaxe",
     "Description": "A Pickaxe made of stone. Used to mine rocks",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Stone_Tool",
-      "Starting",
-      "Equippable"
+      "mining",
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -50,17 +52,18 @@
     "Coord": {
       "X": 1,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 3,
     "Name": "Stone Shovel",
     "Description": "A shovel made of stone. Used for Digging Dirt, Clay.",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Stone_Tool",
-      "Starting",
-      "Equippable"
+      "digging",
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -68,17 +71,18 @@
     "Coord": {
       "X": 2,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 4,
     "Name": "Stone Hoe",
     "Description": "A Hoe made of stone. Used for Digging Farmland, Removing weeds.",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Stone_Tool",
-      "Starting",
-      "Equippable"
+      "tilling",
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -86,17 +90,18 @@
     "Coord": {
       "X": 3,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 5,
     "Name": "Watering Can",
     "Description": "A Watering can with nozzle at top. Used for Watering plants.",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Stone_Tool",
-      "Starting",
-      "Equippable"
+      "watering",
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -104,17 +109,18 @@
     "Coord": {
       "X": 4,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 6,
     "Name": "Stone Scythe",
     "Description": "A Scythe made of stone. Used for Clearing fiberous vines, grass.",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Stone_Tool",
-      "Starting",
-      "Equippable"
+      "shearing",
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -122,18 +128,19 @@
     "Coord": {
       "X": 5,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 7,
     "Name": "Fishing Pole",
     "Description": "Simple Fishing pole made of Spruce, Nylon fibre and a bobber. Used for catching fish.",
-    "Category": "Tool",
+    "Category": "Tools",
     "ItemTags": [
-      "Spruce",
-      "Starting",
+      "fishing",
       "wood",
-      "Equippable"
+      "stone",
+      "basic"
     ],
     "MinWeight": 0.5,
     "MaxWeight": 0.8,
@@ -141,7 +148,8 @@
     "Coord": {
       "X": 6,
       "Y": 0
-    }
+    },
+    "SellValue": -1
   },
   {
     "ID": 10,
@@ -149,9 +157,8 @@
     "Description": "A log from the tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "soft_wood",
+      "cheap"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -168,9 +175,8 @@
     "Description": "A log from the tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "soft_wood",
+      "cheap"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -187,9 +193,9 @@
     "Description": "A log from Sitka Spruce Tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "soft_wood",
+      "cheap",
+      "strong"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -206,9 +212,8 @@
     "Description": "A log from Western White Pine tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "soft_wood",
+      "strong"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -225,9 +230,8 @@
     "Description": "A log from Western Red Cedar tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "soft_wood",
+      "premium"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -244,9 +248,8 @@
     "Description": "A log from Pacific Yew tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "soft_wood",
+      "luxury"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -263,9 +266,8 @@
     "Description": "A log from Western Hemlock tree.",
     "Category": "Material",
     "ItemTags": [
-      "Softwood",
-      "crafting",
-      "wood"
+      "hard_wood",
+      "strong"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -282,9 +284,8 @@
     "Description": "A log from Red Alder tree.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood"
+      "hard_wood",
+      "strong"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -301,9 +302,8 @@
     "Description": "A log from Big leaf Maple tree.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood"
+      "hard_wood",
+      "premium"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -320,9 +320,8 @@
     "Description": "A log from Pacific Willow tree.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood"
+      "hard_wood",
+      "cheap"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -339,9 +338,8 @@
     "Description": "A log from Bitter Cherry tree.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood"
+      "hard_wood",
+      "premium"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -358,9 +356,8 @@
     "Description": "A log from Pacific Coast Mahogany tree.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood"
+      "hard_wood",
+      "luxury"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -377,10 +374,8 @@
     "Description": "A Plywood log manufactured.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "Commercial",
-      "wood"
+      "engineer_wood",
+      "strong"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -397,10 +392,8 @@
     "Description": "A Glulam log manufactured.",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood",
-      "Commercial"
+      "engineer_wood",
+      "premium"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -417,10 +410,8 @@
     "Description": "A Bamboo log. Native to East Asia",
     "Category": "Material",
     "ItemTags": [
-      "Hardwood",
-      "crafting",
-      "wood",
-      "Commercial"
+      "engineer_wood",
+      "cheap"
     ],
     "MinWeight": 1.5,
     "MaxWeight": 2.5,
@@ -471,10 +462,8 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -491,10 +480,9 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family",
+      "violet"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -511,10 +499,9 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family",
+      "yellow"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -531,10 +518,10 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "winter",
+      "carrot_family",
+      "red",
+      "violet"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -551,10 +538,8 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -571,10 +556,8 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -591,10 +574,8 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -611,10 +592,8 @@
     "Description": "Plant in Spring or Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Carrot Family",
-      "spring_crop",
-      "summer_crop",
-      "plantable"
+      "spring",
+      "carrot_family"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -627,13 +606,50 @@
   },
   {
     "ID": 111,
+    "Name": "Beet Seeds (Red)",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [
+      "spring",
+      "carrot_family",
+      "red"
+    ],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "SellValue": 10,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 9,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 112,
+    "Name": "Beet Seeds (Yellow)",
+    "Description": "",
+    "Category": "Seed",
+    "ItemTags": [
+      "spring",
+      "carrot_family",
+      "yellow"
+    ],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "SellValue": 10,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 9,
+      "Y": 3
+    }
+  },
+  {
+    "ID": 113,
     "Name": "Onion Seed",
     "Description": "Plant in Summer. Grows in 5 days.",
     "Category": "Seed",
     "ItemTags": [
-      "Night_Shades_Family",
-      "summer_crop",
-      "plantable"
+      "summer",
+      "allium"
     ],
     "MinWeight": 0.01,
     "MaxWeight": 0.02,
@@ -649,7 +665,10 @@
     "Name": "Potato Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "spring",
+      "night_shades"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -664,7 +683,10 @@
     "Name": "Tomato Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "summer",
+      "night_shades"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -679,7 +701,10 @@
     "Name": "Egg Plant Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "summer",
+      "night_shades"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -694,7 +719,11 @@
     "Name": "Corn Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "autumn",
+      "fall",
+      "poaceae"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -709,7 +738,10 @@
     "Name": "Cauliflower Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "spring",
+      "brassica"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -724,7 +756,10 @@
     "Name": "Cabbage Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "summer",
+      "brassica"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -739,7 +774,10 @@
     "Name": "Red Cabbage Seed",
     "Description": "",
     "Category": "Seed",
-    "ItemTags": [],
+    "ItemTags": [
+      "summer",
+      "brassica"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -753,7 +791,7 @@
     "ID": 201,
     "Name": "SlamonBerry",
     "Description": "A tart wild berry",
-    "Category": "Crop",
+    "Category": "Forage",
     "ItemTags": [
       "Forage",
       "Edible",
@@ -773,7 +811,9 @@
     "Name": "Leek",
     "Description": "Simple Pungent Leek used for Cooking",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "allium"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -788,7 +828,9 @@
     "Name": "Onion",
     "Description": "Pungent Root vegetable used as base for many dishes",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "allium"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -802,8 +844,10 @@
     "ID": 305,
     "Name": "Carrot",
     "Description": "Strachy Root vegetable",
-    "Category": "Material",
-    "ItemTags": [],
+    "Category": "Crop",
+    "ItemTags": [
+      "carrot_family"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -816,11 +860,14 @@
   {
     "ID": 306,
     "Name": "Violet Carrot",
-    "Description": "",
+    "Description": "Violet Variant of Carrot. The original, ancient form of the Carrots first cultivated in Persia in 10 Centuary and purple was the original carrot color long before orange became dominant in the 16th century.",
     "Category": "Crop",
-    "ItemTags": [],
-    "MinWeight": 1,
-    "MaxWeight": 1,
+    "ItemTags": [
+      "carrot_family",
+      "violet"
+    ],
+    "MinWeight": 0.02,
+    "MaxWeight": 0.08,
     "IconSource": "Items",
     "Coord": {
       "X": 3,
@@ -831,9 +878,12 @@
   {
     "ID": 307,
     "Name": "Golden Carrot",
-    "Description": "",
+    "Description": "An ancient, sweet-flavored, and crunchy root vegetable variety of Carrot",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "yellow"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -848,7 +898,10 @@
     "Name": "Red Carrot",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "red"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -863,7 +916,9 @@
     "Name": "Turnip",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -878,7 +933,9 @@
     "Name": "Daikon",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -893,7 +950,9 @@
     "Name": "Radish",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -908,7 +967,9 @@
     "Name": "Beet",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -923,7 +984,10 @@
     "Name": "Red Beet",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "red"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -938,7 +1002,10 @@
     "Name": "Yellow Beet",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "yellow"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -953,7 +1020,10 @@
     "Name": "Baby Leek",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "allium",
+      "baby"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -968,7 +1038,10 @@
     "Name": "Baby onion",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "allium",
+      "baby"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -983,7 +1056,10 @@
     "Name": "Baby Carrot",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "baby"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -998,7 +1074,11 @@
     "Name": "Babay Violet Carrot",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "baby",
+      "violet"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1013,7 +1093,11 @@
     "Name": "Baby Yellow Carrot",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "baby",
+      "yellow"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1028,7 +1112,11 @@
     "Name": "Baby Red Carrot",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family",
+      "baby",
+      "red"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1043,7 +1131,9 @@
     "Name": "Parsnip",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "carrot_family"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1073,7 +1163,9 @@
     "Name": "Potato",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "night_shades"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1088,7 +1180,9 @@
     "Name": "Tomato",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "night_shades"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1103,7 +1197,9 @@
     "Name": "Egg Plant",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "night_shades"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1118,7 +1214,9 @@
     "Name": "Corn",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "poaceae"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1133,7 +1231,9 @@
     "Name": "Cauliflower",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "brassica"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1148,7 +1248,9 @@
     "Name": "Cabbage",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "brassica"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1163,7 +1265,10 @@
     "Name": "Red Cabbage",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "brassica",
+      "red"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1178,7 +1283,10 @@
     "Name": "Lettuce",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "brassica",
+      "green"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1193,7 +1301,9 @@
     "Name": "Brocolli",
     "Description": "",
     "Category": "Crop",
-    "ItemTags": [],
+    "ItemTags": [
+      "brassica"
+    ],
     "MinWeight": 1,
     "MaxWeight": 1,
     "IconSource": "Items",
@@ -1202,5 +1312,71 @@
       "Y": 8
     },
     "SellValue": 35
+  },
+  {
+    "ID": 450,
+    "Name": "Mushroom",
+    "Description": "",
+    "Category": "Forage",
+    "ItemTags": [
+      "fungus"
+    ],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "SellValue": 10,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 1,
+      "Y": 11
+    }
+  },
+  {
+    "ID": 451,
+    "Name": "Oyster Mushroom",
+    "Description": "",
+    "Category": "Forage",
+    "ItemTags": [],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "SellValue": 10,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 2,
+      "Y": 11
+    }
+  },
+  {
+    "ID": 452,
+    "Name": "Red Mushroom",
+    "Description": "fly agaric",
+    "Category": "Forage",
+    "ItemTags": [
+      "fungus"
+    ],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "SellValue": 10,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 3,
+      "Y": 11
+    }
+  },
+  {
+    "ID": 453,
+    "Name": "Violet Mushroom",
+    "Description": " Amethyst Deceiver",
+    "Category": "Forage",
+    "ItemTags": [
+      "fungus"
+    ],
+    "MinWeight": 1,
+    "MaxWeight": 1,
+    "SellValue": 10,
+    "IconSource": "Items",
+    "Coord": {
+      "X": 4,
+      "Y": 11
+    }
   }
 ]

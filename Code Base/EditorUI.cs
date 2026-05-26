@@ -25,11 +25,12 @@ namespace Pixel_Simulations.UI
 
         public TopPanel TopPanel { get; set; }
         public TilesetPanel TilesetPanel { get; set; }
-        public PrefabCreatorPanel PrefabPanel { get; set; }
         public ToolPanel ToolPanel { get; set; }
         public InspectorPanel InspectorPanel { get; set; }
         public MaskEditorPanel MaskEditorPanel { get; set; }
         public LayerPanel LayerPanel { get; set; }
+        public AutoTilePanel AutoTilePanel { get; set; }
+
         public readonly EditorState _editorState;
         public GraphicsDevice gd { get; }
         public SpriteFont DebugFont { get; private set; }
@@ -62,11 +63,12 @@ namespace Pixel_Simulations.UI
             // Create all the panel instances
             TopPanel = new TopPanel(_editorState._layoutmanager.TopPanel, this, _editorState);
             TilesetPanel = new TilesetPanel(_editorState._layoutmanager.TilesetPanel, this, _editorState);
-            PrefabPanel = new PrefabCreatorPanel(_editorState._layoutmanager.prefabModalBounds, this, _editorState);
             LayerPanel = new LayerPanel(_editorState._layoutmanager.LayerPanel, this, _editorState);
             ToolPanel = new ToolPanel(_editorState._layoutmanager.ToolPanel, this, _editorState);
             InspectorPanel = new InspectorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
             MaskEditorPanel = new MaskEditorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
+            AutoTilePanel = new AutoTilePanel(_editorState._layoutmanager.AutoTileModalBounds, this, _editorState);
+
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
         }
 
@@ -96,8 +98,7 @@ namespace Pixel_Simulations.UI
             }
 
             LayerPanel.Draw(spriteBatch);
-
-            if (_editorState.PrefabCreator.IsOpen) PrefabPanel.Draw(spriteBatch);
+            if (AutoTilePanel.IsOpen) AutoTilePanel.Draw(spriteBatch);
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color)
         {
@@ -142,6 +143,7 @@ namespace Pixel_Simulations.UI
         public Rectangle TilesetPanel { get; private set; }
         public Rectangle LayerPanel { get; private set; }
         public Rectangle ToolPanel { get; private set; }
+        public Rectangle AutoTileModalBounds { get; set; }
         public Rectangle InspectorPanel { get; private set; }
         public Rectangle TopPanel { get; private set; }
         public Rectangle tagModalBounds { get; set; }
@@ -176,6 +178,7 @@ namespace Pixel_Simulations.UI
             LayerPanel = new Rectangle(tilesetWidth + ViewW, 0, windowWidth - tilesetWidth - ViewW, windowHeight - inspectorHeight);
             tagModalBounds = new Rectangle(WindowBounds.Center.X - 250,WindowBounds.Center.Y - 275,500, 550);
             prefabModalBounds = new Rectangle(tilesetWidth, topPanelHeight, ViewW + LayerPanel.Width, ViewH);
+            AutoTileModalBounds = new Rectangle(WindowBounds.Center.X - 300, WindowBounds.Center.Y - 250, 600, 500);
             ViewportPanel = new Rectangle(
                 tilesetWidth,
                 topPanelHeight,

@@ -90,12 +90,15 @@ namespace Pixel_Simulations
             _content = content;
             // Load Tile Atlases
             LoadAtlas("Base", AtlasType.Tile);
-            //LoadAtlas("BasiR", AtlasType.Tile);
             LoadAtlas("Wild", AtlasType.Tile);
             //LoadAtlas("Temp", AtlasType.Tile);
-
+            LoadAtlas("Farm", AtlasType.Tile);
             // Load Object Atlases
             LoadAtlas("Trees", AtlasType.Object);
+            LoadAtlas("Trees_t", AtlasType.Object);
+            LoadAtlas("Trees_b", AtlasType.Object);
+            LoadAtlas("Trees_l", AtlasType.Object);
+            LoadAtlas("Trees_s", AtlasType.Object);
             LoadAtlas("Building", AtlasType.Object);
             LoadAtlas("Trees_n", AtlasType.Object);
             LoadAtlas("Building_n", AtlasType.Normal);
@@ -155,77 +158,84 @@ namespace Pixel_Simulations
     }
     public class PrefabManager
         {
-            public Dictionary<string, ObjectPrefab> Prefabs { get; private set; } = new Dictionary<string, ObjectPrefab>();
+        public Dictionary<string, ObjectPrefab> Prefabs { get; private set; } = new Dictionary<string, ObjectPrefab>();
 
-            public void Save(string path)
+        // --- FIX: Add the settings so JSON knows how to read MonoGame Vector2s! ---
+        private readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        {
+            Converters = { new Vector2Converter(), new ColorConverter() },
+            Formatting = Formatting.Indented
+        };
+        public void Save(string path)
+        {
+            try
             {
-                try
+                // Ensure the directory exists
+                string directory = Path.GetDirectoryName(path);
+                if (!Directory.Exists(directory))
                 {
-                    // Ensure the directory exists
-                    string directory = Path.GetDirectoryName(path);
-                    if (!Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
+                    Directory.CreateDirectory(directory);
+                }
 
-                    string json = JsonConvert.SerializeObject(Prefabs.Values, Formatting.Indented);
-                    File.WriteAllText(path, json);
-                    System.Diagnostics.Debug.WriteLine($"Prefabs saved successfully to {path}");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Failed to save prefabs: {ex.Message}");
-                }
+                // Pass the settings here
+                string json = JsonConvert.SerializeObject(Prefabs.Values, _jsonSettings);
+                File.WriteAllText(path, json);
+                System.Diagnostics.Debug.WriteLine($"Prefabs saved successfully to {path}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to save prefabs: {ex.Message}");
+            }
+        }
+
+        public void Load(string path)
+        {
+            // 1. Initialize to empty dictionary immediately
+            Prefabs = new Dictionary<string, ObjectPrefab>(StringComparer.OrdinalIgnoreCase);
+            if (!File.Exists(path))
+            {
+                System.Diagnostics.Debug.WriteLine($"Prefab file not found at {path}. Starting fresh.");
+                return;
             }
 
-            public void Load(string path)
+            try
             {
-                // 1. Initialize to empty dictionary immediately so we never have a null 'Prefabs' property
-                Prefabs = new Dictionary<string, ObjectPrefab>(StringComparer.OrdinalIgnoreCase);
-                if (!File.Exists(path))
+                string json = File.ReadAllText(path);
+
+                // 2. Check if the file is empty or just whitespace
+                if (string.IsNullOrWhiteSpace(json))
                 {
-                    System.Diagnostics.Debug.WriteLine($"Prefab file not found at {path}. Starting fresh.");
+                    System.Diagnostics.Debug.WriteLine("Prefab file is empty. Starting fresh.");
                     return;
                 }
 
-                try
+                // --- FIX: Pass the settings here to use the Vector2Converter! ---
+                var list = JsonConvert.DeserializeObject<List<ObjectPrefab>>(json, _jsonSettings);
+
+                // 3. Populate Dictionary
+                if (list != null)
                 {
-                    string json = File.ReadAllText(path);
-
-                    // 2. Check if the file is empty or just whitespace
-                    if (string.IsNullOrWhiteSpace(json))
+                    foreach (var prefab in list)
                     {
-                        System.Diagnostics.Debug.WriteLine("Prefab file is empty. Starting fresh.");
-                        return;
-                    }
-
-                    var list = JsonConvert.DeserializeObject<List<ObjectPrefab>>(json);
-
-                    // 3. Check if the deserializer returned null (happens with "null" string or empty arrays)
-                    if (list != null)
-                    {
-                        // Use a loop instead of .ToDictionary to safely handle potential duplicate IDs
-                        foreach (var prefab in list)
+                        if (!Prefabs.ContainsKey(prefab.ID))
                         {
-                            if (!Prefabs.ContainsKey(prefab.ID))
-                            {
-                                Prefabs.Add(prefab.ID, prefab);
-                            }
-                            else
-                            {
-                                System.Diagnostics.Debug.WriteLine($"Warning: Duplicate Prefab ID '{prefab.ID}' found in JSON. Skipping duplicate.");
-                            }
+                            Prefabs.Add(prefab.ID, prefab);
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Warning: Duplicate Prefab ID '{prefab.ID}' found in JSON. Skipping duplicate.");
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    // 4. If the JSON is malformed (missing brackets, typos), catch the error and keep the empty dict
-                    System.Diagnostics.Debug.WriteLine($"CRITICAL: Failed to parse objects.json. Error: {ex.Message}");
-                }
             }
+            catch (Exception ex)
+            {
+                // 4. Catch and print exact errors
+                System.Diagnostics.Debug.WriteLine($"CRITICAL: Failed to parse objects.json. Error: {ex.Message}");
+            }
+        }
 
         public ObjectPrefab GetPrefab(string id) => Prefabs.TryGetValue(id, out var p) ? p : null;
-        }
+    }
 }
 

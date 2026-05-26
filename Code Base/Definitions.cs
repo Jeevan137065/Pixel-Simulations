@@ -271,6 +271,7 @@ namespace Pixel_Simulations
                     var maskLayer = (MaskLayer)layer;
                     writer.WritePropertyName("OffsetX"); writer.WriteValue(maskLayer.OffsetX);
                     writer.WritePropertyName("OffsetY"); writer.WriteValue(maskLayer.OffsetY);
+
                     break;
             }
 
@@ -327,6 +328,7 @@ namespace Pixel_Simulations
                         var maskL = new MaskLayer();
                         maskL.OffsetX = jo["OffsetX"]?.Value<int>() ?? 0;
                         maskL.OffsetY = jo["OffsetY"]?.Value<int>() ?? 0;
+                        maskL.Name = "Mask";
                         target = maskL;
                         break;
                 }

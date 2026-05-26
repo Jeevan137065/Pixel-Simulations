@@ -799,7 +799,7 @@ namespace Pixel_Simulations.Editor
 
             RectangleF b = GetObjectBounds(selected);
             float hs = 6f / input.Zoom;
-
+           
             // Draw base selection
             sb.DrawRectangle(b, GetObjectColor(selected.Type) * 0.4f, 1 / input.Zoom, 0);
             sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
@@ -808,13 +808,13 @@ namespace Pixel_Simulations.Editor
             sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
 
             // --- NEW: DRAW LINK LINES ---
-            if (selected.LinkedObjects.Count > 0)
+            if (selected.Links.Count > 0)
             {
                 Vector2 startPos = b.Center;
 
-                foreach (string targetId in selected.LinkedObjects)
+                foreach (var link in selected.Links)
                 {
-                    var targetObj = FindObjectByID(targetId);
+                    var targetObj = FindObjectByID(link.TargetID);
                     if (targetObj != null)
                     {
                         RectangleF targetBounds = GetObjectBounds(targetObj);
@@ -829,8 +829,21 @@ namespace Pixel_Simulations.Editor
                             _ => Color.Cyan
                         };
 
-                        // Draw Dashed Line
-                        UIDrawExtensions.DrawDashedLine(sb, startPos, targetBounds.Center, linkColor, 2f / input.Zoom, 10f / input.Zoom, 5f / input.Zoom);
+                        // Draw beautiful Bezier curve with the Port names as the label!
+                        string label = $"{link.SourcePort} -> {link.TargetPort}";
+
+                        Pixel_Simulations.UI.UIDrawExtensions.DrawBezierCurve(
+                            sb,
+                            Pixel_Simulations.UI.UITheme.DefaultFont,
+                            startPos,
+                            targetBounds.Center,
+                            Pixel_Simulations.Studio.NodePort.Right,
+                            Pixel_Simulations.Studio.NodePort.Left,
+                            linkColor,
+                            2f / input.Zoom,
+                            Pixel_Simulations.Studio.LineStyle.Dashed,
+                            label
+                        );
 
                         // Highlight Target Box
                         sb.DrawRectangle(targetBounds, linkColor * 0.8f, 2f / input.Zoom);
@@ -849,21 +862,43 @@ namespace Pixel_Simulations.Editor
                 default: return Color.White; // Fallback color
             }
         }
-        public string GetShortcutHints() => "ALT: Pick Any Layer | DEL: Delete | CAPS: Grid Nudge"; private RectangleF GetObjectBounds(MapObject obj)
+        public string GetShortcutHints() => "ALT: Pick Any Layer | DEL: Delete | CAPS: Grid Nudge";
+        private RectangleF GetObjectBounds(MapObject obj)
         {
             if (obj is RectangleObject r) return new RectangleF(r.Position, r.Size);
             if (obj is ShapeObject s) return new RectangleF(s.Position, s.Size);
             if (obj is PointObject p) return new RectangleF(p.Position.X - p.Radius, p.Position.Y - p.Radius, p.Radius * 2, p.Radius * 2);
-            if (obj is MapObject o) return new RectangleF(o.Position, Vector2.Zero); 
+            if (obj is PropObject prop)
+            {
+                var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
+                if (prefab != null)
+                {
+                    int w = Math.Max(prefab.SourceRect.Width, prefab.CanvasSize.X);
+                    int h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y);
+                    return new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, w * prop.Scale.X, h * prop.Scale.Y);
+                }
+            }
             return RectangleF.Empty;
         }
+
         private Vector2 GetObjectSize(MapObject obj)
         {
             if (obj is RectangleObject r) return r.Size;
             if (obj is ShapeObject s) return s.Size;
             if (obj is PointObject p) return new Vector2(p.Radius, p.Radius);
+            if (obj is PropObject prop)
+            {
+                var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
+                if (prefab != null)
+                {
+                    int w = Math.Max(prefab.SourceRect.Width, prefab.CanvasSize.X);
+                    int h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y);
+                    return new Vector2(w, h);
+                }
+            }
             return Vector2.Zero;
         }
+        
         private MapObject FindTopObject(Layer activeLayer, Vector2 mouseWorld, bool searchAllLayers)
         {
             // Define which layers we are allowed to look at
@@ -885,7 +920,11 @@ namespace Pixel_Simulations.Editor
                             var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
                             if (prefab != null)
                             {
-                                RectangleF bounds = new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
+                                // FIX: Use CanvasSize here too!
+                                int w = Math.Max(prefab.SourceRect.Width, prefab.CanvasSize.X);
+                                int h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y);
+
+                                RectangleF bounds = new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, w, h);
                                 if (bounds.Contains(mouseWorld)) return prop;
                             }
                         }
@@ -1000,7 +1039,7 @@ namespace Pixel_Simulations.Editor
         private float _normalizedElevation = 0.5f;
         private bool _isDrawing = false;
         private Texture2D _brushTexture;
-        private bool _brushNeedsUpdate = true;
+        public bool BrushNeedsUpdate { get; set; } = true;
         private string _lastNoiseName = "None";
 
         private Dictionary<Point, Color[]> _strokeBefore;
@@ -1033,20 +1072,20 @@ namespace Pixel_Simulations.Editor
             if (_lastNoiseName != editorState.noiseManager.ActiveNoiseName)
             {
                 _lastNoiseName = editorState.noiseManager.ActiveNoiseName;
-                _brushNeedsUpdate = true;
+                BrushNeedsUpdate = true;
             }
 
             if (kbs.IsKeyDown(Keys.OemCloseBrackets))
             {
                 if (shift) BrushRadius = MathHelper.Clamp(BrushRadius + 2f, 8f, 256f);
                 else AdjustValue(true);
-                _brushNeedsUpdate = true;
+                BrushNeedsUpdate = true;
             }
             if (kbs.IsKeyDown(Keys.OemOpenBrackets))
             {
                 if (shift) BrushRadius = MathHelper.Clamp(BrushRadius - 2f, 8f, 256f);
                 else AdjustValue(false);
-                _brushNeedsUpdate = true;
+                BrushNeedsUpdate = true;
             }
 
             if (input.LeftHold)
@@ -1121,7 +1160,7 @@ namespace Pixel_Simulations.Editor
 
         private void EnsureBrushTexture(GraphicsDevice gd, NoiseManager nm)
         {
-            if (!_brushNeedsUpdate && _brushTexture != null) return;
+            if (!BrushNeedsUpdate && _brushTexture != null) return;
 
             int diameter = (int)(BrushRadius * 2);
             if (diameter < 1) diameter = 1;
@@ -1187,7 +1226,7 @@ namespace Pixel_Simulations.Editor
             }
 
             _brushTexture.SetData(data);
-            _brushNeedsUpdate = false;
+            BrushNeedsUpdate = false;
         }
         private void PaintStamp(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
         {
@@ -1421,8 +1460,8 @@ namespace Pixel_Simulations.Editor
             }
 
             // --- THE FIX: LINK THEM USING THEIR UNIQUE IDs! ---
-            sourceShape.LinkedObjects.Add(falloffShape.ID);
-            falloffShape.LinkedObjects.Add(sourceShape.ID);
+            sourceShape.Links.Add(new ObjectLink { SourcePort = "LightData", TargetID = falloffShape.ID, TargetPort = "FalloffMask" });
+            falloffShape.Links.Add(new ObjectLink { SourcePort = "FalloffMask", TargetID = sourceShape.ID, TargetPort = "LightData" });
 
             sourceShape.Properties.Add("Color", new MapProperty(PropertyType.String, "255,220,150,255"));
             sourceShape.Properties.Add("Intensity", new MapProperty(PropertyType.Float, "1.0"));
@@ -1483,7 +1522,63 @@ namespace Pixel_Simulations.Editor
         public string GetShortcutHints() => "CAPS: Draw Rectangle | OFF: Draw Circle";
     }
 
+    public class SpawnPointerTool : ITool
+    {
+        public string Name => "SpawnPointer";
+        public string IconName { get; set; } = "PointPlacer"; // Feel free to add a "SpawnIcon" to your JSON later
 
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
+        {
+            // Only works on Control/Trigger layers
+            if (!(toolInput.ActiveLayer is ControlLayer controlLayer)) return;
+
+            if (input.IsNewLeftClick)
+            {
+                // Snap to the center of the hovered 16x16 cell for perfectly aligned spawns
+                Vector2 snapPos = GridHelper.GetPlacementPosition(toolInput.WorldPosition, false);
+                // Offset back up by half the cell so the visual center is exactly in the middle of the tile
+                snapPos.Y -= 8;
+
+                var spawnPoint = new PointObject
+                {
+                    Position = snapPos,
+                    Radius = 8f, // Fixed, perfectly sized radius
+                    Label = "Spawn Point",
+                    DebugColor = Color.Magenta
+                };
+
+                // Add properties to define who spawns here (defaults to Player)
+                spawnPoint.Properties.Add("SpawnType", new MapProperty(PropertyType.String, "Player"));
+                // Add a systemic tag if you have one (e.g., 20 for spawns)
+                spawnPoint.Tags.Add(20); 
+
+                eventBus.Publish(new AddPointCommand(controlLayer, spawnPoint));
+
+                // Select it immediately so the user can change "Player" to "NPC_Blacksmith" in the Inspector
+                editorState.Selection.SelectedMapObject = spawnPoint;
+            }
+        }
+
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            if (!(toolInput.ActiveLayer is ControlLayer)) return;
+
+            Vector2 snapPos = GridHelper.GetPlacementPosition(input.MouseWorldPosition, false);
+            snapPos.Y -= 8;
+
+            sb.DrawCircle(snapPos, 8f, 16, Color.Magenta, 2f / input.Zoom);
+            sb.DrawLine(snapPos - new Vector2(4, 0), snapPos + new Vector2(4, 0), Color.Magenta, 2f / input.Zoom);
+            sb.DrawLine(snapPos - new Vector2(0, 4), snapPos + new Vector2(0, 4), Color.Magenta, 2f / input.Zoom);
+
+            // Draw text tag
+            if (Pixel_Simulations.UI.UITheme.DefaultFont != null)
+            {
+                sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, "SPAWN", snapPos + new Vector2(10, -10), Color.Magenta, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            }
+        }
+
+        public string GetShortcutHints() => "Click to place a fixed-size Spawn Point";
+    }
 
 
 

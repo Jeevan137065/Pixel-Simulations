@@ -1,0 +1,106 @@
+{
+  "actors": [
+    {
+      "id": "player",
+      "name": "Player",
+      "color": "#3498db",
+      "attributes": [
+        {
+          "key": "Gold",
+          "type": "int",
+          "val": "100"
+        },
+        {
+          "key": "Gender",
+          "type": "bool",
+          "val": "0"
+        }
+      ]
+    },
+    {
+      "id": "narrator",
+      "name": "Narrator",
+      "color": "#95a5a6",
+      "attributes": []
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node_ir2q1m",
+      "x": 100,
+      "y": 100,
+      "speakerId": "narrator",
+      "text": "Welcome to the Editor!\nRight-click to add nodes.",
+      "choices": [
+        {
+          "id": "c_wlnw6c",
+          "text": "Are u rich",
+          "targetNode": "node_43gj34",
+          "hasCheck": true,
+          "check": {
+            "actorId": "player",
+            "attr": "Gold",
+            "val": "10"
+          },
+          "hasReward": true,
+          "reward": {
+            "actorId": "player",
+            "attr": "Gold",
+            "action": "Add",
+            "val": "100"
+          }
+        },
+        {
+          "id": "c_zpnate",
+          "text": "Gender",
+          "targetNode": "node_b4we36",
+          "hasCheck": true,
+          "check": {
+            "actorId": "player",
+            "attr": "Gender",
+            "op": "==",
+            "val": "0"
+          },
+          "hasReward": true,
+          "reward": {}
+        }
+      ]
+    },
+    {
+      "id": "node_43gj34",
+      "x": 436,
+      "y": -2.1818199157714844,
+      "speakerId": "player",
+      "text": "U are rich, add 100 gold",
+      "choices": [
+        {
+          "id": "c_ul8yfd",
+          "text": "Continue",
+          "targetNode": null,
+          "hasCheck": false,
+          "check": {},
+          "hasReward": false,
+          "reward": {}
+        }
+      ]
+    },
+    {
+      "id": "node_b4we36",
+      "x": 437,
+      "y": 176.81818008422852,
+      "speakerId": "player",
+      "text": "Male",
+      "choices": [
+        {
+          "id": "c_ft0xrj",
+          "text": "Continue",
+          "targetNode": null,
+          "hasCheck": false,
+          "check": {},
+          "hasReward": false,
+          "reward": {}
+        }
+      ]
+    }
+  ]
+}

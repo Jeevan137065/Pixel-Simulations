@@ -13,18 +13,6 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin ../../../PROJECTS/ITEM_MANAGER/assets/Items.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:../../../PROJECTS/ITEM_MANAGER/assets/Items.png;Items.png
-
 #begin AmbientLight.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -85,6 +73,18 @@
 /processorParam:TextureFormat=Color
 /build:Emotes.png
 
+#begin Farm.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Farm.png
+
 #begin grass.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -102,6 +102,18 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:HeightToNormal.fx
+
+#begin Items.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Items.png
 
 #begin Items.png
 /importer:TextureImporter

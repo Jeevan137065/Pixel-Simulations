@@ -63,11 +63,9 @@ namespace Pixel_Simulations.Editor
 
             UpdateUI(input, _eventBus);
             // --- 4. Process Viewport/Tool Interaction ---
-            if (_editorState.PrefabCreator.IsOpen)
+            if (_uiManager.AutoTilePanel.IsOpen)
             {
-                _uiManager.PrefabPanel.Update(input, _eventBus);
-                // Block keys from reaching the map/camera while typing name
-                return;
+                _uiManager.AutoTilePanel.Update(input, _eventBus);
             }
             if (_editorState.UI.ActivePanelName == "Viewport" && !_editorState.UI.IsLinkingMode)
             {
@@ -371,14 +369,19 @@ namespace Pixel_Simulations.Editor
             var activeIndex = _editorState.Layers.ActiveLayerIndex;
             var newLayerType = _editorState.Layers.NewLayerType;
 
+            string name = $"{newLayerType}{_editorState.ActiveMap.Layers.Count + 1}";
             // --- NEW: Enforce 1 Mask Layer Rule ---
-            if (newLayerType == LayerType.Mask && _editorState.ActiveMap.Layers.Any(l => l.Type == LayerType.Mask))
+            if (newLayerType == LayerType.Mask)
             {
-                System.Diagnostics.Debug.WriteLine("Map already has a Mask Layer!");
-                return; // Abort!
+                if (_editorState.ActiveMap.Layers.Any(l => l.Type == LayerType.Mask))
+                {
+                    System.Diagnostics.Debug.WriteLine("Map already has a Mask Layer!");
+                    return;
+                }
+                // Force the name
+                name = "Mask";
             }
 
-            string name = $"{newLayerType}{_editorState.ActiveMap.Layers.Count + 1}";
             Layer newLayer;
 
             switch (newLayerType)
@@ -438,7 +441,7 @@ namespace Pixel_Simulations.Editor
     {
         private readonly EditorState _editorState;
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly EventBus _eventBus; // Added to publish side-effects
+        private readonly EventBus _eventBus;
         public int counter = 0;
 
         public TilesetController(EventBus eventBus, EditorState editorState, EditorUI editorUI)
@@ -451,11 +454,7 @@ namespace Pixel_Simulations.Editor
             eventBus.Subscribe<SelectTilesetCommand>(HandleSelectTileset);
             eventBus.Subscribe<SelectTileCommand>(HandleSelectTile);
             eventBus.Subscribe<SelectPrefabCommand>(HandleSelectPrefab);
-            eventBus.Subscribe<TogglePrefabCreatorCommand>(HandleToggleCreator);
             eventBus.Subscribe<OpenAtlasPickerCommand>(HandleOpenAtlasPicker);
-            eventBus.Subscribe<SavePrefabCommand>(HandleSavePrefab);
-            eventBus.Subscribe<ClosePrefabCreatorCommand>(HandleCloseCreator);
-            eventBus.Subscribe<DeletePrefabCommand>(HandleDeletePrefab);
         }
 
         private void HandleCreateTileset(CreateTilesetCommand cmd)
@@ -469,26 +468,23 @@ namespace Pixel_Simulations.Editor
                 _editorState.ActiveTileSets.Add(newTileset);
                 _editorState.TilesetManager.RegisterTileSet(newTileset);
 
-                // Set as active
                 _editorState.TilesetPanel.ActiveTilesetName = cmd.AtlasName;
                 SelectInitialTileset(newTileset);
             }
         }
+
         private void HandleSelectTileset(SelectTilesetCommand cmd)
         {
             var panelState = _editorState.TilesetPanel;
             if (panelState.ActiveTilesetName != cmd.TilesetName)
             {
                 var tileset = _editorState.ActiveTileSets.FirstOrDefault(ts => ts.Name == cmd.TilesetName);
-                if (tileset != null)
-                {
-                    SelectInitialTileset(tileset);
-                }
+                if (tileset != null) SelectInitialTileset(tileset);
             }
         }
+
         private void HandleOpenAtlasPicker(OpenAtlasPickerCommand cmd)
         {
-            // Only get atlases marked for TILES
             var tileAtlases = _editorState.AssetLibrary.GetNamesByType(AtlasType.Tile);
             var activeNames = _editorState.ActiveTileSets.Select(ts => ts.Name).ToList();
 
@@ -496,16 +492,16 @@ namespace Pixel_Simulations.Editor
             if (next != null)
                 _eventBus.Publish(new CreateTilesetCommand { AtlasName = next });
         }
+
         private void HandleSelectTile(SelectTileCommand cmd)
         {
             counter++;
             _editorState.TilesetPanel.ActiveTilesetName = cmd.TilesetName;
             _editorState.TilesetPanel.SelectedTileID = cmd.TileID;
             _editorState.Selection.ActiveTileBrush = new TileInfo(cmd.TilesetName, cmd.TileID);
-
-            // Ensure we are using the Brush tool when a tile is selected
             _eventBus.Publish(new ChangeToolCommand { ToolName = "Brush" });
         }
+
         private void SelectInitialTileset(TileSet tileset)
         {
             var panelState = _editorState.TilesetPanel;
@@ -513,8 +509,7 @@ namespace Pixel_Simulations.Editor
             int firstId = tileset.SlicedAtlas.Any() ? tileset.SlicedAtlas.Keys.First() : -1;
             panelState.SelectedTileID = firstId;
 
-            if (firstId != -1)
-                _editorState.Selection.ActiveTileBrush = new TileInfo(tileset.Name, firstId);
+            if (firstId != -1) _editorState.Selection.ActiveTileBrush = new TileInfo(tileset.Name, firstId);
         }
 
         private void HandleSelectPrefab(SelectPrefabCommand cmd)
@@ -523,117 +518,9 @@ namespace Pixel_Simulations.Editor
             if (prefab != null)
             {
                 _editorState.Selection.ActivePrefab = prefab;
-
-                // LOAD into Creator Context so we can Modify or Delete it
-                var ctx = _editorState.PrefabCreator;
-                ctx.TempName = prefab.ID;
-
-                // Copy Lists and Dictionaries safely
-                ctx.TempTags = new List<int>(prefab.Tags);
-
-                ctx.TempProperties = new Dictionary<string, MapProperty>();
-                foreach (var kvp in prefab.Properties)
-                {
-                    ctx.TempProperties[kvp.Key] = new MapProperty(kvp.Value.Type, kvp.Value.Value);
-                }
-
-                // --- NEW: Copy Alternate States safely ---
-                ctx.TempAlternateStates = new Dictionary<string, Rectangle>();
-                if (prefab.AlternateStates != null)
-                {
-                    foreach (var kvp in prefab.AlternateStates)
-                    {
-                        ctx.TempAlternateStates[kvp.Key] = kvp.Value;
-                    }
-                }
-
-                ctx.SelectionRect = prefab.SourceRect;
-                ctx.BaseSourceRect = prefab.SourceRect;
-                ctx.ActiveAtlasName = prefab.AtlasName;
-                ctx.NeedsUIRebuild = true;
-                ctx.AtlasPanOffset = Vector2.Zero;
-
-                // Switch to the Object Placer tool
+                // Instantly arm the Object Placer tool!
                 _eventBus.Publish(new ChangeToolCommand { ToolName = "ObjectPlacer" });
             }
-        }
-
-        private void HandleToggleCreator(TogglePrefabCreatorCommand cmd)
-        {
-            var ctx = _editorState.PrefabCreator;
-            ctx.IsOpen = !ctx.IsOpen; // Toggle!
-
-            if (ctx.IsOpen)
-            {
-                // RESET the context for a fresh object
-                ctx.TempName = "New_Object_" + (_editorState.PrefabManager.Prefabs.Count + 1);
-                ctx.TempTags = new List<int>(); // We will use a List now instead of a string!
-                ctx.TempProperties = new Dictionary<string, MapProperty>(); // NEW
-                ctx.SelectionRect = new Rectangle(0, 0, 16, 16);
-                ctx.BaseSourceRect = new Rectangle(0, 0, 16, 16);
-                ctx.ActiveAtlasName = cmd.DefaultAtlasName ?? "Basic";
-                ctx.AtlasPanOffset = Vector2.Zero; // Reset camera
-
-                _editorState.Selection.ActivePrefab = null;
-            }
-        }
-        private void HandleSavePrefab(SavePrefabCommand cmd)
-        {
-            var ctx = _editorState.PrefabCreator;
-            if (string.IsNullOrEmpty(ctx.TempName)) return;
-
-            // Check for "New" mode conflicts
-            if (cmd.Mode == "New" && _editorState.PrefabManager.Prefabs.ContainsKey(ctx.TempName))
-            {
-                ctx.TempName += "_Copy"; // Auto-rename to prevent blocking
-            }
-
-            var prefab = new ObjectPrefab
-            {
-                ID = ctx.TempName,
-                AtlasName = ctx.ActiveAtlasName,
-                SourceRect = ctx.BaseSourceRect.IsEmpty ? ctx.SelectionRect : ctx.BaseSourceRect,
-                Tags = new List<int>(ctx.TempTags),
-                Properties = new Dictionary<string, MapProperty>(),
-
-                // --- NEW: Copy the temporary states to the final prefab ---
-                AlternateStates = new Dictionary<string, Rectangle>(),
-
-                Pivot = new Vector2(ctx.SelectionRect.Width / 2, ctx.SelectionRect.Height)
-            };
-
-            // Deep copy the properties
-            foreach (var kvp in ctx.TempProperties)
-            {
-                prefab.Properties[kvp.Key] = new MapProperty(kvp.Value.Type, kvp.Value.Value);
-            }
-
-            // Deep copy the Alternate States
-            foreach (var kvp in ctx.TempAlternateStates)
-            {
-                prefab.AlternateStates[kvp.Key] = kvp.Value;
-            }
-
-            _editorState.PrefabManager.Prefabs[prefab.ID] = prefab;
-
-            // Save to the JSON file
-            _editorState.PrefabManager.Save(Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json"));
-        }
-        private void HandleDeletePrefab(DeletePrefabCommand cmd)
-        {
-            var ctx = _editorState.PrefabCreator;
-            if (_editorState.PrefabManager.Prefabs.Remove(ctx.TempName))
-            {
-                _editorState.PrefabManager.Save(Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json"));
-                _editorState.Selection.ActivePrefab = null;
-
-                // Reset to default name so the user can keep creating
-                ctx.TempName = "New_Object_" + (_editorState.PrefabManager.Prefabs.Count + 1);
-            }
-        }
-        private void HandleCloseCreator(ClosePrefabCreatorCommand cmd)
-        {
-            _editorState.PrefabCreator.IsOpen = false;
         }
     }
     public class MapController
@@ -696,6 +583,7 @@ namespace Pixel_Simulations.Editor
         }
         private void LoadNewMap(Map newMap, string filePath)
         {
+            _editorState.ActiveMap?.Dispose();
             // --- 1. REPLACE THE CORE DATA ---
             _editorState.ActiveMap = newMap;
             _editorState.CurrentMapFile = filePath;

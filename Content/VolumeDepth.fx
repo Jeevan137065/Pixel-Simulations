@@ -14,8 +14,8 @@ Texture2D SpriteTexture;
 sampler2D SpriteSampler = sampler_state{ Texture = <SpriteTexture>; AddressU = Clamp; AddressV = Clamp; };
 
 struct VSInput {
-    float3 Position : POSITION0; // Z holds the BaseWorldY
-    float4 Color : COLOR0;
+    float3 Position : POSITION0; // Z holds the actual World Y coordinate of this specific vertex!
+    float4 Color : COLOR0;       // R = DrawDepth, G = BaseWorldY
     float2 TexCoord : TEXCOORD0;
 };
 
@@ -29,11 +29,14 @@ struct VSOutput {
 VSOutput MainVS(VSInput input) {
     VSOutput output;
 
-    // Multiply X and Y by matrix, but force Z=0 so Ortho projection doesn't clip it out of bounds!
+    // Output actual screen position (Z must be 0 for 2D ortho)
     output.Position = mul(float4(input.Position.x, input.Position.y, 0.0, 1.0), MatrixTransform);
 
-    // Altitude = (Bottom of Sprite Y - Current Vertex Y)
-    output.Altitude = clamp((input.Position.z - input.Position.y) / MaxAltitude, 0.0, 1.0);
+    // Calculate Altitude based on the difference between the object's feet (BaseWorldY) 
+    // and the specific pixel's World Y (stored in input.Position.z).
+    // The higher up the tree, the higher the altitude (closer to 1.0).
+    float baseWorldY = input.Color.g * MaxAltitude; // Recover physical feet Y
+    output.Altitude = clamp((baseWorldY - input.Position.z) / MaxAltitude, 0.0, 1.0);
 
     output.Color = input.Color;
     output.TexCoord = input.TexCoord;
@@ -44,7 +47,7 @@ float4 MainPS(VSOutput input) : COLOR{
     float4 texColor = tex2D(SpriteSampler, input.TexCoord);
     if (texColor.a < 0.1) discard;
 
-    // Red = Altitude, Green = Y-Sort Depth (passed via vertex color in C#)
+    // Red = Altitude (For Fog), Green = Ground Y (For sorting)
     return float4(input.Altitude, input.Color.g, 0, texColor.a);
 }
 

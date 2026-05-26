@@ -1,6 +1,14 @@
 {
   "Layers": [
     {
+      "$type": "Mask",
+      "Name": "Mask",
+      "IsVisible": true,
+      "IsLocked": false,
+      "OffsetX": -1,
+      "OffsetY": -1
+    },
+    {
       "$type": "Tile",
       "Name": "Ground",
       "IsVisible": true,

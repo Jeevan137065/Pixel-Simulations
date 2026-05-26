@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Pixel_Simulations.Data
 {
     public enum LayerType { Tile, Object, Control,Mask}
-    public abstract class Layer
+    public abstract class Layer : IDisposable
     {
         public string Name { get; set; }
         public bool IsVisible { get; set; } = true;
@@ -17,6 +17,7 @@ namespace Pixel_Simulations.Data
         public abstract void Shift(Vector2 delta, int cellSize);
         protected Layer(string name) { Name = name; }
         protected Layer() { } // For deserialization
+        public virtual void Dispose() { }
     }
     public class TileLayer : Layer
     {
@@ -184,6 +185,17 @@ namespace Pixel_Simulations.Data
         {
             // Shifting textures across GPU boundaries is complex, 
             // so we'll leave Mask Layer static for now.
+        }
+        public override void Dispose()
+        {
+            if (Chunks != null)
+            {
+                foreach (var chunk in Chunks.Values)
+                {
+                    chunk?.Dispose();
+                }
+                Chunks.Clear();
+            }
         }
         // Helper to get or create a chunk on the GPU
         public RenderTarget2D GetOrCreateChunk(Point coord, GraphicsDevice gd)

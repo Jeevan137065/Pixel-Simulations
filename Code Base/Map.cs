@@ -2,7 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using Newtonsoft.Json;
-
+using Pixel_Simulations.Editor;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -48,22 +49,28 @@ namespace Pixel_Simulations.Data
             
         }
     }
-    public class Map
+    public class Map : IDisposable
     {
-
         [JsonProperty]
         public List<Layer> Layers { get; set; }
 
         public Map()
         {
             Layers = new List<Layer>();
-            // Every new map starts with a default, unlocked Ground layer.
             Layers.Add(new TileLayer("Ground"));
-            
         }
 
-        // Json.NET requires a parameterless constructor for deserialization
-        //public Map() { }
+        // --- Add Dispose to cascade down ---
+        public void Dispose()
+        {
+            if (Layers != null)
+            {
+                foreach (var layer in Layers)
+                {
+                    layer.Dispose();
+                }
+            }
+        }
 
         // Methods for manipulating layers. The EditorController will call these.
         public void AddLayerAbove(int index, Layer newLayer)
@@ -150,7 +157,7 @@ namespace Pixel_Simulations.Data
             {
                 // --- FILE HEADER ---
                 writer.Write("PMAP".ToCharArray()); // 4-byte magic string to identify our file type
-                writer.Write(1);      // Version number
+                writer.Write(2);      // Version number
 
                 // --- LAYER DATA ---
                 writer.Write(map.Layers.Count);
@@ -175,8 +182,11 @@ namespace Pixel_Simulations.Data
                             WriteControlLayer(writer, layer as ControlLayer);
                             break;
                         case LayerType.Mask:
-                            // Do nothing! The base layer info (Name, Visible, Locked) is already written.
-                            // The chunk pixel data is handled by the PNG exporter.
+                            var maskL = layer as MaskLayer;
+                            // We already wrote Name, IsVisible, IsLocked in the base loop.
+                            // Now write the Offsets!
+                            writer.Write(maskL.OffsetX);
+                            writer.Write(maskL.OffsetY);
                             break;
                     }
                 }
@@ -212,14 +222,16 @@ namespace Pixel_Simulations.Data
                             newLayer = ReadTileLayer(reader, name);
                             break;
                         case LayerType.Object:
-                            newLayer = ReadObjectLayer(reader, name);
+                            newLayer = ReadObjectLayer(reader, name,version);
                             break;
                         case LayerType.Control:
-                            newLayer = ReadControlLayer(reader, name);
+                            newLayer = ReadControlLayer(reader, name,version);
                             break;
                         case LayerType.Mask:
-                            // Do nothing! The base layer info (Name, Visible, Locked) is already written.
-                            newLayer = new MaskLayer(name);
+                            var loadedMask = new MaskLayer(name);
+                            loadedMask.OffsetX = reader.ReadInt32();
+                            loadedMask.OffsetY = reader.ReadInt32();
+                            newLayer = loadedMask;
                             break;
                      }
                     if (newLayer != null)
@@ -330,14 +342,14 @@ namespace Pixel_Simulations.Data
             }
             return layer;
         }
-        private static ObjectLayer ReadObjectLayer(BinaryReader reader, string name)
+        private static ObjectLayer ReadObjectLayer(BinaryReader reader, string name, int version)
         {
             var layer = new ObjectLayer(name);
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
                 var prop = new PropObject();
-                ReadMapObjectBase(reader, prop); // <--- Replaces Name = reader.ReadString()
+                ReadMapObjectBase(reader, prop, version); // <--- Replaces Name = reader.ReadString()
                 prop.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 prop.PrefabID = reader.ReadString();
                 prop.Scale = new Vector2(reader.ReadSingle(), reader.ReadSingle());
@@ -346,7 +358,7 @@ namespace Pixel_Simulations.Data
             }
             return layer;
         }
-        private static ControlLayer ReadControlLayer(BinaryReader reader, string name)
+        private static ControlLayer ReadControlLayer(BinaryReader reader, string name,int version)
         {
             var layer = new ControlLayer(name);
 
@@ -355,7 +367,7 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < sCount; i++)
             {
                 var s = new ShapeObject();
-                ReadMapObjectBase(reader, s); // Loads ID, Links, Tags, Name
+                ReadMapObjectBase(reader, s,version); // Loads ID, Links, Tags, Name
                 int vCount = reader.ReadInt32();
                 var verts = new List<Vector2>();
                 for (int j = 0; j < vCount; j++) verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
@@ -369,7 +381,7 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < rCount; i++)
             {
                 var r = new RectangleObject();
-                ReadMapObjectBase(reader, r); // Loads ID, Links, Tags, Name
+                ReadMapObjectBase(reader, r,version); // Loads ID, Links, Tags, Name
                 r.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 r.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 layer.Rectangles.Add(r);
@@ -380,7 +392,7 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < pCount; i++)
             {
                 var p = new PointObject();
-                ReadMapObjectBase(reader, p); // Loads ID, Links, Tags, Name
+                ReadMapObjectBase(reader, p,version); // Loads ID, Links, Tags, Name
                 p.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 p.Radius = reader.ReadSingle();
                 layer.Points.Add(p);
@@ -391,41 +403,59 @@ namespace Pixel_Simulations.Data
         #endregion
         private static void WriteMapObjectBase(BinaryWriter writer, MapObject obj)
         {
-            writer.Write(obj.ID); // Save the unique ID
+            writer.Write(obj.ID);
             writer.Write(obj.Name ?? "");
 
-            // Write Links
-            writer.Write(obj.LinkedObjects.Count);
-            foreach (var link in obj.LinkedObjects) writer.Write(link);
+            // Write Links (Version 2 Format)
+            writer.Write(obj.Links.Count);
+            foreach (var link in obj.Links)
+            {
+                writer.Write(link.SourcePort ?? "Out");
+                writer.Write(link.TargetID);
+                writer.Write(link.TargetPort ?? "In");
+            }
 
-            // Write Tags
             writer.Write(obj.Tags.Count);
             foreach (var tag in obj.Tags) writer.Write(tag);
-            // Write Properties
+
             writer.Write(obj.Properties.Count);
             foreach (var kvp in obj.Properties)
             {
                 writer.Write(kvp.Key);
-                writer.Write((int)kvp.Value.Type);  // Save type as an int
-                writer.Write(kvp.Value.Value ?? ""); // Save value as string
+                writer.Write((int)kvp.Value.Type);
+                writer.Write(kvp.Value.Value ?? "");
             }
         }
-        private static void ReadMapObjectBase(BinaryReader reader, MapObject obj)
+
+        private static void ReadMapObjectBase(BinaryReader reader, MapObject obj, int version)
         {
-            obj.ID = reader.ReadString(); // Load the unique ID
+            obj.ID = reader.ReadString();
             obj.Name = reader.ReadString();
 
-            // Read Links
             int linkCount = reader.ReadInt32();
-            obj.LinkedObjects = new List<string>();
-            for (int i = 0; i < linkCount; i++) obj.LinkedObjects.Add(reader.ReadString());
+            obj.Links = new List<ObjectLink>();
+            for (int i = 0; i < linkCount; i++)
+            {
+                if (version >= 2)
+                {
+                    obj.Links.Add(new ObjectLink
+                    {
+                        SourcePort = reader.ReadString(),
+                        TargetID = reader.ReadString(),
+                        TargetPort = reader.ReadString()
+                    });
+                }
+                else
+                {
+                    // Backwards Compatibility! Upgrade old V1 String Links to ObjectLinks automatically.
+                    obj.Links.Add(new ObjectLink { SourcePort = "Out", TargetID = reader.ReadString(), TargetPort = "In" });
+                }
+            }
 
-            // Read Tags
             int tagCount = reader.ReadInt32();
             obj.Tags = new HashSet<int>();
             for (int i = 0; i < tagCount; i++) obj.Tags.Add(reader.ReadInt32());
 
-            // --- NEW: READ PROPERTIES ---
             int propCount = reader.ReadInt32();
             obj.Properties = new Dictionary<string, MapProperty>();
             for (int i = 0; i < propCount; i++)
@@ -583,11 +613,11 @@ namespace Pixel_Simulations.Data
             if (!hasData) return new RectangleF(0, 0, 0, 0);
             return new RectangleF(minX, minY, maxX - minX, maxY - minY);
         }
-        public static void SaveMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd, Editor.EditorState state)
+        public static void SaveMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd, EditorState state)
         {
             if (maskLayer == null || maskLayer.Chunks.Count == 0) return;
 
-            // 1. Calculate Bounds and save them directly to the MaskLayer instance!
+            // Calculate Bounds
             maskLayer.OffsetX = maskLayer.Chunks.Keys.Min(p => p.X);
             maskLayer.OffsetY = maskLayer.Chunks.Keys.Min(p => p.Y);
 
@@ -599,65 +629,68 @@ namespace Pixel_Simulations.Data
 
             var prevRt = gd.GetRenderTargets();
 
-            // --- 2. STITCH RAW MASK ---
+            // 1. STITCH RAW MASK
             using (var masterRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
             {
                 gd.SetRenderTarget(masterRt);
-                gd.Clear(new Color(0, 0, 0, 255));
+                gd.Clear(new Color(0, 0, 0, 255)); // Clear to Opaque Black
 
                 using (var sb = new SpriteBatch(gd))
                 {
                     sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
                     foreach (var kvp in maskLayer.Chunks)
                     {
-                        Vector2 pos = new Vector2((kvp.Key.X - maskLayer.OffsetX) * MaskLayer.CHUNK_PIXEL_SIZE, (kvp.Key.Y - maskLayer.OffsetY) * MaskLayer.CHUNK_PIXEL_SIZE);
+                        Vector2 pos = new Vector2(
+                            (kvp.Key.X - maskLayer.OffsetX) * MaskLayer.CHUNK_PIXEL_SIZE,
+                            (kvp.Key.Y - maskLayer.OffsetY) * MaskLayer.CHUNK_PIXEL_SIZE);
                         sb.Draw(kvp.Value, pos, Color.White);
                     }
                     sb.End();
                 }
 
+                // Save Raw Mask to Assets
                 System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(imagePath));
-                using (var stream = System.IO.File.OpenWrite(imagePath)) { masterRt.SaveAsPng(stream, width, height); }
+                using (var stream = System.IO.File.OpenWrite(imagePath))
+                {
+                    masterRt.SaveAsPng(stream, width, height);
+                }
 
-                // --- 3. GENERATE NORMAL MAP ---
+                // 2. GENERATE HEIGHT-TO-NORMAL MAP
                 string normalPath = imagePath.Replace("_mask.png", "_normals.png");
                 var normalShader = state.normalShader;
+
                 if (normalShader != null)
                 {
                     using (var normalRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
                     {
                         gd.SetRenderTarget(normalRt);
-                        gd.Clear(Color.Transparent); // Clear to empty
+                        gd.Clear(Color.Transparent);
 
-                        // 1. Pass the Master Mask Texture to the Shader
                         normalShader.Parameters["MaskTexture"]?.SetValue(masterRt);
                         normalShader.Parameters["TextureSize"]?.SetValue(new Vector2(width, height));
-                        normalShader.Parameters["HeightScale"]?.SetValue(15.0f); // Tweak bumpiness here!
+                        normalShader.Parameters["HeightScale"]?.SetValue(15.0f); // Adjusts terrain slope steepness
 
-                        // 2. Setup GPU State for a raw Full-Screen Quad Draw
-                        gd.BlendState = BlendState.Opaque; // Ignore alpha blending, just write the exact pixel
+                        gd.BlendState = BlendState.Opaque;
                         gd.DepthStencilState = DepthStencilState.None;
                         gd.RasterizerState = RasterizerState.CullNone;
                         gd.SamplerStates[0] = SamplerState.PointClamp;
 
-                        // 3. Create a Full-Screen Quad in Clip Space (-1.0 to 1.0)
-                        // This perfectly covers the entire RenderTarget without needing a Camera Matrix!
+                        // Create a Full-Screen Quad
                         VertexPositionTexture[] quadVerts = new VertexPositionTexture[4];
-                        quadVerts[0] = new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0));  // Top Left
-                        quadVerts[1] = new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0));   // Top Right
-                        quadVerts[2] = new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1)); // Bottom Left
-                        quadVerts[3] = new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1));  // Bottom Right
+                        quadVerts[0] = new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0));
+                        quadVerts[1] = new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0));
+                        quadVerts[2] = new VertexPositionTexture(new Vector3(-1, -1, 0), new Vector2(0, 1));
+                        quadVerts[3] = new VertexPositionTexture(new Vector3(1, -1, 0), new Vector2(1, 1));
 
                         short[] quadIndices = new short[] { 0, 1, 2, 1, 3, 2 };
 
-                        // 4. Draw the Quad!
                         foreach (var pass in normalShader.CurrentTechnique.Passes)
                         {
                             pass.Apply();
                             gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, quadVerts, 0, 4, quadIndices, 0, 2);
                         }
 
-                        // 5. Save the resulting target to PNG
+                        // Save Normal Map to Assets
                         using (var stream = System.IO.File.OpenWrite(normalPath))
                         {
                             normalRt.SaveAsPng(stream, width, height);
@@ -666,7 +699,6 @@ namespace Pixel_Simulations.Data
                 }
                 gd.SetRenderTargets(prevRt);
             }
-            // (Notice: We completely deleted the .meta saving code!)
         }
         public static void LoadMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd)
         {

@@ -195,8 +195,8 @@ namespace Pixel_Simulations
             _effect.Parameters["PlayerPos"]?.SetValue(PlayerPosition);
             _effect.Parameters["ObjectDepthTexture"]?.SetValue(depthTexture);
 
-            _effect.Parameters["u_baseH"]?.SetValue(Settings.GlobalHeightBase * 0.15f);
-            _effect.Parameters["u_baseW"]?.SetValue(Settings.BladeThickness * 0.15f);
+            _effect.Parameters["u_baseH"]?.SetValue(Settings.GlobalHeightBase * 0.5f);
+            _effect.Parameters["u_baseW"]?.SetValue(Settings.BladeThickness * 0.5f);
             _effect.Parameters["u_taper"]?.SetValue(Settings.Taper);
             _effect.Parameters["u_curve"]?.SetValue(Settings.RestingCurvature);
 

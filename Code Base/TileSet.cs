@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Pixel_Simulations.Data
@@ -165,4 +166,54 @@ namespace Pixel_Simulations.Data
             return null;
         }
     }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class AutoTileRule
+    {
+        [JsonProperty] public string RuleName { get; set; } = "New Rule";
+        [JsonProperty] public string TargetAtlas { get; set; } = "Farm";
+
+        // Maps a bitmask (0-15) to a TileID in the atlas
+        [JsonProperty] public Dictionary<int, int> BitmaskMap { get; set; } = new Dictionary<int, int>();
+    }
+    public class AutoTileManager
+    {
+        public Dictionary<string, AutoTileRule> Rules { get; private set; } = new Dictionary<string, AutoTileRule>();
+
+        public void Save(string path)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllText(path, JsonConvert.SerializeObject(Rules.Values, Formatting.Indented));
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Failed to save autotiles: {ex.Message}"); }
+        }
+
+        public void Load(string path)
+        {
+            Rules.Clear();
+            if (!File.Exists(path)) return;
+
+            try
+            {
+                var list = JsonConvert.DeserializeObject<List<AutoTileRule>>(File.ReadAllText(path));
+                if (list != null)
+                {
+                    foreach (var rule in list) Rules[rule.RuleName] = rule;
+                }
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Failed to load autotiles: {ex.Message}"); }
+        }
+
+        public AutoTileRule GetRuleForAtlas(string atlasName)
+        {
+            foreach (var rule in Rules.Values)
+            {
+                if (rule.TargetAtlas == atlasName) return rule;
+            }
+            return null;
+        }
+    }
+
 }

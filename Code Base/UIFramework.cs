@@ -68,8 +68,8 @@ namespace Pixel_Simulations.UI
         {
             get
             {
-                float px = Parent != null ? Parent.AbsoluteBounds.X - Parent.ScrollOffset.X : 0;
-                float py = Parent != null ? Parent.AbsoluteBounds.Y - Parent.ScrollOffset.Y : 0;
+                float px = Parent != null ? Parent.AbsoluteBounds.X : 0;
+                float py = Parent != null ? Parent.AbsoluteBounds.Y : 0;
                 return new Rectangle((int)(LocalPosition.X + px), (int)(LocalPosition.Y + py), (int)Size.X, (int)Size.Y);
             }
         }
@@ -109,7 +109,10 @@ namespace Pixel_Simulations.UI
             bool consumed = false;
             for (int i = Children.Count - 1; i >= 0; i--)
             {
-                if (Children[i].Update(input, bus)) consumed = true;
+                var child = Children[i];
+                child.LocalPosition -= ScrollOffset;
+                if (child.Update(input, bus)) consumed = true;
+                child.LocalPosition += ScrollOffset;
             }
             return consumed;
         }
@@ -512,6 +515,9 @@ namespace Pixel_Simulations.UI
 
             foreach (var prefab in _es.PrefabManager.Prefabs.Values)
             {
+                // SKIP DATA PREFABS (Templates)
+                if (prefab.CanvasSize.X == 0 || prefab.CanvasSize.Y == 0) continue;
+
                 Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
                 if (slotRect.Contains(input.MouseWindowPosition))
                 {
@@ -588,6 +594,9 @@ namespace Pixel_Simulations.UI
 
             foreach (var prefab in _es.PrefabManager.Prefabs.Values)
             {
+                // SKIP DATA PREFABS (Templates)
+                if (prefab.CanvasSize.X == 0 || prefab.CanvasSize.Y == 0) continue;
+
                 Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
                 bool isSelected = _es.Selection.ActivePrefab?.ID == prefab.ID;
 
@@ -596,14 +605,28 @@ namespace Pixel_Simulations.UI
                     sb.FillRectangle(slotRect, Color.Black * 0.3f);
                     sb.DrawRectangle(slotRect, isSelected ? Color.Yellow : Color.White * 0.2f, 1);
 
-                    var tex = _es.AssetLibrary.GetAtlas(prefab.AtlasName);
+                    // --- FIX A: Draw a valid layer if Base is an empty placeholder ---
+                    Texture2D tex = null;
+                    Rectangle srcRect = prefab.SourceRect;
+
+                    if ((prefab.SourceRect.Width <= 16 || prefab.AtlasName == "Base") && prefab.AlternateStates.Count > 0)
+                    {
+                        var firstState = prefab.AlternateStates.Values.First();
+                        tex = _es.AssetLibrary.GetAtlas(firstState.AtlasName);
+                        srcRect = firstState.SourceRect;
+                    }
+                    else
+                    {
+                        tex = _es.AssetLibrary.GetAtlas(prefab.AtlasName);
+                    }
+
                     if (tex != null)
                     {
-                        float scale = (slotSize - 10f) / Math.Max(prefab.SourceRect.Width, prefab.SourceRect.Height);
+                        float scale = (slotSize - 10f) / Math.Max(srcRect.Width, srcRect.Height);
                         Vector2 pos = new Vector2(
-                            slotRect.Center.X - (prefab.SourceRect.Width * scale) / 2,
-                            slotRect.Center.Y - (prefab.SourceRect.Height * scale) / 2);
-                        sb.Draw(tex, pos, prefab.SourceRect, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                            slotRect.Center.X - (srcRect.Width * scale) / 2,
+                            slotRect.Center.Y - (srcRect.Height * scale) / 2);
+                        sb.Draw(tex, pos, srcRect, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
                     }
                 }
 

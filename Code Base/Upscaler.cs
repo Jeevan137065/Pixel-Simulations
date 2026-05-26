@@ -308,7 +308,7 @@ namespace Pixel_Simulations
             
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8 ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
-            _targets[RenderLayer.Simulation] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+            _targets[RenderLayer.Simulation] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height, false,
                 SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
             // Normals: Used for deferred lighting
             _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
@@ -373,10 +373,10 @@ namespace Pixel_Simulations
 
             // A. Draw Albedo (480p Background) scaled to fit the 1080p+ FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, Color.White);
+            spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, Color.White);
 
             // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
-            spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, Color.White);
             //spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
 
             spriteBatch.End();

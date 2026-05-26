@@ -73,19 +73,46 @@ namespace Pixel_Simulations.Data
             {
                 if (obj is PropObject prop)
                 {
-                    // Case-sensitive check
                     if (!_editorState.PrefabManager.Prefabs.TryGetValue(prop.PrefabID, out var prefab))
                     {
-                        // DIAGNOSTIC: If it's missing, draw a bright box so we know it exists but link is broken
                         sb.DrawRectangle(new RectangleF(prop.Position.X - 8, prop.Position.Y - 8, 16, 16), Color.Magenta, 1f);
                         continue;
                     }
 
-                    var tex = _editorState.AssetLibrary.GetAtlas(prefab.AtlasName);
-                    if (tex != null)
+                    Vector2 topLeft = prop.Position - prefab.Pivot;
+
+                    bool isTree = false;
+                    if (prop.Properties.TryGetValue("Type", out var pType)) isTree = pType.Value == "Tree";
+                    else if (prefab.Properties.TryGetValue("Type", out var pTypeB)) isTree = pTypeB.Value == "Tree";
+
+                    if (isTree)
                     {
-                        sb.Draw(tex, prop.Position, prefab.SourceRect, Color.White,
-                                prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, 0f);
+                        // ONLY draw the trunk and the base in the Editor to prevent clutter
+                        if (prefab.AlternateStates.TryGetValue("State_Base", out var bLayer) && _editorState.AssetLibrary.GetAtlas(bLayer.AtlasName) != null)
+                            sb.Draw(_editorState.AssetLibrary.GetAtlas(bLayer.AtlasName), topLeft + bLayer.Offset.ToVector2(), bLayer.SourceRect, Color.White);
+
+                        if (prefab.AlternateStates.TryGetValue("State_Trunk", out var tLayer) && _editorState.AssetLibrary.GetAtlas(tLayer.AtlasName) != null)
+                            sb.Draw(_editorState.AssetLibrary.GetAtlas(tLayer.AtlasName), topLeft + tLayer.Offset.ToVector2(), tLayer.SourceRect, Color.White);
+                    }
+                    else
+                    {
+                        // Check if we should draw an alternate state instead of the base
+                        bool drewLayer = false;
+                        foreach (var kvp in prefab.AlternateStates)
+                        {
+                            var t = _editorState.AssetLibrary.GetAtlas(kvp.Value.AtlasName);
+                            if (t != null)
+                            {
+                                sb.Draw(t, topLeft + kvp.Value.Offset.ToVector2(), kvp.Value.SourceRect, Color.White);
+                                drewLayer = true;
+                            }
+                        }
+
+                        // Draw Base as fallback
+                        if (!drewLayer && _editorState.AssetLibrary.GetAtlas(prefab.AtlasName) != null)
+                        {
+                            sb.Draw(_editorState.AssetLibrary.GetAtlas(prefab.AtlasName), prop.Position, prefab.SourceRect, Color.White, prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, 0f);
+                        }
                     }
                 }
             }
@@ -114,8 +141,8 @@ namespace Pixel_Simulations.Data
                 // --- GRADIENT Light Source PREVIEW ---
                 if (shapeObj.Tags.Contains(200))
                 {
-                    // 1. Find the connected Falloff shape
-                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.Tags.Contains(200) && shapeObj.LinkedObjects.Contains(s.ID));
+                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.Tags.Contains(200) && shapeObj.Links.Any(l => l.TargetID == s.ID));
+
                     if (falloffShape != null && shapeObj.Shape.Vertices.Count == falloffShape.Shape.Vertices.Count)
                     {
                         // 2. Draw lines connecting the vertices (The "Light Shafts")
@@ -124,19 +151,13 @@ namespace Pixel_Simulations.Data
 
                         for (int i = 0; i < srcVerts.Count; i++)
                         {
-                            // Draw connecting edge
                             sb.DrawLine(srcVerts[i], fallVerts[i], Color.Yellow * 0.3f, lineThickness);
-
-                            // Draw the source perimeter (Bright)
                             sb.DrawLine(srcVerts[i], srcVerts[(i + 1) % srcVerts.Count], Color.White, lineThickness * 2);
-
-                            // Draw the falloff perimeter (Dim)
                             sb.DrawLine(fallVerts[i], fallVerts[(i + 1) % fallVerts.Count], Color.Yellow * 0.2f, lineThickness);
                         }
                     }
                     else
                     {
-                        // Fallback if sibling is missing
                         sb.DrawRectangle(bounds, Color.Yellow, lineThickness * 2);
                     }
                 }
@@ -297,7 +318,6 @@ namespace Pixel_Simulations.Data
                             DrawTileLayer(sb, layer as TileLayer, streamBounds);
                             break;
                         case LayerType.Object:
-                            DrawObjectLayer(sb, layer as ObjectLayer, streamBounds);
                             break;
                         case LayerType.Control:
                             DrawControlLayer(sb, layer as ControlLayer);
@@ -306,7 +326,38 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
+        public void Draw(SpriteBatch sb, LayerType typeToDraw, string skipLayerName = null)
+        {
+            var _map = _gameState.CurrentMap;
+            if (_map == null) return;
 
+            RectangleF streamBounds = _gameState.GetStreamingBounds(_nativeScreenWidth, _nativeScreenHeight);
+
+            // FIX: Loop FORWARDS so bottom layers draw first!
+            for (int i = 0; i < _map.Layers.Count; i++)
+            {
+                var layer = _map.Layers[i];
+                if (layer.IsVisible && layer.Type == typeToDraw && layer.Name != skipLayerName)
+                {
+                    switch (layer.Type)
+                    {
+                        case LayerType.Tile: DrawTileLayer(sb, layer as TileLayer, streamBounds); break;
+                        //case LayerType.Object: DrawObjectLayer(sb, layer as ObjectLayer, streamBounds); break;
+                        case LayerType.Control: DrawControlLayer(sb, layer as ControlLayer); break;
+                    }
+                }
+            }
+        }
+
+        public void DrawLayerByName(SpriteBatch sb, string layerName)
+        {
+            var layer = _gameState.CurrentMap.Layers.FirstOrDefault(l => l.Name == layerName);
+            if (layer != null && layer.IsVisible && layer is TileLayer tileLayer)
+            {
+                RectangleF streamBounds = _gameState.GetStreamingBounds(_nativeScreenWidth, _nativeScreenHeight);
+                DrawTileLayer(sb, tileLayer, streamBounds);
+            }
+        }
         private void DrawTileLayer(SpriteBatch sb, TileLayer layer, RectangleF streamBounds)
         {
             if (layer == null) return;
@@ -328,120 +379,44 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
-        public List<RenderableSprite> CollectDynamicSprites()
-        {
-            var sprites = new List<RenderableSprite>();
-            var _map = _gameState.CurrentMap;
-            if (_map == null) return sprites;
+       // GAME MAP RENDERER ONLY DRAWS TILES IN GAME, AND CONTROL LAYER FOR DEBUG PURPOSE
+        //private void DrawObjectLayer(SpriteBatch sb, ObjectLayer layer, RectangleF streamBounds)
+        //{
+        //    if (layer == null) return;
+        //    foreach (var obj in layer.Objects)
+        //    {
+        //        // We are looking for PropObjects (trees, buildings, etc.)
+        //        if (obj is PropObject prop)
+        //        {
+        //            // 1. Look up the prefab definition from the PrefabManager
+        //            var prefab = _gameState.PrefabManager.GetPrefab(prop.PrefabID);
 
-            RectangleF streamBounds = _gameState.GetStreamingBounds(_nativeScreenWidth, _nativeScreenHeight);
+        //            if (prefab == null)
+        //            {
+        //                // Diagnostic: Draw a magenta box if the prefab is missing
+        //                sb.DrawRectangle(new RectangleF(prop.Position.X - 8, prop.Position.Y - 8, 16, 16), Color.Red, 1f);
+        //                continue;
+        //            }
 
-            // 1. COLLECT MAP OBJECTS
-            for (int i = _map.Layers.Count - 1; i >= 0; i--)
-            {
-                var layer = _map.Layers[i];
-                if (layer.IsVisible && layer.Type == LayerType.Object)
-                {
-                    var objLayer = layer as ObjectLayer;
-                    foreach (var obj in objLayer.Objects)
-                    {
-                        if (obj is PropObject prop)
-                        {
-                            var prefab = _gameState.PrefabManager.GetPrefab(prop.PrefabID);
-                            if (prefab == null) continue;
+        //            RectangleF objectBounds = new RectangleF(prop.Position.X, prop.Position.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
 
-                            // FIXED: Offset the bounds by the Pivot so the intersection math is accurate!
-                            RectangleF objectBounds = new RectangleF(
-                                prop.Position.X - prefab.Pivot.X,
-                                prop.Position.Y - prefab.Pivot.Y,
-                                prefab.SourceRect.Width * prop.Scale.X,
-                                prefab.SourceRect.Height * prop.Scale.Y);
+        //            if (streamBounds.Intersects(objectBounds))
+        //            {
+        //                var tex = _gameState.Assets.GetAtlas(prefab.AtlasName);
+        //                if (tex != null)
+        //                {
+        //                    // Calculate Depth based on the bottom Y (Y + Height)
+        //                    float bottomY = prop.Position.Y + prefab.SourceRect.Height;
+        //                    float depth = DepthUtil.Calculate(bottomY);
 
-                            if (streamBounds.Intersects(objectBounds))
-                            {
-                                var tex = _gameState.Assets.GetAtlas(prefab.AtlasName);
-                                if (tex != null)
-                                {
-                                    // The physical bottom of the object
-                                    float distanceFromPivotToBottom = (prefab.SourceRect.Height - prefab.Pivot.Y) * prop.Scale.Y;
-                                    float bottomY = prop.Position.Y + distanceFromPivotToBottom;
+        //                    sb.Draw(tex, prop.Position, prefab.SourceRect, Color.White,
+        //                            prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, depth);
+        //                }
+        //            }
+        //        }
+        //    }
 
-                                    sprites.Add(new RenderableSprite
-                                    {
-                                        Texture = tex,
-                                        Position = prop.Position,
-                                        SourceRect = prefab.SourceRect,
-                                        Origin = prefab.Pivot,
-                                        Scale = prop.Scale,
-                                        Rotation = prop.Rotation,
-                                        DrawDepth = DepthUtil.Calculate(bottomY),
-                                        BaseWorldY = bottomY
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 2. COLLECT THE PLAYER
-            if (_gameState.Player != null)
-            {
-                var P = _gameState.Player;
-                float playerFeetY = _gameState.Player.Position.Y + P.CurrentFrameRect.Height;
-
-                sprites.Add(new RenderableSprite
-                {
-                    Texture = P.CompositeTexture,
-                    Position = P.Position,
-                    SourceRect = P.CurrentFrameRect,
-                    Origin = P.Origin,
-                    Scale = Vector2.One,
-                    Rotation = 0f,
-                    DrawDepth = DepthUtil.Calculate(playerFeetY),
-                    BaseWorldY = playerFeetY
-                });
-            }
-
-            return sprites;
-        }
-        private void DrawObjectLayer(SpriteBatch sb, ObjectLayer layer, RectangleF streamBounds)
-        {
-            if (layer == null) return;
-            foreach (var obj in layer.Objects)
-            {
-                // We are looking for PropObjects (trees, buildings, etc.)
-                if (obj is PropObject prop)
-                {
-                    // 1. Look up the prefab definition from the PrefabManager
-                    var prefab = _gameState.PrefabManager.GetPrefab(prop.PrefabID);
-
-                    if (prefab == null)
-                    {
-                        // Diagnostic: Draw a magenta box if the prefab is missing
-                        sb.DrawRectangle(new RectangleF(prop.Position.X - 8, prop.Position.Y - 8, 16, 16), Color.Red, 1f);
-                        continue;
-                    }
-
-                    RectangleF objectBounds = new RectangleF(prop.Position.X, prop.Position.Y, prefab.SourceRect.Width, prefab.SourceRect.Height);
-
-                    if (streamBounds.Intersects(objectBounds))
-                    {
-                        var tex = _gameState.Assets.GetAtlas(prefab.AtlasName);
-                        if (tex != null)
-                        {
-                            // Calculate Depth based on the bottom Y (Y + Height)
-                            float bottomY = prop.Position.Y + prefab.SourceRect.Height;
-                            float depth = DepthUtil.Calculate(bottomY);
-
-                            sb.Draw(tex, prop.Position, prefab.SourceRect, Color.White,
-                                    prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, depth);
-                        }
-                    }
-                }
-            }
-
-        }
+        //}
         private void DrawControlLayer(SpriteBatch sb, ControlLayer layer)
         {
             if (layer == null) return;

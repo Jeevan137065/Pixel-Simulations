@@ -35,6 +35,9 @@ namespace Pixel_Simulations
         [JsonProperty("ThresholdInt1")] public int ThresholdInt1 { get; set; }
         [JsonProperty("ThresholdInt2")] public int ThresholdInt2 { get; set; }
         [JsonProperty("ThresholdBool")] public bool ThresholdBool { get; set; }
+
+        // NEW: Jumps to this stage index when complete. (-1 means normal sequential progress)
+        [JsonProperty("NextStageIndex")] public int NextStageIndex { get; set; } = -1;
     }
     public class PhysicalItem
     {
@@ -70,20 +73,24 @@ namespace Pixel_Simulations
     [JsonObject(MemberSerialization.OptIn)]
     public class PhysicalItemDefinition
     {
-        // Explicitly map the exact string keys from the JSON
         [JsonProperty("ItemID")] public int ItemID { get; set; }
         [JsonProperty("AtlasName")] public string AtlasName { get; set; }
         [JsonProperty("CanBeDropped")] public bool CanBeDropped { get; set; }
         [JsonProperty("IsPlaceable")] public bool IsPlaceable { get; set; }
         [JsonProperty("HasCollision")] public bool HasCollision { get; set; }
 
-        // This converter tells C# to read "Crop", "Prop", etc., as strings and convert them to the Enum
-        [JsonProperty("IsMultiHarvest")] public bool IsMultiHarvest { get; set; } = false;
-        [JsonProperty("HarvestRevertStage")] public int HarvestRevertStage { get; set; } = 1;
+        // --- Grid & Placement ---
+        [JsonProperty("PrecisionPlacement")] public bool PrecisionPlacement { get; set; }
+
+        // --- Crop Specifics ---
+        [JsonProperty("SeasonOverlap")] public bool SeasonOverlap { get; set; }
+        [JsonProperty("IsMultiHarvest")] public bool IsMultiHarvest { get; set; }
+        [JsonProperty("MaxHarvests")] public int MaxHarvests { get; set; } = -1;
+        [JsonProperty("FinalHarvestStage")] public int FinalHarvestStage { get; set; } = 0;
+
         [JsonProperty("Type")]
         [JsonConverter(typeof(StringEnumConverter))]
         public PlacementType Type { get; set; }
-        [JsonProperty("PrecisionPlacement")] public bool PrecisionPlacement { get; set; } = false;
 
         [JsonProperty("CellWidth")] public int CellWidth { get; set; }
         [JsonProperty("CellHeight")] public int CellHeight { get; set; }

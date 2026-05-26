@@ -42,7 +42,9 @@ namespace Pixel_Simulations
         public Texture2D Texture => _compositeTarget;
         // The exact pixel in the 32x64 texture that touches the ground at the center
         //Center of the sprite
-
+        public Action PendingInteraction;
+        public Vector2? TargetWalkPos;
+        public Vector2 CachedLookPos;
         // --- Internal Components ---
         private AnimationManager _animationManager;
         private List<BodyPart> _bodyParts;
@@ -112,39 +114,64 @@ namespace Pixel_Simulations
             var kbs = Keyboard.GetState();
             Vector2 moveDirection = Vector2.Zero;
 
-            if (kbs.IsKeyDown(Keys.W)) moveDirection.Y -= 1;
-            if (kbs.IsKeyDown(Keys.S)) moveDirection.Y += 1;
-            if (kbs.IsKeyDown(Keys.A)) moveDirection.X -= 1;
-            if (kbs.IsKeyDown(Keys.D)) moveDirection.X += 1;
-
-            // Handle Hotbar
-            if (kbs.IsKeyDown(Keys.D1)) Inventory.SelectSlot(0);
-            if (kbs.IsKeyDown(Keys.D2)) Inventory.SelectSlot(1);
-            if (kbs.IsKeyDown(Keys.D3)) Inventory.SelectSlot(2);
-            if (kbs.IsKeyDown(Keys.D4)) Inventory.SelectSlot(3);
-            if (kbs.IsKeyDown(Keys.D5)) Inventory.SelectSlot(4);
-            if (kbs.IsKeyDown(Keys.D6)) Inventory.SelectSlot(5);
-            if (kbs.IsKeyDown(Keys.D7)) Inventory.SelectSlot(6);
-            if (kbs.IsKeyDown(Keys.D8)) Inventory.SelectSlot(7);
-            if (kbs.IsKeyDown(Keys.D9)) Inventory.SelectSlot(8);
-            if (kbs.IsKeyDown(Keys.D0)) Inventory.SelectSlot(9);
-            if (moveDirection != Vector2.Zero)
+            if (kbs.IsKeyDown(Keys.W) || kbs.IsKeyDown(Keys.S) || kbs.IsKeyDown(Keys.A) || kbs.IsKeyDown(Keys.D))
             {
-                CurrentState = PlayerState.Walking;
-                Vector2 desiredVelocity = Vector2.Normalize(moveDirection) * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-                // Player collision box (feet)
-                RectangleF playerCollisionBox = new RectangleF(Position.X - 8, Position.Y + 16, 16, 16);
-
-                // Resolve movement through PhysicsManager
-                Vector2 allowedVelocity = _physics.ResolveMovement(playerCollisionBox, desiredVelocity);
-                Position += allowedVelocity;
+                TargetWalkPos = null;
+                PendingInteraction = null;
             }
+            if (TargetWalkPos.HasValue)
+            {
+                Vector2 diff = TargetWalkPos.Value - Foot;
+                if (diff.Length() > 32f) // Keep walking until we are 2 tiles away
+                {
+                    moveDirection = Vector2.Normalize(diff);
+                }
+                else
+                {
+                    // Reached target! Stop moving and fire the interaction.
+                    TargetWalkPos = null;
+                    Velocity = Vector2.Zero;
+                    PendingInteraction?.Invoke();
+                    PendingInteraction = null;
+                }
+            }
+            // --- STANDARD WASD LOGIC ---
             else
             {
-                CurrentState = PlayerState.Idle;
-                Velocity = Vector2.Zero;
+                if (kbs.IsKeyDown(Keys.W)) moveDirection.Y -= 1;
+                if (kbs.IsKeyDown(Keys.S)) moveDirection.Y += 1;
+                if (kbs.IsKeyDown(Keys.A)) moveDirection.X -= 1;
+                if (kbs.IsKeyDown(Keys.D)) moveDirection.X += 1;
             }
+
+                // Handle Hotbar
+                if (kbs.IsKeyDown(Keys.D1)) Inventory.SelectSlot(0);
+                if (kbs.IsKeyDown(Keys.D2)) Inventory.SelectSlot(1);
+                if (kbs.IsKeyDown(Keys.D3)) Inventory.SelectSlot(2);
+                if (kbs.IsKeyDown(Keys.D4)) Inventory.SelectSlot(3);
+                if (kbs.IsKeyDown(Keys.D5)) Inventory.SelectSlot(4);
+                if (kbs.IsKeyDown(Keys.D6)) Inventory.SelectSlot(5);
+                if (kbs.IsKeyDown(Keys.D7)) Inventory.SelectSlot(6);
+                if (kbs.IsKeyDown(Keys.D8)) Inventory.SelectSlot(7);
+                if (kbs.IsKeyDown(Keys.D9)) Inventory.SelectSlot(8);
+                if (kbs.IsKeyDown(Keys.D0)) Inventory.SelectSlot(9);
+                if (moveDirection != Vector2.Zero)
+                {
+                    CurrentState = PlayerState.Walking;
+                    Vector2 desiredVelocity = Vector2.Normalize(moveDirection) * _speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                    // Player collision box (feet)
+                    RectangleF playerCollisionBox = new RectangleF(Position.X - 8, Position.Y + 16, 16, 16);
+
+                    // Resolve movement through PhysicsManager
+                    Vector2 allowedVelocity = _physics.ResolveMovement(playerCollisionBox, desiredVelocity);
+                    Position += allowedVelocity;
+                }
+                else
+                {
+                    CurrentState = PlayerState.Idle;
+                    Velocity = Vector2.Zero;
+                }
 
             // --- 3. DETERMINE FACING DIRECTION (THE FIX FOR BUGS A, B, and C) ---
             // Prioritize horizontal facing direction if there is any horizontal movement.
@@ -349,18 +376,54 @@ namespace Pixel_Simulations
 
             float w = 16;
             float h = 16;
-            float reach = 20f;
 
             return FacingDirection switch
             {
-                Direction.North => new RectangleF(centerX - w / 2, feetY - h - reach, w, reach),
-                Direction.South => new RectangleF(centerX - w / 2, feetY, w, reach),
-                Direction.West => new RectangleF(centerX - w / 2 - reach, feetY - h, reach, h),
-                Direction.East => new RectangleF(centerX + w / 2, feetY - h, reach, h),
+                Direction.North => new RectangleF(centerX - w / 2, feetY - h - h, w, h),
+                Direction.South => new RectangleF(centerX - w / 2, feetY, w, h),
+                Direction.West => new RectangleF(centerX - w / 2 - w, feetY - h, w, h),
+                Direction.East => new RectangleF(centerX + w / 2, feetY - h, w, h),
                 _ => new RectangleF(centerX - w / 2, feetY - h, w, h)
             };
         }
+        public void DrawTargetCellDebug(SpriteBatch spriteBatch, Camera camera, Vector2 mouseWorld)
+        {
+            // Get the exact cell we are looking at
+            Vector2 lookPos = GetTargetInteractionPoint(mouseWorld);
+            Point targetGridCell = GridHelper.GetTileCell(lookPos);
 
+            // Convert cell coordinates back to World Space
+            float worldX = targetGridCell.X * GridHelper.TILE_SIZE;
+            float worldY = targetGridCell.Y * GridHelper.TILE_SIZE;
+
+            RectangleF targetBounds = new RectangleF(worldX, worldY, GridHelper.TILE_SIZE, GridHelper.TILE_SIZE);
+
+            float lineThickness = 1f / camera.Zoom;
+
+            // Draw a semi-transparent Red Box to highlight the target cell
+            //spriteBatch.FillRectangle(targetBounds, Color.Red * 0.3f);
+            spriteBatch.DrawRectangle(targetBounds, Color.Red, lineThickness);
+        }
+        public Vector2 GetTargetInteractionPoint(Vector2 mouseWorld)
+        {
+            if (TargetWalkPos.HasValue) return CachedLookPos;
+            // 1. Calculate the Default Point (Directly in front of the player)
+            Vector2 defaultPoint = Foot;
+            float reach = 24f; // Look ~1.5 tiles ahead
+            if (FacingDirection == Direction.North) defaultPoint.Y -= reach;
+            if (FacingDirection == Direction.South) defaultPoint.Y += reach;
+            if (FacingDirection == Direction.West) defaultPoint.X -= reach;
+            if (FacingDirection == Direction.East) defaultPoint.X += reach;
+
+            // 2. Check Mouse Distance
+            float dist = Vector2.Distance(Foot, mouseWorld);
+
+            // If mouse is outside 320px OR inside 50px, snap to the default point
+            CachedLookPos = (dist > 120 || dist < 12f) ? defaultPoint : mouseWorld;
+
+            // Otherwise, follow the mouse
+            return CachedLookPos;
+        }
         // The source rect is the entire composite target
         public Rectangle CurrentFrameRect => new Rectangle(0, 0, _compositeTarget.Width, _compositeTarget.Height);
     }

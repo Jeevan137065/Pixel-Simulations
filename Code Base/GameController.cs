@@ -11,6 +11,7 @@ namespace Pixel_Simulations
     {
         private readonly GameState _state;
         private readonly EntityManager _entityManager;
+        private EventBus _bus;
         private readonly InteractionEngine _interactionEngine;
         private bool _fKeyPressedLastFrame = false;
         private bool _iKeyPressedLastFrame = false;
@@ -19,10 +20,13 @@ namespace Pixel_Simulations
         {
             _state = state;
             _entityManager = entityManager;
-            _interactionEngine = new InteractionEngine(state, entityManager);
+            _bus = bus;
+            _interactionEngine = new InteractionEngine(state, entityManager,bus);
 
             // SUBSCRIBER: Listen for the New Day!
-            bus.Subscribe<DayAdvancedCommand>(OnNewDay);
+            _bus.Subscribe<DayAdvancedCommand>(OnNewDay);
+            bus.Subscribe<PlaceTileCommand>(OnPlaceTile);
+            bus.Subscribe<EraseTileCommand>(OnEraseTile);
         }
 
         public void Update(GameTime gameTime)
@@ -30,14 +34,15 @@ namespace Pixel_Simulations
             _state.Update(gameTime);
             HandleInteractions();
             UpdateEntities(gameTime);
+
+            _interactionEngine.UpdateDebugState();
         }
 
         // Inside GameController.cs
-        private void TryInteract(bool isRightClick)
+        private void TryInteract(bool isRightClick, Vector2 lookPos)
         {
-            // 1. Where are we looking?
             RectangleF interactBox = _state.Player.GetInteractionBox();
-            Vector2 lookPos = interactBox.Center;
+            Point targetGridCell = GridHelper.GetTileCell(lookPos);
 
             // 1. FIND TARGET ENTITY
             GameEntity targetEntity = _entityManager.AllEntities.FirstOrDefault(e => {
@@ -63,7 +68,7 @@ namespace Pixel_Simulations
             ItemDefinition heldItem = (heldStack != null && heldStack.Count > 0) ? _state.ItemManager.GetItem(heldStack.ItemID) : null;
 
             // ==========================================
-            // A. HARVESTING & COLLECTING (Works for both F and Right-Click)
+            // A. HARVESTING & COLLECTING
             // ==========================================
             if (targetEntity != null && targetEntity.BaseData is PlacedItemObject placedObj)
             {
@@ -75,28 +80,27 @@ namespace Pixel_Simulations
                     // Crop Harvesting
                     if (physDef.Type == PlacementType.Crop && stage.ThresholdBool)
                     {
-                        if (stage.ThresholdInt2 > 0) // Ensure it doesn't give item 0!
+                        if (stage.ThresholdInt2 > 0)
                         {
                             int remaining = _state.Player.Inventory.AddItem(stage.ThresholdInt2, 1, _state.ItemManager);
                             if (remaining > 0) return; // Inventory full
                         }
 
-                        // NEW: Multi-Harvest Logic
                         if (physDef.IsMultiHarvest)
                         {
-                            placedObj.CurrentStageIndex = physDef.HarvestRevertStage;
-                            placedObj.DaysInCurrentStage = 0; // Reset growth timer!
+                            placedObj.CurrentStageIndex = physDef.FinalHarvestStage; // Or whatever revert logic you want
+                            placedObj.DaysInCurrentStage = 0;
                             _entityManager.RebuildStaticSprites(_state);
                         }
                         else
                         {
-                            // Single Harvest (e.g., Turnips, Carrots) -> Destroy
                             _state.ActiveSave.PlacedItems.Remove(placedObj);
                             _entityManager.RemoveEntity(placedObj.ID);
                             _entityManager.RebuildStaticSprites(_state);
                         }
-                        return; // Stop here, action consumed!
+                        return; // Action consumed!
                     }
+
                     // Machine Collection
                     if (physDef.Type == PlacementType.Machine && stage.ThresholdBool)
                     {
@@ -109,7 +113,7 @@ namespace Pixel_Simulations
                         placedObj.CurrentStageIndex = 1;
                         placedObj.ProcessingTimer = 0f;
                         _entityManager.RebuildStaticSprites(_state);
-                        return; // Stop here, action consumed!
+                        return; // Action consumed!
                     }
                 }
             }
@@ -157,6 +161,19 @@ namespace Pixel_Simulations
                         // Standard Placement (Props/Crops/Machines)
                         else if (exactEntity == null && targetEntity == null)
                         {
+                            // FIX B: Enforce Tilled Dirt for Crops!
+                            if (physDef.Type == PlacementType.Crop)
+                            {
+                                var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+                                var soilTile = tilledLayer?.GetTileAt(targetGridCell);
+
+                                // If tile is null, or not Tilled(2) or Watered(3), ABORT PLANTING!
+                                if (soilTile == null || (soilTile.TileID != 2 && soilTile.TileID != 3))
+                                {
+                                    return; // Exit out, action consumed but failed.
+                                }
+                            }
+
                             PlaceNewItem(heldStack.ItemID, snapPos, physDef);
                             itemPlaced = true;
                         }
@@ -174,7 +191,6 @@ namespace Pixel_Simulations
             // ==========================================
             // C. LEFT CLICK / F: JSON RULES (Trees, Dirt, etc)
             // ==========================================
-            Point targetGridCell = GridHelper.GetTileCell(lookPos);
             TileLayer groundLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Ground");
             TileInfo targetTile = groundLayer?.GetTileAt(targetGridCell);
 
@@ -185,6 +201,12 @@ namespace Pixel_Simulations
                 TargetCell = targetGridCell,
                 TargetTile = targetTile
             };
+
+            // WRITE TO DEBUGGER:
+            string mediumStr = heldItem != null ? $"{heldItem.Name} (ID: {heldItem.ID})" : "Empty Hands";
+            string tagsStr = heldItem != null ? string.Join(", ", heldItem.ItemTags) : "None";
+            _state.Debug_LastPayload = $"Action: {payload.ActionType} | Medium: {mediumStr}\nTags: [{tagsStr}]\nTarget Cell: {targetGridCell.X}, {targetGridCell.Y}";
+
             _interactionEngine.SendPayload(targetEntity, payload);
         }
         private void HandleInteractions()
@@ -200,14 +222,16 @@ namespace Pixel_Simulations
 
             if (_state.DebugPool[GameBool.IsPaused]) return;
 
-            if (_state.input.NewLeftClick)
-                _state.Player.Inventory.HandleMouseInteraction(_state.input.MouseScreenPosition.ToPoint(), true, new Vector2(1920, 1080), _state.IsInventoryOpen);
+            if (_state.input.NewLeftClick) 
+            {
+                if (_state.IsInventoryOpen) _state.Player.Inventory.HandleMouseInteraction(_state.input.MouseScreenPosition.ToPoint(), true, new Vector2(1920, 1080), _state.IsInventoryOpen);
+                else QueueOrExecuteInteraction(false); // Left Click Action
+            }
 
-            if (kstate.IsKeyDown(Keys.F) && !_fKeyPressedLastFrame) TryInteract(false);
+            if (kstate.IsKeyDown(Keys.F) && !_fKeyPressedLastFrame) QueueOrExecuteInteraction(false); // F Key Action
             _fKeyPressedLastFrame = kstate.IsKeyDown(Keys.F);
 
-            // Right Click
-            if (_state.input.NewRightClick && !_state.IsInventoryOpen) TryInteract(true);
+            if (_state.input.NewRightClick && !_state.IsInventoryOpen) QueueOrExecuteInteraction(true); // Right Click Action
 
             _fKeyPressedLastFrame = kstate.IsKeyDown(Keys.F);
 
@@ -294,7 +318,7 @@ namespace Pixel_Simulations
                                     if (nextStage < physDef.Stages.Count && placed.Amount >= physDef.Stages[nextStage].ThresholdInt1)
                                     {
                                         placed.CurrentStageIndex = nextStage;
-                                        _entityManager.RefreshEntityVisuals(placed.ID);
+                                        _entityManager.RefreshEntityVisuals(placed.ID,_state);
                                     }
                                     itemPlaced = true;
                                 }
@@ -316,6 +340,27 @@ namespace Pixel_Simulations
                 }
             }
         }
+
+        private void QueueOrExecuteInteraction(bool isRightClick)
+        {
+            Vector2 mouseWorld = _state.input.MouseWorldPosition;
+            Vector2 targetPoint = _state.Player.GetTargetInteractionPoint(mouseWorld);
+
+            float distanceToTarget = Vector2.Distance(_state.Player.Foot, targetPoint);
+
+            // If we are close enough, interact immediately
+            if (distanceToTarget <= 35f)
+            {
+                TryInteract(isRightClick, targetPoint);
+            }
+            else
+            {
+                // Too far! Tell player to walk there, then interact automatically.
+                _state.Player.TargetWalkPos = targetPoint;
+                _state.Player.PendingInteraction = () => TryInteract(isRightClick, targetPoint);
+            }
+        }
+
         private void PlaceNewItem(int itemID, Vector2 pos, PhysicalItemDefinition physDef)
         {
             var placedObj = new PlacedItemObject
@@ -363,27 +408,95 @@ namespace Pixel_Simulations
                                 placed.ProcessingTimer = 0f;
                                 placed.CurrentStageIndex++;
                                 visualsNeedsRefresh = true;
-                                _entityManager.RefreshEntityVisuals(placed.ID);
+                                _entityManager.RefreshEntityVisuals(placed.ID,_state);
                             }
                         }
                     }
                 }
             }
         }
+        private void OnPlaceTile(PlaceTileCommand cmd)
+        {
+            // PlaceTileCommand is an IUndoableCommand, so we call Execute() to actually do the work.
+            // (In the editor, the HistoryController calls Execute. Here in the game, we do it directly).
+            cmd.Execute();
+        }
 
+        private void OnEraseTile(EraseTileCommand cmd)
+        {
+            cmd.Execute();
+        }
         private void OnNewDay(DayAdvancedCommand cmd)
         {
             var tickPayload = new InteractionPayload { ActionType = "DayTick", IntValue = cmd.DaysPassed };
-
-            // Broadcast the day change to every entity in the world
             foreach (var entity in _entityManager.AllEntities.ToList())
-            {
                 _interactionEngine.SendPayload(entity, tickPayload);
-            }
-            _entityManager.RebuildStaticSprites(_state);
 
-            System.Diagnostics.Debug.WriteLine($"Day Advanced! All Simulation Sprites Rebuilt.");
+            // --- GRADUAL SOIL DECAY VIA COMMANDS ---
+            var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+            if (tilledLayer != null)
+            {
+                var changes = new System.Collections.Generic.List<IUndoableCommand>();
+                var refreshPoints = new System.Collections.Generic.List<Point>(); // Track what disappeared
+                Random rand = new Random();
+                int dugRemoved = 0;
+                int tilledRemoved = 0;
+
+                foreach (var chunkKvp in tilledLayer.Chunks)
+                {
+                    var chunk = chunkKvp.Value;
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                    {
+                        for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                        {
+                            var tile = chunk.Tiles[x, y];
+                            if (tile != null && tile.TilesetName == "Farm")
+                            {
+                                Point globalCell = new Point(chunkKvp.Key.X * Chunk.CHUNK_SIZE + x, chunkKvp.Key.Y * Chunk.CHUNK_SIZE + y);
+
+                                bool isOccupied = _entityManager.AllEntities.Any(e =>
+                                    e.BaseData is PlacedItemObject && GridHelper.GetTileCell(e.Position) == globalCell);
+
+                                if (tile.TileID == 3) // Watered becomes Tilled
+                                {
+                                    changes.Add(new PlaceTileCommand(tilledLayer, globalCell, new TileInfo("Farm", 2)));
+                                }
+                                else if (!isOccupied && tile.TileID == 2) // Tilled Decay
+                                {
+                                    if (tilledRemoved < 3 && rand.NextDouble() < 0.10)
+                                    {
+                                        changes.Add(new EraseTileCommand(tilledLayer, globalCell));
+                                        refreshPoints.Add(globalCell); // Note for refresh
+                                        tilledRemoved++;
+                                    }
+                                }
+                                else if (!isOccupied && tile.TileID != 2 && tile.TileID != 3) // Dug Decay
+                                {
+                                    if (dugRemoved < 4 && rand.NextDouble() < 0.40)
+                                    {
+                                        changes.Add(new EraseTileCommand(tilledLayer, globalCell));
+                                        refreshPoints.Add(globalCell); // Note for refresh
+                                        dugRemoved++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Execute removals
+                foreach (var command in changes) _bus.Publish(command);
+
+                // FIX: Force surrounding tiles to recalculate their edges since holes appeared!
+                foreach (var point in refreshPoints)
+                {
+                    _interactionEngine.RefreshAutoTiling(tilledLayer, point);
+                }
+            }
+
+            _entityManager.RebuildStaticSprites(_state);
         }
+
 
         private void UpdateEntities(GameTime gameTime)
         {

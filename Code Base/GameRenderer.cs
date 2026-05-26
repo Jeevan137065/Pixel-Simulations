@@ -218,13 +218,21 @@ namespace Pixel_Simulations
             _state._entityManager.DrawDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, useParallax, strength, _state._entityManager._drawList);
             _state._entityManager.DrawDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, false, 0f, _state._entityManager._simulationSprites);
             // ==========================================
+            // PASS 2: SIMULATION SOIL (480p)
+            // ==========================================
+            _pipeline.Begin(RenderLayer.Simulation, Color.Transparent);
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
+            _mapRenderer.DrawLayerByName(spriteBatch, "Tilled_Dirt");
+            spriteBatch.End();
+
+            // ==========================================
             // PASS 3: ALBEDO BACKGROUND (480p)
             // ==========================================
             _pipeline.Begin(RenderLayer.Albedo, Color.Transparent);
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
-            _mapRenderer.Draw(spriteBatch, LayerType.Tile);
+            // Draw all tiles EXCEPT the Tilled_Dirt
+            _mapRenderer.Draw(spriteBatch, LayerType.Tile, "Tilled_Dirt");
             spriteBatch.End();
-
             // ==========================================
             // PASS 3: TERRAIN NORMALS (FIX A: Draw to Normal RT ONLY)
             // ==========================================
@@ -289,6 +297,7 @@ namespace Pixel_Simulations
             {
                 //spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.ScreenWVP);
                 _state.Player.DrawPlacementPreview(spriteBatch, _state, pt.GetPixelTexture(false));
+                _state.Player.DrawTargetCellDebug(spriteBatch, _state.GameCamera,_state.input.MouseWorldPosition);
                 //spriteBatch.End();
             }
             if (_state.DebugPool[GameBool.ShowCollision] || _state.DebugPool[GameBool.ShowLinks] || _state.DebugPool[GameBool.ShowShapes])

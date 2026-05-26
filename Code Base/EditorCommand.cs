@@ -62,11 +62,9 @@ namespace Pixel_Simulations.Data
 
         private MapObject FindSibling()
         {
-            var sibling = _targetLayer.Objects.FirstOrDefault(o => _objectToRemove.LinkedObjects.Contains(o.ID));
+            var sibling = _targetLayer.Objects.FirstOrDefault(o => _objectToRemove.Links.Any(l => l.TargetID == o.ID));
             if (sibling == null && _targetLayer is ControlLayer cl)
-            {
-                sibling = cl.Shapes.FirstOrDefault(s => _objectToRemove.LinkedObjects.Contains(s.ID));
-            }
+                sibling = cl.Shapes.FirstOrDefault(s => _objectToRemove.Links.Any(l => l.TargetID == s.ID));
             return sibling;
         }
 
@@ -122,35 +120,35 @@ namespace Pixel_Simulations.Data
     public class LinkObjectsCommand : IUndoableCommand
     {
         private readonly MapObject _source;
-        private readonly MapObject _target;
+        private readonly ObjectLink _link;
 
-        public LinkObjectsCommand(MapObject source, MapObject target)
+        public LinkObjectsCommand(MapObject source, MapObject target, string sourcePort = "Out", string targetPort = "In")
         {
             _source = source;
-            _target = target;
+            _link = new ObjectLink { SourcePort = sourcePort, TargetID = target.ID, TargetPort = targetPort };
         }
 
         public void Execute()
         {
-            if (!_source.LinkedObjects.Contains(_target.ID))
-                _source.LinkedObjects.Add(_target.ID);
+            if (!_source.Links.Any(l => l.TargetID == _link.TargetID && l.SourcePort == _link.SourcePort))
+                _source.Links.Add(_link);
         }
 
-        public void Undo() { _source.LinkedObjects.Remove(_target.ID); }
+        public void Undo() { _source.Links.Remove(_link); }
     }
     public class UnlinkObjectCommand : IUndoableCommand
     {
         private readonly MapObject _source;
-        private readonly string _targetIdToRemove;
+        private readonly ObjectLink _linkToRemove;
 
-        public UnlinkObjectCommand(MapObject source, string targetId)
+        public UnlinkObjectCommand(MapObject source, ObjectLink link)
         {
             _source = source;
-            _targetIdToRemove = targetId;
+            _linkToRemove = link;
         }
 
-        public void Execute() { _source.LinkedObjects.Remove(_targetIdToRemove); }
-        public void Undo() { _source.LinkedObjects.Add(_targetIdToRemove); }
+        public void Execute() { _source.Links.Remove(_linkToRemove); }
+        public void Undo() { _source.Links.Add(_linkToRemove); }
     }
     public class AddRectangleCommand : IUndoableCommand
     {
@@ -253,6 +251,8 @@ namespace Pixel_Simulations.Data
         public void Execute() { if (!_targetLayer.Points.Contains(_objectToAdd)) _targetLayer.Points.Add(_objectToAdd); }
         public void Undo() { _targetLayer.Points.Remove(_objectToAdd); }
     }
+    public struct OpenAutoTilePanelCommand : ICommand { }
+    public struct ToggleAutoTileCommand : ICommand { }
     public struct MenuActionCommand : ICommand
     {
         public string ActionName; // "Save", "Load", "Undo", "Redo"

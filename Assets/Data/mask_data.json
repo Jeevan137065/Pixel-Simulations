@@ -1,14 +1,78 @@
 {
-  "Elevations": [
+  "Biomes": [
     {
-      "Name": "Ground",
-      "Value": 150
+      "Value": 0,
+      "Name": "Void",
+      "Category": "None"
     },
     {
-      "Name": "Beach",
-      "Value": 80
+      "Value": 50,
+      "Name": "Oak Forest",
+      "Category": "Forest"
+    },
+    {
+      "Value": 100,
+      "Name": "Farmable Dirt",
+      "Category": "Farm"
+    },
+    {
+      "Value": 150,
+      "Name": "Riverbank",
+      "Category": "Water"
     }
   ],
-  "Biomes": [],
-  "Spawns": []
+  "Spawns": [
+    {
+      "Value": 0,
+      "Name": "Empty",
+      "Category": "None"
+    },
+    {
+      "Value": 50,
+      "Name": "Wild Dandelion",
+      "Category": "Forage"
+    },
+    {
+      "Value": 100,
+      "Name": "Berry Bush",
+      "Category": "Forage"
+    },
+    {
+      "Value": 150,
+      "Name": "Copper Node",
+      "Category": "Ore"
+    },
+    {
+      "Value": 200,
+      "Name": "Trout Spawn",
+      "Category": "Fish"
+    }
+  ],
+  "Elevations": [
+    {
+      "Value": 0,
+      "Name": "Sea Floor",
+      "Category": "Submerged"
+    },
+    {
+      "Value": 80,
+      "Name": "Beach",
+      "Category": "Surface"
+    },
+    {
+      "Value": 128,
+      "Name": "Ground Level",
+      "Category": "Surface"
+    },
+    {
+      "Value": 192,
+      "Name": "Hills",
+      "Category": "Elevation"
+    },
+    {
+      "Value": 255,
+      "Name": "Mountain Peak",
+      "Category": "Elevation"
+    }
+  ]
 }

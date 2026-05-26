@@ -38,7 +38,9 @@ namespace Pixel_Simulations
         [JsonProperty] public string Description { get; set; } // e.g., "Blocks player movement"
         [JsonProperty] public Color TagColor { get; set; } = Color.LightGray;
 
-        [JsonIgnore] public int UsageCount { get; set; } = 0; // Calculated at runtime
+        [JsonProperty] public string Category { get; set; } = "General";
+
+        [JsonIgnore] public int UsageCount { get; set; } = 0;
     }
 
     public class TagManager

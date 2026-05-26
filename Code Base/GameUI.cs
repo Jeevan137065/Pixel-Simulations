@@ -2,7 +2,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using Pixel_Simulations.Data;
 using System;
+using System.Linq;
 
 namespace Pixel_Simulations.UI
 {
@@ -295,7 +297,7 @@ namespace Pixel_Simulations.UI
             sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
             // Draw HUD (Always visible)
-            DrawDebugInfo(sb);
+            //DrawDebugInfo(sb);
             //sb.DrawString(_theme.Font, $"Time: {_state.TimeSystem.TimeOfDay:F1} | Weather: {_state.Weather.CurrentWeather}", new Vector2(10, 10), Color.White);
             //sb.DrawString(_theme.Font, "Press ESC to Pause", new Vector2(10, 35), Color.Yellow);
 
@@ -317,7 +319,11 @@ namespace Pixel_Simulations.UI
 
             var cam = _state.GameCamera;
             var player = _state.Player;
+            var heldStack = player.Inventory.GetSelectedItem();
+            string heldStr = heldStack != null ? $"ID: {heldStack.ItemID} (Qty: {heldStack.Count})" : "Empty Hands";
 
+            var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+            string tilledStr = tilledLayer != null ? $"Exists ({tilledLayer.Chunks.Count} chunks)" : "Not Created Yet";
             // Build the massive debug string
             string debugText =
                 "--- PIPELINE STATE ---\n" +
@@ -343,15 +349,18 @@ namespace Pixel_Simulations.UI
                 //$"Sim M41(TransX): {cam.SimTransform.M41:F3}\n\n" +
                 "--- PLAYER ---\n" +
                 $"Pos: {player.Position.X:F1}, {player.Position.Y:F1}\n" +
-                $"Has Texture: {player.Texture != null}\n\n" +
+               $"Held Item: {heldStr}\n" +
                 $"Mouse in World: {_state.input.MouseWorldPosition}"+
                 "--- ITEMS ---\n" +
                 $"Items Loaded: {_state.ItemManager.Items.Count} , Physical Items : {_state.ItemManager.PhysicalItems.Count}\n" +
                 $"Grass Count {_state.Grass._bladeVertCount}"+
-                //$"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
-                //$"Mask Layer Chunks {_state.TerrainMaskChunks.Count}"+
-                "--- MAP ---\n" +
-                $"Loaded: {_state.CurrentMap != null}\n" +
+                "--- INTERACTION ENGINE ---\n" +
+            $"Tilled Layer Status: {tilledStr}\n" +
+            $"Farmable Status: {_state.Debug_FarmableStatus}\n" +
+            $"Last Payload: \n  {_state.Debug_LastPayload.Replace("\n", "\n  ")}\n" +
+            $"Last Command: {_state.Debug_LastCommand}\n\n" +
+
+            "--- MAP ---\n" +
                 $"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
                 $"Mask Layer Chunks {_state.TerrainMaskChunks.Count}";
 

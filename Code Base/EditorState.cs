@@ -47,6 +47,7 @@ namespace Pixel_Simulations.Editor
                 new ShapeTool(),
                 new SelectionTool(),
                 new PointPlacerTool(),
+                new SpawnPointerTool(),
                 new LightShapeTool(),
                 new ReflectionTool()
                 // new RectangleTool(this) // Some tools might need a reference back to the state
@@ -81,26 +82,6 @@ namespace Pixel_Simulations.Editor
         public Point HoveredTileCell { get; set; } = new Point(-1, -1); // For the tile grid
         public string HoveredTilesetName { get; set; } // For the list of tilesets
         public bool IsAtlasPickerVisible { get; set; } = false;
-    }
-    public class PrefabCreatorState
-    {
-        public bool IsOpen = false;
-        public string ActiveAtlasName { get; set; }
-        public Rectangle SelectionRect { get; set; } // The yellow drag box
-        public Rectangle BaseSourceRect { get; set; }
-        public bool NeedsUIRebuild { get; set; } = false;
-        public string TempName { get; set; } = "New_Object";
-
-        // --- CHANGED to List and Dictionary! ---
-        public List<int> TempTags { get; set; } = new List<int>();
-        public Dictionary<string, MapProperty> TempProperties { get; set; } = new Dictionary<string, MapProperty>();
-        public Dictionary<string, Rectangle> TempAlternateStates { get; set; } = new Dictionary<string, Rectangle>();
-        public string NewStateName { get; set; } = "";
-        public Vector2 DragStart { get; set; }
-        public bool IsDragging { get; set; }
-
-        // --- NEW: For panning large atlases ---
-        public Vector2 AtlasPanOffset { get; set; } = Vector2.Zero;
     }
     public class LayerPanelState
     {
@@ -143,10 +124,12 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public SelectionState Selection { get; }
         [JsonIgnore] public HistoryState History { get; }
         [JsonIgnore] public TilesetState TilesetPanel { get; } = new TilesetState();
-        [JsonIgnore] public PrefabCreatorState PrefabCreator { get; } = new PrefabCreatorState();
         [JsonIgnore] public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
+        public AutoTileManager AutoTileManager { get; } = new AutoTileManager();
+
         // --- NEW ASSET CORE ---
         [JsonIgnore] public TilesetManager TilesetManager { get; }
+
         [JsonIgnore] public EditorLibrary AssetLibrary { get; set; }
         [JsonIgnore] public NoiseManager noiseManager = new NoiseManager();
         [JsonIgnore] public MaskDataManager MaskData { get; } = new MaskDataManager();
@@ -190,9 +173,13 @@ namespace Pixel_Simulations.Editor
             //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
             AssetLibrary.LoadAtlas("Base", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
-
+            AssetLibrary.LoadAtlas("Farm", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Trees", AtlasType.Object);
             AssetLibrary.LoadAtlas("Building", AtlasType.Object);
+            AssetLibrary.LoadAtlas("Trees_b", AtlasType.Object);
+            AssetLibrary.LoadAtlas("Trees_l", AtlasType.Object);
+            AssetLibrary.LoadAtlas("Trees_t", AtlasType.Object);
+            AssetLibrary.LoadAtlas("Trees_s", AtlasType.Object);
 
             string prefabPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json");
             PrefabManager.Load(prefabPath);
@@ -200,6 +187,7 @@ namespace Pixel_Simulations.Editor
             TagManager.Load(tagsPath);
             string maskDataPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json");
             MaskData.Load(maskDataPath);
+            AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
         }
         public void refresh(GameTime gameTime)
         {
@@ -207,6 +195,7 @@ namespace Pixel_Simulations.Editor
             Input.Zoom = camera.Zoom;
             Layers.Layers = ActiveMap.Layers;
             UI.ActivePanelName = _layoutmanager.GetPanelAt(Input.MouseWindowPosition.ToPoint());
+            
         }
 
     }

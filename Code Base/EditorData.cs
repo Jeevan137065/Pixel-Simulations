@@ -14,6 +14,14 @@ namespace Pixel_Simulations.Data
     public enum SliceMode { RowFirst, ColumnFirst }
     public enum ShapeOperation { None, Union, Intersection, Difference }
     public enum HandleType { None, Body, TopLeft, TopRight, BottomLeft, BottomRight, Top, Bottom, Left, Right, Center }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class ObjectLink
+    {
+        [JsonProperty] public string SourcePort { get; set; } = "Out";
+        [JsonProperty] public string TargetID { get; set; }
+        [JsonProperty] public string TargetPort { get; set; } = "In";
+    }
     [JsonObject(MemberSerialization.OptIn)]
     public class MapProperty
     {
@@ -35,8 +43,15 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public Vector2 Position { get; set; }
         [JsonProperty] public abstract ObjectType Type { get; }
         [JsonProperty] public HashSet<int> Tags { get; set; } = new HashSet<int>();
-        [JsonProperty] public List<string> LinkedObjects { get; set; } = new List<string>();
         [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
+        [JsonProperty] public List<ObjectLink> Links { get; set; } = new List<ObjectLink>();
+    }
+    [JsonObject(MemberSerialization.OptIn)]
+    public class SpriteData
+    {
+        [JsonProperty] public string AtlasName { get; set; }
+        [JsonProperty] public Rectangle SourceRect { get; set; }
+        [JsonProperty] public Point Offset { get; set; }
     }
     [JsonObject(MemberSerialization.OptIn)]
     public class ObjectPrefab
@@ -44,11 +59,17 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public string ID { get; set; }
         [JsonProperty] public string AtlasName { get; set; }
         [JsonProperty] public Rectangle SourceRect { get; set; }
+        [JsonProperty] public Point Offset { get; set; }
+
+        [JsonProperty] public Point CanvasSize { get; set; } = new Point(16, 16);
         [JsonProperty] public Vector2 Pivot { get; set; }
+        [JsonProperty] public bool IsTemplate { get; set; }
+        
         [JsonProperty] public List<int> Tags { get; set; } = new List<int>();
         [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
-        [JsonProperty] public Dictionary<string, Rectangle> AlternateStates { get; set; } = new Dictionary<string, Rectangle>();
-        [JsonProperty] public Point SizeInCells => new Point(SourceRect.Width / 16, SourceRect.Height / 16);
+        [JsonProperty] public Dictionary<string, SpriteData> AlternateStates { get; set; } = new Dictionary<string, SpriteData>();
+
+        [JsonProperty] public Point SizeInCells => new Point(CanvasSize.X / 16, CanvasSize.Y / 16);
     }
     [JsonObject(MemberSerialization.OptIn)]
     public class ShapeObject : MapObject
