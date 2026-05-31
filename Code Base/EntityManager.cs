@@ -55,7 +55,7 @@ namespace Pixel_Simulations
         private BasicEffect _basicEffect;
 
         // Texture Cache for Layer Compositing
-        private Dictionary<string, Texture2D> _compositeCache = new Dictionary<string, Texture2D>();
+        public Dictionary<string, Texture2D> _compositeCache = new Dictionary<string, Texture2D>();
 
         public void LoadFromMap(Map map, PrefabManager prefabManager, GameState state, GraphicsDevice gd)
         {
@@ -72,16 +72,9 @@ namespace Pixel_Simulations
                 _indices[i * 6 + 5] = (short)(i * 4 + 2);
             }
 
-            if (_basicEffect == null)
-            {
-                _basicEffect = new BasicEffect(gd) { TextureEnabled = true, VertexColorEnabled = true };
-            }
+            if (_basicEffect == null) _basicEffect = new BasicEffect(gd) { TextureEnabled = true, VertexColorEnabled = true };
 
-            if (map == null)
-            {
-                System.Diagnostics.Debug.WriteLine("[EntityManager] WARNING: Map is null!");
-                return;
-            }
+            if (map == null) return;
 
             foreach (var layer in map.Layers)
             {
@@ -96,21 +89,9 @@ namespace Pixel_Simulations
                 }
                 else if (layer is ControlLayer ctrlLayer)
                 {
-                    foreach (var rect in ctrlLayer.Rectangles)
-                    {
-                        if (state.ActiveSave.DestroyedBaseIDs.Contains(rect.ID)) continue;
-                        RegisterObject(rect, prefabManager);
-                    }
-                    foreach (var shape in ctrlLayer.Shapes)
-                    {
-                        if (state.ActiveSave.DestroyedBaseIDs.Contains(shape.ID)) continue;
-                        RegisterObject(shape, prefabManager);
-                    }
-                    foreach (var pt in ctrlLayer.Points)
-                    {
-                        if (state.ActiveSave.DestroyedBaseIDs.Contains(pt.ID)) continue;
-                        RegisterObject(pt, prefabManager);
-                    }
+                    foreach (var rect in ctrlLayer.Rectangles) { if (!state.ActiveSave.DestroyedBaseIDs.Contains(rect.ID)) RegisterObject(rect, prefabManager); }
+                    foreach (var shape in ctrlLayer.Shapes) { if (!state.ActiveSave.DestroyedBaseIDs.Contains(shape.ID)) RegisterObject(shape, prefabManager); }
+                    foreach (var pt in ctrlLayer.Points) { if (!state.ActiveSave.DestroyedBaseIDs.Contains(pt.ID)) RegisterObject(pt, prefabManager); }
                 }
             }
 
@@ -120,25 +101,11 @@ namespace Pixel_Simulations
                 objCount++;
             }
 
-            System.Diagnostics.Debug.WriteLine($"[EntityManager] Loaded {objCount} dynamic objects from Map & Save Data.");
+            System.Diagnostics.Debug.WriteLine($"[EntityManager] Loaded {objCount} dynamic objects.");
             RebuildStaticSprites(state);
         }
 
-        // --- LAYER RENDERING ORDER ---
-        private int GetLayerZIndex(string name)
-        {
-            if (name == "Base") return 0;
-            if (name.Contains("Base")) return 1;      // State_Base
-            if (name.Contains("InteriorBG")) return 2;
-            if (name.Contains("Trunk")) return 3;     // State_Trunk
-            if (name.Contains("Exterior")) return 4;
-            if (name.Contains("InteriorFG")) return 5;
-            if (name.Contains("Roof")) return 6;
-            if (name.StartsWith("Stage_")) return 7;
-            if (name.StartsWith("Overlay_")) return 8;// Leaves/Snow draw ON TOP of trunk
-            return 10;
-        }
-
+        // --- LAYER LOGIC ---
         private List<string> GetActiveLayersForEntity(GameEntity entity, GameState state)
         {
             List<string> activeLayers = new List<string>();
@@ -147,44 +114,154 @@ namespace Pixel_Simulations
 
             if (type == "Tree")
             {
-                if (isChopped)
+                // Always draw base
+                if (entity.Prefab.AlternateStates.ContainsKey("Base")) activeLayers.Add("Base");
+
+                if (!isChopped)
                 {
-                    if (entity.Prefab.AlternateStates.ContainsKey("State_Base")) activeLayers.Add("State_Base");
+                    if (entity.Prefab.AlternateStates.ContainsKey("Trunk")) activeLayers.Add("Trunk");
+
+                    // Add Canopy based on Season
+                    string seasonCanopy = "Canopy_" + state.Calendar.CurrentSeason.ToString();
+                    if (entity.Prefab.AlternateStates.ContainsKey(seasonCanopy)) activeLayers.Add(seasonCanopy);
+                    else if (entity.Prefab.AlternateStates.ContainsKey("Canopy_Summer")) activeLayers.Add("Canopy_Summer"); // Fallback
+
+                    // Add Overlays (Snow, Moss, Fruits) based on conditions
+                    if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
+                    if (entity.GetProperty("HasFruit", "False") == "True" && entity.Prefab.AlternateStates.ContainsKey("Overlay_Fruits")) activeLayers.Add("Overlay_Fruits");
+                    if (entity.GetProperty("HasMoss", "False") == "True" && entity.Prefab.AlternateStates.ContainsKey("Overlay_Moss")) activeLayers.Add("Overlay_Moss");
+                }
+            }
+            else if (type == "Building")
+            {
+                if (entity.Prefab.AlternateStates.ContainsKey("Exterior")) activeLayers.Add("Exterior");
+                if (entity.Prefab.AlternateStates.ContainsKey("Roof") && entity.GetProperty("PlayerInside", "False") == "False") activeLayers.Add("Roof");
+
+                // Add Overlays like Snow to roofs
+                if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
+            }
+            else // Standard Props
+            {
+                foreach (var kvp in entity.Prefab.AlternateStates)
+                {
+                    // By default props just draw everything unless gated by a property
+                    if (entity.GetProperty(kvp.Key, "True") == "True") activeLayers.Add(kvp.Key);
+                }
+            }
+
+            // Sort by ZIndex
+            activeLayers.Sort((a, b) => entity.Prefab.AlternateStates[a].ZIndex.CompareTo(entity.Prefab.AlternateStates[b].ZIndex));
+            return activeLayers;
+        }
+
+        // --- COMPOSITOR & PALETTE SWAPPER ---
+        private Color HexToColor(string hex)
+        {
+            if (string.IsNullOrEmpty(hex)) return Color.Transparent;
+            if (hex.StartsWith("#")) hex = hex.Substring(1);
+            if (hex.Length != 6) return Color.Transparent;
+
+            // Try/Catch just in case the HTML tool generated a weird string
+            try
+            {
+                return new Color(Convert.ToByte(hex.Substring(0, 2), 16), Convert.ToByte(hex.Substring(2, 2), 16), Convert.ToByte(hex.Substring(4, 2), 16));
+            }
+            catch { return Color.Transparent; }
+        }
+        private Color ParseHex(string hex)
+        {
+            if (string.IsNullOrEmpty(hex)) return Color.White;
+            if (hex.StartsWith("#")) hex = hex.Substring(1);
+            if (hex.Length != 6) return Color.White;
+
+            byte r = Convert.ToByte(hex.Substring(0, 2), 16);
+            byte g = Convert.ToByte(hex.Substring(2, 2), 16);
+            byte b = Convert.ToByte(hex.Substring(4, 2), 16);
+            return new Color((int)r, (int)g, (int)b, 255);
+        }
+        private Texture2D ApplyPaletteSwap(Texture2D source, Rectangle srcRect, Dictionary<string, string> paletteMap, GraphicsDevice gd)
+        {
+            if (paletteMap == null || paletteMap.Count == 0) return source;
+
+            Color[] data = new Color[srcRect.Width * srcRect.Height];
+            // Fix: Pull from the specific source rectangle, not the whole atlas
+            source.GetData(0, srcRect, data, 0, data.Length);
+
+            var fastMap = new Dictionary<Color, Color>();
+            foreach (var kvp in paletteMap)
+            {
+                Color original = ParseHex(kvp.Key);
+                Color replacement = ParseHex(kvp.Value);
+                //System.Diagnostics.Debug.WriteLine($"[Compositor] Read colors as {kvp.Key} -> {kvp.Value}");
+
+                // Strip Alpha to guarantee strict RGB matching
+                fastMap[new Color((int)original.R, (int)original.G, (int)original.B, (int)255)] = new Color((int)replacement.R, (int)replacement.G, (int)replacement.B, (int)255);
+            }
+
+            int swappedPixels = 0;
+            int skippedpixels = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i].A < 10)
+                {
+                    skippedpixels++;
+                    continue; 
+                } // Skip fully transparent pixels
+
+                // Un-premultiply the alpha so we can compare the raw RGB values accurately!
+                float alphaFactor = 1f;//255f / data[i].A;
+                byte r = (byte)MathHelper.Clamp(data[i].R * alphaFactor, 0, 255);
+                byte g = (byte)MathHelper.Clamp(data[i].G * alphaFactor, 0, 255);
+                byte b = (byte)MathHelper.Clamp(data[i].B * alphaFactor, 0, 255);
+
+                Color rawRGB = new Color((int)r, (int)g, (int)b, (int)255);
+
+                if (fastMap.TryGetValue(rawRGB, out Color newColor))
+                {
+                    // Re-apply the original alpha to the new color
+                    data[i] = new Color(newColor.R, newColor.G, newColor.B, data[i].A);
+                    swappedPixels++;
                 }
                 else
                 {
-                    if (entity.Prefab.AlternateStates.ContainsKey("State_Base")) activeLayers.Add("State_Base");
-                    if (entity.Prefab.AlternateStates.ContainsKey("State_Trunk")) activeLayers.Add("State_Trunk");
+                    // FALLBACK: Find the closest color (Fixes MonoGame compression artifacts)
+                    Color bestMatch = rawRGB;
+                    int minDiff = int.MaxValue;
 
-                    // Map engine seasons to exact HTML tool strings
-                    string seasonName = state.Calendar.CurrentSeason.ToString();
-                    if (state.Calendar.CurrentSeason == Season.Winter) seasonName = "Snow";
-                    if (state.Calendar.CurrentSeason == Season.Fall) seasonName = "Autumn";
+                    foreach (var mapKvp in fastMap)
+                    {
+                        int dr = rawRGB.R - mapKvp.Key.R;
+                        int dg = rawRGB.G - mapKvp.Key.G;
+                        int db = rawRGB.B - mapKvp.Key.B;
+                        int diff = (dr * dr) + (dg * dg) + (db * db);
 
-                    string overlayKey = "Overlay_" + seasonName;
+                        if (diff < minDiff)
+                        {
+                            minDiff = diff;
+                            bestMatch = mapKvp.Value;
+                        }
+                    }
 
-                    if (entity.Prefab.AlternateStates.ContainsKey(overlayKey)) activeLayers.Add(overlayKey);
-                    else if (entity.Prefab.AlternateStates.ContainsKey("Overlay_Summer")) activeLayers.Add("Overlay_Summer");
-                    else if (entity.Prefab.AlternateStates.ContainsKey("Overlay_Spring")) activeLayers.Add("Overlay_Spring");
+                    // If it's a reasonably close match (Allows for slight compression variation)
+                    if (minDiff < 500)
+                    {
+                        Color OldData = data[i];
+                        data[i] = new Color(bestMatch.R, bestMatch.G, bestMatch.B, data[i].A);
+                        //System.Diagnostics.Debug.WriteLine($"[Compositor] Swapping colors from {OldData} to{data[i]}");
+                        swappedPixels++;
+                    }
                 }
             }
-            else
-            {
-                activeLayers.Add("Base");
-                foreach (var kvp in entity.Prefab.AlternateStates)
-                {
-                    if (entity.GetProperty(kvp.Key, "False") == "True") activeLayers.Add(kvp.Key);
-                }
-            }
 
-            return activeLayers;
+            System.Diagnostics.Debug.WriteLine($"[Compositor] Successfully palette swapped {swappedPixels} pixels. Skipped Pixels {skippedpixels}");
+
+            Texture2D newTex = new Texture2D(gd, srcRect.Width, srcRect.Height);
+            newTex.SetData(data);
+            return newTex;
         }
 
         private Texture2D GetOrCreateComposite(ObjectPrefab prefab, List<string> activeStates, GameState state)
         {
-            // FIX: Sort visually (Base -> Trunk -> Snow) instead of alphabetically!
-            activeStates.Sort((a, b) => GetLayerZIndex(a).CompareTo(GetLayerZIndex(b)));
-
             string cacheKey = prefab.ID + "_" + string.Join("_", activeStates);
             if (_compositeCache.TryGetValue(cacheKey, out var existingTex)) return existingTex;
 
@@ -199,19 +276,12 @@ namespace Pixel_Simulations
             gd.SetRenderTarget(rt);
             gd.Clear(Color.Transparent);
 
+            // Track temporary CPU-swapped textures to safely dispose of them after rendering completes
+            List<Texture2D> tempTextures = new List<Texture2D>();
+
             using (var sb = new SpriteBatch(gd))
             {
                 sb.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
-
-                bool drawBase = prefab.SourceRect.Width > 0 && !string.IsNullOrEmpty(prefab.AtlasName);
-                if (prefab.SourceRect.Width <= 16 && prefab.AlternateStates.Count > 0) drawBase = false;
-
-                if (activeStates.Contains("Base") && drawBase)
-                {
-                    var baseTex = state.Assets.GetAtlas(prefab.AtlasName);
-                    if (baseTex != null)
-                        sb.Draw(baseTex, prefab.Offset.ToVector2(), prefab.SourceRect, Color.White);
-                }
 
                 foreach (var stateKey in activeStates)
                 {
@@ -219,17 +289,36 @@ namespace Pixel_Simulations
                     {
                         var layerTex = state.Assets.GetAtlas(layerData.AtlasName);
                         if (layerTex != null)
-                            sb.Draw(layerTex, layerData.Offset.ToVector2(), layerData.SourceRect, Color.White);
+                        {
+                            if (layerData.PaletteMap != null && layerData.PaletteMap.Count > 0)
+                            {
+                                // Apply Palette Swap on CPU and draw the temporary texture
+                                Texture2D swappedTex = ApplyPaletteSwap(layerTex, layerData.SourceRect, layerData.PaletteMap, gd);
+                                sb.Draw(swappedTex, layerData.Offset.ToVector2(), Color.White);
+
+                                // Queue the temporary texture for safe disposal
+                                tempTextures.Add(swappedTex);
+                            }
+                            else
+                            {
+                                sb.Draw(layerTex, layerData.Offset.ToVector2(), layerData.SourceRect, Color.White);
+                            }
+                        }
                     }
                 }
-                sb.End();
+                sb.End(); // Flushes all draw calls to the active RenderTarget (rt) on the GPU
+            }
+
+            // Now that the GPU has finished utilizing the textures, safely release their memory
+            foreach (var tempTex in tempTextures)
+            {
+                tempTex.Dispose();
             }
 
             gd.SetRenderTargets(oldTargets);
             _compositeCache[cacheKey] = rt;
             return rt;
         }
-
         public void RebuildStaticSprites(GameState state)
         {
             _staticSprites.Clear();
@@ -240,21 +329,26 @@ namespace Pixel_Simulations
             {
                 if (!entity.IsActive) continue;
 
-                if (entity.BaseData is PropObject prop)
+                if (entity.BaseData is PropObject prop && entity.Prefab != null)
                 {
-                    if (entity.Prefab == null) continue;
-
-                    // Centralized Logic
                     List<string> activeLayers = GetActiveLayersForEntity(entity, state);
                     Texture2D finalTexture = GetOrCreateComposite(entity.Prefab, activeLayers, state);
-                    float heightFactor = 0f;
+
                     string type = entity.GetProperty("Type", "Prop");
                     bool isChopped = entity.GetProperty("Chopped", "False") == "True";
+
+                    bool hasSway = activeLayers.Any(l => entity.Prefab.AlternateStates[l].Sway);
+
+                    // --- NEW: PROPORTIONAL PARALLAX ---
+                    // Trees under 64px don't parallax. Trees at 320px parallax fully (1.0).
+                    float pMask = 0f;
                     if (type == "Tree" && !isChopped)
                     {
-                        // Lerp parallax strength based on height. (64px = 0.0, 320px = 1.0)
-                        heightFactor = MathHelper.Clamp((finalTexture.Height - 64f) / (320f - 64f), 0f, 1f);
+                        float rawHeight = entity.Prefab.CanvasSize.Y;
+                        pMask = MathHelper.Clamp((rawHeight - 64f) / (320f - 64f), 0f, 1f);
                     }
+                    if (hasSway) pMask += 0.5f; // Add extra sway if canopy is active
+                    float feetY = entity.Position.Y + entity.Prefab.Pivot.Y;
                     _staticSprites.Add(new RenderableSprite
                     {
                         AtlasName = "COMPOSITE",
@@ -264,8 +358,9 @@ namespace Pixel_Simulations
                         Origin = entity.Prefab.Pivot,
                         Scale = prop.Scale,
                         Rotation = prop.Rotation,
-                        BaseWorldY = entity.Position.Y,
-                        ParallaxMask = heightFactor
+                        BaseWorldY = feetY, // Sort by the actual physical feet!
+                        DrawDepth = DepthUtil.Calculate(feetY),
+                        ParallaxMask = Math.Min(pMask, 1.0f) // Cap at 1.0 max
                     });
                     builtCount++;
                 }
@@ -315,13 +410,13 @@ namespace Pixel_Simulations
                 if (_staticSprites[i].Position == entity.Position)
                 {
                     var sprite = _staticSprites[i];
-
-                    // Centralized Logic
                     List<string> activeLayers = GetActiveLayersForEntity(entity, state);
-                    Texture2D newTexture = GetOrCreateComposite(entity.Prefab, activeLayers, state);
+                    sprite.Texture = GetOrCreateComposite(entity.Prefab, activeLayers, state);
+                    sprite.SourceRect = new Rectangle(0, 0, sprite.Texture.Width, sprite.Texture.Height);
 
-                    sprite.Texture = newTexture;
-                    sprite.SourceRect = new Rectangle(0, 0, newTexture.Width, newTexture.Height);
+                    bool hasSway = activeLayers.Any(l => entity.Prefab.AlternateStates[l].Sway);
+                    sprite.ParallaxMask = hasSway ? 1.0f : 0f;
+
                     _staticSprites[i] = sprite;
                     break;
                 }
@@ -572,8 +667,6 @@ namespace Pixel_Simulations
         public void DrawDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
         {
             if (renderList.Count == 0 || depthEffect == null) return;
-
-            // Additive blending for Red (Altitude) and Green (Depth)
             gd.BlendState = new BlendState
             {
                 ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Green,
@@ -585,7 +678,6 @@ namespace Pixel_Simulations
             gd.SamplerStates[0] = SamplerState.PointClamp;
 
             depthEffect.Parameters["MatrixTransform"]?.SetValue(camera.ScreenWVP);
-            depthEffect.Parameters["MaxAltitude"]?.SetValue(350f); // Make sure this matches your environment
 
             int spriteCount = 0;
             Texture2D currentTexture = null;
@@ -605,29 +697,20 @@ namespace Pixel_Simulations
                 float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW); float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
                 float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW); float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
 
-                // --- NEW: FIX DEPTH CALCULATION FOR SHADER ---
-                // We must pass the exact Top and Bottom Y coordinates in world space.
-                float spriteTopY = sprite.Position.Y - (sprite.Origin.Y * sprite.Scale.Y);
-                float spriteBottomY = sprite.Position.Y + ((sprite.SourceRect.Height - sprite.Origin.Y) * sprite.Scale.Y);
+                // --- NEW: RELATIVE ALTITUDE MATH ---
+                // We pass the actual height of the object to the Z coordinate, and the Base Ground Y to the W coordinate!
+                // Z = Top of the sprite relative to the ground (e.g., 320 for the tip of the tree, 0 for the base)
+                float objHeight = sprite.SourceRect.Height * sprite.Scale.Y;
+                float topRel = objHeight;
+                float botRel = 0f;
 
-                // Set parameters individually for this specific sprite. 
-                // NOTE: Because we are batching, this requires the Shader to do the math per-vertex, NOT per-draw call.
-                // We pack the top/bottom Y coordinates into the Z and W components of the vertex!
-
-                float topZ = spriteTopY;
-                float botZ = spriteBottomY;
-
-                // Color R = Target Depth (For Z-Sorting)
-                // Color G = Actual World Ground Y
                 Color depthColor = new Color(sprite.DrawDepth, DepthUtil.Calculate(sprite.BaseWorldY), 0, 1f);
 
                 int vIdx = spriteCount * 4;
-                // We use the Z coordinate of the Vector3 to pass the World Y position of the vertex to the shader
-                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, topZ), depthColor, new Vector2(u0, v0));
-                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, topZ), depthColor, new Vector2(u1, v0));
-                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, botZ), depthColor, new Vector2(u0, v1));
-                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, botZ), depthColor, new Vector2(u1, v1));
-
+                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, topRel), depthColor, new Vector2(u0, v0));
+                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, topRel), depthColor, new Vector2(u1, v0));
+                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, botRel), depthColor, new Vector2(u0, v1));
+                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, botRel), depthColor, new Vector2(u1, v1));
                 spriteCount++;
             }
             if (spriteCount > 0) FlushBatch(gd, depthEffect, currentTexture, spriteCount);

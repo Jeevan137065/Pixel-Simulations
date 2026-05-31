@@ -115,18 +115,6 @@
 /processorParam:TextureFormat=Color
 /build:Items.png
 
-#begin Items.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Items.png
-
 #begin LightEffect.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -3288,6 +3276,12 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:OcclusionEffect.fx
+
+#begin PaletteSwap.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:PaletteSwap.fx
 
 #begin ParallaxSprite.fx
 /importer:EffectImporter

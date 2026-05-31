@@ -1,341 +1,12 @@
 [
   {
-    "ID": "Tree_Temp",
-    "AtlasName": "Base",
+    "ID": "Object_781",
+    "AtlasName": "",
     "SourceRect": {
       "X": 0,
       "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 0,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 0,
-      "Y": 0
-    },
-    "Pivot": {
-      "X": 8,
-      "Y": 16
-    },
-    "Tags": [
-      600
-    ],
-    "Properties": {},
-    "AlternateStates": {}
-  },
-  {
-    "ID": "Dead_Tree_Temp",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 0,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 0,
-      "Y": 0
-    },
-    "Pivot": {
-      "X": 8,
-      "Y": 16
-    },
-    "Tags": [
-      601
-    ],
-    "Properties": {},
-    "AlternateStates": {}
-  },
-  {
-    "ID": "Fallen_TreeA",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 0,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 112,
-      "Y": 32
-    },
-    "Pivot": {
-      "X": 8,
-      "Y": 16
-    },
-    "Tags": [
-      601
-    ],
-    "Properties": {
-      "Type": {
-        "Type": 0,
-        "Value": "Tree"
-      }
-    },
-    "AlternateStates": {
-      "State_Trunk": {
-        "AtlasName": "Trees_t",
-        "SourceRect": {
-          "X": 912,
-          "Y": 96,
-          "Width": 112,
-          "Height": 32
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      },
-      "Overlay_Snow": {
-        "AtlasName": "Trees_s",
-        "SourceRect": {
-          "X": 912,
-          "Y": 96,
-          "Width": 112,
-          "Height": 32
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      }
-    }
-  },
-  {
-    "ID": "Fallen_TreeB",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 0,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 96,
-      "Y": 48
-    },
-    "Pivot": {
-      "X": 8,
-      "Y": 16
-    },
-    "Tags": [
-      601
-    ],
-    "Properties": {
-      "Type": {
-        "Type": 0,
-        "Value": "Tree"
-      }
-    },
-    "AlternateStates": {
-      "State_Trunk": {
-        "AtlasName": "Trees_t",
-        "SourceRect": {
-          "X": 928,
-          "Y": 128,
-          "Width": 96,
-          "Height": 48
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      },
-      "Overlay_Snow": {
-        "AtlasName": "Trees_s",
-        "SourceRect": {
-          "X": 928,
-          "Y": 128,
-          "Width": 96,
-          "Height": 48
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      }
-    }
-  },
-  {
-    "ID": "Fallen_TreeC",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 0,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 144,
-      "Y": 16
-    },
-    "Pivot": {
-      "X": 8,
-      "Y": 16
-    },
-    "Tags": [
-      601
-    ],
-    "Properties": {
-      "Type": {
-        "Type": 0,
-        "Value": "Tree"
-      }
-    },
-    "AlternateStates": {
-      "State_Trunk": {
-        "AtlasName": "Trees_t",
-        "SourceRect": {
-          "X": 880,
-          "Y": 176,
-          "Width": 144,
-          "Height": 16
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      },
-      "Overlay_Snow": {
-        "AtlasName": "Trees_s",
-        "SourceRect": {
-          "X": 880,
-          "Y": 176,
-          "Width": 144,
-          "Height": 16
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      }
-    }
-  },
-  {
-    "ID": "TreeA",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 0,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 80,
-      "Y": 320
-    },
-    "Pivot": {
-      "X": 40,
-      "Y": 320
-    },
-    "Tags": [
-      600
-    ],
-    "Properties": {
-      "Type": {
-        "Type": 0,
-        "Value": "Tree"
-      }
-    },
-    "AlternateStates": {
-      "State_Base": {
-        "AtlasName": "Trees_b",
-        "SourceRect": {
-          "X": 16,
-          "Y": 400,
-          "Width": 48,
-          "Height": 48
-        },
-        "Offset": {
-          "X": 16,
-          "Y": 272
-        }
-      },
-      "State_Trunk": {
-        "AtlasName": "Trees_t",
-        "SourceRect": {
-          "X": 0,
-          "Y": 144,
-          "Width": 80,
-          "Height": 288
-        },
-        "Offset": {
-          "X": 16,
-          "Y": 16
-        }
-      },
-      "Overlay_Summer": {
-        "AtlasName": "Trees_l",
-        "SourceRect": {
-          "X": 0,
-          "Y": 144,
-          "Width": 80,
-          "Height": 288
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 16
-        }
-      },
-      "Overlay_Spring": {
-        "AtlasName": "Trees_l",
-        "SourceRect": {
-          "X": 80,
-          "Y": 144,
-          "Width": 80,
-          "Height": 288
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 16
-        }
-      },
-      "Overlay_Snow": {
-        "AtlasName": "Trees_s",
-        "SourceRect": {
-          "X": 0,
-          "Y": 144,
-          "Width": 80,
-          "Height": 288
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        }
-      }
-    }
-  },
-  {
-    "ID": "TreeB",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
+      "Width": 0,
+      "Height": 0
     },
     "Offset": {
       "X": 0,
@@ -346,12 +17,10 @@
       "Y": 160
     },
     "Pivot": {
-      "X": 8,
-      "Y": 16
+      "X": 16,
+      "Y": 32
     },
-    "Tags": [
-      600
-    ],
+    "Tags": [],
     "Properties": {
       "Type": {
         "Type": 0,
@@ -359,7 +28,22 @@
       }
     },
     "AlternateStates": {
-      "State_Trunk": {
+      "State_Main": {
+        "AtlasName": "Base",
+        "SourceRect": {
+          "X": 0,
+          "Y": 0,
+          "Width": 16,
+          "Height": 16
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 1,
+        "Sway": false
+      },
+      "Trunk": {
         "AtlasName": "Trees_t",
         "SourceRect": {
           "X": 256,
@@ -370,9 +54,11 @@
         "Offset": {
           "X": 16,
           "Y": 0
-        }
+        },
+        "ZIndex": 3,
+        "Sway": false
       },
-      "Overlay_Spring": {
+      "Canopy_Spring": {
         "AtlasName": "Trees_l",
         "SourceRect": {
           "X": 240,
@@ -383,65 +69,128 @@
         "Offset": {
           "X": 0,
           "Y": 0
-        }
-      }
-    }
-  },
-  {
-    "ID": "BigTreeA",
-    "AtlasName": "Base",
-    "SourceRect": {
-      "X": 0,
-      "Y": 0,
-      "Width": 16,
-      "Height": 16
-    },
-    "Offset": {
-      "X": 64,
-      "Y": 0
-    },
-    "CanvasSize": {
-      "X": 112,
-      "Y": 336
-    },
-    "Pivot": {
-      "X": 8,
-      "Y": 16
-    },
-    "Tags": [
-      600
-    ],
-    "Properties": {
-      "Type": {
-        "Type": 0,
-        "Value": "Tree"
-      }
-    },
-    "AlternateStates": {
-      "State_Trunk": {
-        "AtlasName": "Trees_t",
-        "SourceRect": {
-          "X": 320,
-          "Y": 80,
-          "Width": 48,
-          "Height": 336
         },
-        "Offset": {
-          "X": 32,
-          "Y": 0
-        }
+        "ZIndex": 5,
+        "Sway": true
       },
-      "Overlay_Spring": {
+      "Canopy_Winter": {
         "AtlasName": "Trees_l",
         "SourceRect": {
-          "X": 288,
-          "Y": 80,
-          "Width": 112,
-          "Height": 304
+          "X": 240,
+          "Y": 256,
+          "Width": 48,
+          "Height": 128
         },
         "Offset": {
           "X": 0,
           "Y": 0
+        },
+        "ZIndex": 5,
+        "Sway": true,
+        "PaletteMap": {
+          "#005900": "#205a20",
+          "#046800": "#396c39",
+          "#026d00": "#3f713f",
+          "#046d00": "#407240",
+          "#0f680f": "#457645",
+          "#13770b": "#5d875d",
+          "#13770f": "#5e885e",
+          "#16770d": "#608960",
+          "#117c08": "#628b62",
+          "#137c07": "#638c63",
+          "#117c0f": "#648c64",
+          "#137c0f": "#668e66",
+          "#187c0f": "#699069",
+          "#22861a": "#83a383",
+          "#25861c": "#85a585",
+          "#208b17": "#88a788",
+          "#228b16": "#89a889",
+          "#268a1f": "#8dab8d",
+          "#278a1e": "#8dab8d",
+          "#268b1f": "#8eac8e",
+          "#278b1e": "#8fac8f",
+          "#319529": "#a8bfa8",
+          "#2f9a26": "#adc2ad",
+          "#319a25": "#aec3ae",
+          "#359a2e": "#b4c7b4",
+          "#369a2d": "#b4c8b4",
+          "#3ea935": "#d2ded2",
+          "#40a934": "#d4dfd4",
+          "#44a93d": "#d9e3d9",
+          "#45a93c": "#dae3da",
+          "#45b23c": "#e7ede7",
+          "#53b84c": "#ffffff",
+          "#54b84b": "#ffffff"
+        }
+      },
+      "State_Trunk_VarA": {
+        "AtlasName": "Trees_t",
+        "SourceRect": {
+          "X": 256,
+          "Y": 256,
+          "Width": 16,
+          "Height": 160
+        },
+        "Offset": {
+          "X": 16,
+          "Y": 0
+        },
+        "ZIndex": 3,
+        "Sway": false,
+        "PaletteMap": {
+          "#833012": "#caa091",
+          "#923f21": "#e5c5b9",
+          "#a14e30": "#ffe9e0"
+        }
+      },
+      "Canopy_Fall": {
+        "AtlasName": "Trees_l",
+        "SourceRect": {
+          "X": 240,
+          "Y": 256,
+          "Width": 48,
+          "Height": 128
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 5,
+        "Sway": true,
+        "PaletteMap": {
+          "#005900": "#4d3c00",
+          "#046800": "#61480d",
+          "#026d00": "#664b0f",
+          "#046d00": "#674c10",
+          "#0f680f": "#6b4e13",
+          "#13770b": "#7e5a1f",
+          "#13770f": "#7f5a1f",
+          "#16770d": "#805b20",
+          "#117c08": "#825c21",
+          "#137c07": "#835d22",
+          "#117c0f": "#835d22",
+          "#137c0f": "#855e23",
+          "#187c0f": "#886025",
+          "#22861a": "#9c6c32",
+          "#25861c": "#9e6e33",
+          "#208b17": "#a06f34",
+          "#228b16": "#a16f35",
+          "#268a1f": "#a47137",
+          "#278a1e": "#a47137",
+          "#268b1f": "#a57237",
+          "#278b1e": "#a57238",
+          "#319529": "#ba7e44",
+          "#2f9a26": "#be8147",
+          "#319a25": "#be8247",
+          "#359a2e": "#c3844a",
+          "#369a2d": "#c3844a",
+          "#3ea935": "#db935a",
+          "#40a934": "#dc945a",
+          "#44a93d": "#e1965d",
+          "#45a93c": "#e1975d",
+          "#45b23c": "#ec9d64",
+          "#53b84c": "#ffa970",
+          "#54b84b": "#ffa970"
         }
       }
     }

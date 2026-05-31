@@ -37,6 +37,7 @@ namespace Pixel_Simulations
         public Rectangle CollisionBounds => new Rectangle((int)ProxyPosition.X, (int)ProxyPosition.Y, SourceRect.Width, SourceRect.Height);
         public Vector2 CameraCenter => ProxyPosition + new Vector2(Size.X / 2f, Size.Y / 2f);
         public Vector2 PlayerCenter => new Vector2(ProxyPosition.X +Origin.X, ProxyPosition.Y + Origin.Y);
+
         public Vector2 Foot => new Vector2(ProxyPosition.X + Size.X/2, ProxyPosition.Y + Size.Y); // Exactly the bottom-center-Edge
         public RectangleF FootBounds => new RectangleF(ProxyPosition.X, Foot.Y - 8, SourceRect.Width, 8);
         public Texture2D Texture => _compositeTarget;

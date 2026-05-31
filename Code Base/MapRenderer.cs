@@ -81,37 +81,17 @@ namespace Pixel_Simulations.Data
 
                     Vector2 topLeft = prop.Position - prefab.Pivot;
 
-                    bool isTree = false;
-                    if (prop.Properties.TryGetValue("Type", out var pType)) isTree = pType.Value == "Tree";
-                    else if (prefab.Properties.TryGetValue("Type", out var pTypeB)) isTree = pTypeB.Value == "Tree";
+                    // Collect all active layers (Ignoring conditionals for Editor Preview, just draw them all sorted)
+                    var layersToDraw = prefab.AlternateStates.Keys.ToList();
+                    layersToDraw.Sort((a, b) => prefab.AlternateStates[a].ZIndex.CompareTo(prefab.AlternateStates[b].ZIndex));
 
-                    if (isTree)
+                    foreach (var key in layersToDraw)
                     {
-                        // ONLY draw the trunk and the base in the Editor to prevent clutter
-                        if (prefab.AlternateStates.TryGetValue("State_Base", out var bLayer) && _editorState.AssetLibrary.GetAtlas(bLayer.AtlasName) != null)
-                            sb.Draw(_editorState.AssetLibrary.GetAtlas(bLayer.AtlasName), topLeft + bLayer.Offset.ToVector2(), bLayer.SourceRect, Color.White);
-
-                        if (prefab.AlternateStates.TryGetValue("State_Trunk", out var tLayer) && _editorState.AssetLibrary.GetAtlas(tLayer.AtlasName) != null)
-                            sb.Draw(_editorState.AssetLibrary.GetAtlas(tLayer.AtlasName), topLeft + tLayer.Offset.ToVector2(), tLayer.SourceRect, Color.White);
-                    }
-                    else
-                    {
-                        // Check if we should draw an alternate state instead of the base
-                        bool drewLayer = false;
-                        foreach (var kvp in prefab.AlternateStates)
+                        var sLayer = prefab.AlternateStates[key];
+                        var tex = _editorState.AssetLibrary.GetAtlas(sLayer.AtlasName);
+                        if (tex != null)
                         {
-                            var t = _editorState.AssetLibrary.GetAtlas(kvp.Value.AtlasName);
-                            if (t != null)
-                            {
-                                sb.Draw(t, topLeft + kvp.Value.Offset.ToVector2(), kvp.Value.SourceRect, Color.White);
-                                drewLayer = true;
-                            }
-                        }
-
-                        // Draw Base as fallback
-                        if (!drewLayer && _editorState.AssetLibrary.GetAtlas(prefab.AtlasName) != null)
-                        {
-                            sb.Draw(_editorState.AssetLibrary.GetAtlas(prefab.AtlasName), prop.Position, prefab.SourceRect, Color.White, prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, 0f);
+                            sb.Draw(tex, topLeft + sLayer.Offset.ToVector2(), sLayer.SourceRect, Color.White);
                         }
                     }
                 }

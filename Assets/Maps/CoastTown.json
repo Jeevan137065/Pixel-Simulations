@@ -2,27 +2,25 @@
   "Layers": [
     {
       "$type": "Object",
-      "Name": "Object6",
+      "Name": "Object7",
       "IsVisible": true,
       "IsLocked": false,
       "Objects": [
         {
           "Type": 0,
-          "PrefabID": "TreeB",
+          "PrefabID": "Object_781",
           "Scale": {
             "X": 1.0,
             "Y": 1.0
           },
           "Rotation": 0.0,
-          "ID": "f185fa70",
-          "Name": "TreeB_1",
+          "ID": "2f664a1d",
+          "Name": "Object_781_1",
           "Position": {
-            "X": -350.02362,
-            "Y": 268.1443
+            "X": -385.0,
+            "Y": -117.5
           },
-          "Tags": [
-            600
-          ],
+          "Tags": [],
           "Properties": {
             "Type": {
               "Type": 0,
@@ -33,21 +31,19 @@
         },
         {
           "Type": 0,
-          "PrefabID": "TreeA",
+          "PrefabID": "Object_781",
           "Scale": {
             "X": 1.0,
             "Y": 1.0
           },
           "Rotation": 0.0,
-          "ID": "671db124",
-          "Name": "TreeA_1",
+          "ID": "c5bf6b81",
+          "Name": "Object_781_2",
           "Position": {
-            "X": -170.02362,
-            "Y": 212.81053
+            "X": -238.5,
+            "Y": -261.5
           },
-          "Tags": [
-            600
-          ],
+          "Tags": [],
           "Properties": {
             "Type": {
               "Type": 0,
@@ -58,96 +54,19 @@
         },
         {
           "Type": 0,
-          "PrefabID": "BigTreeA",
+          "PrefabID": "Object_781",
           "Scale": {
             "X": 1.0,
             "Y": 1.0
           },
           "Rotation": 0.0,
-          "ID": "c4f6bf88",
-          "Name": "BigTreeA_1",
+          "ID": "3e688f4d",
+          "Name": "Object_781_3",
           "Position": {
-            "X": -340.02362,
-            "Y": -292.52405
+            "X": -382.5,
+            "Y": -350.0
           },
-          "Tags": [
-            600
-          ],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Fallen_TreeC",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "2290a5dc",
-          "Name": "Fallen_TreeC_1",
-          "Position": {
-            "X": 113.23793,
-            "Y": 278.26794
-          },
-          "Tags": [
-            601
-          ],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Fallen_TreeB",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "23f1b71c",
-          "Name": "Fallen_TreeB_1",
-          "Position": {
-            "X": 335.2379,
-            "Y": 191.26796
-          },
-          "Tags": [
-            601
-          ],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Fallen_TreeA",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "d038d272",
-          "Name": "Fallen_TreeA_1",
-          "Position": {
-            "X": 548.2379,
-            "Y": 284.26794
-          },
-          "Tags": [
-            601
-          ],
+          "Tags": [],
           "Properties": {
             "Type": {
               "Type": 0,

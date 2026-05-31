@@ -494,6 +494,12 @@ namespace Pixel_Simulations
                 }
             }
 
+            System.Diagnostics.Debug.WriteLine($"[GameController] Day Advanced! Rebuilding Entity Visuals to ensure Seasonal Overlays update.");
+
+            // Clear the Composite Cache so old seasonal graphics are flushed!
+            foreach (var tex in _entityManager._compositeCache.Values) tex.Dispose();
+            _entityManager._compositeCache.Clear();
+
             _entityManager.RebuildStaticSprites(_state);
         }
 

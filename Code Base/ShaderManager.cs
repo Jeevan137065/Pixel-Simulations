@@ -76,6 +76,7 @@ namespace Pixel_Simulations
             Effects["WaterFlood"] = content.Load<Effect>("WaterFlood");
             Effects["ReflectionShader"] = content.Load<Effect>("ReflectionShader");
             Effects["WindTrails"] = content.Load<Effect>("WindTrails");
+            Effects["PaletteSwap"] = content.Load<Effect>("PaletteSwap");
             // Assign your swirl/streak texture to it
             // Load all Textures
             Effects["WaterFlood"].SetSafe("WaterLevel", 50f / 255f);

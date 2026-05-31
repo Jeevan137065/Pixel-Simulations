@@ -142,7 +142,7 @@ namespace Pixel_Simulations
                 return meta.Texture;
             }
 
-            if(name != "Player") System.Diagnostics.Debug.WriteLine($"WARNING: Normal Atlas '{name}' requested but not loaded.");
+            //if(name != "Player") System.Diagnostics.Debug.WriteLine($"WARNING: Normal Atlas '{name}' requested but not loaded.");
             return null;
         }
 
@@ -190,29 +190,16 @@ namespace Pixel_Simulations
 
         public void Load(string path)
         {
-            // 1. Initialize to empty dictionary immediately
             Prefabs = new Dictionary<string, ObjectPrefab>(StringComparer.OrdinalIgnoreCase);
-            if (!File.Exists(path))
-            {
-                System.Diagnostics.Debug.WriteLine($"Prefab file not found at {path}. Starting fresh.");
-                return;
-            }
+            if (!File.Exists(path)) return;
 
             try
             {
                 string json = File.ReadAllText(path);
+                if (string.IsNullOrWhiteSpace(json)) return;
 
-                // 2. Check if the file is empty or just whitespace
-                if (string.IsNullOrWhiteSpace(json))
-                {
-                    System.Diagnostics.Debug.WriteLine("Prefab file is empty. Starting fresh.");
-                    return;
-                }
-
-                // --- FIX: Pass the settings here to use the Vector2Converter! ---
                 var list = JsonConvert.DeserializeObject<List<ObjectPrefab>>(json, _jsonSettings);
 
-                // 3. Populate Dictionary
                 if (list != null)
                 {
                     foreach (var prefab in list)
@@ -220,17 +207,21 @@ namespace Pixel_Simulations
                         if (!Prefabs.ContainsKey(prefab.ID))
                         {
                             Prefabs.Add(prefab.ID, prefab);
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Warning: Duplicate Prefab ID '{prefab.ID}' found in JSON. Skipping duplicate.");
+
+                            // DEBUG: Verify Palette Maps are loading!
+                            foreach (var state in prefab.AlternateStates)
+                            {
+                                if (state.Value.PaletteMap != null && state.Value.PaletteMap.Count > 0)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[PrefabManager] Loaded PaletteMap for {prefab.ID} -> {state.Key} with {state.Value.PaletteMap.Count} colors.");
+                                }
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                // 4. Catch and print exact errors
                 System.Diagnostics.Debug.WriteLine($"CRITICAL: Failed to parse objects.json. Error: {ex.Message}");
             }
         }

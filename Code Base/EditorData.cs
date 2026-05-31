@@ -52,21 +52,27 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public string AtlasName { get; set; }
         [JsonProperty] public Rectangle SourceRect { get; set; }
         [JsonProperty] public Point Offset { get; set; }
+        [JsonProperty] public int ZIndex { get; set; } = 0;
+        [JsonProperty] public bool Sway { get; set; } = false;
+
+        // Maps Original Hex Color -> New Hex Color
+        [JsonProperty] public Dictionary<string, string> PaletteMap { get; set; }
     }
     [JsonObject(MemberSerialization.OptIn)]
     public class ObjectPrefab
     {
         [JsonProperty] public string ID { get; set; }
-        [JsonProperty] public string AtlasName { get; set; }
-        [JsonProperty] public Rectangle SourceRect { get; set; }
-        [JsonProperty] public Point Offset { get; set; }
+        [JsonProperty] public string AtlasName { get; set; } // Kept for legacy serialization, but unused
+        [JsonProperty] public Rectangle SourceRect { get; set; } // Unused
+        [JsonProperty] public Point Offset { get; set; } // Unused
 
         [JsonProperty] public Point CanvasSize { get; set; } = new Point(16, 16);
         [JsonProperty] public Vector2 Pivot { get; set; }
-        [JsonProperty] public bool IsTemplate { get; set; }
-        
+
         [JsonProperty] public List<int> Tags { get; set; } = new List<int>();
         [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
+
+        // EVERYTHING is now driven by this dictionary!
         [JsonProperty] public Dictionary<string, SpriteData> AlternateStates { get; set; } = new Dictionary<string, SpriteData>();
 
         [JsonProperty] public Point SizeInCells => new Point(CanvasSize.X / 16, CanvasSize.Y / 16);
@@ -172,4 +178,5 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public int DaysInCurrentStage { get; set; } = 0; // For Crops & Piles
         [JsonProperty] public float ProcessingTimer { get; set; } = 0f; // For Machines (In-Game Hours)
     }
+
 }

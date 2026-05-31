@@ -361,7 +361,9 @@ namespace Pixel_Simulations.UI
             $"Last Command: {_state.Debug_LastCommand}\n\n" +
 
             "--- MAP ---\n" +
-                $"Layers: {_state.CurrentMap?.Layers.Count ?? 0}" +
+                $"Loaded: {_state.CurrentMap != null}\n" +
+                $"Layers: {_state.CurrentMap?.Layers.Count ?? 0}\n" +
+                $"Composite Cache Size: {_state._entityManager._compositeCache.Count} textures\n" +
                 $"Mask Layer Chunks {_state.TerrainMaskChunks.Count}";
 
             // Draw black shadow for readability
