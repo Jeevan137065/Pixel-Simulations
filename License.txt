@@ -1,0 +1,9 @@
+Copyright (C) 2026 DeadPenguin. All rights reserved.
+
+This software and all associated files are proprietary. 
+
+You may view the source code for educational or review purposes, 
+but you are strictly prohibited from:
+1. Copying, modifying, or distributing the code.
+2. Replicating the game mechanics, assets, or editor features.
+3. Using this code in any commercial or non-commercial product.
