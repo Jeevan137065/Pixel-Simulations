@@ -8,14 +8,16 @@ namespace Pixel_Simulations
     public enum RenderLayer
     {
         Albedo,         // 480x270: Static background
-        VolumeDepth,    // 960x540: Store Altitude depth of world
-        Dynamic,        // 960x540: Grass, Player, NPCs (The G-Buffer Color)
-        Simulation,     // NEW: For Physical/Interactable Items
+        YDepth,         // 960x540: R: Volume Depth (Altitude), G: Light/Shadow Vol, B: Surface Depth
+        ZDepth,         // 960x540: R: Z-Depth (Sorting), G: Light Depth (3D shadow), B: Shading/Material
+        WaterData,      // 960x540 [HalfVector4] R: SDF Shore, G: Flow X, B: Flow Y, A: Dynamic Wave/Ripples
+        Dynamic,        // 960x540: Grass, Player, NPCs (G-Buffer Color)
+        Simulation,     // 480p: For physical items
         Normal,         // 960x540: Normal maps for lighting
         LightMask,      // 960x540: HDR Lighting calculation
-        Shader,         // 960p: Weather and Atmospheric Shader
-        Composite,   // Final: Combined result at Window Resolution
-        PostProcess,// NEW: The final image AFTER Color Grading, Gusting, etc.
+        Shader,         // 960p: Weather and atmospheric shader
+        Composite,      // Final: Combined result
+        PostProcess     // Final: After color grading, gusting, etc.
     }
     public class Upscaler
     {
@@ -148,23 +150,30 @@ namespace Pixel_Simulations
 
     }
 
+    // Inside Upscaler.cs
     public class EditorUpscaler
     {
         private readonly GraphicsDevice _graphicsDevice;
         private RenderTarget2D _nativeRenderTarget; // The low-res 480x270 canvas
 
+        // --- DOUBLE BUFFER SIMULATION TARGETS ---
+        private RenderTarget2D _fluidStateCurrent;
+        private RenderTarget2D _fluidStatePrevious;
+
         public int NativeWidth { get; }
         public int NativeHeight { get; }
         public int Scale { get; }
+
+        public RenderTarget2D FluidCurrent => _fluidStateCurrent;
+        public RenderTarget2D FluidPrevious => _fluidStatePrevious;
 
         public EditorUpscaler(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice;
             NativeWidth = 480;
             NativeHeight = 270;
-            Scale = 2; // Upscale 2x for the editor view
+            Scale = 2;
 
-            // Create the render target that our game world will be drawn to
             _nativeRenderTarget = new RenderTarget2D(
                 _graphicsDevice,
                 NativeWidth,
@@ -173,28 +182,47 @@ namespace Pixel_Simulations
                 _graphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.Depth24
             );
+
+            // Instantiate low-res floating-point buffers for fluid physics stability
+            _fluidStateCurrent = new RenderTarget2D(
+                _graphicsDevice,
+                NativeWidth,
+                NativeHeight,
+                false,
+                SurfaceFormat.HalfVector4,
+                DepthFormat.None,
+                0,
+                RenderTargetUsage.PreserveContents
+            );
+
+            _fluidStatePrevious = new RenderTarget2D(
+                _graphicsDevice,
+                NativeWidth,
+                NativeHeight,
+                false,
+                SurfaceFormat.HalfVector4,
+                DepthFormat.None,
+                0,
+                RenderTargetUsage.PreserveContents
+            );
         }
 
-        /// <summary>
-        /// Sets the GraphicsDevice to render to the internal low-resolution target.
-        /// Call this before drawing the world.
-        /// </summary>
+        public void SwapFluidBuffers()
+        {
+            var temp = _fluidStateCurrent;
+            _fluidStateCurrent = _fluidStatePrevious;
+            _fluidStatePrevious = temp;
+        }
+
         public void BeginRender()
         {
             _graphicsDevice.SetRenderTarget(_nativeRenderTarget);
         }
 
-        /// <summary>
-        /// Draws the upscaled world content to the screen within the specified viewport area.
-        /// Call this during the final UI composition pass.
-        /// </summary>
         public void Present(SpriteBatch spriteBatch, Rectangle viewportDestination)
         {
-            // First, ensure we are drawing back to the main screen
             _graphicsDevice.SetRenderTarget(null);
 
-            // Draw the contents of our low-res render target, scaled up to fit the viewport area.
-            // SamplerState.PointClamp is crucial to maintain the crisp pixel-art look.
             spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             spriteBatch.Draw(_nativeRenderTarget, viewportDestination, Color.White);
             spriteBatch.End();
@@ -281,8 +309,10 @@ namespace Pixel_Simulations
                 RenderLayer.Dynamic,
                 RenderLayer.Simulation,
                 RenderLayer.Normal,
-                RenderLayer.VolumeDepth,
-                RenderLayer.LightMask,
+                RenderLayer.YDepth,
+                RenderLayer.ZDepth,
+                RenderLayer.WaterData,
+                //RenderLayer.LightMask,
                 //RenderLayer.Shader,
             };
             MicroRTs = new MicroRenderTargetPool(graphicsDevice);
@@ -303,13 +333,18 @@ namespace Pixel_Simulations
             _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height, false, 
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // 2. SIMULATION LAYER (960x540)
-            _targets[RenderLayer.VolumeDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
-                SurfaceFormat.HalfVector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            
+            _targets[RenderLayer.YDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+
+            _targets[RenderLayer.ZDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            // High-precision 16-bit per-channel floating-point map for mathematical fluid simulation
+            _targets[RenderLayer.WaterData] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.Depth24Stencil8 ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
+                SurfaceFormat.Color, DepthFormat.None ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
             _targets[RenderLayer.Simulation] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.Depth24Stencil8, 0, RenderTargetUsage.PreserveContents);
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             // Normals: Used for deferred lighting
             _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
@@ -368,32 +403,20 @@ namespace Pixel_Simulations
             _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Composite]);
             _graphicsDevice.Clear(Color.Black);
 
-            // If we have a composite effect (for lighting/HDR), we use it here
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
 
-            // A. Draw Albedo (480p Background) scaled to fit the 1080p+ FinalRect
+            // Draw Albedo (480p Background) scaled to fit the FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, Color.White);
             spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, Color.White);
 
-            // B. Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
+            // Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
-            //spriteBatch.Draw(_targets[RenderLayer.Shader], FinalRect, Color.White);
 
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
-
             spriteBatch.Draw(_targets[RenderLayer.LightMask], FinalRect, Color.White);
-
             spriteBatch.End();
-            // 2. OUTPUT TO SCREEN
-            //_graphicsDevice.SetRenderTarget(null);
-            //_graphicsDevice.Clear(Color.Black);
-
-            //spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
-            // Draw whichever layer is currently selected for debugging
-            //spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
-            //spriteBatch.End();
         }
         /// <summary>
         /// Takes the Composite image, applies full-screen post-processing effects, 
@@ -407,7 +430,7 @@ namespace Pixel_Simulations
             spriteBatch.End();
         }
 
-        public void PostFinal(SpriteBatch spriteBatch, Effect debugChannelEffect, params Effect[] postEffects)
+        public void PostFinal(SpriteBatch spriteBatch, params Effect[] postEffects)
         {
             RenderTarget2D currentSource = _targets[RenderLayer.Composite];
 
@@ -445,15 +468,14 @@ namespace Pixel_Simulations
                 spriteBatch.Draw(currentSource, FinalRect, Color.White);
                 spriteBatch.End();
             }
-            else if (_currentDebugView == RenderLayer.VolumeDepth && debugChannelEffect != null)
+            else if (_currentDebugView == RenderLayer.WaterData)// || _currentDebugView == RenderLayer.YDepth || _currentDebugView == RenderLayer.ZDepth)
             {
-                // USE THE DEBUG SHADER to isolate the Red or Blue channel
-                debugChannelEffect.Parameters["Channel"]?.SetValue(DebugDepthChannel);
 
-                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, debugChannelEffect);
-                spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
-                spriteBatch.End();
+                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null);
+                    spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+                    spriteBatch.End();
             }
+
             else
             {
                 // Standard debug draw for Albedo, Normal, etc.

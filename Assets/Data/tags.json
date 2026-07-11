@@ -1,74 +1,80 @@
 [
-  {
-    "ID": 1,
-    "Name": "DEBUG",
-    "Description": "if we don't find a tag, we apply this fall back tag, and report that shape to debug console so dev can see that...",
-    "TagColor": "0,0,0,255"
-  },
-  {
-    "ID": 2,
-    "Name": "Hard Collision",
-    "Description": "Hard Defined Boundaries to Stop anything beyond...",
-    "TagColor": "255,0,0,255"
-  },
-  {
-    "ID": 3,
-    "Name": "Soft Collision",
-    "Description": "Normal Collision that are used to Block Player Hitbox for normal things like walls, fences, etc...",
-    "TagColor": "255,112,112,255"
-  },
-  {
-    "ID": 20,
-    "Name": "Spawn",
-    "Description": "Tag a pointer to make it act as spawn point.",
-    "TagColor": "255,153,233,255"
-  },
-  {
-    "ID": 50,
-    "Name": "Light Source",
-    "Description": "Used to Tag shapes that acts as light sources",
-    "TagColor": "232,255,148,255"
-  },
-  {
-    "ID": 51,
-    "Name": "Light Zone",
-    "Description": "For Shapes that Act as Where Light from light source hit.",
-    "TagColor": "138,194,255,255"
-  },
-  {
-    "ID": 71,
-    "Name": "Ocean",
-    "Description": "",
-    "TagColor": "26,83,255,255"
-  },
-  {
-    "ID": 72,
-    "Name": "Beach Water",
-    "Description": "Denotes The Beach Water which player can  Walk on (Ocean Water can't be walked on, so Beach Acts as Shallow Water before We stop player movement). Also We apply Sink Effect to player sprite to Indicate shallowness, And also we need to apply a Ocean Waves Effect to this shape with this tag",
-    "TagColor": "0,157,255,255"
-  },
-  {
-    "ID": 80,
-    "Name": "Grass",
-    "Description": "Use to spawn default green grass",
-    "TagColor": "81,245,122,255"
-  },
-  {
-    "ID": 90,
-    "Name": "Farm",
-    "Description": "Denotes area where player can till, farm, etc...",
-    "TagColor": "0,255,42,255"
-  },
-  {
-    "ID": 600,
-    "Name": "Tree",
-    "Description": "Mark Trees that grows wild, can be chopped",
-    "TagColor": "12,107,0,255"
-  },
-  {
-    "ID": 601,
-    "Name": "Dead Tree",
-    "Description": "Mark tree that are have fallen, and Dead. Often rots with mushrooms",
-    "TagColor": "7,31,0,255"
-  }
+    {
+        "ID": 1,
+        "Name": "DEBUG",
+        "Description": "if we don't find a tag, we apply this fall back tag, and report that shape to debug console so dev can see that...",
+        "TagColor": "0,0,0,255"
+    },
+    {
+        "ID": 2,
+        "Name": "Hard Collision",
+        "Description": "Hard Defined Boundaries to Stop anything beyond...",
+        "TagColor": "255,0,0,255"
+    },
+    {
+        "ID": 3,
+        "Name": "Soft Collision",
+        "Description": "Normal Collision that are used to Block Player Hitbox for normal things like walls, fences, etc...",
+        "TagColor": "255,112,112,255"
+    },
+    {
+        "ID": 20,
+        "Name": "Spawn",
+        "Description": "Tag a pointer to make it act as spawn point.",
+        "TagColor": "255,153,233,255"
+    },
+    {
+        "ID": 50,
+        "Name": "Light Source",
+        "Description": "Used to Tag shapes that acts as light sources",
+        "TagColor": "232,255,148,255"
+    },
+    {
+        "ID": 51,
+        "Name": "Light Zone",
+        "Description": "For Shapes that Act as Where Light from light source hit.",
+        "TagColor": "138,194,255,255"
+    },
+    {
+        "ID": 70,
+        "Name": "WATER",
+        "Description": "",
+        "TagColor": "26,83,255,255"
+    },
+    {
+        "ID": 71,
+        "Name": "Ocean",
+        "Description": "",
+        "TagColor": "26,83,255,255"
+    },
+    {
+        "ID": 72,
+        "Name": "Beach Water",
+        "Description": "Denotes The Beach Water which player can  Walk on (Ocean Water can't be walked on, so Beach Acts as Shallow Water before We stop player movement). Also We apply Sink Effect to player sprite to Indicate shallowness, And also we need to apply a Ocean Waves Effect to this shape with this tag",
+        "TagColor": "0,157,255,255"
+    },
+    {
+        "ID": 80,
+        "Name": "Grass",
+        "Description": "Use to spawn default green grass",
+        "TagColor": "81,245,122,255"
+    },
+    {
+        "ID": 90,
+        "Name": "Farm",
+        "Description": "Denotes area where player can till, farm, etc...",
+        "TagColor": "0,255,42,255"
+    },
+    {
+        "ID": 600,
+        "Name": "Tree",
+        "Description": "Mark Trees that grows wild, can be chopped",
+        "TagColor": "12,107,0,255"
+    },
+    {
+        "ID": 601,
+        "Name": "Dead Tree",
+        "Description": "Mark tree that are have fallen, and Dead. Often rots with mushrooms",
+        "TagColor": "7,31,0,255"
+    }
 ]

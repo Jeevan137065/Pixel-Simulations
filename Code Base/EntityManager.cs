@@ -459,21 +459,74 @@ namespace Pixel_Simulations
             if (state.Player != null)
             {
                 var P = state.Player;
+
+                // 1. Get the current terrain height beneath the player's feet
+                float groundHeight = state.WaterSystem.GetTerrainHeightAt(P.Foot);
+
+                // 2. Baseline shoreline elevation (e.g. 180 representing lake edge)
+                float shorelineWaterLevel = 100f / 255f;
+
+                // 3. Submersion depth represents the difference
+                float submergeAmount = Math.Max(0.0f, shorelineWaterLevel - groundHeight);
+
+                int sinkOffset = 0;
+                string playerMovementState = "WALKING";
+
+                if (submergeAmount > 0.0f)
+                {
+                    // Check if player has entered the Deep Swimming Zone (Elevation <= 40 / 255)
+                    if (groundHeight <= (40f / 255f))
+                    {
+                        playerMovementState = "SWIMMING";
+                        sinkOffset = 26; // Submerge up to chest
+                    }
+                    else
+                    {
+                        playerMovementState = "SINKING/WADING";
+                        sinkOffset = (int)(submergeAmount * 16f); // Gradual shins-to-waist crop (Max 16px)
+                    }
+                }
+
+                // Output status to the dynamic debug log on screen
+                state.Debug_LastCommand = $"PLAYER STATE: {playerMovementState} Surface {groundHeight}| Ground Alt: {Math.Round(groundHeight * 255)} | Depth: {Math.Round(submergeAmount * 255)}";
+
+                Rectangle croppedSource = new Rectangle(
+                    P.SourceRect.X,
+                    P.SourceRect.Y,
+                    P.SourceRect.Width,
+                    P.SourceRect.Height - sinkOffset
+                );
+
+                Vector2 adjustedOrigin = new Vector2(P.Origin.X, P.Origin.Y - sinkOffset);
+
                 _drawList.Add(new RenderableSprite
                 {
                     AtlasName = "Player",
                     Texture = P.Texture,
                     Position = P.Position,
-                    SourceRect = P.SourceRect,
-                    Origin = P.Origin,
+                    SourceRect = croppedSource,
+                    Origin = adjustedOrigin,
                     Scale = Vector2.One,
                     Rotation = 0f,
-                    DrawDepth = DepthUtil.Calculate(P.Foot.Y),
-                    BaseWorldY = P.Foot.Y,
                     ParallaxMask = 0.0f
                 });
             }
 
+            // Apply standardized math to calculate the actual physical ground contact point (feet) for sorting
+            for (int i = 0; i < _drawList.Count; i++)
+            {
+                var sprite = _drawList[i];
+
+                // Ground contact is the bottom edge of the sprite bounds in world-space
+                float physicalFeetY = sprite.Position.Y + (sprite.SourceRect.Height - sprite.Origin.Y) * sprite.Scale.Y;
+
+                sprite.BaseWorldY = physicalFeetY;
+                sprite.DrawDepth = DepthUtil.Calculate(physicalFeetY);
+
+                _drawList[i] = sprite;
+            }
+
+            // Sort the list based on uniform feet calculations
             SpriteSorter.Sort(_drawList, !_isFirstLoad);
             _isFirstLoad = false;
         }
@@ -664,9 +717,11 @@ namespace Pixel_Simulations
         // ==========================================
         // DEDICATED VOLUME DEPTH PASS
         // ==========================================
-        public void DrawDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
+        public void DrawYDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
         {
             if (renderList.Count == 0 || depthEffect == null) return;
+
+            // Write only to Red (Volume Height) and Green (Shadow Occlusion)
             gd.BlendState = new BlendState
             {
                 ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Green,
@@ -693,24 +748,79 @@ namespace Pixel_Simulations
 
                 CalculateSpriteGeometry(sprite, camera, enableParallax, parallaxStrength, out Vector2 tl, out Vector2 tr, out Vector2 bl, out Vector2 br);
 
-                float texW = 1f / currentTexture.Width; float texH = 1f / currentTexture.Height;
-                float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW); float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
-                float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW); float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
+                float texW = 1f / currentTexture.Width;
+                float texH = 1f / currentTexture.Height;
+                float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW);
+                float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
+                float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW);
+                float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
 
-                // --- NEW: RELATIVE ALTITUDE MATH ---
-                // We pass the actual height of the object to the Z coordinate, and the Base Ground Y to the W coordinate!
-                // Z = Top of the sprite relative to the ground (e.g., 320 for the tip of the tree, 0 for the base)
+                // Height attributes
                 float objHeight = sprite.SourceRect.Height * sprite.Scale.Y;
-                float topRel = objHeight;
-                float botRel = 0f;
 
-                Color depthColor = new Color(sprite.DrawDepth, DepthUtil.Calculate(sprite.BaseWorldY), 0, 1f);
+                // G-Channel: Ambient/Canopy shadow value (255 for thick foliage, 0 for standard entities)
+                byte canopyShadow = (byte)(sprite.AtlasName.Contains("Trees") || sprite.AtlasName.Contains("Building") ? 255 : 0);
+
+                // Interpolate the height gradient via the vertex colors (R: Height, G: Occlusion, B: Surface)
+                Color topColor = new Color((byte)255, canopyShadow, (byte)0, (byte)255); // Top vertices (Full height)
+                Color botColor = new Color((byte)0, canopyShadow, (byte)0, (byte)255);   // Bottom vertices (Base ground)
 
                 int vIdx = spriteCount * 4;
-                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, topRel), depthColor, new Vector2(u0, v0));
-                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, topRel), depthColor, new Vector2(u1, v0));
-                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, botRel), depthColor, new Vector2(u0, v1));
-                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, botRel), depthColor, new Vector2(u1, v1));
+                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, objHeight), topColor, new Vector2(u0, v0));
+                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, objHeight), topColor, new Vector2(u1, v0));
+                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0f), botColor, new Vector2(u0, v1));
+                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0f), botColor, new Vector2(u1, v1));
+                spriteCount++;
+            }
+            if (spriteCount > 0) FlushBatch(gd, depthEffect, currentTexture, spriteCount);
+        }
+        public void DrawZDepthPass(GraphicsDevice gd, Camera camera, Effect depthEffect, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
+        {
+            if (renderList.Count == 0 || depthEffect == null) return;
+
+            // Write only to Red (Sorting Depth) and Green (Shadow depth projection)
+            gd.BlendState = new BlendState
+            {
+                ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Green,
+                ColorSourceBlend = Blend.One,
+                ColorDestinationBlend = Blend.Zero
+            };
+            gd.DepthStencilState = DepthStencilState.None;
+            gd.RasterizerState = RasterizerState.CullNone;
+            gd.SamplerStates[0] = SamplerState.PointClamp;
+
+            depthEffect.Parameters["MatrixTransform"]?.SetValue(camera.ScreenWVP);
+
+            int spriteCount = 0;
+            Texture2D currentTexture = null;
+
+            foreach (var sprite in renderList)
+            {
+                if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
+                {
+                    FlushBatch(gd, depthEffect, currentTexture, spriteCount);
+                    spriteCount = 0;
+                }
+                currentTexture = sprite.Texture;
+
+                CalculateSpriteGeometry(sprite, camera, enableParallax, parallaxStrength, out Vector2 tl, out Vector2 tr, out Vector2 bl, out Vector2 br);
+
+                float texW = 1f / currentTexture.Width;
+                float texH = 1f / currentTexture.Height;
+                float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW);
+                float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
+                float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW);
+                float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
+
+                // Convert flat calculated feet depth into color value across the entire quad face
+                byte sortingDepth = (byte)(sprite.DrawDepth * 255f);
+                Color flatDepthColor = new Color(sortingDepth, (byte)0, (byte)0, (byte)255);
+
+                int vIdx = spriteCount * 4;
+                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), flatDepthColor, new Vector2(u0, v0));
+                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0), flatDepthColor, new Vector2(u1, v0));
+                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0), flatDepthColor, new Vector2(u0, v1));
+                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0), flatDepthColor, new Vector2(u1, v1));
                 spriteCount++;
             }
             if (spriteCount > 0) FlushBatch(gd, depthEffect, currentTexture, spriteCount);

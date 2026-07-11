@@ -90,6 +90,7 @@ namespace Pixel_Simulations
             _content = content;
             // Load Tile Atlases
             LoadAtlas("Base", AtlasType.Tile);
+            LoadAtlas("BaseWorld", AtlasType.Tile);
             LoadAtlas("Wild", AtlasType.Tile);
             //LoadAtlas("Temp", AtlasType.Tile);
             LoadAtlas("Farm", AtlasType.Tile);

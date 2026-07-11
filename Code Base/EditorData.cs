@@ -46,6 +46,21 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public Dictionary<string, MapProperty> Properties { get; set; } = new Dictionary<string, MapProperty>();
         [JsonProperty] public List<ObjectLink> Links { get; set; } = new List<ObjectLink>();
     }
+    public static class MapObjectExtensions
+    {
+        /// <summary>
+        /// Safely retrieves a custom property value from a MapObject's property dictionary.
+        /// Returns the specified fallback string if the property is missing.
+        /// </summary>
+        public static string GetProperty(this MapObject obj, string key, string fallback = "")
+        {
+            if (obj != null && obj.Properties != null && obj.Properties.TryGetValue(key, out var prop))
+            {
+                return prop.Value;
+            }
+            return fallback;
+        }
+    }
     [JsonObject(MemberSerialization.OptIn)]
     public class SpriteData
     {
@@ -84,6 +99,7 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public Polygon Shape { get; set; }
         [JsonProperty] public Vector2 Size { get; set; }
         [JsonProperty] public Color DebugColor { get; set; }
+        [JsonProperty] public List<Vector2> SpineWaypoints { get; set; } = new List<Vector2>();
 
         public ShapeObject()
         {

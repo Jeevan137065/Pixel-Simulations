@@ -271,24 +271,34 @@ namespace Pixel_Simulations.Editor
 
             return candidate;
         }
-        public void DrawPreview(ToolInput toolInput,SpriteBatch sb, EditorInputState input)
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
-            if (_activePrefab == null) return;
+            if (_activePrefab == null || _es == null) return;
 
-            var atlas = _es.AssetLibrary.GetAtlas(_activePrefab.AtlasName);
-            if (atlas != null)
+            Vector2 pos = input.MouseWorldPosition;
+            if (input.CurrentKeyboard.CapsLock)
             {
-                Vector2 pos = input.MouseWorldPosition;
-                if (input.CurrentKeyboard.CapsLock)
+                pos = GridHelper.SnapToSubCell(pos, _activePrefab.Pivot);
+            }
+
+            Vector2 origin = _activePrefab.Pivot;
+            Vector2 topLeft = pos - origin;
+
+            // Collect and sort layers by Z-Index so the placement ghost composites correctly
+            var layersToDraw = _activePrefab.AlternateStates.Keys.ToList();
+            layersToDraw.Sort((a, b) =>
+                _activePrefab.AlternateStates[a].ZIndex.CompareTo(_activePrefab.AlternateStates[b].ZIndex)
+            );
+
+            foreach (var key in layersToDraw)
+            {
+                var sLayer = _activePrefab.AlternateStates[key];
+                var tex = _es.AssetLibrary.GetAtlas(sLayer.AtlasName);
+                if (tex != null)
                 {
-                    pos = GridHelper.SnapToSubCell(pos, _activePrefab.Pivot);
+                    // Composite the layered preview at 50% opacity
+                    sb.Draw(tex, topLeft + sLayer.Offset.ToVector2(), sLayer.SourceRect, Color.White * 0.5f);
                 }
-
-                // FIX: Use the Pivot as the origin so the "Ghost" matches the final placement
-                Vector2 origin = _activePrefab.Pivot;
-
-                sb.Draw(atlas, pos, _activePrefab.SourceRect, Color.White * 0.5f,
-                        0f, origin, 1f, SpriteEffects.None, 0f);
             }
         }
         public string GetShortcutHints() => "";
@@ -555,8 +565,8 @@ namespace Pixel_Simulations.Editor
         private Vector2 _initialPos, _initialSize;
         private Vector2 _dragOffset;
         private EditorState _es;
-
-        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus,EditorState editorState)
+        private bool _isSpineHandle = false;
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
             _es = editorState;
             if (_es == null) return;
@@ -565,39 +575,43 @@ namespace Pixel_Simulations.Editor
             {
                 if (input.CurrentKeyboard.IsKeyDown(Keys.Delete) && input.PreviousKeyboard.IsKeyUp(Keys.Delete))
                 {
-                    if (CurrentSelect != null && toolInput.ActiveLayer is ObjectLayer objLayer)
+                    if (CurrentSelect != null)
                     {
-                        eventBus.Publish(new RemoveObjectCommand(objLayer, CurrentSelect));
-                        editorState.Selection.SelectedMapObject = null;
-                        CurrentSelect = null;
-                        _currentMode = InteractionMode.None;
-                        return; // Exit early
+                        var layer = _es.ActiveMap.Layers.FirstOrDefault(l =>
+                            (l is ObjectLayer ol && ol.Objects.Contains(CurrentSelect)) ||
+                            (l is ControlLayer cl && (cl.Rectangles.Contains(CurrentSelect) || cl.Shapes.Contains(CurrentSelect) || cl.Points.Contains(CurrentSelect))));
+
+                        if (layer is ObjectLayer targetLayer)
+                        {
+                            eventBus.Publish(new RemoveObjectCommand(targetLayer, CurrentSelect));
+                            editorState.Selection.SelectedMapObject = null;
+                            CurrentSelect = null;
+                            _currentMode = InteractionMode.None;
+                            return;
+                        }
                     }
                 }
             }
-            // --- STEP 1: SELECTION (Only on the frame the button is pressed) ---
+
             if (input.IsNewLeftClick)
             {
-
-                // First, check handles on the EXISTING selection
-                if (_es.Selection.SelectedMapObject != null)
+                // Check if clicking on an individual vertex handle of an already selected ShapeObject
+                if (_es.Selection.SelectedMapObject is ShapeObject poly)
                 {
-                    _activeHandle = GetHandleAt(_es.Selection.SelectedMapObject, input.MouseWorldPosition, input.Zoom);
+                    _activeHandle = GetVertexHandleAt(poly, input.MouseWorldPosition, input.Zoom, out _isSpineHandle);
                     if (_activeHandle != -1)
                     {
-                        _currentMode = InteractionMode.Resizing;
-                        var obj = _es.Selection.SelectedMapObject;
-                        _initialPos = obj.Position;
-                        _initialSize = GetObjectSize(obj);
+                        _currentMode = InteractionMode.Resizing; // Abuse resizing mode for vertex dragging
+                        _initialPos = poly.Position;
+                        _initialSize = GetObjectSize(poly);
                     }
                 }
 
-                // Second, if no handle was hit, try to select a NEW object
                 if (_currentMode == InteractionMode.None)
                 {
                     bool absoluteMode = input.CurrentKeyboard.IsKeyDown(Keys.LeftAlt);
                     var hit = FindTopObject(toolInput.ActiveLayer, input.MouseWorldPosition, absoluteMode);
-                    editorState.Selection.SelectedMapObject = hit; // APPLY SELECTION TO STATE
+                    editorState.Selection.SelectedMapObject = hit;
 
                     if (hit != null)
                     {
@@ -611,9 +625,6 @@ namespace Pixel_Simulations.Editor
                 CurrentSelect = editorState.Selection.SelectedMapObject;
             }
 
-            // --- STEP 2: INTERACTION (While mouse is held) ---
-            // We use state.Selection.SelectedMapObject directly to ensure we have the latest ref
-            
             if (CurrentSelect != null && input.LeftHold && _currentMode != InteractionMode.None)
             {
                 if (_currentMode == InteractionMode.Moving)
@@ -624,7 +635,6 @@ namespace Pixel_Simulations.Editor
 
                     Vector2 delta = newPos - CurrentSelect.Position;
 
-                    // If it's a shape, we MUST move the vertices, not just the Position property
                     if (CurrentSelect is ShapeObject poly)
                     {
                         poly.Shape.Offset(delta);
@@ -637,17 +647,38 @@ namespace Pixel_Simulations.Editor
                 }
                 else if (_currentMode == InteractionMode.Resizing)
                 {
-                    ApplyResize(CurrentSelect, input.MouseWorldPosition, _activeHandle, input.CurrentKeyboard.CapsLock);
+                    if (CurrentSelect is ShapeObject selPoly && _activeHandle != -1)
+                    {
+                        // Drag single node handle
+                        Vector2 targetPos = input.MouseWorldPosition;
+                        if (input.CurrentKeyboard.CapsLock)
+                        {
+                            targetPos = new Vector2((float)Math.Round(targetPos.X / 16) * 16, (float)Math.Round(targetPos.Y / 16) * 16);
+                        }
+
+                        if (_isSpineHandle)
+                        {
+                            selPoly.SpineWaypoints[_activeHandle] = targetPos;
+                        }
+                        else
+                        {
+                            selPoly.Shape.Vertices[_activeHandle] = targetPos;
+                        }
+                        selPoly.UpdateBoundsFromVertices();
+                    }
+                    else
+                    {
+                        // Standard rectangle bounds scaling...
+                        ApplyResize(CurrentSelect, input.MouseWorldPosition, _activeHandle, input.CurrentKeyboard.CapsLock);
+                    }
                 }
             }
 
-            // --- STEP 3: KEYBOARD NUDGING ---
             if (CurrentSelect != null && _currentMode == InteractionMode.None)
             {
-                HandleKeyboardMovement(CurrentSelect, input,toolInput.ActiveLayer);
+                HandleKeyboardMovement(CurrentSelect, input, toolInput.ActiveLayer);
             }
 
-            // --- STEP 4: RELEASE & COMMAND ---
             if (input.CurrentMouse.LeftButton == ButtonState.Released && _currentMode != InteractionMode.None)
             {
                 if (CurrentSelect != null)
@@ -665,50 +696,43 @@ namespace Pixel_Simulations.Editor
 
         private void HandleKeyboardMovement(MapObject obj, EditorInputState input, Layer activeLayer)
         {
+            if (_es.UI.FocusedElement is UITextBox) return;
+
+            bool snapMode = input.CurrentKeyboard.CapsLock;
+            float speed = snapMode ? 16f : 1f;
+            Vector2 move = Vector2.Zero;
+
+            bool discrete = snapMode;
+            bool up = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.W) && input.PreviousKeyboard.IsKeyUp(Keys.W)) : input.CurrentKeyboard.IsKeyDown(Keys.W);
+            bool down = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.S) && input.PreviousKeyboard.IsKeyUp(Keys.S)) : input.CurrentKeyboard.IsKeyDown(Keys.S);
+            bool left = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.A) && input.PreviousKeyboard.IsKeyUp(Keys.A)) : input.CurrentKeyboard.IsKeyDown(Keys.A);
+            bool right = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.D) && input.PreviousKeyboard.IsKeyUp(Keys.D)) : input.CurrentKeyboard.IsKeyDown(Keys.D);
+
+            if (up) move.Y -= speed;
+            if (down) move.Y += speed;
+            if (left) move.X -= speed;
+            if (right) move.X += speed;
+
+            if (move != Vector2.Zero)
             {
-                if (_es.UI.FocusedElement is UITextBox) return; // Don't move if typing!
-
-                bool snapMode = input.CurrentKeyboard.CapsLock;
-                bool isMovingLayer = (obj == null);
-
-                float speed = snapMode ? 16f : 1f;
-                Vector2 move = Vector2.Zero;
-                bool discrete = snapMode || isMovingLayer;
-                bool up = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.W) && input.PreviousKeyboard.IsKeyUp(Keys.W)) : input.CurrentKeyboard.IsKeyDown(Keys.W);
-                bool down = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.S) && input.PreviousKeyboard.IsKeyUp(Keys.S)) : input.CurrentKeyboard.IsKeyDown(Keys.S);
-                bool left = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.A) && input.PreviousKeyboard.IsKeyUp(Keys.A)) : input.CurrentKeyboard.IsKeyDown(Keys.A);
-                bool right = discrete ? (input.CurrentKeyboard.IsKeyDown(Keys.D) && input.PreviousKeyboard.IsKeyUp(Keys.D)) : input.CurrentKeyboard.IsKeyDown(Keys.D);
-
-                if (up) move.Y -= speed;
-                if (down) move.Y += speed;
-                if (left) move.X -= speed;
-                if (right) move.X += speed;
-
-                if (move != Vector2.Zero)
+                if (obj != null)
                 {
-                    if (obj != null) // Move single selected object
+                    if (obj is ShapeObject poly)
                     {
-                        if (obj is ShapeObject poly)
-                        {
-                            poly.Shape.Offset(move);
-                            poly.UpdateBoundsFromVertices();
-                        }
-                        else obj.Position += move;
+                        poly.Shape.Offset(move);
+                        poly.UpdateBoundsFromVertices();
                     }
-                    else // MOVE ENTIRE LAYER
-                    {
-                        activeLayer.Shift(move, _es.CELL_SIZE);
-                    }
+                    else obj.Position += move;
                 }
             }
         }
+
         private int GetHandleAt(MapObject obj, Vector2 mouseWorld, float zoom)
         {
             float handleSize = 8f / zoom;
             RectangleF bounds = GetObjectBounds(obj);
             if (bounds.IsEmpty) return -1;
 
-            // TL, TR, BR, BL
             Vector2[] corners = {
             new Vector2(bounds.Left, bounds.Top),
             new Vector2(bounds.Right, bounds.Top),
@@ -747,12 +771,10 @@ namespace Pixel_Simulations.Editor
             }
             else if (obj is ShapeObject poly)
             {
-                // Complex Resize: We calculate the scale factor and apply it to vertices
                 Vector2 pos = poly.Position;
                 Vector2 size = poly.Size;
                 Vector2 br = pos + size;
 
-                // Calculate new bounds based on handle
                 Vector2 newPos = pos;
                 Vector2 newSize = size;
 
@@ -764,7 +786,6 @@ namespace Pixel_Simulations.Editor
                     case 3: newPos.X = mouseWorld.X; newSize = new Vector2(br.X - mouseWorld.X, mouseWorld.Y - pos.Y); break;
                 }
 
-                // Apply scale to vertices relative to the anchor (the opposite corner)
                 Vector2 anchor = GetAnchor(handle, pos, br);
                 Vector2 scale = new Vector2(
                     oldSize.X != 0 ? newSize.X / oldSize.X : 1,
@@ -784,12 +805,41 @@ namespace Pixel_Simulations.Editor
         {
             return handle switch
             {
-                0 => br, // Anchor BR to resize TL
-                1 => new Vector2(tl.X, br.Y), // Anchor BL to resize TR
-                2 => tl, // Anchor TL to resize BR
-                3 => new Vector2(br.X, tl.Y), // Anchor TR to resize BL
+                0 => br,
+                1 => new Vector2(tl.X, br.Y),
+                2 => tl,
+                3 => new Vector2(br.X, tl.Y),
                 _ => tl
             };
+        }
+        private int GetVertexHandleAt(ShapeObject poly, Vector2 mouseWorld, float zoom, out bool isSpine)
+        {
+            float handleSize = 8f / zoom;
+            isSpine = false;
+
+            // Check Spine waypoints first
+            if (poly.SpineWaypoints != null)
+            {
+                for (int i = 0; i < poly.SpineWaypoints.Count; i++)
+                {
+                    if (Vector2.Distance(mouseWorld, poly.SpineWaypoints[i]) < handleSize)
+                    {
+                        isSpine = true;
+                        return i;
+                    }
+                }
+            }
+
+            // Check Poly vertices
+            for (int i = 0; i < poly.Shape.Vertices.Count; i++)
+            {
+                if (Vector2.Distance(mouseWorld, poly.Shape.Vertices[i]) < handleSize)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
@@ -799,74 +849,91 @@ namespace Pixel_Simulations.Editor
 
             RectangleF b = GetObjectBounds(selected);
             float hs = 6f / input.Zoom;
-           
-            // Draw base selection
-            sb.DrawRectangle(b, GetObjectColor(selected.Type) * 0.4f, 1 / input.Zoom, 0);
-            sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
-            sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
-            sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
-            sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
-
-            // --- NEW: DRAW LINK LINES ---
-            if (selected.Links.Count > 0)
+            if (selected is ShapeObject selPoly)
             {
-                Vector2 startPos = b.Center;
-
-                foreach (var link in selected.Links)
+                // Render boundary vertex nodes
+                for (int i = 0; i < selPoly.Shape.Vertices.Count; i++)
                 {
-                    var targetObj = FindObjectByID(link.TargetID);
-                    if (targetObj != null)
+                    Vector2 v = selPoly.Shape.Vertices[i];
+                    sb.FillRectangle(new RectangleF(v.X - hs / 2, v.Y - hs / 2, hs, hs), Color.White);
+                    sb.DrawRectangle(new RectangleF(v.X - hs / 2, v.Y - hs / 2, hs, hs), Color.Teal, 1f / input.Zoom);
+                }
+
+                // Render spine waypoints nodes
+                if (selPoly.SpineWaypoints != null)
+                {
+                    for (int i = 0; i < selPoly.SpineWaypoints.Count; i++)
                     {
-                        RectangleF targetBounds = GetObjectBounds(targetObj);
+                        Vector2 wp = selPoly.SpineWaypoints[i];
+                        sb.FillRectangle(new RectangleF(wp.X - hs / 2, wp.Y - hs / 2, hs, hs), Color.Orange);
+                        sb.DrawRectangle(new RectangleF(wp.X - hs / 2, wp.Y - hs / 2, hs, hs), Color.DarkOrange, 1f / input.Zoom);
+                    }
+                }
+            }
+            else
+            {
+                // Standard rectangle boxes selection preview...
+                sb.DrawRectangle(b, GetObjectColor(selected.Type) * 0.4f, 1 / input.Zoom, 0);
+                sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
+                sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
+                sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
+                sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
 
-                        // Color Code based on the target's type!
-                        Color linkColor = targetObj.Type switch
+                if (selected.Links.Count > 0)
+                {
+                    Vector2 startPos = b.Center;
+
+                    foreach (var link in selected.Links)
+                    {
+                        var targetObj = FindObjectByID(link.TargetID);
+                        if (targetObj != null)
                         {
-                            ObjectType.Prop => Color.LimeGreen,
-                            ObjectType.Rectangle => Color.DeepSkyBlue,
-                            ObjectType.Shape => Color.OrangeRed,
-                            ObjectType.Point => Color.Yellow,
-                            _ => Color.Cyan
-                        };
+                            RectangleF targetBounds = GetObjectBounds(targetObj);
+                            Color linkColor = targetObj.Type switch
+                            {
+                                ObjectType.Prop => Color.LimeGreen,
+                                ObjectType.Rectangle => Color.DeepSkyBlue,
+                                ObjectType.Shape => Color.OrangeRed,
+                                ObjectType.Point => Color.Yellow,
+                                _ => Color.Cyan
+                            };
 
-                        // Draw beautiful Bezier curve with the Port names as the label!
-                        string label = $"{link.SourcePort} -> {link.TargetPort}";
+                            string label = $"{link.SourcePort} -> {link.TargetPort}";
 
-                        Pixel_Simulations.UI.UIDrawExtensions.DrawBezierCurve(
-                            sb,
-                            Pixel_Simulations.UI.UITheme.DefaultFont,
-                            startPos,
-                            targetBounds.Center,
-                            Pixel_Simulations.Studio.NodePort.Right,
-                            Pixel_Simulations.Studio.NodePort.Left,
-                            linkColor,
-                            2f / input.Zoom,
-                            Pixel_Simulations.Studio.LineStyle.Dashed,
-                            label
-                        );
+                            Pixel_Simulations.UI.UIDrawExtensions.DrawBezierCurve(
+                                sb,
+                                Pixel_Simulations.UI.UITheme.DefaultFont,
+                                startPos,
+                                targetBounds.Center,
+                                Pixel_Simulations.Studio.NodePort.Right,
+                                Pixel_Simulations.Studio.NodePort.Left,
+                                linkColor,
+                                2f / input.Zoom,
+                                Pixel_Simulations.Studio.LineStyle.Dashed,
+                                label
+                            );
 
-                        // Highlight Target Box
-                        sb.DrawRectangle(targetBounds, linkColor * 0.8f, 2f / input.Zoom);
+                            sb.DrawRectangle(targetBounds, linkColor * 0.8f, 2f / input.Zoom);
+                        }
                     }
                 }
             }
         }
 
-        // Helper utilities
         private Color GetObjectColor(ObjectType type)
         {
-            switch (type)
+            return type switch
             {
-                case ObjectType.Shape: return Color.Red;
-                case ObjectType.Rectangle: return Color.Blue;
-                default: return Color.White; // Fallback color
-            }
+                ObjectType.Shape => Color.Red,
+                ObjectType.Rectangle => Color.Blue,
+                _ => Color.White
+            };
         }
-        public string GetShortcutHints() => "ALT: Pick Any Layer | DEL: Delete | CAPS: Grid Nudge";
+
         private RectangleF GetObjectBounds(MapObject obj)
         {
             if (obj is RectangleObject r) return new RectangleF(r.Position, r.Size);
-            if (obj is ShapeObject s) return new RectangleF(s.Position, s.Size);
+            if (obj is ShapeObject s) return s.Shape.GetBounds();
             if (obj is PointObject p) return new RectangleF(p.Position.X - p.Radius, p.Position.Y - p.Radius, p.Radius * 2, p.Radius * 2);
             if (obj is PropObject prop)
             {
@@ -898,20 +965,17 @@ namespace Pixel_Simulations.Editor
             }
             return Vector2.Zero;
         }
-        
+
         private MapObject FindTopObject(Layer activeLayer, Vector2 mouseWorld, bool searchAllLayers)
         {
-            // Define which layers we are allowed to look at
             var layersToSearch = searchAllLayers ? _es.ActiveMap.Layers.AsEnumerable() : new List<Layer> { activeLayer };
 
-            // Loop backwards (top layer to bottom layer)
             foreach (var layer in layersToSearch.Reverse())
             {
                 if (!layer.IsVisible || layer.IsLocked) continue;
 
                 if (layer is ObjectLayer objLayer)
                 {
-                    // Reverse so top objects are selected first
                     for (int i = objLayer.Objects.Count - 1; i >= 0; i--)
                     {
                         var obj = objLayer.Objects[i];
@@ -920,7 +984,6 @@ namespace Pixel_Simulations.Editor
                             var prefab = _es.PrefabManager.GetPrefab(prop.PrefabID);
                             if (prefab != null)
                             {
-                                // FIX: Use CanvasSize here too!
                                 int w = Math.Max(prefab.SourceRect.Width, prefab.CanvasSize.X);
                                 int h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y);
 
@@ -945,6 +1008,7 @@ namespace Pixel_Simulations.Editor
             }
             return null;
         }
+
         private MapObject FindObjectByID(string id)
         {
             foreach (var layer in _es.ActiveMap.Layers)
@@ -962,6 +1026,7 @@ namespace Pixel_Simulations.Editor
             }
             return null;
         }
+        public string GetShortcutHints() => "ALT: Pick Any Layer | DEL: Delete | CAPS: Grid Nudge";
     }
     public class PointPlacerTool : ITool
     {
@@ -1025,28 +1090,33 @@ namespace Pixel_Simulations.Editor
     }
     public enum PaintChannel { R_Biome, G_SpawnType, B_Elevation, A_SpawnIndex }
     public enum BrushMode { Solid, DetailAdd, DetailSub }
+    public enum DetailerBehavior { Overwrite, Additive }
     public class TerrainBrushTool : ITool
     {
         public string Name => "TerrainBrush";
         public string IconName { get; set; } = "TerrainBrush";
 
+        // --- CONFIGURATION ---
+        public int BrushGridSize { get; set; } = 1;
         public float BrushRadius { get; set; } = 32f;
         public int TargetValue { get; set; } = 128;
+
         public PaintChannel ActiveChannel { get; set; } = PaintChannel.B_Elevation;
         public BrushMode ActiveMode { get; set; } = BrushMode.Solid;
-        public float DetailIntensity { get; set; } = 2f; // How fast detail builds up per frame
+        public DetailerBehavior ActiveBehavior { get; set; } = DetailerBehavior.Additive;
 
-        private float _normalizedElevation = 0.5f;
         private bool _isDrawing = false;
+        private Texture2D _solidPixelTexture;
         private Texture2D _brushTexture;
         public bool BrushNeedsUpdate { get; set; } = true;
-        private string _lastNoiseName = "None";
 
         private Dictionary<Point, Color[]> _strokeBefore;
         private HashSet<Point> _touchedChunksThisStroke;
+
+        private Point _lastDrawCell;
         private Vector2 _lastDrawPos;
+
         // --- BLEND STATES ---
-        // Solid Opaque Writes (Ignores what's underneath, just Max overwrites)
         private static readonly BlendState SolidR = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Red };
         private static readonly BlendState SolidG = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Green };
         private static readonly BlendState SolidB = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Blue };
@@ -1055,7 +1125,15 @@ namespace Pixel_Simulations.Editor
         private static readonly BlendState DetailAddBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Blue };
         private static readonly BlendState DetailSubBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.ReverseSubtract, ColorWriteChannels = ColorWriteChannels.Blue };
 
-        // FIX: Dedicated Erase states for each channel to prevent MonoGame crashes!
+        // Overwrite BlendState: Selectively modifies ONLY the Blue Channel using SourceAlpha interpolation
+        private static readonly BlendState OverwriteElevation = new BlendState
+        {
+            ColorSourceBlend = Blend.SourceAlpha,
+            ColorDestinationBlend = Blend.InverseSourceAlpha,
+            ColorBlendFunction = BlendFunction.Add,
+            ColorWriteChannels = ColorWriteChannels.Blue
+        };
+
         private static readonly BlendState EraseR = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Red };
         private static readonly BlendState EraseG = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Green };
         private static readonly BlendState EraseB = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Blue };
@@ -1066,96 +1144,345 @@ namespace Pixel_Simulations.Editor
             if (!(toolInput.ActiveLayer is MaskLayer maskLayer)) return;
 
             var kbs = input.CurrentKeyboard;
+            var prevKbs = input.PreviousKeyboard;
             bool shift = kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift);
             bool isErasing = kbs.IsKeyDown(Keys.LeftControl) || kbs.IsKeyDown(Keys.RightControl);
 
-            if (_lastNoiseName != editorState.noiseManager.ActiveNoiseName)
+            // --- SAFELY TERMINATE STROKES OUTSIDE VIEWPORT ---
+            if (editorState.UI.ActivePanelName != "Viewport" && _isDrawing)
             {
-                _lastNoiseName = editorState.noiseManager.ActiveNoiseName;
+                TerminateStroke(maskLayer, eventBus, editorState._graphics);
+                return;
+            }
+
+            // --- VALUE & SIZE ADJUSTMENTS ---
+            if (kbs.IsKeyDown(Keys.OemCloseBrackets) && prevKbs.IsKeyUp(Keys.OemCloseBrackets))
+            {
+                if (shift)
+                {
+                    if (ActiveMode == BrushMode.Solid)
+                        BrushGridSize = MathHelper.Clamp(BrushGridSize + 2, 1, 31);
+                    else
+                        BrushRadius = MathHelper.Clamp(BrushRadius + 4f, 8f, 256f);
+                }
+                else
+                {
+                    AdjustValue(editorState, true);
+                }
                 BrushNeedsUpdate = true;
             }
 
-            if (kbs.IsKeyDown(Keys.OemCloseBrackets))
+            if (kbs.IsKeyDown(Keys.OemOpenBrackets) && prevKbs.IsKeyUp(Keys.OemOpenBrackets))
             {
-                if (shift) BrushRadius = MathHelper.Clamp(BrushRadius + 2f, 8f, 256f);
-                else AdjustValue(true);
-                BrushNeedsUpdate = true;
-            }
-            if (kbs.IsKeyDown(Keys.OemOpenBrackets))
-            {
-                if (shift) BrushRadius = MathHelper.Clamp(BrushRadius - 2f, 8f, 256f);
-                else AdjustValue(false);
+                if (shift)
+                {
+                    if (ActiveMode == BrushMode.Solid)
+                        BrushGridSize = MathHelper.Clamp(BrushGridSize - 2, 1, 31);
+                    else
+                        BrushRadius = MathHelper.Clamp(BrushRadius - 4f, 8f, 256f);
+                }
+                else
+                {
+                    AdjustValue(editorState, false);
+                }
                 BrushNeedsUpdate = true;
             }
 
+            // --- INPUT HANDLING ---
             if (input.LeftHold)
             {
                 if (!_isDrawing)
                 {
-                    _isDrawing = true;
-                    _strokeBefore = new Dictionary<Point, Color[]>();
-                    _touchedChunksThisStroke = new HashSet<Point>();
+                    if (input.IsNewLeftClick && editorState.UI.ActivePanelName == "Viewport")
+                    {
+                        _isDrawing = true;
+                        _strokeBefore = new Dictionary<Point, Color[]>();
+                        _touchedChunksThisStroke = new HashSet<Point>();
 
-                    _lastDrawPos = input.MouseWorldPosition;
-                    PaintStamp(maskLayer, _lastDrawPos, editorState, isErasing);
+                        _lastDrawCell = input.MouseGridCell;
+                        _lastDrawPos = input.MouseWorldPosition;
+
+                        PaintStamp(maskLayer, _lastDrawCell, editorState, isErasing);
+                    }
                 }
                 else
                 {
-                    // Calculate distance moved since last stamp
-                    float dist = Vector2.Distance(_lastDrawPos, input.MouseWorldPosition);
-
-                    // We stamp once every 15% of the radius (Smooth but prevents 60fps solid overlap)
-                    float spacing = Math.Max(2f, BrushRadius * 0.15f);
-
-                    if (dist >= spacing)
+                    if (ActiveMode == BrushMode.Solid)
                     {
-                        Vector2 dir = Vector2.Normalize(input.MouseWorldPosition - _lastDrawPos);
-                        int steps = (int)Math.Floor(dist / spacing);
-
-                        // Paint intermediate stamps to fill the gap if moved quickly
-                        for (int i = 1; i <= steps; i++)
+                        if (input.MouseGridCell != _lastDrawCell)
                         {
-                            Vector2 stampPos = _lastDrawPos + dir * (spacing * i);
-                            PaintStamp(maskLayer, stampPos, editorState, isErasing);
+                            _lastDrawCell = input.MouseGridCell;
+                            PaintStamp(maskLayer, _lastDrawCell, editorState, isErasing);
                         }
+                    }
+                    else
+                    {
+                        float dist = Vector2.Distance(_lastDrawPos, input.MouseWorldPosition);
+                        float spacing = Math.Max(2f, BrushRadius * 0.15f);
 
-                        _lastDrawPos = _lastDrawPos + dir * (spacing * steps);
+                        if (dist >= spacing)
+                        {
+                            Vector2 dir = Vector2.Normalize(input.MouseWorldPosition - _lastDrawPos);
+                            int steps = (int)Math.Floor(dist / spacing);
+
+                            for (int i = 1; i <= steps; i++)
+                            {
+                                Vector2 stampPos = _lastDrawPos + dir * (spacing * i);
+                                PaintStamp(maskLayer, input.MouseGridCell, editorState, isErasing);
+                            }
+
+                            _lastDrawPos = _lastDrawPos + dir * (spacing * steps);
+                        }
                     }
                 }
             }
             else if (_isDrawing)
             {
-                _isDrawing = false;
-                if (_touchedChunksThisStroke != null && _touchedChunksThisStroke.Count > 0)
-                {
-                    var strokeAfter = new Dictionary<Point, Color[]>();
-                    foreach (var chunkCoord in _touchedChunksThisStroke)
-                    {
-                        Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
-                        maskLayer.Chunks[chunkCoord].GetData(data);
-                        strokeAfter[chunkCoord] = data;
-                    }
-                    eventBus.Publish(new PaintMaskCommand(maskLayer, _strokeBefore, strokeAfter, editorState._graphics));
-                }
-                _strokeBefore = null;
-                _touchedChunksThisStroke = null;
+                TerminateStroke(maskLayer, eventBus, editorState._graphics);
             }
         }
 
-        private float SmootherStep(float x) => x * x * x * (x * (x * 6 - 15) + 10);
+        private void TerminateStroke(MaskLayer layer, EventBus eventBus, GraphicsDevice gd)
+        {
+            _isDrawing = false;
+            if (_touchedChunksThisStroke != null && _touchedChunksThisStroke.Count > 0)
+            {
+                var strokeAfter = new Dictionary<Point, Color[]>();
+                foreach (var chunkCoord in _touchedChunksThisStroke)
+                {
+                    Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                    layer.Chunks[chunkCoord].GetData(data);
+                    strokeAfter[chunkCoord] = data;
+                }
+                eventBus.Publish(new PaintMaskCommand(layer, _strokeBefore, strokeAfter, gd));
+            }
+            _strokeBefore = null;
+            _touchedChunksThisStroke = null;
+        }
 
-        private void AdjustValue(bool increase)
+        private void AdjustValue(EditorState es, bool increase)
         {
             if (ActiveChannel == PaintChannel.B_Elevation)
             {
-                _normalizedElevation += increase ? 0.005f : -0.005f;
-                _normalizedElevation = MathHelper.Clamp(_normalizedElevation, 0f, 1f);
-                TargetValue = (int)Math.Round(SmootherStep(_normalizedElevation) * 255f);
+                var sortedElevations = es.MaskData?.Elevations?
+                    .Select(e => e.Value)
+                    .Distinct()
+                    .OrderBy(v => v)
+                    .ToList();
+
+                if (sortedElevations == null || sortedElevations.Count == 0)
+                {
+                    sortedElevations = new List<int> { 0, 15, 120, 128, 160, 192, 200, 240, 255 };
+                }
+
+                int currentIndex = 0;
+                int minDifference = int.MaxValue;
+                for (int i = 0; i < sortedElevations.Count; i++)
+                {
+                    int diff = Math.Abs(sortedElevations[i] - TargetValue);
+                    if (diff < minDifference)
+                    {
+                        minDifference = diff;
+                        currentIndex = i;
+                    }
+                }
+
+                if (increase)
+                    currentIndex = Math.Min(currentIndex + 1, sortedElevations.Count - 1);
+                else
+                    currentIndex = Math.Max(currentIndex - 1, 0);
+
+                TargetValue = sortedElevations[currentIndex];
             }
             else
             {
-                TargetValue = MathHelper.Clamp(TargetValue + (increase ? 1 : -1), 0, 255);
+                TargetValue = MathHelper.Clamp(TargetValue + (increase ? 5 : -5), 0, 255);
             }
+        }
+
+        private Texture2D GetSolidPixelTexture(GraphicsDevice gd)
+        {
+            if (_solidPixelTexture == null)
+            {
+                _solidPixelTexture = new Texture2D(gd, 1, 1);
+                _solidPixelTexture.SetData(new[] { Color.White });
+            }
+            return _solidPixelTexture;
+        }
+
+        private void PaintStamp(MaskLayer layer, Point centerCell, EditorState es, bool isErasing)
+        {
+            if (ActiveMode == BrushMode.Solid)
+            {
+                PaintGridStamp(layer, centerCell, es, isErasing);
+            }
+            else
+            {
+                PaintNoiseStamp(layer, es.Input.MouseWorldPosition, es, isErasing);
+            }
+        }
+
+        // --- GRID ALIGNED PAINTING ---
+        private void PaintGridStamp(MaskLayer layer, Point centerCell, EditorState es, bool isErasing)
+        {
+            var gd = es._graphics;
+            int halfSize = (BrushGridSize - 1) / 2;
+            const int CELLS_PER_MASK_CHUNK = 16;
+
+            var prevTargets = gd.GetRenderTargets();
+
+            using (var sb = new SpriteBatch(gd))
+            {
+                var cellsByChunk = new Dictionary<Point, List<Point>>();
+
+                for (int dx = -halfSize; dx <= halfSize; dx++)
+                {
+                    for (int dy = -halfSize; dy <= halfSize; dy++)
+                    {
+                        Point targetCell = new Point(centerCell.X + dx, centerCell.Y + dy);
+
+                        Point chunkCoord = new Point(
+                            (int)Math.Floor((double)targetCell.X / CELLS_PER_MASK_CHUNK),
+                            (int)Math.Floor((double)targetCell.Y / CELLS_PER_MASK_CHUNK)
+                        );
+
+                        if (!cellsByChunk.ContainsKey(chunkCoord))
+                            cellsByChunk[chunkCoord] = new List<Point>();
+
+                        cellsByChunk[chunkCoord].Add(targetCell);
+                    }
+                }
+
+                foreach (var kvp in cellsByChunk)
+                {
+                    Point chunkCoord = kvp.Key;
+                    var chunkRT = layer.GetOrCreateChunk(chunkCoord, gd);
+
+                    if (_touchedChunksThisStroke != null && !_touchedChunksThisStroke.Contains(chunkCoord))
+                    {
+                        Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                        chunkRT.GetData(data);
+                        _strokeBefore[chunkCoord] = data;
+                        _touchedChunksThisStroke.Add(chunkCoord);
+                    }
+
+                    gd.SetRenderTarget(chunkRT);
+
+                    BlendState activeState = isErasing
+                        ? ActiveChannel switch { PaintChannel.R_Biome => EraseR, PaintChannel.G_SpawnType => EraseG, PaintChannel.A_SpawnIndex => EraseA, _ => EraseB }
+                        : ActiveChannel switch { PaintChannel.R_Biome => SolidR, PaintChannel.G_SpawnType => SolidG, PaintChannel.A_SpawnIndex => SolidA, _ => SolidB };
+
+                    sb.Begin(blendState: activeState, samplerState: SamplerState.PointClamp);
+
+                    Texture2D pixelTex = GetSolidPixelTexture(gd);
+                    Color paintColor = Color.White;
+
+                    if (!isErasing)
+                    {
+                        byte val = (byte)TargetValue;
+                        paintColor = ActiveChannel switch
+                        {
+                            PaintChannel.R_Biome => new Color((int)val, 0, 0, 255),
+                            PaintChannel.G_SpawnType => new Color(0, (int)val, 0, 255),
+                            PaintChannel.B_Elevation => new Color(0, 0, (int)val, 255),
+                            PaintChannel.A_SpawnIndex => new Color(0, 0, 0, (int)val),
+                            _ => Color.White
+                        };
+                    }
+
+                    foreach (Point targetCell in kvp.Value)
+                    {
+                        int localCellX = targetCell.X - (chunkCoord.X * CELLS_PER_MASK_CHUNK);
+                        int localCellY = targetCell.Y - (chunkCoord.Y * CELLS_PER_MASK_CHUNK);
+
+                        Rectangle destRect = new Rectangle(
+                            localCellX * es.CELL_SIZE,
+                            localCellY * es.CELL_SIZE,
+                            es.CELL_SIZE,
+                            es.CELL_SIZE
+                        );
+
+                        sb.Draw(pixelTex, destRect, paintColor);
+                    }
+
+                    sb.End();
+                }
+            }
+
+            gd.SetRenderTargets(prevTargets);
+        }
+
+        // --- ORGANIC NOISE & CIRCLE DETAIL PAINTING ---
+        private void PaintNoiseStamp(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
+        {
+            var gd = es._graphics;
+            EnsureBrushTexture(gd, es.noiseManager);
+
+            float r = BrushRadius;
+            int minChunkX = (int)Math.Floor((worldPos.X - r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int maxChunkX = (int)Math.Floor((worldPos.X + r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int minChunkY = (int)Math.Floor((worldPos.Y - r) / MaskLayer.CHUNK_PIXEL_SIZE);
+            int maxChunkY = (int)Math.Floor((worldPos.Y + r) / MaskLayer.CHUNK_PIXEL_SIZE);
+
+            var prevTargets = gd.GetRenderTargets();
+
+            using (var sb = new SpriteBatch(gd))
+            {
+                for (int y = minChunkY; y <= maxChunkY; y++)
+                {
+                    for (int x = minChunkX; x <= maxChunkX; x++)
+                    {
+                        Point chunkCoord = new Point(x, y);
+                        var chunkRT = layer.GetOrCreateChunk(chunkCoord, gd);
+
+                        if (_touchedChunksThisStroke != null && !_touchedChunksThisStroke.Contains(chunkCoord))
+                        {
+                            Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                            chunkRT.GetData(data);
+                            _strokeBefore[chunkCoord] = data;
+                            _touchedChunksThisStroke.Add(chunkCoord);
+                        }
+
+                        Vector2 localPos = new Vector2(
+                            worldPos.X - (x * MaskLayer.CHUNK_PIXEL_SIZE),
+                            worldPos.Y - (y * MaskLayer.CHUNK_PIXEL_SIZE)
+                        );
+
+                        gd.SetRenderTarget(chunkRT);
+
+                        // Select BlendState
+                        BlendState activeState = EraseR;
+                        if (isErasing)
+                        {
+                            activeState = ActiveChannel switch { PaintChannel.R_Biome => EraseR, PaintChannel.G_SpawnType => EraseG, PaintChannel.A_SpawnIndex => EraseA, _ => EraseB };
+                        }
+                        else
+                        {
+                            if (ActiveBehavior == DetailerBehavior.Overwrite)
+                                activeState = OverwriteElevation;
+                            else
+                                activeState = ActiveMode == BrushMode.DetailAdd ? DetailAddBlue : DetailSubBlue;
+                        }
+
+                        sb.Begin(blendState: activeState, samplerState: SamplerState.PointClamp);
+
+                        Color paintColor = isErasing ? new Color(0, 0, 0, 0) : Color.White;
+                        if (!isErasing && ActiveBehavior == DetailerBehavior.Overwrite)
+                        {
+                            // Overwrite mode pushes target value modulated into the alpha channel
+                            byte val = (byte)TargetValue;
+                            paintColor = new Color(0, 0, (int)val, 255);
+                        }
+
+                        Vector2 origin = new Vector2(_brushTexture.Width / 2f, _brushTexture.Height / 2f);
+                        sb.Draw(_brushTexture, localPos, null, paintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
+
+                        sb.End();
+                    }
+                }
+            }
+
+            gd.SetRenderTargets(prevTargets);
         }
 
         private void EnsureBrushTexture(GraphicsDevice gd, NoiseManager nm)
@@ -1189,7 +1516,8 @@ namespace Pixel_Simulations.Editor
             {
                 for (int x = 0; x < diameter; x++)
                 {
-                    if (Vector2.Distance(center, new Vector2(x, y)) <= radius)
+                    float dist = Vector2.Distance(center, new Vector2(x, y));
+                    if (dist <= radius)
                     {
                         float noiseVal = 1f;
                         if (noiseData != null)
@@ -1197,26 +1525,22 @@ namespace Pixel_Simulations.Editor
                             noiseVal = noiseData[(x % noiseTex.Width) + (y % noiseTex.Height) * noiseTex.Width].R / 255f;
                         }
 
-                        int pixelValue = TargetValue;
+                        // Circular radial edge falloff
+                        float falloff = 1.0f - (dist / radius);
 
-                        if (ActiveMode == BrushMode.Solid)
+                        int intensityValue = 255;
+                        if (ActiveBehavior == DetailerBehavior.Additive)
                         {
-                            // --- NEW AMPLIFIED NOISE MATH ---
-                            // b + 50 * (noise - 0.5)
-                            if (noiseData != null)
-                            {
-                                float offset = (noiseVal - 0.5f) * 50f;
-                                pixelValue = (int)MathHelper.Clamp(TargetValue + offset, 0, 255);
-                            }
+                            // Additive uses minor delta steps
+                            intensityValue = (int)(15.0f * falloff * noiseVal);
                         }
                         else
                         {
-                            // Detail mode: Value is the tiny intensity to add/subtract
-                            pixelValue = (int)(DetailIntensity * noiseVal);
+                            // Overwrite behaves as a smooth stamp
+                            intensityValue = (int)(255f * falloff * noiseVal);
                         }
 
-                        // FIX: Alpha is ALWAYS 255. This prevents SpriteBatch premultiplication dark edges!
-                        data[x + y * diameter] = new Color(pixelValue, pixelValue, pixelValue, 255);
+                        data[x + y * diameter] = new Color(intensityValue, intensityValue, intensityValue, intensityValue);
                     }
                     else
                     {
@@ -1228,90 +1552,58 @@ namespace Pixel_Simulations.Editor
             _brushTexture.SetData(data);
             BrushNeedsUpdate = false;
         }
-        private void PaintStamp(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
-        {
-            var gd = es._graphics;
-            EnsureBrushTexture(gd, es.noiseManager);
-
-            float r = BrushRadius;
-            int minChunkX = (int)Math.Floor((worldPos.X - r) / MaskLayer.CHUNK_PIXEL_SIZE);
-            int maxChunkX = (int)Math.Floor((worldPos.X + r) / MaskLayer.CHUNK_PIXEL_SIZE);
-            int minChunkY = (int)Math.Floor((worldPos.Y - r) / MaskLayer.CHUNK_PIXEL_SIZE);
-            int maxChunkY = (int)Math.Floor((worldPos.Y + r) / MaskLayer.CHUNK_PIXEL_SIZE);
-
-            var prevTargets = gd.GetRenderTargets();
-
-            using (var sb = new SpriteBatch(gd))
-            {
-                for (int y = minChunkY; y <= maxChunkY; y++)
-                {
-                    for (int x = minChunkX; x <= maxChunkX; x++)
-                    {
-                        Point chunkCoord = new Point(x, y);
-                        var chunkRT = layer.GetOrCreateChunk(chunkCoord, gd);
-
-                        if (!_touchedChunksThisStroke.Contains(chunkCoord))
-                        {
-                            Color[] data = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
-                            chunkRT.GetData(data);
-                            _strokeBefore[chunkCoord] = data;
-                            _touchedChunksThisStroke.Add(chunkCoord);
-                        }
-
-                        Vector2 localPos = new Vector2(worldPos.X - (x * MaskLayer.CHUNK_PIXEL_SIZE), worldPos.Y - (y * MaskLayer.CHUNK_PIXEL_SIZE));
-                        gd.SetRenderTarget(chunkRT);
-
-                        // Select Blend State
-                        BlendState activeState = EraseR;
-                        if (isErasing)
-                        {
-                            activeState = ActiveChannel switch { PaintChannel.R_Biome => EraseR, PaintChannel.G_SpawnType => EraseG, PaintChannel.A_SpawnIndex => EraseA, _ => EraseB };
-                        }
-                        else
-                        {
-                            if (ActiveMode == BrushMode.Solid)
-                                activeState = ActiveChannel switch { PaintChannel.R_Biome => SolidR, PaintChannel.G_SpawnType => SolidG, PaintChannel.A_SpawnIndex => SolidA, _ => SolidB };
-                            else if (ActiveChannel == PaintChannel.B_Elevation)
-                                activeState = ActiveMode == BrushMode.DetailAdd ? DetailAddBlue : DetailSubBlue;
-                            else
-                                activeState = SolidR;
-                        }
-
-                        // We use NonPremultiplied locally in the SpriteBatch if not erasing, so it doesn't try to multiply our exact RGB values
-                        sb.Begin(blendState: activeState);
-
-                        // If Erasing, draw transparent. Else, draw White (retaining the exact RGB values baked into the brush)
-                        Color tintColor = isErasing ? new Color(0, 0, 0, 0) : Color.White;
-
-                        Vector2 origin = new Vector2(_brushTexture.Width / 2f, _brushTexture.Height / 2f);
-                        sb.Draw(_brushTexture, localPos, null, tintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
-
-                        sb.End();
-                    }
-                }
-            }
-
-            gd.SetRenderTargets(prevTargets);
-        }
 
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (!(toolInput.ActiveLayer is MaskLayer)) return;
 
             bool isErasing = input.CurrentKeyboard.IsKeyDown(Keys.LeftControl) || input.CurrentKeyboard.IsKeyDown(Keys.RightControl);
-            Color cursorColor = ActiveChannel switch { PaintChannel.R_Biome => Color.Red, PaintChannel.G_SpawnType => Color.LimeGreen, PaintChannel.B_Elevation => Color.DeepSkyBlue, PaintChannel.A_SpawnIndex => Color.White, _ => Color.Cyan };
+            Color cursorColor = ActiveChannel switch
+            {
+                PaintChannel.R_Biome => Color.Red,
+                PaintChannel.G_SpawnType => Color.LimeGreen,
+                PaintChannel.B_Elevation => Color.DeepSkyBlue,
+                PaintChannel.A_SpawnIndex => Color.White,
+                _ => Color.Cyan
+            };
             if (isErasing) cursorColor = Color.Magenta;
 
-            sb.DrawCircle(input.MouseWorldPosition, BrushRadius, 32, cursorColor, 2f / input.Zoom);
+            float thickness = 2f / input.Zoom;
 
-            Vector2 textPos = input.MouseWorldPosition + new Vector2(BrushRadius + 10, -10) / input.Zoom;
-            string modeText = isErasing ? $"ERASE ({ActiveChannel})" : $"{ActiveChannel}: {TargetValue} | {ActiveMode}";
+            if (ActiveMode == BrushMode.Solid)
+            {
+                int halfSize = (BrushGridSize - 1) / 2;
+                Point centerCell = input.MouseGridCell;
 
-            sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
-            sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+                RectangleF previewBounds = new RectangleF(
+                    (centerCell.X - halfSize) * 16,
+                    (centerCell.Y - halfSize) * 16,
+                    BrushGridSize * 16,
+                    BrushGridSize * 16
+                );
+
+                sb.DrawRectangle(previewBounds, cursorColor, thickness);
+
+                Vector2 textPos = new Vector2(previewBounds.Right + 10, previewBounds.Top);
+                string modeText = isErasing ? $"ERASE ({ActiveChannel})" : $"{ActiveChannel}: {TargetValue} ({BrushGridSize}x{BrushGridSize} Grid)";
+
+                sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+                sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            }
+            else
+            {
+                sb.DrawCircle(input.MouseWorldPosition, BrushRadius, 32, cursorColor, thickness);
+
+                Vector2 textPos = input.MouseWorldPosition + new Vector2(BrushRadius + 10, -10) / input.Zoom;
+                string modeText = isErasing ? $"ERASE ({ActiveChannel})" : $"{ActiveChannel}: {TargetValue} | {ActiveMode} ({ActiveBehavior}) (Radius: {BrushRadius:F0}px)";
+
+                sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+                sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, modeText, textPos, cursorColor, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            }
         }
-        public string GetShortcutHints() => "[ / ]: Adjust Value | SHIFT + [ / ]: Radius | CTRL: Erase Channel";
-     }
+
+        public string GetShortcutHints() => "[ / ]: Adjust Value | SHIFT + [ / ]: Adjust Size | CTRL: Erase";
+    }
     public class ReflectionTool : ITool
     {
         public string Name => "ReflectionPlane";
@@ -1525,7 +1817,7 @@ namespace Pixel_Simulations.Editor
     public class SpawnPointerTool : ITool
     {
         public string Name => "SpawnPointer";
-        public string IconName { get; set; } = "PointPlacer"; // Feel free to add a "SpawnIcon" to your JSON later
+        public string IconName { get; set; } = "SpotPlacer"; // Feel free to add a "SpawnIcon" to your JSON later
 
         public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
@@ -1580,8 +1872,430 @@ namespace Pixel_Simulations.Editor
         public string GetShortcutHints() => "Click to place a fixed-size Spawn Point";
     }
 
+    public class MoveTool : ITool
+    {
+        public string Name => "Move";
+        public string IconName => "MoveTool"; // Reuses standard selection icon
 
+        private enum MoveState { Idle, SelectingBox, Translating }
+        private MoveState _currentState = MoveState.Idle;
 
+        private List<MapObject> _selectedCollection = new List<MapObject>();
+        private Dictionary<MapObject, Vector2> _initialPositions = new Dictionary<MapObject, Vector2>();
 
+        private Vector2 _selectionBoxStart;
+        private Vector2 _dragStartWorld;
+        private Vector2 _dragDelta;
+
+        public string GetShortcutHints() => "DRAG: Select Box | SHIFT+CLICK: Toggle | DRAG GROUP: Translate";
+
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus bus, EditorState editorState)
+        {
+            if (toolInput.ActiveLayer == null || toolInput.ActiveLayer.IsLocked) return;
+
+            Vector2 mouseWorld = input.MouseWorldPosition;
+
+            switch (_currentState)
+            {
+                case MoveState.Idle:
+                    if (input.IsNewLeftClick)
+                    {
+                        // 1. Check if clicking on an already selected object to begin translation
+                        MapObject hitObject = FindObjectUnderMouse(toolInput.ActiveLayer, mouseWorld, editorState);
+                        if (hitObject != null && _selectedCollection.Contains(hitObject))
+                        {
+                            _currentState = MoveState.Translating;
+                            _dragStartWorld = mouseWorld;
+                            _initialPositions.Clear();
+                            foreach (var obj in _selectedCollection)
+                            {
+                                _initialPositions[obj] = obj.Position;
+                            }
+                        }
+                        // 2. Check if Shift-Clicking to toggle individual objects
+                        else if (input.CurrentKeyboard.IsKeyDown(Keys.LeftShift) || input.CurrentKeyboard.IsKeyDown(Keys.RightShift))
+                        {
+                            if (hitObject != null)
+                            {
+                                if (_selectedCollection.Contains(hitObject))
+                                    _selectedCollection.Remove(hitObject);
+                                else
+                                    _selectedCollection.Add(hitObject);
+                            }
+                        }
+                        // 3. Otherwise, click empty space to clear collection and drag a selection box
+                        else
+                        {
+                            if (hitObject != null)
+                            {
+                                _selectedCollection.Clear();
+                                _selectedCollection.Add(hitObject);
+                                _currentState = MoveState.Translating;
+                                _dragStartWorld = mouseWorld;
+                                _initialPositions.Clear();
+                                _initialPositions[hitObject] = hitObject.Position;
+                            }
+                            else
+                            {
+                                _selectedCollection.Clear();
+                                _currentState = MoveState.SelectingBox;
+                                _selectionBoxStart = mouseWorld;
+                            }
+                        }
+                    }
+                    break;
+
+                case MoveState.SelectingBox:
+                    if (!input.LeftHold)
+                    {
+                        // Selection Box Released: Capture all objects within the geometric area
+                        RectangleF box = GetBoxRect(_selectionBoxStart, mouseWorld);
+                        _selectedCollection = FindObjectsInArea(toolInput.ActiveLayer, box, editorState);
+                        _currentState = MoveState.Idle;
+                    }
+                    break;
+
+                case MoveState.Translating:
+                    if (input.LeftHold)
+                    {
+                        _dragDelta = mouseWorld - _dragStartWorld;
+
+                        // Support Caps Lock grid snapping
+                        if (input.CurrentKeyboard.CapsLock)
+                        {
+                            _dragDelta.X = (float)Math.Round(_dragDelta.X / 16) * 16;
+                            _dragDelta.Y = (float)Math.Round(_dragDelta.Y / 16) * 16;
+                        }
+
+                        // Translate all objects temporarily
+                        foreach (var obj in _selectedCollection)
+                        {
+                            Vector2 startPos = _initialPositions[obj];
+                            obj.Position = startPos + _dragDelta;
+
+                            if (obj is ShapeObject poly)
+                            {
+                                poly.UpdateBoundsFromVertices();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Translation Released: Compile and publish the unified Compound Command
+                        var moveCommands = new List<IUndoableCommand>();
+                        foreach (var obj in _selectedCollection)
+                        {
+                            Vector2 oldPos = _initialPositions[obj];
+                            Vector2 newPos = obj.Position;
+
+                            if (oldPos != newPos)
+                            {
+                                moveCommands.Add(new TransformObjectCommand(obj, oldPos, newPos, GetObjectSize(obj, editorState), GetObjectSize(obj, editorState)));
+                            }
+                        }
+
+                        if (moveCommands.Count > 0)
+                        {
+                            bus.Publish<IUndoableCommand>(new CompoundCommand(moveCommands));
+                        }
+
+                        _currentState = MoveState.Idle;
+                    }
+                    break;
+            }
+        }
+
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            float lineThickness = 1f / input.Zoom;
+
+            // 1. Draw Selection Box Drag Outline
+            if (_currentState == MoveState.SelectingBox)
+            {
+                RectangleF selectionBox = GetBoxRect(_selectionBoxStart, input.MouseWorldPosition);
+                sb.DrawRectangle(selectionBox, Color.Cyan * 0.8f, lineThickness);
+                sb.FillRectangle(selectionBox, Color.Cyan * 0.15f);
+            }
+
+            // 2. Highlight all selected items in the collection
+            foreach (var obj in _selectedCollection)
+            {
+                RectangleF bounds = GetObjectBounds(obj, toolInput.ActiveLayer as ObjectLayer);
+                sb.DrawRectangle(bounds, Color.DeepSkyBlue, lineThickness * 2f);
+                sb.FillRectangle(bounds, Color.DeepSkyBlue * 0.1f);
+            }
+        }
+
+        // --- INTERNAL GEOMETRY HELPERS ---
+
+        private RectangleF GetBoxRect(Vector2 p1, Vector2 p2)
+        {
+            float minX = Math.Min(p1.X, p2.X);
+            float minY = Math.Min(p1.Y, p2.Y);
+            float maxX = Math.Max(p1.X, p2.X);
+            float maxY = Math.Max(p1.Y, p2.Y);
+            return new RectangleF(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        private MapObject FindObjectUnderMouse(Layer activeLayer, Vector2 mouseWorld, EditorState state)
+        {
+            if (activeLayer is ObjectLayer objLayer)
+            {
+                for (int i = objLayer.Objects.Count - 1; i >= 0; i--)
+                {
+                    var obj = objLayer.Objects[i];
+                    if (GetObjectBounds(obj, objLayer).Contains(mouseWorld)) return obj;
+                }
+            }
+            if (activeLayer is ControlLayer cl)
+            {
+                var shape = cl.Shapes.LastOrDefault(s => s.Shape.GetBounds().Contains(mouseWorld));
+                if (shape != null) return shape;
+
+                var rect = cl.Rectangles.LastOrDefault(r => new RectangleF(r.Position, r.Size).Contains(mouseWorld));
+                if (rect != null) return rect;
+
+                var pt = cl.Points.LastOrDefault(p => Vector2.Distance(p.Position, mouseWorld) <= p.Radius);
+                if (pt != null) return pt;
+            }
+            return null;
+        }
+
+        private List<MapObject> FindObjectsInArea(Layer activeLayer, RectangleF area, EditorState state)
+        {
+            var results = new List<MapObject>();
+            if (activeLayer is ObjectLayer objLayer)
+            {
+                foreach (var obj in objLayer.Objects)
+                {
+                    if (area.Intersects(GetObjectBounds(obj, objLayer))) results.Add(obj);
+                }
+            }
+            if (activeLayer is ControlLayer cl)
+            {
+                results.AddRange(cl.Shapes.Where(s => area.Intersects(s.Shape.GetBounds())));
+                results.AddRange(cl.Rectangles.Where(r => area.Intersects(new RectangleF(r.Position, r.Size))));
+                results.AddRange(cl.Points.Where(p => area.Intersects(new RectangleF(p.Position.X - p.Radius, p.Position.Y - p.Radius, p.Radius * 2, p.Radius * 2))));
+            }
+            return results;
+        }
+
+        private RectangleF GetObjectBounds(MapObject obj, ObjectLayer layer)
+        {
+            if (obj is RectangleObject r) return new RectangleF(r.Position, r.Size);
+            if (obj is ShapeObject s) return s.Shape.GetBounds();
+            if (obj is PointObject p) return new RectangleF(p.Position.X - p.Radius, p.Position.Y - p.Radius, p.Radius * 2, p.Radius * 2);
+            if (obj is PropObject prop)
+            {
+                var prefab = SpawnerLogicGetPrefab(prop.PrefabID);
+                if (prefab != null)
+                {
+                    return new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, prefab.CanvasSize.X * prop.Scale.X, prefab.CanvasSize.Y * prop.Scale.Y);
+                }
+            }
+            return RectangleF.Empty;
+        }
+
+        private Vector2 GetObjectSize(MapObject obj, EditorState state)
+        {
+            if (obj is RectangleObject r) return r.Size;
+            if (obj is ShapeObject s) return s.Size;
+            if (obj is PointObject p) return new Vector2(p.Radius, p.Radius);
+            if (obj is PropObject prop)
+            {
+                var prefab = state.PrefabManager.GetPrefab(prop.PrefabID);
+                if (prefab != null) return new Vector2(prefab.CanvasSize.X, prefab.CanvasSize.Y);
+            }
+            return Vector2.Zero;
+        }
+
+        private ObjectPrefab SpawnerLogicGetPrefab(string id)
+        {
+            // Direct safety wrapper for static registry retrieval
+            return windowPrefabManagerReference?.GetPrefab(id);
+        }
+
+        // Global link hook to access state safely
+        private static PrefabManager windowPrefabManagerReference;
+        public static void LinkPrefabManager(PrefabManager pm) => windowPrefabManagerReference = pm;
+    }
+
+    // Inside EditorTool.cs
+    public class WaterShapeTool : ITool
+    {
+        public string Name => "WaterShape";
+        public string IconName => "SlopeTerrain";
+
+        public enum DrawSubMode { Bounds, Spine }
+        public DrawSubMode ActiveSubMode { get; set; } = DrawSubMode.Bounds;
+
+        private List<Vector2> _boundsVertices = new List<Vector2>();
+        private List<Vector2> _spineWaypoints = new List<Vector2>();
+        private bool _isDrawing = false;
+
+        public string GetShortcutHints() => "TAB: Switch SubMode (Bounds/Spine) | ENTER: Save Polygon | ESC: Clear Draft";
+
+        public void Update(ToolInput toolInput, EditorInputState input, EventBus bus, EditorState editorState)
+        {
+            if (!(toolInput.ActiveLayer is ControlLayer controlLayer)) return;
+
+            Vector2 mouseWorld = input.MouseWorldPosition;
+
+            // Caps Lock grid snap
+            if (input.CurrentKeyboard.CapsLock)
+            {
+                mouseWorld.X = (float)Math.Round(mouseWorld.X / 16) * 16;
+                mouseWorld.Y = (float)Math.Round(mouseWorld.Y / 16) * 16;
+            }
+
+            // TAB Key: Swap between drawing Bounds or River Spline Centerlines
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Tab) && input.PreviousKeyboard.IsKeyUp(Keys.Tab))
+            {
+                ActiveSubMode = ActiveSubMode == DrawSubMode.Bounds ? DrawSubMode.Spine : DrawSubMode.Bounds;
+                System.Diagnostics.Debug.WriteLine($"[WaterTool] Submode Switched to: {ActiveSubMode}");
+            }
+
+            // Node Snapping Check (Bounds Close Loop)
+            bool isSnappedToStart = false;
+            if (ActiveSubMode == DrawSubMode.Bounds && _boundsVertices.Count >= 3)
+            {
+                float snapTolerance = 10f / input.Zoom;
+                if (Vector2.Distance(mouseWorld, _boundsVertices[0]) < snapTolerance)
+                {
+                    mouseWorld = _boundsVertices[0];
+                    isSnappedToStart = true;
+                }
+            }
+
+            // 1. PLACE NODE ON CLICK
+            if (input.IsNewLeftClick)
+            {
+                _isDrawing = true;
+                if (ActiveSubMode == DrawSubMode.Bounds)
+                {
+                    if (isSnappedToStart)
+                    {
+                        CloseAndBakePolygon(controlLayer, bus, editorState);
+                    }
+                    else
+                    {
+                        _boundsVertices.Add(mouseWorld);
+                    }
+                }
+                else
+                {
+                    _spineWaypoints.Add(mouseWorld);
+                }
+            }
+
+            // 2. CLOSE LOOP ON ENTER
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Enter) && input.PreviousKeyboard.IsKeyUp(Keys.Enter) && _isDrawing)
+            {
+                CloseAndBakePolygon(controlLayer, bus, editorState);
+            }
+
+            // 3. CANCEL DRAFT
+            if (input.CurrentKeyboard.IsKeyDown(Keys.Escape) && _isDrawing)
+            {
+                ClearDraft();
+            }
+        }
+
+        private void CloseAndBakePolygon(ControlLayer controlLayer, EventBus bus, EditorState state)
+        {
+            if (_boundsVertices.Count >= 3)
+            {
+                Polygon waterPolygon = new Polygon(new List<Vector2>(_boundsVertices));
+                var waterShape = new ShapeObject
+                {
+                    Shape = waterPolygon,
+                    Name = $"WaterBody_{Guid.NewGuid().ToString().Substring(0, 4)}",
+                    DebugColor = Color.SlateGray * 0.6f,
+                    SpineWaypoints = new List<Vector2>(_spineWaypoints) // Save spine centerline waypoints
+                };
+
+                waterShape.Tags.Add(SystemTags.WATER);
+
+                // AUTO-POPULATE GEOLOGY DEFAULTS modeled after the HTML editor
+                waterShape.Properties.Add("ProjectionMode", new MapProperty(PropertyType.String, "spline"));
+                waterShape.Properties.Add("EasingMode", new MapProperty(PropertyType.String, "linear"));
+                waterShape.Properties.Add("BaseHeight", new MapProperty(PropertyType.Float, "160"));
+                waterShape.Properties.Add("StartHeightOffset", new MapProperty(PropertyType.Float, "0"));
+                waterShape.Properties.Add("EndHeightOffset", new MapProperty(PropertyType.Float, "-60"));
+                waterShape.Properties.Add("RiverWidth", new MapProperty(PropertyType.Float, "8"));
+                waterShape.Properties.Add("Asymmetric", new MapProperty(PropertyType.Boolean, "True"));
+                waterShape.Properties.Add("Snap", new MapProperty(PropertyType.Boolean, "True"));
+
+                waterShape.UpdateBoundsFromVertices();
+
+                bus.Publish<IUndoableCommand>(new AddPolygonCommand(controlLayer, waterShape));
+                state.Selection.SelectedMapObject = waterShape;
+            }
+
+            ClearDraft();
+        }
+
+        private void ClearDraft()
+        {
+            _boundsVertices.Clear();
+            _spineWaypoints.Clear();
+            _isDrawing = false;
+        }
+
+        public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
+        {
+            if (!_isDrawing) return;
+
+            float thickness = 2f / input.Zoom;
+            Vector2 mouseWorld = input.MouseWorldPosition;
+
+            if (input.CurrentKeyboard.CapsLock)
+            {
+                mouseWorld.X = (float)Math.Round(mouseWorld.X / 16) * 16;
+                mouseWorld.Y = (float)Math.Round(mouseWorld.Y / 16) * 16;
+            }
+
+            // Draw outer boundary segments
+            if (_boundsVertices.Count > 0)
+            {
+                for (int i = 0; i < _boundsVertices.Count - 1; i++)
+                {
+                    sb.DrawLine(_boundsVertices[i], _boundsVertices[i + 1], Color.Teal, thickness);
+                }
+                if (ActiveSubMode == DrawSubMode.Bounds)
+                {
+                    sb.DrawLine(_boundsVertices[_boundsVertices.Count - 1], mouseWorld, Color.Teal * 0.6f, thickness);
+                }
+                foreach (var vertex in _boundsVertices)
+                {
+                    sb.DrawRectangle(new RectangleF(vertex.X - 2, vertex.Y - 2, 4, 4), Color.White, thickness);
+                }
+            }
+
+            // Draw spline centerline segments
+            if (_spineWaypoints.Count > 0)
+            {
+                for (int i = 0; i < _spineWaypoints.Count - 1; i++)
+                {
+                    sb.DrawLine(_spineWaypoints[i], _spineWaypoints[i + 1], Color.Orange * 0.8f, thickness);
+                }
+                if (ActiveSubMode == DrawSubMode.Spine)
+                {
+                    sb.DrawLine(_spineWaypoints[_spineWaypoints.Count - 1], mouseWorld, Color.Orange * 0.4f, thickness);
+                }
+                foreach (var waypoint in _spineWaypoints)
+                {
+                    sb.DrawCircle(waypoint, 3f, 8, Color.Orange, thickness);
+                }
+            }
+
+            // Render tool status text
+            Vector2 textPos = mouseWorld + new Vector2(15, -15);
+            string toolText = $"Water Designer [{ActiveSubMode}] (Bounds: {_boundsVertices.Count} | Spine: {_spineWaypoints.Count})";
+            sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, toolText, textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            sb.DrawString(Pixel_Simulations.UI.UITheme.DefaultFont, toolText, textPos, Color.Cyan, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+        }
+    }
 }
+
 

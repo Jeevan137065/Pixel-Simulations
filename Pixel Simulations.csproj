@@ -28,9 +28,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Assets\Maps\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Update="Assets\Data\GrassPresetsMaster.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -70,6 +67,9 @@
     <None Update="Assets\Maps\CoastTown_normals.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Maps\CoastTown_water.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Maps\level1.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -84,6 +84,9 @@
     </None>
     <None Update="Assets\Maps\level1_normals.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Maps\level1_water.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Content\player_animation_data.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -24,7 +24,7 @@ namespace Pixel_Simulations
         public const int SOLID = 2;      // Blocks physics movement
         public const int NAV = 5;        // Navigation obstacle
         public const int WARP = 6;       // Level transition trigger
-        public const int WATER = 8;      // Slows movement / splash effect
+        public const int WATER = 70;      // Slows movement / splash effect
 
         // --- OBJECT/PROP TAGS ---
         public const int VEG = 100; // Wind sway / Growth logic

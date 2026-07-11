@@ -1,9 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using Newtonsoft.Json;
+using Pixel_Simulations.Data;
 using Pixel_Simulations.Editor;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -118,6 +121,7 @@ namespace Pixel_Simulations.Data
         // 2. Tracks everything the player has placed on the ground
         [JsonProperty] public List<PlacedItemObject> PlacedItems { get; set; } = new List<PlacedItemObject>();
     }
+
     public static class MapSerializer
     {
         private static readonly JsonSerializerSettings _jsonSettings;
@@ -155,11 +159,9 @@ namespace Pixel_Simulations.Data
             using (var stream = File.Open(filePath, FileMode.Create))
             using (var writer = new BinaryWriter(stream))
             {
-                // --- FILE HEADER ---
-                writer.Write("PMAP".ToCharArray()); // 4-byte magic string to identify our file type
+                writer.Write("PMAP".ToCharArray());
                 writer.Write(2);      // Version number
 
-                // --- LAYER DATA ---
                 writer.Write(map.Layers.Count);
                 foreach (var layer in map.Layers)
                 {
@@ -168,7 +170,6 @@ namespace Pixel_Simulations.Data
                     writer.Write(layer.IsVisible);
                     writer.Write(layer.IsLocked);
 
-                    // Write type-specific data
                     switch (layer.Type)
                     {
                         case LayerType.Tile:
@@ -177,14 +178,11 @@ namespace Pixel_Simulations.Data
                         case LayerType.Object:
                             WriteObjectLayer(writer, layer as ObjectLayer);
                             break;
-
                         case LayerType.Control:
                             WriteControlLayer(writer, layer as ControlLayer);
                             break;
                         case LayerType.Mask:
                             var maskL = layer as MaskLayer;
-                            // We already wrote Name, IsVisible, IsLocked in the base loop.
-                            // Now write the Offsets!
                             writer.Write(maskL.OffsetX);
                             writer.Write(maskL.OffsetY);
                             break;
@@ -196,17 +194,15 @@ namespace Pixel_Simulations.Data
         {
             if (!File.Exists(filePath)) return null;
             var map = new Map();
-            map.Layers.Clear(); // Clear the default "Ground" layer
+            map.Layers.Clear();
 
             using (var stream = File.Open(filePath, FileMode.Open))
             using (var reader = new BinaryReader(stream))
             {
-                // --- FILE HEADER ---
                 string magic = new string(reader.ReadChars(4));
                 if (magic != "PMAP") throw new System.Exception("Invalid map file format.");
                 int version = reader.ReadInt32();
 
-                // --- LAYER DATA ---
                 int layerCount = reader.ReadInt32();
                 for (int i = 0; i < layerCount; i++)
                 {
@@ -222,10 +218,10 @@ namespace Pixel_Simulations.Data
                             newLayer = ReadTileLayer(reader, name);
                             break;
                         case LayerType.Object:
-                            newLayer = ReadObjectLayer(reader, name,version);
+                            newLayer = ReadObjectLayer(reader, name, version);
                             break;
                         case LayerType.Control:
-                            newLayer = ReadControlLayer(reader, name,version);
+                            newLayer = ReadControlLayer(reader, name, version);
                             break;
                         case LayerType.Mask:
                             var loadedMask = new MaskLayer(name);
@@ -233,7 +229,7 @@ namespace Pixel_Simulations.Data
                             loadedMask.OffsetY = reader.ReadInt32();
                             newLayer = loadedMask;
                             break;
-                     }
+                    }
                     if (newLayer != null)
                     {
                         newLayer.IsVisible = isVisible;
@@ -262,11 +258,11 @@ namespace Pixel_Simulations.Data
                         var tile = chunkPair.Value.Tiles[x, y];
                         if (tile == null)
                         {
-                            writer.Write(false); // Indicates no tile here
+                            writer.Write(false);
                         }
                         else
                         {
-                            writer.Write(true); // Indicates a tile follows
+                            writer.Write(true);
                             writer.Write(tile.TilesetName);
                             writer.Write(tile.TileID);
                             writer.Write(tile.Rotation);
@@ -281,7 +277,7 @@ namespace Pixel_Simulations.Data
             writer.Write(props.Count);
             foreach (var prop in props)
             {
-                WriteMapObjectBase(writer, prop); // <--- Replaces writer.Write(prop.Name)
+                WriteMapObjectBase(writer, prop);
                 writer.Write(prop.Position.X); writer.Write(prop.Position.Y);
                 writer.Write(prop.PrefabID);
                 writer.Write(prop.Scale.X); writer.Write(prop.Scale.Y);
@@ -294,16 +290,24 @@ namespace Pixel_Simulations.Data
             writer.Write(layer.Shapes.Count);
             foreach (var shape in layer.Shapes)
             {
-                WriteMapObjectBase(writer, shape); // Saves ID, Links, Tags, Name
+                WriteMapObjectBase(writer, shape);
                 writer.Write(shape.Shape.Vertices.Count);
                 foreach (var v in shape.Shape.Vertices) { writer.Write(v.X); writer.Write(v.Y); }
+
+                // FIX: Defensive null check prevents truncated file exports
+                int wpCount = shape.SpineWaypoints != null ? shape.SpineWaypoints.Count : 0;
+                writer.Write(wpCount);
+                if (shape.SpineWaypoints != null)
+                {
+                    foreach (var wp in shape.SpineWaypoints) { writer.Write(wp.X); writer.Write(wp.Y); }
+                }
             }
 
             // Write Rectangles
             writer.Write(layer.Rectangles.Count);
             foreach (var rect in layer.Rectangles)
             {
-                WriteMapObjectBase(writer, rect); // Saves ID, Links, Tags, Name
+                WriteMapObjectBase(writer, rect);
                 writer.Write(rect.Position.X); writer.Write(rect.Position.Y);
                 writer.Write(rect.Size.X); writer.Write(rect.Size.Y);
             }
@@ -312,7 +316,7 @@ namespace Pixel_Simulations.Data
             writer.Write(layer.Points.Count);
             foreach (var pt in layer.Points)
             {
-                WriteMapObjectBase(writer, pt); // Saves ID, Links, Tags, Name
+                WriteMapObjectBase(writer, pt);
                 writer.Write(pt.Position.X); writer.Write(pt.Position.Y);
                 writer.Write(pt.Radius);
             }
@@ -329,7 +333,7 @@ namespace Pixel_Simulations.Data
                 {
                     for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                     {
-                        if (reader.ReadBoolean()) // Check if a tile exists
+                        if (reader.ReadBoolean())
                         {
                             string tilesetName = reader.ReadString();
                             int tileId = reader.ReadInt32();
@@ -349,7 +353,7 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < count; i++)
             {
                 var prop = new PropObject();
-                ReadMapObjectBase(reader, prop, version); // <--- Replaces Name = reader.ReadString()
+                ReadMapObjectBase(reader, prop, version);
                 prop.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 prop.PrefabID = reader.ReadString();
                 prop.Scale = new Vector2(reader.ReadSingle(), reader.ReadSingle());
@@ -358,7 +362,7 @@ namespace Pixel_Simulations.Data
             }
             return layer;
         }
-        private static ControlLayer ReadControlLayer(BinaryReader reader, string name,int version)
+        private static ControlLayer ReadControlLayer(BinaryReader reader, string name, int version)
         {
             var layer = new ControlLayer(name);
 
@@ -367,11 +371,17 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < sCount; i++)
             {
                 var s = new ShapeObject();
-                ReadMapObjectBase(reader, s,version); // Loads ID, Links, Tags, Name
+                ReadMapObjectBase(reader, s, version);
                 int vCount = reader.ReadInt32();
                 var verts = new List<Vector2>();
                 for (int j = 0; j < vCount; j++) verts.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
                 s.Shape = new Polygon(verts);
+                s.SpineWaypoints = new List<Vector2>();
+                if (version >= 2)
+                {
+                    int wpCount = reader.ReadInt32();
+                    for (int j = 0; j < wpCount; j++) s.SpineWaypoints.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()));
+                }
                 s.UpdateBoundsFromVertices();
                 layer.Shapes.Add(s);
             }
@@ -381,7 +391,7 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < rCount; i++)
             {
                 var r = new RectangleObject();
-                ReadMapObjectBase(reader, r,version); // Loads ID, Links, Tags, Name
+                ReadMapObjectBase(reader, r, version);
                 r.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 r.Size = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 layer.Rectangles.Add(r);
@@ -392,7 +402,7 @@ namespace Pixel_Simulations.Data
             for (int i = 0; i < pCount; i++)
             {
                 var p = new PointObject();
-                ReadMapObjectBase(reader, p,version); // Loads ID, Links, Tags, Name
+                ReadMapObjectBase(reader, p, version);
                 p.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
                 p.Radius = reader.ReadSingle();
                 layer.Points.Add(p);
@@ -447,7 +457,7 @@ namespace Pixel_Simulations.Data
                 }
                 else
                 {
-                    // Backwards Compatibility! Upgrade old V1 String Links to ObjectLinks automatically.
+                    // Backwards Compatibility: Upgrade old V1 String Links to ObjectLinks automatically.
                     obj.Links.Add(new ObjectLink { SourcePort = "Out", TargetID = reader.ReadString(), TargetPort = "In" });
                 }
             }
@@ -466,7 +476,7 @@ namespace Pixel_Simulations.Data
                 obj.Properties[key] = new MapProperty(type, val);
             }
         }
-        public static void CaptureToImage(Map map, GraphicsDevice gd,Editor.EditorState state, string path)
+        public static void CaptureToImage(Map map, GraphicsDevice gd, Editor.EditorState state, string path)
         {
             // 1. Calculate the exact bounding box of the entire map
             var bounds = CalculateMapBounds(map, state.PrefabManager);
@@ -480,8 +490,8 @@ namespace Pixel_Simulations.Data
             bounds.Inflate(16, 16);
 
             // 2. Create the Render Target (WARNING: Max size is usually 4096 or 8192 depending on GPU)
-            int width = (int)System.Math.Min(bounds.Width, 4096);
-            int height = (int)System.Math.Min(bounds.Height, 4096);
+            int width = (int)System.Math.Min(bounds.Width, 10240);
+            int height = (int)System.Math.Min(bounds.Height, 10240);
 
             var prevTargets = gd.GetRenderTargets();
 
@@ -691,7 +701,7 @@ namespace Pixel_Simulations.Data
                         }
 
                         // Save Normal Map to Assets
-                        using (var stream = System.IO.File.OpenWrite(normalPath))
+                        using (var stream = File.OpenWrite(normalPath))
                         {
                             normalRt.SaveAsPng(stream, width, height);
                         }
@@ -704,7 +714,7 @@ namespace Pixel_Simulations.Data
         {
             if (!System.IO.File.Exists(imagePath)) return;
 
-            using (var stream = System.IO.File.OpenRead(imagePath))
+            using (var stream = File.OpenRead(imagePath))
             using (var masterTex = Texture2D.FromStream(gd, stream))
             {
                 int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
@@ -738,7 +748,7 @@ namespace Pixel_Simulations.Data
             var chunks = new Dictionary<Point, Texture2D>();
             if (!System.IO.File.Exists(imagePath)) return chunks;
 
-            using (var stream = System.IO.File.OpenRead(imagePath))
+            using (var stream = File.OpenRead(imagePath))
             using (var masterTex = Texture2D.FromStream(gd, stream))
             {
                 int chunkPixels = MaskLayer.CHUNK_PIXEL_SIZE;
@@ -778,7 +788,7 @@ namespace Pixel_Simulations.Data
             var chunks = new Dictionary<Point, Texture2D>();
             if (!System.IO.File.Exists(imagePath)) return chunks;
 
-            using (var stream = System.IO.File.OpenRead(imagePath))
+            using (var stream = File.OpenRead(imagePath))
             using (var masterTex = Texture2D.FromStream(gd, stream))
             {
                 int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
@@ -818,5 +828,431 @@ namespace Pixel_Simulations.Data
         }
     }
 
-}
+    public static class MapExporter
+    {
+        /// <summary>
+        /// Carves a smooth, continuous waterbed valley directly into the Blue channel of the terrain mask.
+        /// Step 1 of export.
+        /// </summary>
+        // Inside Map.cs -> MapExporter Class
+        public static MaskLayer BakeWaterBedIntoMask(GraphicsDevice gd, Map map, MaskLayer terrainMask)
+        {
+            if (terrainMask == null || terrainMask.Chunks.Count == 0) return terrainMask;
 
+            int minX = terrainMask.OffsetX * MaskLayer.CHUNK_PIXEL_SIZE;
+            int minY = terrainMask.OffsetY * MaskLayer.CHUNK_PIXEL_SIZE;
+
+            int maxChunkX = terrainMask.Chunks.Keys.Max(p => p.X);
+            int maxChunkY = terrainMask.Chunks.Keys.Max(p => p.Y);
+
+            int width = (maxChunkX - terrainMask.OffsetX + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+            int height = (maxChunkY - terrainMask.OffsetY + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+
+            Color[] bakedTerrainMask = new Color[width * height];
+            ExtractContinuousTerrainHeightMap(gd, terrainMask, bakedTerrainMask, width, height, map);
+
+            var waterShapes = map.Layers
+                .OfType<ControlLayer>()
+                .SelectMany(l => l.Shapes.Where(s => s.Tags.Contains(SystemTags.WATER)))
+                .ToList();
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Vector2 pixelPos = new Vector2(x + minX, y + minY);
+                    int idx = y * width + x;
+
+                    foreach (var lake in waterShapes)
+                    {
+                        if (lake.Shape.Contains(pixelPos))
+                        {
+                            string projMode = lake.GetProperty("ProjectionMode", "spline");
+                            string easingMode = lake.GetProperty("EasingMode", "linear");
+                            float baseHeight = float.Parse(lake.GetProperty("BaseHeight", "160"));
+                            float startOffset = float.Parse(lake.GetProperty("StartHeightOffset", "0"));
+                            float endOffset = float.Parse(lake.GetProperty("EndHeightOffset", "-60"));
+                            float channelHalfWidth = float.Parse(lake.GetProperty("RiverWidth", "8")) * 8f; // Scaled to pixels
+                            bool isAsymmetric = lake.GetProperty("Asymmetric", "True") == "True";
+                            bool doSnap = lake.GetProperty("Snap", "True") == "True";
+
+                            float startHeight = baseHeight - startOffset;
+                            float endHeight = baseHeight - endOffset;
+
+                            float t = 0.0f;
+
+                            if (projMode == "linear" && lake.Shape.Vertices.Count >= 2)
+                            {
+                                // Linear Slope projection utilizing vector projection from Anchor A to B
+                                Vector2 anchorA = lake.Shape.Vertices[0];
+                                Vector2 anchorB = lake.Shape.Vertices[1];
+
+                                Vector2 ab = anchorB - anchorA;
+                                Vector2 ap = pixelPos - anchorA;
+                                float lenSq = ab.LengthSquared();
+                                if (lenSq > 0)
+                                {
+                                    t = Vector2.Dot(ap, ab) / lenSq;
+                                }
+                                t = MathHelper.Clamp(t, 0.0f, 1.0f);
+                            }
+                            else if (projMode == "concentric")
+                            {
+                                // Concentric Basin projection centered on the centroid of the shape
+                                Vector2 centroid = Vector2.Zero;
+                                foreach (var v in lake.Shape.Vertices) centroid += v;
+                                centroid /= lake.Shape.Vertices.Count;
+
+                                float distEdge = GetDistanceToShoreline(pixelPos, lake);
+                                float distCenter = Vector2.Distance(pixelPos, centroid);
+                                if (distEdge + distCenter > 0)
+                                {
+                                    t = distEdge / (distEdge + distCenter);
+                                }
+                            }
+                            else if (projMode == "spline" && lake.SpineWaypoints != null && lake.SpineWaypoints.Count >= 2)
+                            {
+                                // Winding Spline Longitudinal projection
+                                var projection = GetSplineProjection(pixelPos, lake.SpineWaypoints);
+                                float tLateral = MathHelper.Clamp(projection.Dist / channelHalfWidth, 0.0f, 1.0f);
+
+                                // Asymmetric profile bends flow path around river bends
+                                float profileCurve = MathF.Cos(tLateral * MathHelper.PiOver2);
+                                if (isAsymmetric)
+                                {
+                                    float twistBias = projection.Curvature * 15f;
+                                    float warpedLateral = MathHelper.Clamp((projection.Dist + twistBias) / channelHalfWidth, 0.0f, 1.0f);
+                                    profileCurve = MathF.Cos(warpedLateral * MathHelper.PiOver2);
+                                }
+
+                                float baseLongitudinal = startHeight + projection.U * (endHeight - startHeight);
+                                float calculatedDepth = baseLongitudinal - (profileCurve * (startHeight - endHeight));
+                                t = MathHelper.Clamp(calculatedDepth / 255.0f, 0.0f, 1.0f);
+                            }
+
+                            // --- APPLY DESCENT CURVE EASING FUNCTIONS ---
+                            float easedT = t;
+                            if (easingMode == "easeIn")
+                            {
+                                easedT = t * t;
+                            }
+                            else if (easingMode == "easeOut")
+                            {
+                                easedT = t * (2f - t);
+                            }
+                            else if (easingMode == "easeInOut")
+                            {
+                                easedT = t < 0.5f ? 2f * t * t : -1f + (4f - 2f * t) * t;
+                            }
+                            else if (easingMode == "zoned")
+                            {
+                                if (t < 0.3f)
+                                {
+                                    easedT = (t / 0.3f) * 0.12f;
+                                }
+                                else if (t < 0.7f)
+                                {
+                                    float nt = (t - 0.3f) / 0.4f;
+                                    float ease = nt < 0.5f ? 2f * nt * nt : -1f + (4f - 2f * nt) * nt;
+                                    //finalHeight = 0.12f + ease * 0.78f;
+                                }
+                                else
+                                {
+                                    easedT = 0.90f + ((t - 0.7f) / 0.3f) * 0.10f;
+                                }
+                            }
+
+                            float heightValue = startHeight + easedT * (endHeight - startHeight);
+                            if (projMode == "spline") heightValue = easedT * 255f;
+
+                            // Enforce clamping constraint (Minimum value of 15 inside waterbeds)
+                            int finalHeight = (int)MathHelper.Clamp(heightValue, 15f, 240f);
+
+                            if (doSnap)
+                            {
+                                finalHeight = FindClosestDimetricLevel(finalHeight);
+                            }
+
+                            bakedTerrainMask[idx].B = (byte)finalHeight;
+                        }
+                    }
+                }
+            }
+
+            WriteTerrainHeightMapToChunks(gd, terrainMask, bakedTerrainMask, width, height, map);
+            return terrainMask;
+        }
+
+        private struct SplineProjectionResult
+        {
+            public float Dist;
+            public float U;
+            public float Curvature;
+        }
+
+        private static SplineProjectionResult GetSplineProjection(Vector2 pt, List<Vector2> spine)
+        {
+            float totalLength = 0;
+            float[] segmentLengths = new float[spine.Count - 1];
+            for (int i = 0; i < spine.Count - 1; i++)
+            {
+                float l = Vector2.Distance(spine[i], spine[i + 1]);
+                segmentLengths[i] = l;
+                totalLength += l;
+            }
+
+            float minD2 = float.MaxValue;
+            float bestU = 0;
+            float cumulativeLength = 0;
+            int bestIdx = 0;
+
+            for (int i = 0; i < spine.Count - 1; i++)
+            {
+                var res = distToSegmentSquared(pt, spine[i], spine[i + 1]);
+                if (res.d2 < minD2)
+                {
+                    minD2 = res.d2;
+                    float progressInSegment = res.t * segmentLengths[i];
+                    bestU = totalLength > 0 ? (cumulativeLength + progressInSegment) / totalLength : 0;
+                    bestIdx = i;
+                }
+                cumulativeLength += segmentLengths[i];
+            }
+
+            float curvature = 0;
+            if (spine.Count > 2 && bestIdx > 0 && bestIdx < spine.Count - 1)
+            {
+                Vector2 prev = spine[bestIdx - 1];
+                Vector2 curr = spine[bestIdx];
+                Vector2 next = spine[bestIdx + 1];
+
+                Vector2 v1 = curr - prev;
+                Vector2 v2 = next - curr;
+
+                if (v1.Length() > 0 && v2.Length() > 0)
+                {
+                    v1.Normalize();
+                    v2.Normalize();
+                    curvature = v1.X * v2.Y - v1.Y * v2.X;
+                }
+            }
+
+            return new SplineProjectionResult
+            {
+                Dist = (float)Math.Sqrt(minD2),
+                U = bestU,
+                Curvature = curvature
+            };
+        }
+        private struct SegmentProjection
+        {
+            public float d2;
+            public float t;
+        }
+        private static SegmentProjection distToSegmentSquared(Vector2 p, Vector2 v, Vector2 w)
+        {
+            float l2 = Vector2.DistanceSquared(v, w);
+            if (l2 == 0f) return new SegmentProjection { d2 = Vector2.DistanceSquared(p, v), t = 0f };
+            float t = Vector2.Dot(p - v, w - v) / l2;
+            t = MathHelper.Clamp(t, 0f, 1f);
+            float d2 = Vector2.DistanceSquared(p, v + t * (w - v));
+            return new SegmentProjection { d2 = d2, t = t };
+        }
+        private static int FindClosestDimetricLevel(int val)
+        {
+            int closest = 0;
+            int minDiff = int.MaxValue;
+            int[] levels = { 0, 15, 120, 128, 160, 192, 200, 240, 255 };
+
+            for (int i = 0; i < levels.Length; i++)
+            {
+                int diff = Math.Abs(levels[i] - val);
+                if (diff < minDiff)
+                {
+                    minDiff = diff;
+                    closest = levels[i];
+                }
+            }
+            return closest;
+        }
+
+        /// <summary>
+        /// Bakes purely water surface attributes (R: Flow, G: Foam, B: Swells) into waterdata.png.
+        /// Step 2 of export.
+        /// </summary>
+        public static Texture2D BakeWaterSurfaceData(GraphicsDevice gd, Map map, MaskLayer terrainMask)
+        {
+            int minX = terrainMask.OffsetX * MaskLayer.CHUNK_PIXEL_SIZE;
+            int minY = terrainMask.OffsetY * MaskLayer.CHUNK_PIXEL_SIZE;
+
+            int maxChunkX = terrainMask.Chunks.Keys.Max(p => p.X);
+            int maxChunkY = terrainMask.Chunks.Keys.Max(p => p.Y);
+
+            int width = (maxChunkX - terrainMask.OffsetX + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+            int height = (maxChunkY - terrainMask.OffsetY + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
+
+            RenderTarget2D waterBakeTarget = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None);
+            Color[] bakedWaterData = new Color[width * height];
+
+            var waterShapes = map.Layers
+                .OfType<ControlLayer>()
+                .SelectMany(l => l.Shapes.Where(s => s.Tags.Contains(SystemTags.WATER)))
+                .ToList();
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Vector2 pixelPos = new Vector2(x + minX, y + minY);
+                    int idx = y * width + x;
+
+                    bakedWaterData[idx] = new Color(0, 0, 0, 0); // Transparent outside water
+
+                    foreach (var lake in waterShapes)
+                    {
+                        if (lake.Shape.Contains(pixelPos))
+                        {
+                            // R Channel: Flow Vector Angle
+                            float flowX = float.Parse(lake.GetProperty("FlowX", "0.0"));
+                            float flowY = float.Parse(lake.GetProperty("FlowY", "0.0"));
+                            float angleRad = (float)Math.Atan2(flowY, flowX);
+                            if (angleRad < 0) angleRad += MathHelper.TwoPi;
+                            byte rFlow = (byte)((angleRad / MathHelper.TwoPi) * 255f);
+
+                            // G Channel: Foam Density
+                            float distToShore = GetDistanceToShoreline(pixelPos, lake);
+                            byte gFoam = (byte)MathHelper.Clamp(255f - (distToShore * 15f), 0, 255);
+
+                            // B Channel: Wave characteristics
+                            byte bCustom = 255;
+
+                            bakedWaterData[idx] = new Color((int)rFlow, gFoam, bCustom, 255);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            waterBakeTarget.SetData(bakedWaterData);
+            return waterBakeTarget;
+        }
+
+        private static byte GetShorelineElevation(ShapeObject lake, Color[] terrainMask, int w, int h, int minX, int minY)
+        {
+            Vector2 startNode = lake.Shape.Vertices[0];
+            int lx = (int)startNode.X - minX;
+            int ly = (int)startNode.Y - minY;
+
+            // Search outward from the edge node to bypass unpainted pixels and find real land elevation
+            for (int r = 1; r < 6; r++)
+            {
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    for (int dy = -r; dy <= r; dy++)
+                    {
+                        int sx = lx + dx * 8; // Scan in 8-pixel increments
+                        int sy = ly + dy * 8;
+
+                        if (sx >= 0 && sx < w && sy >= 0 && sy < h)
+                        {
+                            byte elev = terrainMask[sy * w + sx].B;
+                            if (elev > 40) // Found painted terrain (altitude > 40)
+                            {
+                                return elev;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return 180; // Standard shoreline elevation fallback
+        }
+
+        private static float GetDistanceToShoreline(Vector2 point, ShapeObject lake)
+        {
+            float minDistance = float.MaxValue;
+            int count = lake.Shape.Vertices.Count;
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 v1 = lake.Shape.Vertices[i];
+                Vector2 v2 = lake.Shape.Vertices[(i + 1) % count];
+
+                Vector2 ab = v2 - v1;
+                Vector2 ap = point - v1;
+                float t = MathHelper.Clamp(Vector2.Dot(ap, ab) / Vector2.Dot(ab, ab), 0.0f, 1.0f);
+                Vector2 closestPoint = v1 + ab * t;
+
+                float dist = Vector2.Distance(point, closestPoint);
+                if (dist < minDistance) minDistance = dist;
+            }
+
+            return minDistance;
+        }
+
+        private static void ExtractContinuousTerrainHeightMap(GraphicsDevice gd, MaskLayer terrainMask, Color[] heightData, int w, int h, Map map)
+        {
+            // FIX A: Reference terrainMask's offsets directly to prevent coordinates drift
+            int offsetX = terrainMask.OffsetX;
+            int offsetY = terrainMask.OffsetY;
+
+            for (int y = 0; y < h; y += 256)
+            {
+                for (int x = 0; x < w; x += 256)
+                {
+                    Point chunkCoord = new Point((x / 256) + offsetX, (y / 256) + offsetY);
+                    if (terrainMask.Chunks.TryGetValue(chunkCoord, out var chunkRT))
+                    {
+                        Color[] chunkData = new Color[256 * 256];
+                        chunkRT.GetData(chunkData);
+
+                        for (int cy = 0; cy < 256 && y + cy < h; cy++)
+                        {
+                            for (int cx = 0; cx < 256 && x + cx < w; cx++)
+                            {
+                                int destIdx = (y + cy) * w + (x + cx);
+                                int srcIdx = cy * 256 + cx;
+                                heightData[destIdx] = chunkData[srcIdx];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Inside Map.cs -> MapExporter Class
+        private static void WriteTerrainHeightMapToChunks(GraphicsDevice gd, MaskLayer terrainMask, Color[] heightData, int w, int h, Map map)
+        {
+            int offsetX = terrainMask.OffsetX;
+            int offsetY = terrainMask.OffsetY;
+
+            for (int y = 0; y < h; y += 256)
+            {
+                for (int x = 0; x < w; x += 256)
+                {
+                    Point chunkCoord = new Point((x / 256) + offsetX, (y / 256) + offsetY);
+                    if (terrainMask.Chunks.TryGetValue(chunkCoord, out var chunkRT))
+                    {
+                        // Preserve pre-existing Red (Biomes), Green (Spawns), and Alpha (Noise details)
+                        Color[] chunkData = new Color[256 * 256];
+                        chunkRT.GetData(chunkData);
+
+                        for (int cy = 0; cy < 256 && y + cy < h; cy++)
+                        {
+                            for (int cx = 0; cx < 256 && x + cx < w; cx++)
+                            {
+                                int srcIdx = (y + cy) * w + (x + cx);
+                                int destIdx = cy * 256 + cx;
+
+                                // Overwrite ONLY the Blue Channel with baked slope heights
+                                chunkData[destIdx].B = heightData[srcIdx].B;
+                            }
+                        }
+                        chunkRT.SetData(chunkData);
+                    }
+                }
+            }
+        }
+    }
+
+}

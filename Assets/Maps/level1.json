@@ -1,19 +1,669 @@
 {
   "Layers": [
     {
+      "$type": "Control",
+      "Name": "Control3",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Rectangles": [],
+      "Shapes": [],
+      "Points": []
+    },
+    {
       "$type": "Mask",
       "Name": "Mask",
       "IsVisible": true,
       "IsLocked": false,
       "OffsetX": 0,
-      "OffsetY": -1
+      "OffsetY": 0
     },
     {
       "$type": "Tile",
       "Name": "Ground",
       "IsVisible": true,
       "IsLocked": false,
-      "Chunks": []
+      "Chunks": [
+        {
+          "Key": {
+            "X": 0,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 0,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Base",
+                  "TileID": 141,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        }
+      ]
     }
   ]
 }

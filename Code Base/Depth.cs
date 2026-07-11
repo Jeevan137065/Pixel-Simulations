@@ -62,16 +62,14 @@ namespace Pixel_Simulations
         {
             if (chunks == null || chunks.Count == 0) return;
 
-            // Use SimTransform so it aligns perfectly with the 960p Dynamic/Normal layers
             sb.Begin(SpriteSortMode.Deferred, blendState, SamplerState.PointClamp, null, null, null, camera.SimTransform);
 
             int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE; // 256
             foreach (var kvp in chunks)
             {
-                // FIX B: Subtract the offset from the Key to get the correct World Position!
-                // (Because the dictionary Key is the absolute chunk coordinate, but we want to draw it relative to world 0,0)
-                float worldX = (kvp.Key.X + offset.X) * chunkSize;
-                float worldY = (kvp.Key.Y + offset.Y) * chunkSize;
+                // Fix: Use the coordinate directly since the keys already contain the offset
+                float worldX = kvp.Key.X * chunkSize;
+                float worldY = kvp.Key.Y * chunkSize;
 
                 RectangleF chunkBounds = new RectangleF(worldX, worldY, chunkSize, chunkSize);
 

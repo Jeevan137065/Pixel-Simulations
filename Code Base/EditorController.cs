@@ -3,14 +3,15 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using Newtonsoft.Json.Converters;
-using Pixel_Simulations.Data;
 using Pixel_Simulations;
+using Pixel_Simulations.Data;
 using Pixel_Simulations.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 namespace Pixel_Simulations.Editor
 {
@@ -26,6 +27,7 @@ namespace Pixel_Simulations.Editor
         public readonly TilesetController _tilesetController;
         public MapController _mapController {get; }
         public bool ShouldExit { get; private set; }
+        private bool _clickCapturedByUI = false;
         public EditorController(EditorUI uiManager, EventBus eventBus)
         {
             _eventBus = eventBus;
@@ -44,6 +46,19 @@ namespace Pixel_Simulations.Editor
             // --- 1. ACTIVATE AND UPDATE THE INPUTSTATE ---
             UpdateInputState(keyboardState, mouseState);
             var input = _editorState.Input;
+
+            if (input.IsNewLeftClick)
+            {
+                // Capture the click if it occurs over any non-viewport UI panel
+                if (_editorState.UI.ActivePanelName != "Viewport" && _editorState.UI.ActivePanelName != "None")
+                {
+                    _clickCapturedByUI = true;
+                }
+            }
+            if (input.CurrentMouse.LeftButton == ButtonState.Released)
+            {
+                _clickCapturedByUI = false;
+            }
             if (_editorState.UI.FocusedElement != null && !_editorState.UI.FocusedElement.IsFocused)
                 _editorState.UI.FocusedElement = null;
             bool isTyping = _editorState.UI.FocusedElement is UITextBox;
@@ -67,14 +82,13 @@ namespace Pixel_Simulations.Editor
             {
                 _uiManager.AutoTilePanel.Update(input, _eventBus);
             }
-            if (_editorState.UI.ActivePanelName == "Viewport" && !_editorState.UI.IsLinkingMode)
+            if (_editorState.UI.ActivePanelName == "Viewport" && !_editorState.UI.IsLinkingMode && !isTyping && !_uiManager.IsMouseOverUI)
             {
                 var activeTool = _editorState.ToolState.ActiveTool;
                 if (activeTool != null)
                 {
                     activeTool.Update(GetCurrentToolInput(), input, _eventBus, _editorState);
                 }
-
             }
         }
         private void HandleGlobalShortcuts(EditorInputState input, EventBus eventBus)
@@ -200,9 +214,15 @@ namespace Pixel_Simulations.Editor
 
             // Toggle updating based on active layer
             var activeLayer = _editorState.Layers.GetActiveLayer();
+            var activeTool = _editorState.ToolState.ActiveTool;
+
             if (activeLayer != null && activeLayer.Type == LayerType.Mask)
             {
                 _uiManager.MaskEditorPanel.Update(input, bus);
+            }
+            else if (activeTool != null && activeTool.Name == "WaterShape")
+            {
+                _uiManager.WaterEditorPanel.Update(input, bus); // NEW
             }
             else
             {
@@ -571,9 +591,26 @@ namespace Pixel_Simulations.Editor
                 case "Export":
                     // We usually want to make sure the mask is saved during export too
                     var exportMask = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                    if (exportMask != null) MapSerializer.SaveMaskLayer(exportMask, maskPath, _editorState._graphics, _editorState);
+
+                    // 1. CARVE WATERBED INTO THE MASK ELEVATION (B Channel of Mask)
+                    var bakedMaskL = MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, exportMask);
+
+                    // 2. BAKE & EXPORT SURFACE WATER DATA (R: Flow, G: Foam, B: Swells to _water.png)
+                    string waterPath = gameMapPath.Replace(".map", "_water.png");
+                    using (var bakedWaterTex = MapExporter.BakeWaterSurfaceData(_editorState._graphics, _editorState.ActiveMap, exportMask))
+                    {
+                        using (var stream = File.OpenWrite(waterPath))
+                        {
+                            bakedWaterTex.SaveAsPng(stream, bakedWaterTex.Width, bakedWaterTex.Height);
+                        }
+                        System.Diagnostics.Debug.WriteLine($"[Export] Baked and exported Water Surface Map to: {waterPath}");
+                    }
+
+                    // 2. BAKE & EXPORT TERRAIN MASK PNG SECOND (Saves the compiled waterbed carvings!)
+                    if (exportMask != null) MapSerializer.SaveMaskLayer(bakedMaskL, maskPath, _editorState._graphics, _editorState);
+                    System.Diagnostics.Debug.WriteLine($"[Export] Compiled and exported Terrain Mask to: {maskPath}");
                     MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
-                    System.Diagnostics.Debug.WriteLine($"Map EXPORTED for game to: {gameMapPath}");
+                    System.Diagnostics.Debug.WriteLine($"[Export] Exported map to to: {gameMapPath}");
                     break;
                 case "Capture":
                     string capturePath = Path.Combine(assetsPath, "Maps", $"{mapName}_capture.png");

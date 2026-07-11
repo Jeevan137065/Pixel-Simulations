@@ -28,6 +28,7 @@ namespace Pixel_Simulations.UI
         public ToolPanel ToolPanel { get; set; }
         public InspectorPanel InspectorPanel { get; set; }
         public MaskEditorPanel MaskEditorPanel { get; set; }
+        public WaterEditorPanel WaterEditorPanel { get; set; } // NEW
         public LayerPanel LayerPanel { get; set; }
         public AutoTilePanel AutoTilePanel { get; set; }
 
@@ -68,7 +69,7 @@ namespace Pixel_Simulations.UI
             InspectorPanel = new InspectorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
             MaskEditorPanel = new MaskEditorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState);
             AutoTilePanel = new AutoTilePanel(_editorState._layoutmanager.AutoTileModalBounds, this, _editorState);
-
+            WaterEditorPanel = new WaterEditorPanel(_editorState._layoutmanager.InspectorPanel, this, _editorState); // NEW
             gridRenderer = new GridRenderer(_editorState.CELL_SIZE);
         }
 
@@ -88,9 +89,15 @@ namespace Pixel_Simulations.UI
             ToolPanel.Draw(spriteBatch);
 
             var activeLayer = _editorState.Layers.GetActiveLayer();
+            var activeTool = _editorState.ToolState.ActiveTool;
+
             if (activeLayer != null && activeLayer.Type == LayerType.Mask)
             {
                 MaskEditorPanel.Draw(spriteBatch);
+            }
+            else if (activeTool != null && activeTool.Name == "WaterShape")
+            {
+                WaterEditorPanel.Draw(spriteBatch); // NEW: Show water panel when water tool is armed
             }
             else
             {
@@ -99,6 +106,11 @@ namespace Pixel_Simulations.UI
 
             LayerPanel.Draw(spriteBatch);
             if (AutoTilePanel.IsOpen) AutoTilePanel.Draw(spriteBatch);
+
+            if (_editorState.WaterSystem.IsSimulating)
+            {
+                //_editorState.WaterSystem.DrawLiveSimulationOverlay(spriteBatch, _editorState.camera);
+            }
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color)
         {
@@ -148,7 +160,7 @@ namespace Pixel_Simulations.UI
         public Rectangle TopPanel { get; private set; }
         public Rectangle tagModalBounds { get; set; }
         public Rectangle prefabModalBounds { get; set; }
-
+        public EditorUpscaler EditorUpscalerReference { get; set; }
         // A dictionary to easily look up panel names
         public readonly Dictionary<string, Rectangle> _panels = new Dictionary<string, Rectangle>();
 
@@ -164,6 +176,7 @@ namespace Pixel_Simulations.UI
             int topPanelHeight = 60;
             int inspectorHeight = 260; // Big, spacious bottom panel
 
+            EditorUpscalerReference = editorUpscaler;
             UpscaleFactor = editorUpscaler.Scale;
             // Calculate the positions and sizes
             //TopPanel = new Rectangle(tilesetWidth, 0, windowWidth - tilesetWidth - layerWidth, topPanelHeight);

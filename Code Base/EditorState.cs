@@ -46,10 +46,12 @@ namespace Pixel_Simulations.Editor
                 new FreeRectangleTool(),
                 new ShapeTool(),
                 new SelectionTool(),
+                new MoveTool(),
                 new PointPlacerTool(),
                 new SpawnPointerTool(),
-                new LightShapeTool(),
-                new ReflectionTool()
+                //new LightShapeTool(),
+                //new ReflectionTool(),
+                new WaterShapeTool(),
                 // new RectangleTool(this) // Some tools might need a reference back to the state
             };
             //ActiveTool = null;
@@ -142,6 +144,7 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public bool ShowMaskBlue { get; set; } = true;
         [JsonIgnore] public bool ShowMaskAlpha { get; set; } = false; // Usually keep alpha hidden in editor
         [JsonIgnore] public Effect normalShader { get; set; }
+        [JsonIgnore] public WaterManager WaterSystem { get; private set; } // NEW
         public EditorState(LayoutManager layoutManager, GraphicsDevice graphicsDevice)
         {
             // Create a default map to start with
@@ -159,6 +162,7 @@ namespace Pixel_Simulations.Editor
             _layoutmanager = layoutManager;
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
+            WaterSystem = new WaterManager(_graphics, new RenderPipeline(_graphics, 480, 270, 1920, 1080)); // NEW
             Layers.Layers = ActiveMap.Layers;
             if (Layers.Layers.Count > 0)
             {
@@ -172,6 +176,7 @@ namespace Pixel_Simulations.Editor
             normalShader = content.Load<Effect>("HeightToNormal");
             //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
             AssetLibrary.LoadAtlas("Base", AtlasType.Tile);
+            AssetLibrary.LoadAtlas("BaseWorld", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Farm", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Trees", AtlasType.Object);
@@ -183,11 +188,18 @@ namespace Pixel_Simulations.Editor
 
             string prefabPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json");
             PrefabManager.Load(prefabPath);
+            MoveTool.LinkPrefabManager(PrefabManager);
             string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
             TagManager.Load(tagsPath);
             string maskDataPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json");
             MaskData.Load(maskDataPath);
             AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
+            var maskLayer = ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+            if (maskLayer != null)
+            {
+                WaterSystem.LoadContent(content);
+                WaterSystem.InitializeSimulationGrids(maskLayer);
+            }
         }
         public void refresh(GameTime gameTime)
         {
@@ -195,7 +207,10 @@ namespace Pixel_Simulations.Editor
             Input.Zoom = camera.Zoom;
             Layers.Layers = ActiveMap.Layers;
             UI.ActivePanelName = _layoutmanager.GetPanelAt(Input.MouseWindowPosition.ToPoint());
-            
+            if (WaterSystem.IsSimulating)
+            {
+                //                WaterSystem.UpdateGPUSimulation(, ActiveMap);
+            }
         }
 
     }

@@ -91,18 +91,22 @@ namespace Pixel_Simulations.Editor
 
         private readonly UIPanel _rootPanel;
         private readonly UIStackPanel _tabStack;
+        private readonly UIStackPanel _headerSelectorStack; // Compact top selector
         private readonly UIStackPanel _footerStack;
-        private readonly UIStackPanel _dynamicTilesetStack;
-        private readonly UIGridView _contentGrid; // Custom element for optimized grid drawing
+        private readonly UIGridView _contentGrid;
         private readonly UITheme _theme;
+
+        private readonly UIButton _prevBtn;
+        private readonly UIButton _nextBtn;
+        private readonly UIButton _activeTilesetNameBtn;
+
         public TilesetPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
             : base(area, editorUI, editorState)
         {
             _theme = new UITheme { Font = editorUI.DebugFont };
-
             _rootPanel = new UIPanel { LocalPosition = area.Location.ToVector2(), Size = new Vector2(area.Width, area.Height) };
 
-            // 1. TABS (Top)
+            // 1. TABS (Top - Height: 30)
             _tabStack = new UIStackPanel
             {
                 Direction = StackDirection.Horizontal,
@@ -122,47 +126,101 @@ namespace Pixel_Simulations.Editor
             _tabStack.AddChild(btnTiles);
             _tabStack.AddChild(btnObjects);
 
-            // 2. FOOTER (Bottom)
+            // 2. COMPACT TILESET CYCLE SELECTOR (Y: 30, Height: 32)
+            _headerSelectorStack = new UIStackPanel
+            {
+                Direction = StackDirection.Horizontal,
+                LocalPosition = new Vector2(0, 30),
+                Size = new Vector2(area.Width, 32),
+                AutoSize = false,
+                PanelBackground = Color.Black * 0.3f,
+                Spacing = 4f,
+                Padding = 4f
+            };
+
+            _prevBtn = new UIButton { Size = new Vector2(24, 24), Text = "<", BackgroundColor = Color.DarkSlateGray };
+            _prevBtn.OnClick = () => CycleTileset(false);
+
+            _activeTilesetNameBtn = new UIButton { Size = new Vector2(area.Width - 84, 24), Text = "None", BackgroundColor = Color.Black * 0.4f };
+
+            _nextBtn = new UIButton { Size = new Vector2(24, 24), Text = ">", BackgroundColor = Color.DarkSlateGray };
+            _nextBtn.OnClick = () => CycleTileset(true);
+
+            _headerSelectorStack.AddChild(_prevBtn);
+            _headerSelectorStack.AddChild(_activeTilesetNameBtn);
+            _headerSelectorStack.AddChild(_nextBtn);
+
+            // 3. SCROLLABLE CONTENT (Middle - Starts at Y: 62)
+            _contentGrid = new UIGridView(_editorState, this)
+            {
+                LocalPosition = new Vector2(0, 62),
+                Size = new Vector2(area.Width, area.Height - 102), // Fills remaining space above footer
+                ClipToBounds = true
+            };
+
+            // 4. FOOTER UTILITIES (Bottom - Height: 40)
             _footerStack = new UIStackPanel
             {
                 Direction = StackDirection.Horizontal,
                 LocalPosition = new Vector2(0, area.Height - 40),
                 Size = new Vector2(area.Width, 40),
                 AutoSize = false,
-                PanelBackground = Color.Black * 0.4f
+                PanelBackground = Color.Black * 0.5f,
+                Spacing = 6f,
+                Padding = 4f
             };
 
             _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewTileSet", Command = new OpenAtlasPickerCommand() });
             _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewObject", Command = new TogglePrefabCreatorCommand { DefaultAtlasName = "Basic" } });
-            _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewTags",Text = "Tags",Command = new ToggleTagManagerCommand()});
+            _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewTags", Text = "Tags", Command = new ToggleTagManagerCommand() });
+
             var atBtn = new UIButton { Size = new Vector2(32, 32), IconName = "AutoTile", Text = "AT" };
             atBtn.OnClick = () => _editorUI.AutoTilePanel.Open(_editorState.AutoTileManager.GetRuleForAtlas(_editorState.TilesetPanel.ActiveTilesetName));
             _footerStack.AddChild(atBtn);
-            // Container for dynamically generated active tileset tabs
-            _dynamicTilesetStack = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent };
-            _footerStack.AddChild(_dynamicTilesetStack);
 
-            // 3. SCROLLABLE CONTENT (Middle)
-            _contentGrid = new UIGridView(_editorState, this)
-            {
-                LocalPosition = new Vector2(0, 30),
-                Size = new Vector2(area.Width, area.Height - 70),
-                ClipToBounds = true // Crucial for scrolling
-            };
-
-            // Assemble
             _rootPanel.AddChild(_tabStack);
+            _rootPanel.AddChild(_headerSelectorStack);
             _rootPanel.AddChild(_contentGrid);
             _rootPanel.AddChild(_footerStack);
         }
 
+        private void CycleTileset(bool forward)
+        {
+            if (_editorState.ActiveTileSets.Count == 0) return;
+
+            int idx = _editorState.ActiveTileSets.FindIndex(ts => ts.Name == _editorState.TilesetPanel.ActiveTilesetName);
+            if (idx == -1) idx = 0;
+
+            if (forward)
+                idx = (idx + 1) % _editorState.ActiveTileSets.Count;
+            else
+                idx = (idx - 1 + _editorState.ActiveTileSets.Count) % _editorState.ActiveTileSets.Count;
+
+            var nextTs = _editorState.ActiveTileSets[idx];
+            _editorUI.SetFocus(null);
+            _editorState.TilesetPanel.ActiveTilesetName = nextTs.Name;
+
+            if (nextTs.SlicedAtlas.Keys.Any())
+            {
+                _editorState.TilesetPanel.SelectedTileID = nextTs.SlicedAtlas.Keys.First();
+                _editorState.Selection.ActiveTileBrush = new TileInfo(nextTs.Name, nextTs.SlicedAtlas.Keys.First());
+            }
+        }
+
         public override void Update(EditorInputState input, EventBus bus)
         {
-            RefreshDynamicFooter();
-
-            // Sync Tab visual state
+            // Sync Tab States
             ((UIButton)_tabStack.Children[0]).IsSelected = (_activeTab == Tab.Tiles);
             ((UIButton)_tabStack.Children[1]).IsSelected = (_activeTab == Tab.Objects);
+
+            // Update Active Selection Readout
+            var activeTsName = _editorState.TilesetPanel.ActiveTilesetName;
+            _activeTilesetNameBtn.Text = !string.IsNullOrEmpty(activeTsName) ? activeTsName : "No Tileset Loaded";
+
+            // Hide cycle selector in Object Mode
+            _headerSelectorStack.IsVisible = (_activeTab == Tab.Tiles);
+            _contentGrid.LocalPosition = new Vector2(0, _activeTab == Tab.Tiles ? 62 : 30);
+            _contentGrid.Size = new Vector2(Area.Width, _activeTab == Tab.Tiles ? Area.Height - 102 : Area.Height - 70);
 
             if (Area.Contains(input.MouseWindowPosition))
             {
@@ -170,38 +228,10 @@ namespace Pixel_Simulations.Editor
             }
         }
 
-        private void RefreshDynamicFooter()
-        {
-            // Only rebuild if count changes to save performance
-            if (_dynamicTilesetStack.Children.Count != _editorState.ActiveTileSets.Count)
-            {
-                _dynamicTilesetStack.ClearChildren();
-                foreach (var ts in _editorState.ActiveTileSets)
-                {
-                    _dynamicTilesetStack.AddChild(new UIButton
-                    {
-                        Size = new Vector2(80, 30),
-                        Text = ts.Name,
-                        Command = new SelectTilesetCommand { TilesetName = ts.Name }
-                    });
-                }
-            }
-
-            // Sync selected visual state
-            foreach (UIButton btn in _dynamicTilesetStack.Children)
-            {
-                btn.IsSelected = (btn.Text == _editorState.TilesetPanel.ActiveTilesetName);
-            }
-        }
-
         public override void Draw(SpriteBatch sb) => _rootPanel.Draw(sb, (IUIContext)_editorUI, _theme);
-        public override string GetDebugInfo()
-        {
-            return $"Active Tab: {_activeTab} | Selected TS: {_editorState.TilesetPanel.ActiveTilesetName}\n" +
-                   $"Grid Scroll Y: {_contentGrid.ScrollOffset.Y:F0}";
-        }
-
+        public override string GetDebugInfo() => "";
     }
+
     public class ToolPanel : BasePanel
     {
         private readonly UIPanel _rootPanel;
@@ -215,13 +245,14 @@ namespace Pixel_Simulations.Editor
             : base(area, editorUI, editorState)
         {
             _theme = new UITheme { Font = editorUI.DebugFont };
-            _rootPanel = new UIStackPanel
+            _rootPanel = new UIFlowPanel
             {
-                Direction = StackDirection.Horizontal,
-                LocalPosition = new Vector2(area.X + 10, area.Y + 10), // Centered vertically
-                Spacing = 10f,
+                LocalPosition = new Vector2(area.X + 10, area.Y + 10),
+                Size = new Vector2(area.Width - 20, area.Height - 20),
+                SpacingX = 6f, // Spacing between columns
+                SpacingY = 6f, // Spacing between wrapped rows
                 Padding = 0f,
-                PanelBackground = Color.Transparent,
+                BackgroundColor = Color.Transparent,
                 BorderColor = Color.Transparent
             };
             // Tools (Left)
@@ -555,6 +586,10 @@ namespace Pixel_Simulations.Editor
                     {
                         var valInp = new UITextBox { Size = new Vector2(100, 24), Text = kvp.Value.Value };
                         valInp.OnTextChanged = (t) => kvp.Value.Value = t;
+                        valInp.OnSubmit = (t) => {
+                            kvp.Value.Value = t;
+                            _needsInspectorRebuild = true;
+                        };
                         pRow.AddChild(valInp);
                     }
 
@@ -711,6 +746,7 @@ namespace Pixel_Simulations.Editor
         // ==========================================================
         // DYNAMIC REBUILDER FOR COLUMN 2
         // ==========================================================
+
         private void RebuildColumn2(PaintChannel activeChannel)
         {
             _col2Stack.ClearChildren();
@@ -721,94 +757,126 @@ namespace Pixel_Simulations.Editor
             channelHeader.AddChild(new UILabel { Text = "Active Paint Channel:", TextColor = Color.Yellow });
             channelHeader.AddChild(CreateChannelBtn("Biome (Red)", PaintChannel.R_Biome, Color.Red));
             channelHeader.AddChild(CreateChannelBtn("Spawn (Green)", PaintChannel.G_SpawnType, Color.LimeGreen));
-            channelHeader.AddChild(CreateChannelBtn("Elev (Blue)", PaintChannel.B_Elevation, Color.DeepSkyBlue));
+            channelHeader.AddChild(CreateChannelBtn("Elevation (Blue)", PaintChannel.B_Elevation, Color.DeepSkyBlue));
             _col2Stack.AddChild(channelHeader);
 
-            // 2. Brush Mode Row (Only for Elevation)
+            // 2. Setup Mode Rows (Only applicable to Elevation / Blue Channel)
             if (activeChannel == PaintChannel.B_Elevation)
             {
                 var modeRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
                 modeRow.AddChild(new UILabel { Text = "Mode:", TextColor = Color.Cyan });
-                modeRow.AddChild(CreateModeBtn("Solid", BrushMode.Solid));
+                modeRow.AddChild(CreateModeBtn("Solid (Grid)", BrushMode.Solid));
                 modeRow.AddChild(CreateModeBtn("Detail (+)", BrushMode.DetailAdd));
                 modeRow.AddChild(CreateModeBtn("Detail (-)", BrushMode.DetailSub));
                 _col2Stack.AddChild(modeRow);
+
+                // Behavior toggle for detailing modes
+                var behaviorRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
+                behaviorRow.AddChild(new UILabel { Text = "Detailer Blend Mode:", TextColor = Color.Yellow });
+
+                var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
+                if (tool != null)
+                {
+                    var optOverwrite = new UIButton { Size = new Vector2(100, 24), Text = "Overwrite", BackgroundColor = tool.ActiveBehavior == DetailerBehavior.Overwrite ? Color.DarkCyan : Color.DarkSlateGray };
+                    optOverwrite.OnClick = () => { tool.ActiveBehavior = DetailerBehavior.Overwrite; RebuildColumn2(activeChannel); };
+
+                    var optAdditive = new UIButton { Size = new Vector2(100, 24), Text = "Additive", BackgroundColor = tool.ActiveBehavior == DetailerBehavior.Additive ? Color.DarkCyan : Color.DarkSlateGray };
+                    optAdditive.OnClick = () => { tool.ActiveBehavior = DetailerBehavior.Additive; RebuildColumn2(activeChannel); };
+
+                    behaviorRow.AddChild(optOverwrite);
+                    behaviorRow.AddChild(optAdditive);
+                }
+                _col2Stack.AddChild(behaviorRow);
             }
 
             _col2Stack.AddChild(new UIPanel { Size = new Vector2(550, 2), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
 
-            // 3. Dynamic Dictionary Loader (Reads your HTML exports!)
+            // 3. Dynamic Dictionary Selection List
             var splitLayout = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 20f };
-
-            // --- LEFT: ADD NEW DATA FORM (220px) ---
-            var leftForm = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Size = new Vector2(220, 100), AutoSize = false, Spacing = 5f };
-            string title = activeChannel switch { PaintChannel.R_Biome => "Biomes (R):", PaintChannel.G_SpawnType => "Spawns (G):", _ => "Elevations (B):" };
-            leftForm.AddChild(new UILabel { Text = title, TextColor = Color.Cyan });
-            leftForm.AddChild(new UILabel { Text = "Quick-Add Entry:", TextColor = Color.Gray });
-
-            var nameIn = new UITextBox { Size = new Vector2(220, 24), Placeholder = "Name", Text = _newDataName, DebugName = "DataNameIn" };
-            nameIn.OnTextChanged = (t) => _newDataName = t;
-            leftForm.AddChild(nameIn);
-
-            var valRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 10f };
-            var valIn = new UITextBox { Size = new Vector2(140, 24), Placeholder = "Val (0-255)", Text = _newDataValue.ToString(), DebugName = "DataValIn" };
-            valIn.OnTextChanged = (t) => { if (int.TryParse(t, out int v)) _newDataValue = v; };
-            valRow.AddChild(valIn);
-
             var dataList = activeChannel switch { PaintChannel.R_Biome => _editorState.MaskData.Biomes, PaintChannel.G_SpawnType => _editorState.MaskData.Spawns, _ => _editorState.MaskData.Elevations };
 
-            var addBtn = new UIButton { Size = new Vector2(70, 24), Text = "+ Add", BackgroundColor = Color.DarkGreen };
-            addBtn.OnClick = () => {
-                if (!string.IsNullOrWhiteSpace(_newDataName))
-                {
-                    dataList.Add(new MaskDataDef { Name = _newDataName, Value = MathHelper.Clamp(_newDataValue, 0, 255), Category = "None" });
-                    _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
-                    _newDataName = ""; _newDataValue = 0;
-                    _editorUI.SetFocus(null);
-                    RebuildColumn2(activeChannel);
-                }
-            };
-            valRow.AddChild(addBtn);
-            leftForm.AddChild(valRow);
-            splitLayout.AddChild(leftForm);
+            // --- CONDITION: Completely strip Add/Edit input panels when Elevation (Blue) is active ---
+            if (activeChannel != PaintChannel.B_Elevation)
+            {
+                // LEFT: ADD NEW DATA FORM (Only visible for Biomes / Spawns)
+                var leftForm = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Size = new Vector2(220, 100), AutoSize = false, Spacing = 5f };
+                string title = activeChannel == PaintChannel.R_Biome ? "Biomes (R):" : "Spawns (G):";
+                leftForm.AddChild(new UILabel { Text = title, TextColor = Color.Cyan });
+                leftForm.AddChild(new UILabel { Text = "Quick-Add Entry:", TextColor = Color.Gray });
 
-            // --- RIGHT: SCROLLABLE LIST OF SAVED DATA GROUPED BY CATEGORY (310px) ---
+                var nameIn = new UITextBox { Size = new Vector2(220, 24), Placeholder = "Name", Text = _newDataName, DebugName = "DataNameIn" };
+                nameIn.OnTextChanged = (t) => _newDataName = t;
+                leftForm.AddChild(nameIn);
+
+                var valRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 10f };
+                var valIn = new UITextBox { Size = new Vector2(140, 24), Placeholder = "Val (0-255)", Text = _newDataValue.ToString(), DebugName = "DataValIn" };
+                valIn.OnTextChanged = (t) => { if (int.TryParse(t, out int v)) _newDataValue = v; };
+                valRow.AddChild(valIn);
+
+                var addBtn = new UIButton { Size = new Vector2(70, 24), Text = "+ Add", BackgroundColor = Color.DarkGreen };
+                addBtn.OnClick = () => {
+                    if (!string.IsNullOrWhiteSpace(_newDataName))
+                    {
+                        dataList.Add(new MaskDataDef { Name = _newDataName, Value = MathHelper.Clamp(_newDataValue, 0, 255), Category = "None" });
+                        _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
+                        _newDataName = ""; _newDataValue = 0;
+                        _editorUI.SetFocus(null);
+                        RebuildColumn2(activeChannel);
+                    }
+                };
+                valRow.AddChild(addBtn);
+                leftForm.AddChild(valRow);
+                splitLayout.AddChild(leftForm);
+            }
+            else
+            {
+                // Simple descriptive spacer box replacing the left input form for Elevations
+                var leftForm = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Size = new Vector2(220, 100), AutoSize = false, Spacing = 5f };
+                leftForm.AddChild(new UILabel { Text = "Elevations (Blue):", TextColor = Color.Cyan });
+                leftForm.AddChild(new UILabel { Text = "Systemic Height Levels", TextColor = Color.Gray });
+                leftForm.AddChild(new UILabel { Text = "Value steps are defined in\nmask_data.json.", TextColor = Color.DarkGray });
+                splitLayout.AddChild(leftForm);
+            }
+
+            // RIGHT: SELECTION LIST (Takes up the rest of the workspace)
             var rightList = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(310, 85), PanelBackground = Color.Black * 0.3f, BorderColor = Color.Transparent, ClipToBounds = true, Spacing = 4f, Padding = 5f, AutoSize = false };
-
-            // Group items by Category (e.g. Forest, Water, Ore, Forage)
-            var groupedData = dataList.GroupBy(d => d.Category ?? "Uncategorized").OrderBy(g => g.Key);
+            var groupedData = dataList.GroupBy(d => d.Category ?? "None").OrderBy(g => g.Key);
 
             foreach (var group in groupedData)
             {
-                // Category Header Label
-                rightList.AddChild(new UILabel { Text = $"--- {group.Key.ToUpper()} ---", TextColor = Color.Yellow * 0.8f });
+                rightList.AddChild(new UILabel { Text = group.Key.ToUpper(), TextColor = Color.Yellow });
 
-                foreach (var def in group.OrderBy(d => d.Value))
+                foreach (var item in group.OrderBy(i => i.Value))
                 {
-                    var safeDef = def;
+                    var safeDef = item;
                     var listRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, BorderColor = Color.Transparent, Spacing = 5f };
 
-                    // Paint Button
-                    var btn = new UIButton { Size = new Vector2(260, 24), Text = $"[{safeDef.Value}] {safeDef.Name}", BackgroundColor = Color.DarkSlateGray };
+                    // Paint selector button
+                    var btn = new UIButton { Size = new Vector2(260, 24), Text = $"[{safeDef.Value}] {safeDef.Name}", BackgroundColor = _newDataValue == safeDef.Value ? Color.DarkCyan : Color.DarkSlateGray };
                     btn.OnClick = () => {
+                        _newDataValue = safeDef.Value;
                         var tool = _editorState.ToolState.Tools.FirstOrDefault(t => t.Name == "TerrainBrush") as TerrainBrushTool;
                         if (tool != null)
                         {
                             tool.TargetValue = safeDef.Value;
-                            tool.BrushNeedsUpdate = true; // --- BUG FIX: Force GPU Rebuild! ---
+                            tool.BrushNeedsUpdate = true;
                         }
-                    };
-
-                    // Delete Button
-                    var delBtn = new UIButton { Size = new Vector2(30, 24), Text = "X", BackgroundColor = Color.DarkRed };
-                    delBtn.OnClick = () => {
-                        dataList.Remove(safeDef);
-                        _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
                         RebuildColumn2(activeChannel);
                     };
-
                     listRow.AddChild(btn);
-                    listRow.AddChild(delBtn);
+
+                    // Only show delete button for non-elevation indices
+                    if (activeChannel != PaintChannel.B_Elevation)
+                    {
+                        var delBtn = new UIButton { Size = new Vector2(30, 24), Text = "X", BackgroundColor = Color.DarkRed };
+                        delBtn.OnClick = () => {
+                            dataList.Remove(safeDef);
+                            _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
+                            RebuildColumn2(activeChannel);
+                        };
+                        listRow.AddChild(delBtn);
+                    }
+
                     rightList.AddChild(listRow);
                 }
             }
@@ -892,7 +960,7 @@ namespace Pixel_Simulations.Editor
 
             if (tool != null)
             {
-                _radiusLabel.Text = $"Radius: {tool.BrushRadius:F0} px";
+                _radiusLabel.Text = $"Radius: {tool.BrushGridSize:F0} px";
                 _elevationLabel.Text = $"Value ({tool.ActiveChannel}): {tool.TargetValue}";
 
                 if (tool.ActiveChannel != _lastBuiltChannel) RebuildColumn2(tool.ActiveChannel);
@@ -1100,6 +1168,259 @@ namespace Pixel_Simulations.Editor
         }
     }
 
+    public class WaterEditorPanel : BasePanel
+    {
+        private readonly UIPanel _rootPanel;
+        private readonly UIStackPanel _horizontalContainer;
+        private readonly UITheme _theme;
+
+        // Numerical Indicators
+        private readonly UILabel _lblSimStatus;
+        private readonly UILabel _lblWaterLevel;
+        private readonly UILabel _lblInflow;
+        private readonly UILabel _lblSeepage;
+        private readonly UILabel _lblBaseHeight;
+        private readonly UILabel _lblStartOffset;
+        private readonly UILabel _lblEndOffset;
+        private readonly UILabel _lblRiverWidth;
+
+        public WaterEditorPanel(Rectangle area, EditorUI ui, EditorState state) : base(area, ui, state)
+        {
+            _theme = new UITheme { Font = ui.DebugFont, PanelBackground = Color.Black * 0.85f, BorderColor = Color.DarkGray };
+            _rootPanel = new UIPanel { LocalPosition = area.Location.ToVector2(), Size = new Vector2(area.Width, area.Height), BackgroundColor = _theme.PanelBackground, BorderColor = Color.Transparent };
+
+            // 1. Root Horizontal Stack (Divides the widescreen workspace)
+            _horizontalContainer = new UIStackPanel
+            {
+                Direction = StackDirection.Horizontal,
+                LocalPosition = new Vector2(15, 10),
+                Size = new Vector2(area.Width - 30, area.Height - 20),
+                PanelBackground = Color.Transparent,
+                BorderColor = Color.Transparent,
+                Spacing = 20f,
+                AutoSize = false
+            };
+
+            float colWidth = (area.Width - 120f) / 4f; // Dynamically allocate column widths
+            float colHeight = area.Height - 30f;
+
+            // ==========================================
+            // COLUMN 1: SYSTEM TRIGGERS & SIMULATOR
+            // ==========================================
+            var col1 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.2f, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(colWidth, colHeight), Padding = 8f, Spacing = 6f };
+            col1.AddChild(new UILabel { Text = "Core Operations", TextColor = Color.Cyan });
+
+            _lblSimStatus = new UILabel { Text = "Sim: STOPPED", ColorOverride = Color.Red };
+            col1.AddChild(_lblSimStatus);
+
+            var btnSimToggle = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Run Live Test" };
+            btnSimToggle.OnClick = () => {
+                bool nextState = !_editorState.WaterSystem.IsSimulating;
+                //_editorState.WaterSystem.ToggleSimulation(nextState, _editorState._graphics, _editorState._layoutmanager.EditorUpscalerReference, _editorState.ActiveMap);
+
+                _lblSimStatus.Text = nextState ? "Sim: RUNNING" : "Sim: STOPPED";
+                _lblSimStatus.ColorOverride = nextState ? Color.LimeGreen : Color.Red;
+                btnSimToggle.Text = nextState ? "Pause Physics" : "Run Live Test";
+            };
+            col1.AddChild(btnSimToggle);
+
+            var btnBakeMask = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Bake Mask Blue", BackgroundColor = Color.DarkGreen };
+            btnBakeMask.OnClick = () => {
+                var maskLayer = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                if (maskLayer != null)
+                {
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, maskLayer);
+                }
+            };
+            col1.AddChild(btnBakeMask);
+
+            var btnSaveBaked = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Save Water Map", BackgroundColor = Color.DarkMagenta };
+            btnSaveBaked.OnClick = () => {
+                string assetsPath = PathHelper.GetAssetsPath();
+                string mapName = string.IsNullOrWhiteSpace(_editorState.CurrentMapFile) ? "level1" : _editorState.CurrentMapFile;
+                mapName = mapName.Replace(".json", "").Replace(".map", "");
+                string savePath = Path.Combine(assetsPath, "Maps", $"{mapName}_water.png");
+
+                var maskLayer = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                if (maskLayer != null)
+                {
+                    _editorState.WaterSystem.SaveBakedWaterMap(savePath, maskLayer, _editorState._layoutmanager.EditorUpscalerReference);
+                }
+            };
+            col1.AddChild(btnSaveBaked);
+            _horizontalContainer.AddChild(col1);
+
+            _horizontalContainer.AddChild(new UIPanel { Size = new Vector2(2, colHeight), BackgroundColor = Color.Gray * 0.3f, BorderColor = Color.Transparent });
+
+            // ==========================================
+            // COLUMN 2: GEOLOGY MODELLING OPTIONS
+            // ==========================================
+            var col2 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.2f, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(colWidth, colHeight), Padding = 8f, Spacing = 6f };
+            col2.AddChild(new UILabel { Text = "Geology Options", TextColor = Color.Yellow });
+
+            var btnProj = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Slope: SPLINE", BackgroundColor = Color.DarkSlateGray };
+            btnProj.OnClick = () => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    string cur = poly.GetProperty("ProjectionMode", "spline");
+                    string next = cur == "spline" ? "linear" : (cur == "linear" ? "concentric" : "spline");
+                    poly.Properties["ProjectionMode"] = new MapProperty(PropertyType.String, next);
+                    btnProj.Text = $"Slope: {next.ToUpper()}";
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            col2.AddChild(btnProj);
+
+            var btnEase = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Curve: LINEAR", BackgroundColor = Color.DarkSlateGray };
+            btnEase.OnClick = () => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    string cur = poly.GetProperty("EasingMode", "linear");
+                    string[] curves = { "linear", "easeIn", "easeOut", "easeInOut", "zoned" };
+                    int idx = (Array.IndexOf(curves, cur) + 1) % curves.Length;
+                    poly.Properties["EasingMode"] = new MapProperty(PropertyType.String, curves[idx]);
+                    btnEase.Text = $"Curve: {curves[idx].ToUpper()}";
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            col2.AddChild(btnEase);
+
+            // SNAP CONTROL (Issue B2)
+            var btnSnapToggle = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Snapping: ENABLED", BackgroundColor = Color.DarkGoldenrod };
+            btnSnapToggle.OnClick = () => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    bool curSnap = poly.GetProperty("Snap", "True") == "True";
+                    string nextVal = (!curSnap).ToString();
+                    poly.Properties["Snap"] = new MapProperty(PropertyType.Boolean, nextVal);
+                    btnSnapToggle.Text = !curSnap ? "Snapping: ENABLED" : "Snapping: DISABLED";
+
+                    // Re-bake heightmap automatically to show smooth slope transition on canvas
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            col2.AddChild(btnSnapToggle);
+
+            _horizontalContainer.AddChild(col2);
+
+            _horizontalContainer.AddChild(new UIPanel { Size = new Vector2(2, colHeight), BackgroundColor = Color.Gray * 0.3f, BorderColor = Color.Transparent });
+
+            // ==========================================
+            // COLUMN 3: ELEVATION STAGING SLIDERS
+            // ==========================================
+            var col3 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.2f, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(colWidth, colHeight), Padding = 8f, Spacing = 6f };
+            col3.AddChild(new UILabel { Text = "Height Variables", TextColor = Color.Coral });
+
+            // Base height
+            var hBaseRow = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 2f, PanelBackground = Color.Transparent };
+            _lblBaseHeight = new UILabel { Text = "Base Height: 160", Size = new Vector2(colWidth - 16, 14) };
+            var sldBaseHeight = new UISlider { Size = new Vector2(colWidth - 16, 14), Min = 0f, Max = 255f, Value = 160f };
+            sldBaseHeight.OnValueChanged = (val) => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    poly.Properties["BaseHeight"] = new MapProperty(PropertyType.Float, Math.Round(val).ToString());
+                    _lblBaseHeight.Text = $"Base Height: {Math.Round(val)}";
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            hBaseRow.AddChild(_lblBaseHeight); hBaseRow.AddChild(sldBaseHeight); col3.AddChild(hBaseRow);
+
+            // Start Height Offset
+            var hStartRow = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 2f, PanelBackground = Color.Transparent };
+            _lblStartOffset = new UILabel { Text = "Start Offset: 0", Size = new Vector2(colWidth - 16, 14) };
+            var sldStart = new UISlider { Size = new Vector2(colWidth - 16, 14), Min = -128f, Max = 128f, Value = 0f };
+            sldStart.OnValueChanged = (val) => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    poly.Properties["StartHeightOffset"] = new MapProperty(PropertyType.Float, Math.Round(val).ToString());
+                    _lblStartOffset.Text = $"Start Offset: {Math.Round(val)}";
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            hStartRow.AddChild(_lblStartOffset); hStartRow.AddChild(sldStart); col3.AddChild(hStartRow);
+
+            // End Height Offset
+            var hEndRow = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 2f, PanelBackground = Color.Transparent };
+            _lblEndOffset = new UILabel { Text = "End Offset: -60", Size = new Vector2(colWidth - 16, 14) };
+            var sldEnd = new UISlider { Size = new Vector2(colWidth - 16, 14), Min = -128f, Max = 128f, Value = -60f };
+            sldEnd.OnValueChanged = (val) => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    poly.Properties["EndHeightOffset"] = new MapProperty(PropertyType.Float, Math.Round(val).ToString());
+                    _lblEndOffset.Text = $"End Offset: {Math.Round(val)}";
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            hEndRow.AddChild(_lblEndOffset); hEndRow.AddChild(sldEnd); col3.AddChild(hEndRow);
+
+            _horizontalContainer.AddChild(col3);
+
+            _horizontalContainer.AddChild(new UIPanel { Size = new Vector2(2, colHeight), BackgroundColor = Color.Gray * 0.3f, BorderColor = Color.Transparent });
+
+            // ==========================================
+            // COLUMN 4: RIVER SHAPES & FLUID OPTICS
+            // ==========================================
+            var col4 = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.2f, BorderColor = Color.Transparent, AutoSize = false, Size = new Vector2(colWidth, colHeight), Padding = 8f, Spacing = 6f };
+            col4.AddChild(new UILabel { Text = "Flow Parameters", TextColor = Color.LimeGreen });
+
+            // Channel Width
+            var sldWidthRow = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 2f, PanelBackground = Color.Transparent };
+            _lblRiverWidth = new UILabel { Text = "Channel Width: 8", Size = new Vector2(colWidth - 16, 14) };
+            var sldWidth = new UISlider { Size = new Vector2(colWidth - 16, 14), Min = 2f, Max = 32f, Value = 8f };
+            sldWidth.OnValueChanged = (val) => {
+                var sel = _editorState.Selection.SelectedMapObject;
+                if (sel is ShapeObject poly)
+                {
+                    poly.Properties["RiverWidth"] = new MapProperty(PropertyType.Float, Math.Round(val).ToString());
+                    _lblRiverWidth.Text = $"Channel Width: {Math.Round(val)}";
+                    MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer);
+                }
+            };
+            sldWidthRow.AddChild(_lblRiverWidth); sldWidthRow.AddChild(sldWidth); col4.AddChild(sldWidthRow);
+
+            // Global Water Level
+            var sldWaterLevelRow = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 2f, PanelBackground = Color.Transparent };
+            _lblWaterLevel = new UILabel { Text = "Global Level: 130", Size = new Vector2(colWidth - 16, 14) };
+            var sldWaterLevel = new UISlider { Size = new Vector2(colWidth - 16, 14), Min = 0f, Max = 255f, Value = 130f };
+            sldWaterLevel.OnValueChanged = (val) => {
+                _editorState.WaterSystem.WaterLevel = val;
+                _lblWaterLevel.Text = $"Global Level: {Math.Round(val)}";
+            };
+            sldWaterLevelRow.AddChild(_lblWaterLevel); sldWaterLevelRow.AddChild(sldWaterLevel); col4.AddChild(sldWaterLevelRow);
+
+            // Seepage / Decay
+            var sldSeepageRow = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 2f, PanelBackground = Color.Transparent };
+            _lblSeepage = new UILabel { Text = "Seepage Rate: 0.0", Size = new Vector2(colWidth - 16, 14) };
+            var sldSeepage = new UISlider { Size = new Vector2(colWidth - 16, 14), Min = 0f, Max = 10f, Value = 0f };
+            sldSeepage.OnValueChanged = (val) => {
+                _editorState.WaterSystem.SeepageDecayRate = val;
+                _lblSeepage.Text = $"Seepage Rate: {val:F1}";
+            };
+            sldSeepageRow.AddChild(_lblSeepage); sldSeepageRow.AddChild(sldSeepage); col4.AddChild(sldSeepageRow);
+
+            _horizontalContainer.AddChild(col4);
+
+            _rootPanel.AddChild(_horizontalContainer);
+        }
+
+        public override void Update(EditorInputState input, EventBus bus)
+        {
+            if (Area.Contains(input.MouseWindowPosition))
+            {
+                _editorUI.CheckFocusClick(_rootPanel, input);
+                _rootPanel.Update(input, bus);
+            }
+        }
+
+        public override void Draw(SpriteBatch sb) => _rootPanel.Draw(sb, (IUIContext)_editorUI, _theme);
+        public override string GetDebugInfo() => "";
+    }
     public class AutoTilePanel : BasePanel
     {
         private readonly UIPanel _root;

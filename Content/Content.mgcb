@@ -61,6 +61,12 @@
 /processorParam:DebugMode=Auto
 /build:Combine.fx
 
+#begin DebugChannel.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:DebugChannel.fx
+
 #begin Emotes.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -3347,6 +3353,12 @@
 /processorParam:DebugMode=Auto
 /build:SnowEffect.fx
 
+#begin StillWater.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:StillWater.fx
+
 #begin Test.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -3358,12 +3370,6 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:VolumeDepth.fx
-
-#begin WaterFlood.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:WaterFlood.fx
 
 #begin Wild.png
 /importer:TextureImporter

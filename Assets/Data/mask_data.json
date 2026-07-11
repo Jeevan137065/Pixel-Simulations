@@ -51,28 +51,48 @@
   "Elevations": [
     {
       "Value": 0,
+      "Name": "Absolute Bottom",
+      "Category": "None"
+    },
+    {
+      "Value": 15,
       "Name": "Sea Floor",
       "Category": "Submerged"
     },
     {
-      "Value": 80,
-      "Name": "Beach",
-      "Category": "Surface"
+      "Value": 120,
+      "Name": "Shoreline",
+      "Category": "Submerged"
     },
     {
       "Value": 128,
-      "Name": "Ground Level",
+      "Name": "Water Level",
+      "Category": "Surface"
+    },
+    {
+      "Value": 160,
+      "Name": "Ground I",
       "Category": "Surface"
     },
     {
       "Value": 192,
-      "Name": "Hills",
+      "Name": "Ground II",
       "Category": "Elevation"
     },
     {
-      "Value": 255,
-      "Name": "Mountain Peak",
+      "Value": 200,
+      "Name": "Ground III",
       "Category": "Elevation"
+    },
+    {
+      "Value": 240,
+      "Name": "Absolute Peak",
+      "Category": "Sky"
+    },
+    {
+      "Value": 255,
+      "Name": "New Entry",
+      "Category": "None"
     }
   ]
 }
