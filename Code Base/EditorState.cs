@@ -25,6 +25,51 @@ namespace Pixel_Simulations.Editor
         public bool IsLinkingMode { get; set; } = false; // Add this!
         public UIElement FocusedElement { get; set; }
     }
+    public class EditorTaskProgress
+    {
+        public bool IsActive { get; set; } = false;
+        public string Title { get; set; } = "";
+        public string Status { get; set; } = "";
+        public float Progress { get; set; } = 0f; // 0.0 to 1.0
+        public float FadeTimer { get; set; } = 0f;
+
+        public void Start(string title, string initialStatus)
+        {
+            IsActive = true;
+            Title = title;
+            Status = initialStatus;
+            Progress = 0.05f;
+            FadeTimer = 0f;
+        }
+
+        public void SetProgress(float value, string status)
+        {
+            Progress = MathHelper.Clamp(value, 0f, 1f);
+            Status = status;
+        }
+
+        public void Complete(string completionStatus = "Completed Successfully!")
+        {
+            Progress = 1.0f;
+            Status = completionStatus;
+            FadeTimer = 1.2f; // Keep visible for 1.2s before fading
+        }
+
+        public void Update(float dt)
+        {
+            if (FadeTimer > 0f)
+            {
+                FadeTimer -= dt;
+                if (FadeTimer <= 0f)
+                {
+                    IsActive = false;
+                    Progress = 0f;
+                    Title = "";
+                    Status = "";
+                }
+            }
+        }
+    }
     public class ToolState
     {
         public ITool ActiveTool { get; set; }
@@ -128,6 +173,7 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public TilesetState TilesetPanel { get; } = new TilesetState();
         [JsonIgnore] public List<TileSet> ActiveTileSets { get; } = new List<TileSet>();
         public AutoTileManager AutoTileManager { get; } = new AutoTileManager();
+        public EditorTaskProgress TaskProgress { get; } = new EditorTaskProgress();
 
         // --- NEW ASSET CORE ---
         [JsonIgnore] public TilesetManager TilesetManager { get; }
@@ -180,7 +226,8 @@ namespace Pixel_Simulations.Editor
             AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Farm", AtlasType.Tile);
             AssetLibrary.LoadAtlas("Trees", AtlasType.Object);
-            AssetLibrary.LoadAtlas("Building", AtlasType.Object);
+            AssetLibrary.LoadAtlas("Building", AtlasType.Object); 
+            AssetLibrary.LoadAtlas("Prototype_Building", AtlasType.Object);
             AssetLibrary.LoadAtlas("Trees_b", AtlasType.Object);
             AssetLibrary.LoadAtlas("Trees_l", AtlasType.Object);
             AssetLibrary.LoadAtlas("Trees_t", AtlasType.Object);

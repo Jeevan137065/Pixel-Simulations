@@ -1,9 +1,109 @@
 {
   "Layers": [
     {
+      "$type": "Object",
+      "Name": "Buildings",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Objects": [
+        {
+          "Type": 0,
+          "PrefabID": "WaterHouse",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "791afbdc",
+          "Name": "WaterHouse_1",
+          "Position": {
+            "X": 588.83344,
+            "Y": -4738.578
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Building"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Corner A shop",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "77e841e7",
+          "Name": "Corner A shop_1",
+          "Position": {
+            "X": 128.0,
+            "Y": -288.0
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Building"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Public_Bath",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "738c2585",
+          "Name": "Public_Bath_1",
+          "Position": {
+            "X": 128.0,
+            "Y": 240.0
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Building"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bait Shop",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "6a98ea9d",
+          "Name": "Bait Shop_1",
+          "Position": {
+            "X": 400.0,
+            "Y": 256.0
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Building"
+            }
+          },
+          "Links": []
+        }
+      ]
+    },
+    {
       "$type": "Tile",
       "Name": "WoodPaths",
-      "IsVisible": false,
+      "IsVisible": true,
       "IsLocked": false,
       "Chunks": [
         {
@@ -2517,7 +2617,7 @@
     {
       "$type": "Tile",
       "Name": "Pavement",
-      "IsVisible": false,
+      "IsVisible": true,
       "IsLocked": false,
       "Chunks": [
         {
@@ -2710,8 +2810,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
+                  "TileID": 463,
+                  "Rotation": 0
                 },
                 null,
                 null,
@@ -2732,8 +2832,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
+                  "TileID": 463,
+                  "Rotation": 0
                 },
                 null,
                 null,
@@ -2754,8 +2854,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
+                  "TileID": 464,
+                  "Rotation": 0
                 },
                 null,
                 null,
@@ -2774,11 +2874,7 @@
                 }
               ],
               [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
+                null,
                 null,
                 null,
                 null,
@@ -2796,11 +2892,7 @@
                 }
               ],
               [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
+                null,
                 null,
                 null,
                 null,
@@ -2818,11 +2910,7 @@
                 }
               ],
               [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
+                null,
                 null,
                 null,
                 null,
@@ -2840,11 +2928,7 @@
                 }
               ],
               [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
+                null,
                 null,
                 null,
                 null,
@@ -2876,10 +2960,118 @@
             },
             "Tiles": [
               [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 {
                   "TilesetName": "BaseWorld",
                   "TileID": 187,
-                  "Rotation": 2
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 196,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 187,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 196,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 187,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 196,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 187,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 196,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 187,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 196,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 187,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 196,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 463,
+                  "Rotation": 0
                 },
                 null,
                 null,
@@ -2900,140 +3092,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
+                  "TileID": 463,
                   "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
-                },
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 187,
-                  "Rotation": 2
                 },
                 null,
                 null,
@@ -15577,7 +15637,7 @@
                 },
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 431,
                   "Rotation": 0
                 }
               ],
@@ -15590,12 +15650,12 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 431,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 464,
                   "Rotation": 0
                 }
               ],
@@ -15608,14 +15668,10 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 463,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
+                null
               ],
               [
                 null,
@@ -15626,14 +15682,10 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 463,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
+                null
               ],
               [
                 null,
@@ -15644,14 +15696,10 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 463,
                   "Rotation": 0
                 },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
+                null
               ]
             ]
           }
@@ -15676,12 +15724,86 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 463,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 463,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 463,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 463,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 431,
+                  "Rotation": 1
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 432,
+                  "Rotation": 1
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 430,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 430,
                   "Rotation": 0
                 }
               ],
@@ -15694,12 +15816,12 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 430,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 430,
                   "Rotation": 0
                 }
               ],
@@ -15712,102 +15834,12 @@
                 null,
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 430,
                   "Rotation": 0
                 },
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                }
-              ],
-              [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
-                  "Rotation": 0
-                },
-                {
-                  "TilesetName": "BaseWorld",
-                  "TileID": 196,
+                  "TileID": 430,
                   "Rotation": 0
                 }
               ]
@@ -58660,6 +58692,7 @@
             "Y": 391.73462
           },
           "DebugColor": "0,64,64,127",
+          "SpineWaypoints": [],
           "ID": "e610769b",
           "Name": "WaterBody_0de3",
           "Position": {
@@ -58801,7 +58834,7 @@
       "$type": "Tile",
       "Name": "Road",
       "IsVisible": true,
-      "IsLocked": true,
+      "IsLocked": false,
       "Chunks": [
         {
           "Key": {
@@ -63435,8 +63468,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63473,8 +63506,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63511,8 +63544,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63549,8 +63582,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63601,8 +63634,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63639,8 +63672,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63677,8 +63710,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63715,8 +63748,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -63753,8 +63786,8 @@
               [
                 {
                   "TilesetName": "BaseWorld",
-                  "TileID": 203,
-                  "Rotation": 0
+                  "TileID": 631,
+                  "Rotation": 3
                 },
                 {
                   "TilesetName": "BaseWorld",
@@ -110071,6 +110104,270 @@
                 null,
                 null,
                 null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": -1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": -1
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 599,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 632,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 2,
+            "Y": -1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 2,
+              "Y": -1
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 566,
+                  "Rotation": 3
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 665,
+                  "Rotation": 3
+                }
               ],
               [
                 null,

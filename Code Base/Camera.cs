@@ -210,9 +210,9 @@ namespace Pixel_Simulations
         public float Zoom { get; set; }
         public Matrix Transform { get; private set; }
 
-        private const float MIN_ZOOM = 0.5f;
+        private const float MIN_ZOOM = 0.125f;
         private const float MAX_ZOOM = 4.0f;
-        private const float STEP_ZOOM = 0.5f;
+        private const float STEP_ZOOM = 0.25f;
 
         public EditorCamera()
         {

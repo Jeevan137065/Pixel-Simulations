@@ -11,24 +11,62 @@ namespace Pixel_Simulations
         // For this test, we will use simple AABB (Axis-Aligned Bounding Box) collision for performance
         private List<RectangleF> _collisionBounds = new List<RectangleF>();
 
-        public void LoadMapData(Map map)
+        public void LoadMapData(Map map, PrefabManager prefabManager = null)
         {
+
             if (map == null) return;
             _collisionBounds.Clear();
 
-            // Grab all control layers
+            // 1. Control Layer Shapes
             foreach (var layer in map.Layers.OfType<ControlLayer>())
             {
-                // Cache Polygons (Shapes)
-                    foreach (var shape in layer.Shapes.Where(s => s.Tags.Contains(2)))
+                foreach (var shape in layer.Shapes.Where(s => s.Tags.Contains(SystemTags.SOLID)))
                 {
-
                     if (shape != null) _collisionBounds.Add(shape.Shape.GetBounds());
                 }
+                foreach (var rect in layer.Rectangles.Where(r => r.Tags.Contains(SystemTags.SOLID)))
+                {
+                    _collisionBounds.Add(new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y));
+                }
+            }
 
-                // Cache Rectangles
-                //foreach (var rect in layer.Rectangles)
-                //    _collisionBounds.Add(new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y));
+            // 2. Automatic Building & Prop Solid Collision
+            if (prefabManager != null)
+            {
+                foreach (var objLayer in map.Layers.OfType<ObjectLayer>().Where(l => l.Type == LayerType.Object))
+                {
+                    foreach (var prop in objLayer.Objects.OfType<PropObject>())
+                    {
+                        if (prop.Tags.Contains(SystemTags.SOLID))
+                        {
+                            var prefab = prefabManager.GetPrefab(prop.PrefabID);
+                            if (prefab != null)
+                            {
+                                string type = prefab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
+
+                                if (type == "Building")
+                                {
+                                    // Footprint collision: span the width, block the lower 32px, leave entrance gap
+                                    float bw = prefab.CanvasSize.X * prop.Scale.X;
+                                    float bh = 32f * prop.Scale.Y;
+                                    float bx = prop.Position.X - prefab.Pivot.X * prop.Scale.X;
+                                    float by = prop.Position.Y - bh;
+
+                                    _collisionBounds.Add(new RectangleF(bx, by, bw, bh));
+                                }
+                                else
+                                {
+                                    // Standard prop box
+                                    float pw = prefab.CanvasSize.X * 0.7f * prop.Scale.X;
+                                    float ph = 16f * prop.Scale.Y;
+                                    float px = prop.Position.X - (pw / 2f);
+                                    float py = prop.Position.Y - ph;
+                                    _collisionBounds.Add(new RectangleF(px, py, pw, ph));
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

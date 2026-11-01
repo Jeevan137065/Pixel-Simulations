@@ -17,7 +17,7 @@ namespace Pixel_Simulations
     {
         // Core Properties
         public string Name { get; protected set; }
-        public Vector2 Position { get; protected set; }
+        public Vector2 Position { get;  set; }
         public Vector2 Velocity { get; protected set; }
         public Direction FacingDirection { get; protected set; }
 

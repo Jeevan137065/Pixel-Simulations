@@ -487,6 +487,23 @@ namespace Pixel_Simulations.UI
             return true; // Consume mouse
         }
 
+        private IEnumerable<ObjectPrefab> GetFilteredPrefabs()
+        {
+            var all = _es.PrefabManager.Prefabs.Values.Where(p => p.CanvasSize.X > 0 && p.CanvasSize.Y > 0);
+            string cat = _parentPanel.ActiveObjectCategory;
+
+            if (cat == "All") return all;
+
+            return all.Where(p =>
+            {
+                string type = p.Properties.TryGetValue("Type", out var tProp) ? tProp.Value : "Prop";
+                if (cat == "Buildings") return type == "Building";
+                if (cat == "Trees") return type == "Tree";
+                if (cat == "Props") return type != "Building" && type != "Tree";
+                return true;
+            });
+        }
+
         private void HandleTileClick(EditorInputState input, EventBus bus)
         {
             var activeTs = _es.ActiveTileSets.FirstOrDefault(ts => ts.Name == _es.TilesetPanel.ActiveTilesetName);
@@ -513,11 +530,8 @@ namespace Pixel_Simulations.UI
             int x = AbsoluteBounds.X + spacing;
             int y = AbsoluteBounds.Y + spacing - (int)ScrollOffset.Y;
 
-            foreach (var prefab in _es.PrefabManager.Prefabs.Values)
+            foreach (var prefab in GetFilteredPrefabs())
             {
-                // SKIP DATA PREFABS (Templates)
-                if (prefab.CanvasSize.X == 0 || prefab.CanvasSize.Y == 0) continue;
-
                 Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
                 if (slotRect.Contains(input.MouseWindowPosition))
                 {
@@ -545,7 +559,7 @@ namespace Pixel_Simulations.UI
             }
 
             if (_parentPanel._activeTab == Tab.Tiles) DrawTiles(sb);
-            else DrawObjects(sb);
+            else DrawObjects(sb,theme);
 
             if (ClipToBounds)
             {
@@ -586,47 +600,54 @@ namespace Pixel_Simulations.UI
             }
         }
 
-        private void DrawObjects(SpriteBatch sb)
+        private void DrawObjects(SpriteBatch sb, UITheme theme)
         {
             int slotSize = 64, spacing = 6;
             int x = AbsoluteBounds.X + spacing;
             int y = AbsoluteBounds.Y + spacing - (int)ScrollOffset.Y;
 
-            foreach (var prefab in _es.PrefabManager.Prefabs.Values)
+            foreach (var prefab in GetFilteredPrefabs())
             {
-                // SKIP DATA PREFABS (Templates)
-                if (prefab.CanvasSize.X == 0 || prefab.CanvasSize.Y == 0) continue;
-
                 Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
                 bool isSelected = _es.Selection.ActivePrefab?.ID == prefab.ID;
 
                 if (slotRect.Bottom > AbsoluteBounds.Top && slotRect.Top < AbsoluteBounds.Bottom)
                 {
-                    sb.FillRectangle(slotRect, Color.Black * 0.3f);
-                    sb.DrawRectangle(slotRect, isSelected ? Color.Yellow : Color.White * 0.2f, 1);
+                    sb.FillRectangle(slotRect, Color.Black * 0.4f);
+                    sb.DrawRectangle(slotRect, isSelected ? Color.Yellow : Color.White * 0.2f, isSelected ? 2 : 1);
 
-                    // --- FIX A: Draw a valid layer if Base is an empty placeholder ---
-                    Texture2D tex = null;
-                    Rectangle srcRect = prefab.SourceRect;
+                    int cw = Math.Max(16, prefab.CanvasSize.X);
+                    int ch = Math.Max(16, prefab.CanvasSize.Y);
+                    float scale = (slotSize - 8f) / Math.Max(cw, ch);
 
-                    if ((prefab.SourceRect.Width <= 16 || prefab.AtlasName == "Base") && prefab.AlternateStates.Count > 0)
+                    Vector2 slotCenter = slotRect.Center.ToVector2();
+                    Vector2 previewTopLeft = slotCenter - new Vector2(cw * scale / 2f, ch * scale / 2f);
+
+                    // Sort layers to render composite thumbnail
+                    var layers = prefab.AlternateStates.Keys.ToList();
+                    layers.Sort((a, b) => prefab.AlternateStates[a].ZIndex.CompareTo(prefab.AlternateStates[b].ZIndex));
+
+                    // Hide interior layers in palette thumbnail
+                    var drawLayers = layers.Where(k => !k.StartsWith("Interior")).ToList();
+                    if (drawLayers.Count == 0) drawLayers = layers;
+
+                    foreach (var key in drawLayers)
                     {
-                        var firstState = prefab.AlternateStates.Values.First();
-                        tex = _es.AssetLibrary.GetAtlas(firstState.AtlasName);
-                        srcRect = firstState.SourceRect;
+                        var sLayer = prefab.AlternateStates[key];
+                        var tex = _es.AssetLibrary.GetAtlas(sLayer.AtlasName);
+                        if (tex != null)
+                        {
+                            Vector2 drawPos = previewTopLeft + sLayer.Offset.ToVector2() * scale;
+                            Rectangle dest = new Rectangle((int)drawPos.X, (int)drawPos.Y, (int)(sLayer.SourceRect.Width * scale), (int)(sLayer.SourceRect.Height * scale));
+                            sb.Draw(tex, dest, sLayer.SourceRect, Color.White);
+                        }
                     }
-                    else
-                    {
-                        tex = _es.AssetLibrary.GetAtlas(prefab.AtlasName);
-                    }
 
-                    if (tex != null)
+                    // Name label
+                    if (theme?.Font != null)
                     {
-                        float scale = (slotSize - 10f) / Math.Max(srcRect.Width, srcRect.Height);
-                        Vector2 pos = new Vector2(
-                            slotRect.Center.X - (srcRect.Width * scale) / 2,
-                            slotRect.Center.Y - (srcRect.Height * scale) / 2);
-                        sb.Draw(tex, pos, srcRect, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                        string label = prefab.ID.Length > 8 ? prefab.ID.Substring(0, 8) : prefab.ID;
+                        sb.DrawString(theme.Font, label, new Vector2(slotRect.X + 2, slotRect.Bottom - 12), Color.LightGray * 0.8f, 0f, Vector2.Zero, 0.7f, SpriteEffects.None, 0f);
                     }
                 }
 

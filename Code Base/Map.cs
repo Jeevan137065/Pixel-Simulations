@@ -448,12 +448,12 @@ namespace Pixel_Simulations.Data
             {
                 if (version >= 2)
                 {
-                    obj.Links.Add(new ObjectLink
-                    {
-                        SourcePort = reader.ReadString(),
-                        TargetID = reader.ReadString(),
-                        TargetPort = reader.ReadString()
-                    });
+                    //obj.Links.Add(new ObjectLink
+                    //{
+                    //    SourcePort = reader.ReadString(),
+                    //    TargetID = reader.ReadString(),
+                    //    TargetPort = reader.ReadString()
+                    //});
                 }
                 else
                 {

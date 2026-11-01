@@ -134,12 +134,48 @@ namespace Pixel_Simulations.UI
                     _state.Calendar.AdvanceDay(); // This also naturally advances the season if > 28
                     UpdateTabContent();
                 };
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UILabel { Text = "Map Navigation:", TextColor = Color.Magenta });
 
+                var teleportRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+
+                var warpBtn = new UIButton { Size = new Vector2(180, 30), Text = "Warp to Random Spawn", BackgroundColor = Color.DarkMagenta };
+                warpBtn.OnClick = () => {
+                    // Retrieve all map entities tagged with ID '20' (the Spawners)
+                    var spawnEntities = _state._entityManager.AllEntities
+                        .Where(e => e.BaseData.Tags.Contains(20) || e.BaseData is PointObject pt && pt.Label == "Spawn Point")
+                        .ToList();
+
+                    if (spawnEntities.Count > 0)
+                    {
+                        // Pick a random spawn point
+                        Random rand = new Random();
+                        var selectedSpawn = spawnEntities[rand.Next(spawnEntities.Count)];
+                        Vector2 targetPos = selectedSpawn.Position;
+
+                        // Teleport the player
+                        _state.Player.Position = targetPos;
+                        _state.Player.TargetWalkPos = null;
+                        _state.Player.PendingInteraction = null;
+
+                        // Instantly snap the camera to avoid sluggish tracking pans across the entire map
+                        _state.GameCamera.SnapTo(targetPos, _state.GameCamera.Zoom);
+
+                        System.Diagnostics.Debug.WriteLine($"[Warp] Teleported player to spawn point: '{selectedSpawn.BaseData.Name}' at {targetPos.X}, {targetPos.Y}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("[Warp] Warning: No active spawn points found on the current map.");
+                    }
+                };
+
+                teleportRow.AddChild(warpBtn);
                 calRow.AddChild(prevDayBtn);
                 calRow.AddChild(seasonBtn);
                 calRow.AddChild(dayBtn);
                 calRow.AddChild(nextDayBtn);
                 _contentArea.AddChild(calRow);
+                _contentArea.AddChild(teleportRow);
 
                 // --- 2. TIME SCRUBBER ---
                 var timeRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 15f, PanelBackground = Color.Transparent, Padding = 10f };
@@ -297,7 +333,7 @@ namespace Pixel_Simulations.UI
             sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
             // Draw HUD (Always visible)
-            //DrawDebugInfo(sb);
+            DrawDebugInfo(sb);
             //sb.DrawString(_theme.Font, $"Time: {_state.TimeSystem.TimeOfDay:F1} | Weather: {_state.Weather.CurrentWeather}", new Vector2(10, 10), Color.White);
             //sb.DrawString(_theme.Font, "Press ESC to Pause", new Vector2(10, 35), Color.Yellow);
 

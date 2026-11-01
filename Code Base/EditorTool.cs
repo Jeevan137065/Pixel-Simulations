@@ -218,7 +218,7 @@ namespace Pixel_Simulations.Editor
             if (input.IsNewLeftClick)
             {
                 Vector2 pos = toolInput.WorldPosition;
-
+                string type = _activePrefab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
                 // Handle Snapping if CapsLock is on
                 if (input.CurrentKeyboard.CapsLock)
                 {
@@ -245,7 +245,10 @@ namespace Pixel_Simulations.Editor
                     {
                         instance.Properties[prop.Key] = new MapProperty(prop.Value.Type, prop.Value.Value);
                     }
-
+                    if (type == "Building" && !instance.Tags.Contains(SystemTags.SOLID))
+                    {
+                        instance.Tags.Add(SystemTags.SOLID);
+                    }
                     eventBus.Publish(new AddObjectCommand(objLayer, instance));
                     editorState.Selection.SelectedMapObject = instance;
                 }
@@ -276,7 +279,9 @@ namespace Pixel_Simulations.Editor
             if (_activePrefab == null || _es == null) return;
 
             Vector2 pos = input.MouseWorldPosition;
-            if (input.CurrentKeyboard.CapsLock)
+            string type = _activePrefab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
+
+            if (input.CurrentKeyboard.CapsLock || type == "Building")
             {
                 pos = GridHelper.SnapToSubCell(pos, _activePrefab.Pivot);
             }
@@ -284,21 +289,31 @@ namespace Pixel_Simulations.Editor
             Vector2 origin = _activePrefab.Pivot;
             Vector2 topLeft = pos - origin;
 
-            // Collect and sort layers by Z-Index so the placement ghost composites correctly
             var layersToDraw = _activePrefab.AlternateStates.Keys.ToList();
-            layersToDraw.Sort((a, b) =>
-                _activePrefab.AlternateStates[a].ZIndex.CompareTo(_activePrefab.AlternateStates[b].ZIndex)
-            );
+            layersToDraw.Sort((a, b) => _activePrefab.AlternateStates[a].ZIndex.CompareTo(_activePrefab.AlternateStates[b].ZIndex));
 
             foreach (var key in layersToDraw)
             {
+                if (key.StartsWith("Interior")) continue; // Preview exterior shell during placement
+
                 var sLayer = _activePrefab.AlternateStates[key];
+                if (string.Equals(sLayer.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
+       sLayer.SourceRect == new Rectangle(0, 0, 16, 16) &&
+       sLayer.Offset == Point.Zero)
+                {
+                    continue;
+                }
                 var tex = _es.AssetLibrary.GetAtlas(sLayer.AtlasName);
                 if (tex != null)
                 {
-                    // Composite the layered preview at 50% opacity
-                    sb.Draw(tex, topLeft + sLayer.Offset.ToVector2(), sLayer.SourceRect, Color.White * 0.5f);
+                    sb.Draw(tex, topLeft + sLayer.Offset.ToVector2(), sLayer.SourceRect, Color.White * 0.6f);
                 }
+            }
+
+            if (type == "Building")
+            {
+                // Outline canvas footprint
+                sb.DrawRectangle(new RectangleF(topLeft.X, topLeft.Y, _activePrefab.CanvasSize.X, _activePrefab.CanvasSize.Y), Color.Cyan, 1f / input.Zoom);
             }
         }
         public string GetShortcutHints() => "";

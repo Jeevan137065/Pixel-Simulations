@@ -77,6 +77,7 @@ namespace Pixel_Simulations.Editor
             _editorState.camera.Update(input, _editorState._layoutmanager.ViewportPanel, true);
 
             UpdateUI(input, _eventBus);
+            _mapController.Update(gameTime);
             // --- 4. Process Viewport/Tool Interaction ---
             if (_uiManager.AutoTilePanel.IsOpen)
             {
@@ -212,6 +213,7 @@ namespace Pixel_Simulations.Editor
             _uiManager.TilesetPanel.Update(input, bus);
             _uiManager.LayerPanel.Update(input, bus);
 
+            
             // Toggle updating based on active layer
             var activeLayer = _editorState.Layers.GetActiveLayer();
             var activeTool = _editorState.ToolState.ActiveTool;
@@ -546,12 +548,21 @@ namespace Pixel_Simulations.Editor
     public class MapController
     {
         private readonly EditorState _editorState;
-        public string savedPath;
+        private int _exportPhase = -1;
+        private int _capturePhase = -1;
+
+        private string _exportMapName;
+        private string _exportJsonPath;
+        private string _exportGameMapPath;
+        private string _exportMaskPath;
+        private string _exportWaterPath;
+        private MaskLayer _exportBakedMask;
+
+        private string _capturePath;
         public MapController(EventBus eventBus, EditorState editorState)
         {
             _editorState = editorState;
             eventBus.Subscribe<MenuActionCommand>(HandleMenuAction);
-            savedPath = PathHelper.GetSolutionRoot();
         }
 
         private void HandleMenuAction(MenuActionCommand cmd)
@@ -559,63 +570,120 @@ namespace Pixel_Simulations.Editor
             string assetsPath = PathHelper.GetAssetsPath();
             if (string.IsNullOrEmpty(assetsPath)) return;
 
-            // Use the string typed in the Top Panel! (Default to level1 if empty)
             string mapName = string.IsNullOrWhiteSpace(_editorState.CurrentMapFile) ? "level1" : _editorState.CurrentMapFile;
-
-            // Ensure it doesn't end with .json twice
             mapName = mapName.Replace(".json", "").Replace(".map", "");
-
-            string jsonPath = Path.Combine(assetsPath, "Maps", $"{mapName}.json");
-            string gameMapPath = Path.Combine(assetsPath, "Maps", $"{mapName}.map");
-            string maskPath = Path.Combine(assetsPath, "Maps", $"{mapName}_mask.png"); // NEW
 
             switch (cmd.ActionName)
             {
                 case "Save":
                     var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                    string maskPath = Path.Combine(assetsPath, "Maps", $"{mapName}_mask.png");
                     if (maskToSave != null) MapSerializer.SaveMaskLayer(maskToSave, maskPath, _editorState._graphics, _editorState);
-                    MapSerializer.Save(_editorState.ActiveMap, jsonPath);
-                    System.Diagnostics.Debug.WriteLine($"Working map SAVED to: {jsonPath}");
+                    MapSerializer.Save(_editorState.ActiveMap, Path.Combine(assetsPath, "Maps", $"{mapName}.json"));
                     break;
+
                 case "Load":
+                    string jsonPath = Path.Combine(assetsPath, "Maps", $"{mapName}.json");
                     var loadedMap = MapSerializer.Load(jsonPath);
                     if (loadedMap != null)
                     {
                         LoadNewMap(loadedMap, jsonPath);
-                        // Load Mask Layer Data!
                         var maskToLoad = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                        if (maskToLoad != null) MapSerializer.LoadMaskLayer(maskToLoad, maskPath, _editorState._graphics);
+                        if (maskToLoad != null) MapSerializer.LoadMaskLayer(maskToLoad, Path.Combine(assetsPath, "Maps", $"{mapName}_mask.png"), _editorState._graphics);
                     }
-                    System.Diagnostics.Debug.WriteLine($"Map Loaded for game to: {gameMapPath}");
                     break;
+
                 case "Export":
-                    // We usually want to make sure the mask is saved during export too
-                    var exportMask = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-
-                    // 1. CARVE WATERBED INTO THE MASK ELEVATION (B Channel of Mask)
-                    var bakedMaskL = MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, exportMask);
-
-                    // 2. BAKE & EXPORT SURFACE WATER DATA (R: Flow, G: Foam, B: Swells to _water.png)
-                    string waterPath = gameMapPath.Replace(".map", "_water.png");
-                    using (var bakedWaterTex = MapExporter.BakeWaterSurfaceData(_editorState._graphics, _editorState.ActiveMap, exportMask))
-                    {
-                        using (var stream = File.OpenWrite(waterPath))
-                        {
-                            bakedWaterTex.SaveAsPng(stream, bakedWaterTex.Width, bakedWaterTex.Height);
-                        }
-                        System.Diagnostics.Debug.WriteLine($"[Export] Baked and exported Water Surface Map to: {waterPath}");
-                    }
-
-                    // 2. BAKE & EXPORT TERRAIN MASK PNG SECOND (Saves the compiled waterbed carvings!)
-                    if (exportMask != null) MapSerializer.SaveMaskLayer(bakedMaskL, maskPath, _editorState._graphics, _editorState);
-                    System.Diagnostics.Debug.WriteLine($"[Export] Compiled and exported Terrain Mask to: {maskPath}");
-                    MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
-                    System.Diagnostics.Debug.WriteLine($"[Export] Exported map to to: {gameMapPath}");
+                    _exportMapName = mapName;
+                    _exportJsonPath = Path.Combine(assetsPath, "Maps", $"{mapName}.json");
+                    _exportGameMapPath = Path.Combine(assetsPath, "Maps", $"{mapName}.map");
+                    _exportMaskPath = Path.Combine(assetsPath, "Maps", $"{mapName}_mask.png");
+                    _exportWaterPath = Path.Combine(assetsPath, "Maps", $"{mapName}_water.png");
+                    _exportPhase = 0;
+                    _editorState.TaskProgress.Start("Exporting Map", "Initializing export pipeline...");
                     break;
+
                 case "Capture":
-                    string capturePath = Path.Combine(assetsPath, "Maps", $"{mapName}_capture.png");
-                    MapSerializer.CaptureToImage(_editorState.ActiveMap, _editorState._graphics, _editorState, capturePath);
+                    _capturePath = Path.Combine(assetsPath, "Maps", $"{mapName}_capture.png");
+                    _capturePhase = 0;
+                    _editorState.TaskProgress.Start("Capturing Map Image", "Preparing canvas...");
                     break;
+            }
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _editorState.TaskProgress.Update(dt);
+
+            // --- STEPPED EXPORT PIPELINE ---
+            if (_exportPhase >= 0)
+            {
+                var exportMask = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+
+                switch (_exportPhase)
+                {
+                    case 0:
+                        _editorState.TaskProgress.SetProgress(0.25f, "Carving waterbed into terrain mask...");
+                        _exportBakedMask = MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, exportMask);
+                        _exportPhase = 1;
+                        break;
+
+                    case 1:
+                        _editorState.TaskProgress.SetProgress(0.50f, "Baking water surface data (Flow & Foam)...");
+                        using (var bakedWaterTex = MapExporter.BakeWaterSurfaceData(_editorState._graphics, _editorState.ActiveMap, exportMask))
+                        {
+                            using (var stream = File.OpenWrite(_exportWaterPath))
+                            {
+                                bakedWaterTex.SaveAsPng(stream, bakedWaterTex.Width, bakedWaterTex.Height);
+                            }
+                        }
+                        _exportPhase = 2;
+                        break;
+
+                    case 2:
+                        _editorState.TaskProgress.SetProgress(0.75f, "Saving terrain mask & generating normal maps...");
+                        if (_exportBakedMask != null)
+                        {
+                            MapSerializer.SaveMaskLayer(_exportBakedMask, _exportMaskPath, _editorState._graphics, _editorState);
+                        }
+                        _exportPhase = 3;
+                        break;
+
+                    case 3:
+                        _editorState.TaskProgress.SetProgress(0.90f, "Serializing binary .map format...");
+                        MapSerializer.Export(_editorState.ActiveMap, _exportGameMapPath);
+                        _exportPhase = 4;
+                        break;
+
+                    case 4:
+                        _editorState.TaskProgress.Complete("Export Complete!");
+                        _exportPhase = -1;
+                        break;
+                }
+            }
+
+            // --- STEPPED CAPTURE PIPELINE ---
+            if (_capturePhase >= 0)
+            {
+                switch (_capturePhase)
+                {
+                    case 0:
+                        _editorState.TaskProgress.SetProgress(0.40f, "Rendering high-res composite image...");
+                        _capturePhase = 1;
+                        break;
+
+                    case 1:
+                        _editorState.TaskProgress.SetProgress(0.80f, "Encoding PNG to disk...");
+                        MapSerializer.CaptureToImage(_editorState.ActiveMap, _editorState._graphics, _editorState, _capturePath);
+                        _capturePhase = 2;
+                        break;
+
+                    case 2:
+                        _editorState.TaskProgress.Complete("Image Saved to Maps Folder!");
+                        _capturePhase = -1;
+                        break;
+                }
             }
         }
         private void LoadNewMap(Map newMap, string filePath)

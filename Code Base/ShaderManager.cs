@@ -34,7 +34,7 @@ namespace Pixel_Simulations
         public Dictionary<string, Effect> Effects { get; private set; }
         public Dictionary<string, Texture2D> Textures { get; private set; }
         public Texture2D PixelTexture { get; private set; }
-
+        public RenderPipeline PipelineReference { get; set; }
         // --- The Three Sub-Systems ---
         public GPUParticleSystem Particles { get; private set; }
         public WeatherOverlayRenderer Overlays { get; set; }
@@ -73,14 +73,13 @@ namespace Pixel_Simulations
             Effects["ParticleUpdate"] = content.Load<Effect>("ParticleUpdate");
             Effects["CloudShadows"] = content.Load<Effect>("CloudShadows");
             Effects["TestWeather"] = content.Load<Effect>("Test");
-            Effects["WaterFlood"] = content.Load<Effect>("WaterFlood");
+            Effects["StillWater"] = content.Load<Effect>("StillWater");
             Effects["ReflectionShader"] = content.Load<Effect>("ReflectionShader");
             Effects["WindTrails"] = content.Load<Effect>("WindTrails");
             Effects["PaletteSwap"] = content.Load<Effect>("PaletteSwap");
+            Effects["DebugChannel"] = content.Load<Effect>("DebugChannel");
             // Assign your swirl/streak texture to it
             // Load all Textures
-            Effects["WaterFlood"].SetSafe("WaterLevel", 50f / 255f);
-            Effects["WaterFlood"].SetSafe("WaterColor", new Vector4(0.1f, 0.4f, 0.8f, 0.6f));
             // Assign static textures to effects immediately
             Effects["Gusting"].SetSafe("NoiseTexture", ns.Noises["Perlin"]);
             Effects["CloudShadows"].SetSafe("NoiseTexture", ns.Noises["Perlin"]);

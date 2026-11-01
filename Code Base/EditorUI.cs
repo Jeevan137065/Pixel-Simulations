@@ -111,6 +111,47 @@ namespace Pixel_Simulations.UI
             {
                 //_editorState.WaterSystem.DrawLiveSimulationOverlay(spriteBatch, _editorState.camera);
             }
+            if (_editorState.TaskProgress.IsActive)
+            {
+                var task = _editorState.TaskProgress;
+                var vp = gd.Viewport;
+
+                // Dark background dim
+                spriteBatch.FillRectangle(new RectangleF(0, 0, vp.Width, vp.Height), Color.Black * 0.6f);
+
+                int dialogW = 480;
+                int dialogH = 110;
+                int x = (vp.Width - dialogW) / 2;
+                int y = (vp.Height - dialogH) / 2;
+                Rectangle dialogRect = new Rectangle(x, y, dialogW, dialogH);
+
+                // Dialog Box
+                spriteBatch.FillRectangle(dialogRect, new Color(20, 24, 30));
+                spriteBatch.DrawRectangle(dialogRect, Color.Cyan * 0.8f, 2);
+
+                // Title & Status
+                spriteBatch.DrawString(DebugFont, task.Title, new Vector2(x + 16, y + 14), Color.Cyan);
+                spriteBatch.DrawString(DebugFont, task.Status, new Vector2(x + 16, y + 36), Color.LightGray);
+
+                // Progress Track
+                int barX = x + 16;
+                int barY = y + 64;
+                int barW = dialogW - 32;
+                int barH = 18;
+
+                spriteBatch.FillRectangle(new Rectangle(barX, barY, barW, barH), Color.Black * 0.7f);
+                spriteBatch.DrawRectangle(new Rectangle(barX, barY, barW, barH), Color.DarkGray, 1);
+
+                // Progress Fill
+                int fillW = (int)(barW * task.Progress);
+                Color fillColor = task.Progress >= 1f ? Color.LimeGreen : Color.DeepSkyBlue;
+                spriteBatch.FillRectangle(new Rectangle(barX, barY, fillW, barH), fillColor);
+
+                // Percentage Label
+                string pctText = $"{Math.Round(task.Progress * 100)}%";
+                Vector2 pctSize = DebugFont.MeasureString(pctText);
+                spriteBatch.DrawString(DebugFont, pctText, new Vector2(barX + (barW - pctSize.X) / 2, barY + (barH - pctSize.Y) / 2), Color.White);
+            }
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color)
         {

@@ -114,19 +114,16 @@ namespace Pixel_Simulations
 
             if (type == "Tree")
             {
-                // Always draw base
                 if (entity.Prefab.AlternateStates.ContainsKey("Base")) activeLayers.Add("Base");
 
                 if (!isChopped)
                 {
                     if (entity.Prefab.AlternateStates.ContainsKey("Trunk")) activeLayers.Add("Trunk");
 
-                    // Add Canopy based on Season
                     string seasonCanopy = "Canopy_" + state.Calendar.CurrentSeason.ToString();
                     if (entity.Prefab.AlternateStates.ContainsKey(seasonCanopy)) activeLayers.Add(seasonCanopy);
-                    else if (entity.Prefab.AlternateStates.ContainsKey("Canopy_Summer")) activeLayers.Add("Canopy_Summer"); // Fallback
+                    else if (entity.Prefab.AlternateStates.ContainsKey("Canopy_Summer")) activeLayers.Add("Canopy_Summer");
 
-                    // Add Overlays (Snow, Moss, Fruits) based on conditions
                     if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
                     if (entity.GetProperty("HasFruit", "False") == "True" && entity.Prefab.AlternateStates.ContainsKey("Overlay_Fruits")) activeLayers.Add("Overlay_Fruits");
                     if (entity.GetProperty("HasMoss", "False") == "True" && entity.Prefab.AlternateStates.ContainsKey("Overlay_Moss")) activeLayers.Add("Overlay_Moss");
@@ -134,22 +131,41 @@ namespace Pixel_Simulations
             }
             else if (type == "Building")
             {
-                if (entity.Prefab.AlternateStates.ContainsKey("Exterior")) activeLayers.Add("Exterior");
-                if (entity.Prefab.AlternateStates.ContainsKey("Roof") && entity.GetProperty("PlayerInside", "False") == "False") activeLayers.Add("Roof");
+                bool playerInside = entity.GetProperty("PlayerInside", "False") == "True";
 
-                // Add Overlays like Snow to roofs
-                if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
+                // Base exterior walls are always present
+                if (entity.Prefab.AlternateStates.ContainsKey("Exterior")) activeLayers.Add("Exterior");
+
+                if (!playerInside)
+                {
+                    // Roof is active when outside
+                    if (entity.Prefab.AlternateStates.ContainsKey("Roof")) activeLayers.Add("Roof");
+                    if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
+                }
+                else
+                {
+                    // Player is inside: cut roof away and display interior elements
+                    if (entity.Prefab.AlternateStates.ContainsKey("InteriorBG")) activeLayers.Add("InteriorBG");
+                    if (entity.Prefab.AlternateStates.ContainsKey("InteriorFG")) activeLayers.Add("InteriorFG");
+                }
+
+                // Include any generic states authored in ObjectII.html
+                foreach (var kvp in entity.Prefab.AlternateStates)
+                {
+                    if (kvp.Key != "Exterior" && kvp.Key != "Roof" && kvp.Key != "InteriorBG" && kvp.Key != "InteriorFG" && kvp.Key != "Overlay_Snow")
+                    {
+                        if (entity.GetProperty(kvp.Key, "True") == "True") activeLayers.Add(kvp.Key);
+                    }
+                }
             }
             else // Standard Props
             {
                 foreach (var kvp in entity.Prefab.AlternateStates)
                 {
-                    // By default props just draw everything unless gated by a property
                     if (entity.GetProperty(kvp.Key, "True") == "True") activeLayers.Add(kvp.Key);
                 }
             }
 
-            // Sort by ZIndex
             activeLayers.Sort((a, b) => entity.Prefab.AlternateStates[a].ZIndex.CompareTo(entity.Prefab.AlternateStates[b].ZIndex));
             return activeLayers;
         }
@@ -287,16 +303,21 @@ namespace Pixel_Simulations
                 {
                     if (prefab.AlternateStates.TryGetValue(stateKey, out var layerData))
                     {
+                        // Skip dummy base tile layers
+                        if (string.Equals(layerData.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
+                            layerData.SourceRect == new Rectangle(0, 0, 16, 16) &&
+                            layerData.Offset == Point.Zero)
+                        {
+                            continue;
+                        }
+
                         var layerTex = state.Assets.GetAtlas(layerData.AtlasName);
                         if (layerTex != null)
                         {
                             if (layerData.PaletteMap != null && layerData.PaletteMap.Count > 0)
                             {
-                                // Apply Palette Swap on CPU and draw the temporary texture
                                 Texture2D swappedTex = ApplyPaletteSwap(layerTex, layerData.SourceRect, layerData.PaletteMap, gd);
                                 sb.Draw(swappedTex, layerData.Offset.ToVector2(), Color.White);
-
-                                // Queue the temporary texture for safe disposal
                                 tempTextures.Add(swappedTex);
                             }
                             else
@@ -337,30 +358,41 @@ namespace Pixel_Simulations
                     string type = entity.GetProperty("Type", "Prop");
                     bool isChopped = entity.GetProperty("Chopped", "False") == "True";
 
-                    bool hasSway = activeLayers.Any(l => entity.Prefab.AlternateStates[l].Sway);
+                    bool hasSway = activeLayers.Any(l => entity.Prefab.AlternateStates.ContainsKey(l) && entity.Prefab.AlternateStates[l].Sway);
 
-                    // --- NEW: PROPORTIONAL PARALLAX ---
-                    // Trees under 64px don't parallax. Trees at 320px parallax fully (1.0).
                     float pMask = 0f;
                     if (type == "Tree" && !isChopped)
                     {
                         float rawHeight = entity.Prefab.CanvasSize.Y;
                         pMask = MathHelper.Clamp((rawHeight - 64f) / (320f - 64f), 0f, 1f);
                     }
-                    if (hasSway) pMask += 0.5f; // Add extra sway if canopy is active
-                    float feetY = entity.Position.Y + entity.Prefab.Pivot.Y;
+                    if (hasSway) pMask += 0.5f;
+
+                    // Resolve representative atlas name for normal mapping
+                    string atlasName = "Building";
+                    if (type == "Tree") atlasName = "Trees";
+                    else if (entity.Prefab.AlternateStates.Count > 0)
+                    {
+                        var firstLayer = entity.Prefab.AlternateStates.Values.FirstOrDefault();
+                        if (firstLayer != null && !string.IsNullOrEmpty(firstLayer.AtlasName))
+                            atlasName = System.IO.Path.GetFileNameWithoutExtension(firstLayer.AtlasName);
+                    }
+
+                    // Feet depth: Ground contact is aligned to the sprite's bottom
+                    float feetY = entity.Position.Y + (finalTexture.Height - entity.Prefab.Pivot.Y) * prop.Scale.Y;
+
                     _staticSprites.Add(new RenderableSprite
                     {
-                        AtlasName = "COMPOSITE",
+                        AtlasName = atlasName,
                         Texture = finalTexture,
                         Position = entity.Position,
                         SourceRect = new Rectangle(0, 0, finalTexture.Width, finalTexture.Height),
                         Origin = entity.Prefab.Pivot,
                         Scale = prop.Scale,
                         Rotation = prop.Rotation,
-                        BaseWorldY = feetY, // Sort by the actual physical feet!
+                        BaseWorldY = feetY,
                         DrawDepth = DepthUtil.Calculate(feetY),
-                        ParallaxMask = Math.Min(pMask, 1.0f) // Cap at 1.0 max
+                        ParallaxMask = Math.Min(pMask, 1.0f)
                     });
                     builtCount++;
                 }
@@ -396,7 +428,6 @@ namespace Pixel_Simulations
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"[EntityManager] Successfully generated {builtCount} renderable sprites.");
             _isFirstLoad = true;
         }
 
@@ -452,6 +483,38 @@ namespace Pixel_Simulations
 
         public void UpdateRenderList(GameState state)
         {
+            // Real-time dynamic interior/cutaway trigger detection
+            if (state.Player != null)
+            {
+                Vector2 playerFoot = state.Player.Foot;
+
+                foreach (var entity in _allEntities)
+                {
+                    if (!entity.IsActive || entity.Prefab == null) continue;
+
+                    string type = entity.GetProperty("Type", "Prop");
+                    if (type == "Building")
+                    {
+                        float left = entity.Position.X - entity.Prefab.Pivot.X;
+                        float top = entity.Position.Y - entity.Prefab.Pivot.Y;
+                        float width = entity.Prefab.CanvasSize.X;
+                        float height = entity.Prefab.CanvasSize.Y;
+
+                        // Threshold area inside building (above the entrance threshold)
+                        RectangleF interiorZone = new RectangleF(left + 8f, top + 16f, Math.Max(1f, width - 16f), Math.Max(1f, height - 24f));
+
+                        bool isPlayerInside = interiorZone.Contains(playerFoot);
+                        bool wasInside = entity.GetProperty("PlayerInside", "False") == "True";
+
+                        if (isPlayerInside != wasInside)
+                        {
+                            entity.BaseData.Properties["PlayerInside"] = new MapProperty(PropertyType.Boolean, isPlayerInside.ToString());
+                            RefreshEntityVisuals(entity.BaseData.ID, state);
+                        }
+                    }
+                }
+            }
+
             _drawList.Clear();
             _drawList.AddRange(_staticSprites);
             _drawList.AddRange(_simulationSprites);
@@ -459,44 +522,18 @@ namespace Pixel_Simulations
             if (state.Player != null)
             {
                 var P = state.Player;
-
-                // 1. Get the current terrain height beneath the player's feet
                 float groundHeight = state.WaterSystem.GetTerrainHeightAt(P.Foot);
-
-                // 2. Baseline shoreline elevation (e.g. 180 representing lake edge)
                 float shorelineWaterLevel = 100f / 255f;
-
-                // 3. Submersion depth represents the difference
                 float submergeAmount = Math.Max(0.0f, shorelineWaterLevel - groundHeight);
 
                 int sinkOffset = 0;
-                string playerMovementState = "WALKING";
-
                 if (submergeAmount > 0.0f)
                 {
-                    // Check if player has entered the Deep Swimming Zone (Elevation <= 40 / 255)
-                    if (groundHeight <= (40f / 255f))
-                    {
-                        playerMovementState = "SWIMMING";
-                        sinkOffset = 26; // Submerge up to chest
-                    }
-                    else
-                    {
-                        playerMovementState = "SINKING/WADING";
-                        sinkOffset = (int)(submergeAmount * 16f); // Gradual shins-to-waist crop (Max 16px)
-                    }
+                    if (groundHeight <= (40f / 255f)) sinkOffset = 26;
+                    else sinkOffset = (int)(submergeAmount * 16f);
                 }
 
-                // Output status to the dynamic debug log on screen
-                state.Debug_LastCommand = $"PLAYER STATE: {playerMovementState} Surface {groundHeight}| Ground Alt: {Math.Round(groundHeight * 255)} | Depth: {Math.Round(submergeAmount * 255)}";
-
-                Rectangle croppedSource = new Rectangle(
-                    P.SourceRect.X,
-                    P.SourceRect.Y,
-                    P.SourceRect.Width,
-                    P.SourceRect.Height - sinkOffset
-                );
-
+                Rectangle croppedSource = new Rectangle(P.SourceRect.X, P.SourceRect.Y, P.SourceRect.Width, P.SourceRect.Height - sinkOffset);
                 Vector2 adjustedOrigin = new Vector2(P.Origin.X, P.Origin.Y - sinkOffset);
 
                 _drawList.Add(new RenderableSprite
@@ -512,25 +549,18 @@ namespace Pixel_Simulations
                 });
             }
 
-            // Apply standardized math to calculate the actual physical ground contact point (feet) for sorting
             for (int i = 0; i < _drawList.Count; i++)
             {
                 var sprite = _drawList[i];
-
-                // Ground contact is the bottom edge of the sprite bounds in world-space
                 float physicalFeetY = sprite.Position.Y + (sprite.SourceRect.Height - sprite.Origin.Y) * sprite.Scale.Y;
-
                 sprite.BaseWorldY = physicalFeetY;
                 sprite.DrawDepth = DepthUtil.Calculate(physicalFeetY);
-
                 _drawList[i] = sprite;
             }
 
-            // Sort the list based on uniform feet calculations
             SpriteSorter.Sort(_drawList, !_isFirstLoad);
             _isFirstLoad = false;
         }
-
         public void RemoveEntity(string id)
         {
             if (_entitiesById.TryGetValue(id, out var entity))

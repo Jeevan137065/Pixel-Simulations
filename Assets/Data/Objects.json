@@ -751,5 +751,274 @@
         }
       }
     }
+  },
+  {
+    "ID": "WaterHouse",
+    "AtlasName": "",
+    "SourceRect": {
+      "X": 0,
+      "Y": 0,
+      "Width": 0,
+      "Height": 0
+    },
+    "Offset": {
+      "X": 0,
+      "Y": 0
+    },
+    "CanvasSize": {
+      "X": 144,
+      "Y": 352
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Building"
+      }
+    },
+    "AlternateStates": {
+      "State_Main": {
+        "AtlasName": "Base",
+        "SourceRect": {
+          "X": 0,
+          "Y": 0,
+          "Width": 16,
+          "Height": 16
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 1,
+        "Sway": false
+      },
+      "Exterior": {
+        "AtlasName": "Prototype_Building",
+        "SourceRect": {
+          "X": 48,
+          "Y": 32,
+          "Width": 176,
+          "Height": 352
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": false
+      }
+    }
+  },
+  {
+    "ID": "Template Building",
+    "AtlasName": "",
+    "SourceRect": {
+      "X": 0,
+      "Y": 0,
+      "Width": 0,
+      "Height": 0
+    },
+    "Offset": {
+      "X": 0,
+      "Y": 0
+    },
+    "CanvasSize": {
+      "X": 0,
+      "Y": 0
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {},
+    "AlternateStates": {}
+  },
+  {
+    "ID": "Corner A shop",
+    "AtlasName": "",
+    "SourceRect": {
+      "X": 0,
+      "Y": 0,
+      "Width": 0,
+      "Height": 0
+    },
+    "Offset": {
+      "X": 0,
+      "Y": 0
+    },
+    "CanvasSize": {
+      "X": 240,
+      "Y": 256
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Building"
+      }
+    },
+    "AlternateStates": {
+      "State_Main": {
+        "AtlasName": "Base",
+        "SourceRect": {
+          "X": 0,
+          "Y": 0,
+          "Width": 16,
+          "Height": 16
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 1,
+        "Sway": false
+      },
+      "Exterior": {
+        "AtlasName": "Prototype_Building",
+        "SourceRect": {
+          "X": 432,
+          "Y": 672,
+          "Width": 240,
+          "Height": 256
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": false
+      }
+    }
+  },
+  {
+    "ID": "Public_Bath",
+    "AtlasName": "",
+    "SourceRect": {
+      "X": 0,
+      "Y": 0,
+      "Width": 0,
+      "Height": 0
+    },
+    "Offset": {
+      "X": 0,
+      "Y": 0
+    },
+    "CanvasSize": {
+      "X": 160,
+      "Y": 384
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Building"
+      }
+    },
+    "AlternateStates": {
+      "State_Main": {
+        "AtlasName": "Base",
+        "SourceRect": {
+          "X": 0,
+          "Y": 0,
+          "Width": 16,
+          "Height": 16
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 1,
+        "Sway": false
+      },
+      "Exterior": {
+        "AtlasName": "Prototype_Building",
+        "SourceRect": {
+          "X": 1136,
+          "Y": 0,
+          "Width": 208,
+          "Height": 384
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": false
+      }
+    }
+  },
+  {
+    "ID": "Bait Shop",
+    "AtlasName": "",
+    "SourceRect": {
+      "X": 0,
+      "Y": 0,
+      "Width": 0,
+      "Height": 0
+    },
+    "Offset": {
+      "X": 0,
+      "Y": 0
+    },
+    "CanvasSize": {
+      "X": 160,
+      "Y": 368
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Building"
+      }
+    },
+    "AlternateStates": {
+      "State_Main": {
+        "AtlasName": "Base",
+        "SourceRect": {
+          "X": 0,
+          "Y": 0,
+          "Width": 16,
+          "Height": 16
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 1,
+        "Sway": false
+      },
+      "Exterior": {
+        "AtlasName": "Prototype_Building",
+        "SourceRect": {
+          "X": 1360,
+          "Y": 16,
+          "Width": 160,
+          "Height": 368
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": false
+      }
+    }
   }
 ]

@@ -1,6 +1,8 @@
-﻿using Microsoft.Xna.Framework.Content;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using Pixel_Simulations;
 using Pixel_Simulations.Data;
 using System;
 using System.Collections.Generic;
@@ -20,25 +22,38 @@ namespace Pixel_Simulations
     }
     public class EditorLibrary
         {
-        public readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>();
+        public readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>(StringComparer.OrdinalIgnoreCase);
         private readonly ContentManager _content;
         
         public EditorLibrary(ContentManager content) => _content = content;
 
         public void LoadAtlas(string assetName, AtlasType type)
         {
-            if (!_library.ContainsKey(assetName))
+            string cleanName = Path.GetFileNameWithoutExtension(assetName);
+            if (!_library.ContainsKey(cleanName))
             {
-                _library[assetName] = new AtlasMetadata
+                try
                 {
-                    Name = assetName,
-                    Texture = _content.Load<Texture2D>(assetName),
-                    Type = type
-                };
+                    _library[cleanName] = new AtlasMetadata
+                    {
+                        Name = cleanName,
+                        Texture = _content.Load<Texture2D>(cleanName),
+                        Type = type
+                    };
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EditorLibrary] Failed to load '{assetName}': {ex.Message}");
+                }
             }
         }
 
-        public Texture2D GetAtlas(string name) => _library.TryGetValue(name, out var meta) ? meta.Texture : null;
+        public Texture2D GetAtlas(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            string cleanName = Path.GetFileNameWithoutExtension(name);
+            return _library.TryGetValue(cleanName, out var meta) ? meta.Texture : null;
+        }
 
         public List<string> GetNamesByType(AtlasType type)
         {
@@ -49,66 +64,55 @@ namespace Pixel_Simulations
     }
     public class AssetLibrary
     {
-        // Store metadata, just like the EditorLibrary
-        private readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>();
+        private readonly Dictionary<string, AtlasMetadata> _library = new Dictionary<string, AtlasMetadata>(StringComparer.OrdinalIgnoreCase);
         private ContentManager _content;
         public SpriteFont customFont;
-        // Pass ContentManager in constructor for cleaner loading later
-        public AssetLibrary()
-        {
 
-        }
-
-        /// <summary>
-        /// Loads a specific atlas and categorizes it.
-        /// </summary>
         public void LoadAtlas(string assetName, AtlasType type)
         {
-            if (!_library.ContainsKey(assetName))
+            string cleanName = Path.GetFileNameWithoutExtension(assetName);
+            if (!_library.ContainsKey(cleanName))
             {
                 try
                 {
-                    _library[assetName] = new AtlasMetadata
+                    _library[cleanName] = new AtlasMetadata
                     {
-                        Name = assetName,
-                        Texture = _content.Load<Texture2D>(assetName),
+                        Name = cleanName,
+                        Texture = _content.Load<Texture2D>(cleanName),
                         Type = type
                     };
                 }
                 catch (ContentLoadException)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ERROR: Could not load texture '{assetName}'.");
+                    System.Diagnostics.Debug.WriteLine($"ERROR: Could not load texture '{cleanName}'.");
                 }
             }
         }
 
-        /// <summary>
-        /// Loads the core set of necessary game atlases.
-        /// </summary>
         public void LoadCoreContent(ContentManager content)
         {
             _content = content;
-            // Load Tile Atlases
+            // Tiles
             LoadAtlas("Base", AtlasType.Tile);
             LoadAtlas("BaseWorld", AtlasType.Tile);
             LoadAtlas("Wild", AtlasType.Tile);
-            //LoadAtlas("Temp", AtlasType.Tile);
             LoadAtlas("Farm", AtlasType.Tile);
-            // Load Object Atlases
+
+            // Objects & Facades
             LoadAtlas("Trees", AtlasType.Object);
             LoadAtlas("Trees_t", AtlasType.Object);
             LoadAtlas("Trees_b", AtlasType.Object);
             LoadAtlas("Trees_l", AtlasType.Object);
             LoadAtlas("Trees_s", AtlasType.Object);
-            LoadAtlas("Building", AtlasType.Object);
-            LoadAtlas("Trees_n", AtlasType.Object);
-            LoadAtlas("Building_n", AtlasType.Normal);
+            LoadAtlas("Trees_n", AtlasType.Normal);
 
-            // Load Universal/UI Atlases
+            LoadAtlas("Building", AtlasType.Object);
+            LoadAtlas("Building_n", AtlasType.Normal);
+            LoadAtlas("Prototype_Building", AtlasType.Object);
+            // UI / Items / Crops
             customFont = content.Load<SpriteFont>("Seattle");
             LoadAtlas("Items", AtlasType.Universal);
             LoadAtlas("CropA", AtlasType.Universal);
-
             LoadAtlas("CropB", AtlasType.Universal);
             LoadAtlas("CropC", AtlasType.Universal);
             LoadAtlas("Machines", AtlasType.Universal);
@@ -117,39 +121,23 @@ namespace Pixel_Simulations
             LoadAtlas("CropB_n", AtlasType.Normal);
             LoadAtlas("CropC_n", AtlasType.Normal);
             LoadAtlas("Machines_n", AtlasType.Normal);
-
         }
 
-        /// <summary>
-        /// Retrieves a pre-loaded texture by its name.
-        /// </summary>
         public Texture2D GetAtlas(string name)
         {
-            if (_library.TryGetValue(name, out var meta))
-            {
-                //System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested and loaded.");
-                return meta.Texture;
-            }
-
-            //System.Diagnostics.Debug.WriteLine($"WARNING: Atlas '{name}' requested but not loaded.");
-            return null;
+            if (string.IsNullOrEmpty(name)) return null;
+            string cleanName = Path.GetFileNameWithoutExtension(name);
+            return _library.TryGetValue(cleanName, out var meta) ? meta.Texture : null;
         }
-        
+
         public Texture2D GetNormalAtlas(string name)
         {
-            string normal_atlas = String.Concat(name, "_n");
-            if (_library.TryGetValue(normal_atlas, out var meta))
-            {
-                return meta.Texture;
-            }
-
-            //if(name != "Player") System.Diagnostics.Debug.WriteLine($"WARNING: Normal Atlas '{name}' requested but not loaded.");
-            return null;
+            if (string.IsNullOrEmpty(name)) return null;
+            string cleanName = Path.GetFileNameWithoutExtension(name);
+            string normalAtlas = string.Concat(cleanName, "_n");
+            return _library.TryGetValue(normalAtlas, out var meta) ? meta.Texture : null;
         }
 
-        /// <summary>
-        /// Gets all loaded atlas names of a specific type.
-        /// </summary>
         public List<string> GetNamesByType(AtlasType type)
         {
             return _library.Values
@@ -157,6 +145,7 @@ namespace Pixel_Simulations
                 .Select(m => m.Name).ToList();
         }
     }
+
     public class PrefabManager
         {
         public Dictionary<string, ObjectPrefab> Prefabs { get; private set; } = new Dictionary<string, ObjectPrefab>();
@@ -207,16 +196,21 @@ namespace Pixel_Simulations
                     {
                         if (!Prefabs.ContainsKey(prefab.ID))
                         {
-                            Prefabs.Add(prefab.ID, prefab);
+                            // FIX: Strip any phantom / dummy default tile layers targeting the Base tile atlas
+                            var phantomKeys = prefab.AlternateStates
+                                .Where(kvp => (string.Equals(kvp.Value.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) ||
+                                               string.Equals(kvp.Value.AtlasName, "BaseWorld", StringComparison.OrdinalIgnoreCase)) &&
+                                              kvp.Value.SourceRect == new Rectangle(0, 0, 16, 16) &&
+                                              kvp.Value.Offset == Point.Zero)
+                                .Select(kvp => kvp.Key)
+                                .ToList();
 
-                            // DEBUG: Verify Palette Maps are loading!
-                            foreach (var state in prefab.AlternateStates)
+                            foreach (var key in phantomKeys)
                             {
-                                if (state.Value.PaletteMap != null && state.Value.PaletteMap.Count > 0)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[PrefabManager] Loaded PaletteMap for {prefab.ID} -> {state.Key} with {state.Value.PaletteMap.Count} colors.");
-                                }
+                                prefab.AlternateStates.Remove(key);
                             }
+
+                            Prefabs.Add(prefab.ID, prefab);
                         }
                     }
                 }

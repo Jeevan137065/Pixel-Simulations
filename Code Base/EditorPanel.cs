@@ -88,10 +88,13 @@ namespace Pixel_Simulations.Editor
     public class TilesetPanel : BasePanel
     {
         public Tab _activeTab = Tab.Tiles;
+        public string ActiveObjectCategory { get; set; } = "All"; // "All", "Props", "Trees", "Buildings"
 
         private readonly UIPanel _rootPanel;
         private readonly UIStackPanel _tabStack;
         private readonly UIStackPanel _headerSelectorStack; // Compact top selector
+        private readonly UIStackPanel _objectCategoryStack; // New category filter bar
+        private readonly UIPanel _dividerLine;
         private readonly UIStackPanel _footerStack;
         private readonly UIGridView _contentGrid;
         private readonly UITheme _theme;
@@ -120,7 +123,7 @@ namespace Pixel_Simulations.Editor
             var btnTiles = new UIButton { Size = new Vector2(area.Width / 2, 30), Text = "Tiles" };
             btnTiles.OnClick = () => _activeTab = Tab.Tiles;
 
-            var btnObjects = new UIButton { Size = new Vector2(area.Width / 2, 30), Text = "Objects" };
+            var btnObjects = new UIButton { Size = new Vector2(area.Width / 2, 30), Text = "Objects / Facades" };
             btnObjects.OnClick = () => _activeTab = Tab.Objects;
 
             _tabStack.AddChild(btnTiles);
@@ -150,15 +153,50 @@ namespace Pixel_Simulations.Editor
             _headerSelectorStack.AddChild(_activeTilesetNameBtn);
             _headerSelectorStack.AddChild(_nextBtn);
 
-            // 3. SCROLLABLE CONTENT (Middle - Starts at Y: 62)
+            // 3. OBJECT / FACADE CATEGORY SELECTOR (Y: 30, Height: 32)
+            _objectCategoryStack = new UIStackPanel
+            {
+                Direction = StackDirection.Horizontal,
+                LocalPosition = new Vector2(0, 30),
+                Size = new Vector2(area.Width, 32),
+                AutoSize = false,
+                PanelBackground = Color.Black * 0.45f,
+                Spacing = 4f,
+                Padding = 4f
+            };
+
+            string[] cats = { "All", "Props", "Trees", "Buildings" };
+            foreach (var cat in cats)
+            {
+                string c = cat;
+                var catBtn = new UIButton
+                {
+                    Size = new Vector2((area.Width - 28) / 4f, 24),
+                    Text = c,
+                    BackgroundColor = Color.DarkSlateGray
+                };
+                catBtn.OnClick = () => { ActiveObjectCategory = c; };
+                _objectCategoryStack.AddChild(catBtn);
+            }
+
+            // Divider Line under sub-bars (Y: 63)
+            _dividerLine = new UIPanel
+            {
+                LocalPosition = new Vector2(0, 63),
+                Size = new Vector2(area.Width, 2),
+                BackgroundColor = Color.DarkGray * 0.4f,
+                BorderColor = Color.Transparent
+            };
+
+            // 4. SCROLLABLE CONTENT GRID (Starts cleanly at Y: 68)
             _contentGrid = new UIGridView(_editorState, this)
             {
-                LocalPosition = new Vector2(0, 62),
-                Size = new Vector2(area.Width, area.Height - 102), // Fills remaining space above footer
+                LocalPosition = new Vector2(0, 68),
+                Size = new Vector2(area.Width, area.Height - 68 - 42),
                 ClipToBounds = true
             };
 
-            // 4. FOOTER UTILITIES (Bottom - Height: 40)
+            // 5. FOOTER UTILITIES (Bottom - Height: 40)
             _footerStack = new UIStackPanel
             {
                 Direction = StackDirection.Horizontal,
@@ -171,7 +209,7 @@ namespace Pixel_Simulations.Editor
             };
 
             _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewTileSet", Command = new OpenAtlasPickerCommand() });
-            _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewObject", Command = new TogglePrefabCreatorCommand { DefaultAtlasName = "Basic" } });
+            _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewObject", Command = new TogglePrefabCreatorCommand { DefaultAtlasName = "Building" } });
             _footerStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "NewTags", Text = "Tags", Command = new ToggleTagManagerCommand() });
 
             var atBtn = new UIButton { Size = new Vector2(32, 32), IconName = "AutoTile", Text = "AT" };
@@ -180,6 +218,8 @@ namespace Pixel_Simulations.Editor
 
             _rootPanel.AddChild(_tabStack);
             _rootPanel.AddChild(_headerSelectorStack);
+            _rootPanel.AddChild(_objectCategoryStack);
+            _rootPanel.AddChild(_dividerLine);
             _rootPanel.AddChild(_contentGrid);
             _rootPanel.AddChild(_footerStack);
         }
@@ -213,14 +253,26 @@ namespace Pixel_Simulations.Editor
             ((UIButton)_tabStack.Children[0]).IsSelected = (_activeTab == Tab.Tiles);
             ((UIButton)_tabStack.Children[1]).IsSelected = (_activeTab == Tab.Objects);
 
+            _headerSelectorStack.IsVisible = (_activeTab == Tab.Tiles);
+            _objectCategoryStack.IsVisible = (_activeTab == Tab.Objects);
+
+            if (_activeTab == Tab.Objects)
+            {
+                for (int i = 0; i < _objectCategoryStack.Children.Count; i++)
+                {
+                    var btn = (UIButton)_objectCategoryStack.Children[i];
+                    btn.IsSelected = (btn.Text == ActiveObjectCategory);
+                }
+            }
+
             // Update Active Selection Readout
             var activeTsName = _editorState.TilesetPanel.ActiveTilesetName;
             _activeTilesetNameBtn.Text = !string.IsNullOrEmpty(activeTsName) ? activeTsName : "No Tileset Loaded";
 
             // Hide cycle selector in Object Mode
             _headerSelectorStack.IsVisible = (_activeTab == Tab.Tiles);
-            _contentGrid.LocalPosition = new Vector2(0, _activeTab == Tab.Tiles ? 62 : 30);
-            _contentGrid.Size = new Vector2(Area.Width, _activeTab == Tab.Tiles ? Area.Height - 102 : Area.Height - 70);
+            _contentGrid.LocalPosition = new Vector2(0, 68);
+            _contentGrid.Size = new Vector2(Area.Width, Area.Height - 68 - 42);
 
             if (Area.Contains(input.MouseWindowPosition))
             {
@@ -424,9 +476,27 @@ namespace Pixel_Simulations.Editor
                     var pfab = _editorState.PrefabManager.GetPrefab(pObj.PrefabID);
                     if (pfab != null)
                     {
+                        string pType = pfab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
+                        infoPnl.AddChild(new UILabel { Text = $"Category: {pType}", TextColor = Color.Yellow });
                         infoPnl.AddChild(new UILabel { Text = $"Canvas: {pfab.CanvasSize.X}x{pfab.CanvasSize.Y}", TextColor = Color.LightGray });
                         infoPnl.AddChild(new UILabel { Text = $"Pivot: {pfab.Pivot.X},{pfab.Pivot.Y}", TextColor = Color.LightGray });
                         infoPnl.AddChild(new UILabel { Text = $"Sprite Layers: {pfab.AlternateStates.Count}", TextColor = Color.Cyan });
+
+                        if (pType == "Building")
+                        {
+                            bool isInside = obj.GetProperty("PlayerInside", "False") == "True";
+                            var toggleRoofBtn = new UIButton
+                            {
+                                Size = new Vector2(w - 20, 24),
+                                Text = isInside ? "Show Roof (Exterior)" : "Hide Roof (Preview Interior)",
+                                BackgroundColor = isInside ? Color.DarkCyan : Color.DarkSlateGray
+                            };
+                            toggleRoofBtn.OnClick = () => {
+                                obj.Properties["PlayerInside"] = new MapProperty(PropertyType.Boolean, (!isInside).ToString());
+                                _needsInspectorRebuild = true;
+                            };
+                            infoPnl.AddChild(toggleRoofBtn);
+                        }
                     }
                 }
 

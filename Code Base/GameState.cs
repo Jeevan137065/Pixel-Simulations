@@ -42,10 +42,12 @@ namespace Pixel_Simulations
         public AssetLibrary Assets { get; }
         public Dictionary<Point, Texture2D> TerrainMaskChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public Dictionary<Point, Texture2D> TerrainNormalChunks { get; private set; } = new Dictionary<Point, Texture2D>();
+        public Dictionary<Point, Texture2D> TerrainWaterChunks { get; private set; } = new Dictionary<Point, Texture2D>();
         public TilesetManager TilesetManager { get; }
         public AutoTileManager AutoTileManager { get; } = new AutoTileManager();
         public PrefabManager PrefabManager { get; }
         public WeatherSimulator Weather { get; set; }
+        public WaterManager WaterSystem { get; private set; }
         public ShaderManager Shaders { get; private set; }
         public TimeManager Calendar { get; private set; }
         public DayTimeManager TimeSystem { get; private set; }
@@ -87,58 +89,98 @@ namespace Pixel_Simulations
             _entityManager = entityManager;
         }
 
-        /// <summary>
-        /// Loads all game assets and initializes the game world from a map file.
-        /// </summary>
-        public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
+        public void LoadContent(ContentManager content, GraphicsDevice graphicsDevice, RenderPipeline pipeline)
+        {
+            // Phase 1: Core System & Graphics Context Initialization
+            InitializeCoreGraphicsAndHardware(graphicsDevice);
+
+            // Phase 2: Data, Databases & Shader Program Loading
+            LoadDataDatabasesAndShaders(content, pipeline);
+
+            // Phase 3: Level, Environment Map & Asset Loading
+            LoadLevelAndEnvironmentAssets(content);
+
+            // Phase 4: Player, Simulation, & Interactive Runtime Setup
+            InitializePlayerAndSimulationRuntime(content);
+        }
+
+        private void InitializeCoreGraphicsAndHardware(GraphicsDevice graphicsDevice)
         {
             _gd = graphicsDevice;
+
+            // Core System flags
             DebugPool[GameBool.ShowCollision] = true;
             DebugPool[GameBool.ShowLinks] = false;
             DebugPool[GameBool.ShowShapes] = true;
             DebugPool[GameBool.ShowPlayerBounds] = false;
             DebugPool[GameBool.IsPaused] = false;
             DebugPool[GameBool.EnableParallax] = true;
-            // 1. Load all raw texture assets first.
-            foreach (var rt in TerrainMaskChunks.Values) rt?.Dispose();
-            foreach (var rt in TerrainNormalChunks.Values) rt?.Dispose();
-            TerrainMaskChunks.Clear();
-            TerrainNormalChunks.Clear();
-            CurrentMap?.Dispose(); // Dispose old map just in case
+
+            GameCamera = new Camera();
+            input.Update(new GameTime(), GameCamera); // Initialize inputs
+        }
+
+        private void LoadDataDatabasesAndShaders(ContentManager content, RenderPipeline pipeline)
+        {
+            // Load asset registries
             Assets.LoadCoreContent(content);
             ns.LoadContent(content);
-            // 2. Load the map data from the file.
+
+            // Load data registries
             var parentDir = Directory.GetParent(content.RootDirectory)?.FullName ?? content.RootDirectory;
-
-
-            string prefabPath = Path.Combine(parentDir,"Assets" ,"Data", "objects.json");
+            string prefabPath = Path.Combine(parentDir, "Assets", "Data", "objects.json");
             PrefabManager.Load(prefabPath);
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Prefabs loaded. Prefab Count = {PrefabManager.Prefabs.Count}");
+            string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
+            tagManager.Load(tagsPath);
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Tags loaded. Tags Count = { tagManager.Tags.Count}");
+            string itemPath = Path.Combine(parentDir, "Assets", "Data", "items.json");
+            string physicalPath = Path.Combine(parentDir, "Assets", "Data", "physical_items.json");
+            ItemManager.Load(itemPath, physicalPath);
+            System.Diagnostics.Debug.WriteLine($"[GameState] : ITEM MANAGER loaded. Items Count = {ItemManager.Items.Count},{ItemManager.PhysicalItems.Count}");
+            string interactionsPath = Path.Combine(parentDir, "Assets", "Data", "interactions.json");
+            Interactions.Load(interactionsPath);
 
-            // 3. MAP: Load the actual level data (Binary .map for the game).
+            string timePath = Path.Combine(parentDir, "Assets", "Data", "TimeOfDay.json");
+            TimeSystem.LoadContent(timePath);
+
+            // Load shader programs
+            Shaders = new ShaderManager(_gd);
+            Shaders.PipelineReference = Shaders.PipelineReference ?? pipeline;
+            Shaders.LoadContent(content, ns);
+            WaterSystem = new WaterManager(_gd,pipeline);
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Shader loaded {Shaders.Effects.Count} Shaders.");
+
+        }
+
+        private void LoadLevelAndEnvironmentAssets(ContentManager content)
+        {
+            var parentDir = Directory.GetParent(content.RootDirectory)?.FullName ?? content.RootDirectory;
+            //string mapName = "Level1";
             string mapName = "CoastTown";
-            gameMapPath = Path.Combine(parentDir,"Assets", "Maps", $"{mapName}.map");
-            System.Diagnostics.Debug.WriteLine($"Map being Read for game to: {gameMapPath}");
+            gameMapPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}.map");
+
             CurrentMap = MapSerializer.Read(gameMapPath);
+            System.Diagnostics.Debug.WriteLine($"[Map] : Map is Read at {gameMapPath}");
+
             var maskLayer = CurrentMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
 
             if (maskLayer != null)
             {
                 string maskPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_mask.png");
                 string normalPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_normals.png");
-
-                // Load the Blue/Red/Green Data map
-                TerrainMaskChunks = MapSerializer.LoadGameChunks(maskPath, graphicsDevice, maskLayer.OffsetX, maskLayer.OffsetY);
-
-                // Load the generated Normal Map
-                TerrainNormalChunks = MapSerializer.LoadGameChunks(normalPath, graphicsDevice, maskLayer.OffsetX, maskLayer.OffsetY);
-                int maskOffsetX = maskLayer.OffsetX;
-                int maskOffsetY = maskLayer.OffsetY;
-                MaskOffset = new Vector2(maskOffsetX, maskOffsetY);
-                System.Diagnostics.Debug.WriteLine($"Mask offset as: {MaskOffset}");
+                string waterPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_water.png");
+                // Terrain texture segments
+                TerrainMaskChunks = MapSerializer.LoadGameChunks(maskPath, _gd, maskLayer.OffsetX, maskLayer.OffsetY);
+                TerrainNormalChunks = MapSerializer.LoadGameChunks(normalPath, _gd, maskLayer.OffsetX, maskLayer.OffsetY);
+                TerrainWaterChunks = MapSerializer.LoadGameChunks(waterPath, _gd, maskLayer.OffsetX, maskLayer.OffsetY); // NEW
+                System.Diagnostics.Debug.WriteLine($"[Map] : Chunks are read at {maskPath}, {normalPath}. Available data [{TerrainMaskChunks.Count}] Terrain, and [{TerrainNormalChunks.Count} Normal Terrain] ");
+                MaskOffset = new Vector2(maskLayer.OffsetX, maskLayer.OffsetY);
+                WaterSystem.CacheTerrainElevationData(TerrainMaskChunks);
+                WaterSystem.CacheWaterDepthData(TerrainWaterChunks);
             }
-            if (CurrentMap == null) {
-                System.Diagnostics.Debug.WriteLine($"Map Read at: {gameMapPath} is NULL");
-            }
+
+            // Save Game Profile
             string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Saves", "CoastTown_Save.json");
             if (File.Exists(savePath))
             {
@@ -147,54 +189,40 @@ namespace Pixel_Simulations
             }
             else
             {
-                ActiveSave = new MapSaveData(); // Fresh save
+                ActiveSave = new MapSaveData();
             }
-            string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
-            tagManager.Load(tagsPath);
-            string timePath = Path.Combine(parentDir, "Assets", "Data", "TimeOfDay.json");
-            TimeSystem.LoadContent(timePath);
-            // 3. Hook the Calendar to the Weather!
-            // Every time the day changes, the weather generates a new seeded forecast
+        }
+
+        private void InitializePlayerAndSimulationRuntime(ContentManager content)
+        {
+            // Calendar clock bound to climate forecast
             Calendar.OnDayChanged += () => {
                 Weather.GenerateDailyForecast(WorldSeed, Calendar.Year, Calendar.CurrentSeason, Calendar.Day);
-
-                // THE EMITTER: Broadcast the New Day to the entire game
                 Bus.Publish(new DayAdvancedCommand { DaysPassed = 1 });
             };
-
-            // Trigger Day 1 explicitly to generate the first weather profile
             Weather.GenerateDailyForecast(WorldSeed, Calendar.Year, Calendar.CurrentSeason, Calendar.Day);
-            // 3. Create all TileSet instances and register them with the TilesetManager.
-            // The manager needs the raw textures from the AssetLibrary to do its job.
-            InitializeTilesets(graphicsDevice);
 
+            // Standardize tiles
+            InitializeTilesets(_gd);
             AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
 
-            Grass = new GrassSystem(graphicsDevice);
+            // Grass & Wind Math
+            Grass = new GrassSystem(_gd);
             var grassShapes = new List<RectangleF>();
             foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
             {
-                foreach (var sh in layer.Shapes.Where(s => s.Tags.Contains(80)))
-                {
-                    grassShapes.Add(sh.Shape.GetBounds());
-                }
+                grassShapes.AddRange(layer.Shapes.Where(s => s.Tags.Contains(80)).Select(s => s.Shape.GetBounds()));
             }
-            Grass.LoadContent(content,ns,grassShapes);
-            Shaders = new ShaderManager(graphicsDevice);
-            Shaders.LoadContent(content,ns);
-            Physics.LoadMapData(CurrentMap);
-            
-            // ---------------------------------
-            // 4. Create the player object.
-            Player = new NewPlayer("Hero", new Vector2(200, 200), graphicsDevice);
-            string itemPath = Path.Combine(parentDir, "Assets", "Data", "items.json");
-            string physicalPath = Path.Combine(parentDir, "Assets", "Data", "physical_items.json");
-            ItemManager.Load(itemPath, physicalPath);
-            string interactionsPath = Path.Combine(parentDir, "Assets", "Data", "interactions.json");
-            Interactions.Load(interactionsPath);
-            Player.LoadContent(content,Physics); // Player loads its own specific content
-        }
+            Grass.LoadContent(content, ns, grassShapes);
 
+
+            // Physics Boundaries
+            Physics.LoadMapData(CurrentMap, PrefabManager);
+
+            // Dynamic Player entity
+            Player = new NewPlayer("Hero", new Vector2(200, 200), _gd);
+            Player.LoadContent(content, Physics);
+        }
         private void InitializeTilesets(GraphicsDevice graphicsDevice)
         {
             // Clear any old tilesets first
@@ -205,6 +233,10 @@ namespace Pixel_Simulations
             var basicTexture = Assets.GetAtlas("Base");
             if (basicTexture != null)
                 TilesetManager.RegisterTileSet(new TileSet("Base", basicTexture, 16, graphicsDevice));
+
+            var basicWTexture = Assets.GetAtlas("BaseWorld");
+            if (basicWTexture != null)
+                TilesetManager.RegisterTileSet(new TileSet("BaseWorld", basicWTexture, 16, graphicsDevice));
 
             var wildTexture = Assets.GetAtlas("Wild");
             if (wildTexture != null)
@@ -251,7 +283,14 @@ namespace Pixel_Simulations
             {
                 _fKeyPressedLastFrame = false;
             }
-
+            if (WaterSystem.IsSimulating)
+            {
+                var maskLayer = CurrentMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                if (maskLayer != null)
+                {
+                    //WaterSystem.UpdateSimulation(gameTime, CurrentMap, maskLayer);
+                }
+            }
             // Update the weather math
             float prevTime = TimeSystem.TimeOfDay;
             TimeSystem.Update(gameTime, Calendar.CurrentSeason, Calendar.GetCurrentPhase());
@@ -307,7 +346,7 @@ namespace Pixel_Simulations
                 }
 
                 // 3. Refresh the Physics Engine so the collision actually disappears!
-                Physics.LoadMapData(CurrentMap);
+                Physics.LoadMapData(CurrentMap, PrefabManager);
 
                 System.Diagnostics.Debug.WriteLine($"Chopped down: {targetProp.Name}");
             }

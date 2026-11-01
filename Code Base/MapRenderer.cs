@@ -80,14 +80,23 @@ namespace Pixel_Simulations.Data
                     }
 
                     Vector2 topLeft = prop.Position - prefab.Pivot;
+                    bool hideRoof = prop.GetProperty("PlayerInside", "False") == "True";
 
-                    // Collect all active layers (Ignoring conditionals for Editor Preview, just draw them all sorted)
                     var layersToDraw = prefab.AlternateStates.Keys.ToList();
                     layersToDraw.Sort((a, b) => prefab.AlternateStates[a].ZIndex.CompareTo(prefab.AlternateStates[b].ZIndex));
 
                     foreach (var key in layersToDraw)
                     {
+                        if (hideRoof && key == "Roof") continue;
+                        if (!hideRoof && (key == "InteriorBG" || key == "InteriorFG")) continue;
+
                         var sLayer = prefab.AlternateStates[key];
+                        if (string.Equals(sLayer.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
+                        sLayer.SourceRect == new Rectangle(0, 0, 16, 16) &&
+                        sLayer.Offset == Point.Zero)
+                        {
+                            continue;
+                        }
                         var tex = _editorState.AssetLibrary.GetAtlas(sLayer.AtlasName);
                         if (tex != null)
                         {
