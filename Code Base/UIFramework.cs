@@ -215,17 +215,30 @@ namespace Pixel_Simulations.UI
             set
             {
                 _text = value;
-                // Calculate size IMMEDIATELY when text changes
-                if (UITheme.DefaultFont != null && !string.IsNullOrEmpty(_text))
-                    Size = UITheme.DefaultFont.MeasureString(_text);
-                else
-                    Size = Vector2.Zero;
+                UpdateSize();
             }
         }
+        public void UpdateSize(SpriteFont fallbackFont = null)
+        {
+            var font = UITheme.DefaultFont ?? fallbackFont;
+            if (font != null && !string.IsNullOrEmpty(_text))
+            {
+                Size = font.MeasureString(_text);
+            }
+            else
+            {
+                // Robust default height so labels never overlap even if font is missing
+                Size = new Vector2(Math.Max(100f, _text.Length * 8f), 18f);
+            }
+        }
+
         public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
         {
             if (!IsVisible || string.IsNullOrEmpty(Text)) return;
-            sb.DrawString(UITheme.DefaultFont ?? theme.Font, Text, AbsoluteBounds.Location.ToVector2(), TextColor ?? theme.TextColor);
+            var font = UITheme.DefaultFont ?? theme.Font;
+            if (font == null) return;
+
+            sb.DrawString(font, Text, AbsoluteBounds.Location.ToVector2(), TextColor ?? ColorOverride ?? theme.TextColor);
             base.Draw(sb, ui, theme);
         }
     }

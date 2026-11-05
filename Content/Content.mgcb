@@ -43,6 +43,12 @@
 /processorParam:TextureFormat=Color
 /build:BodySheet.png
 
+#begin CleanZoom.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:CleanZoom.fx
+
 #begin CloudShadows.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -3388,4 +3394,10 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:WindTrails.fx
+
+#begin ZDepth.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:ZDepth.fx
 

@@ -24,7 +24,8 @@ namespace Pixel_Simulations
         ShowPlayerBounds,
         ShowLinks,
         ShowShapes,
-        EnableParallax
+        EnableParallax,
+        ExtendedZoom // Developer flag for arbitrary zoom levels
     }
     public class GameState
     {
@@ -115,7 +116,7 @@ namespace Pixel_Simulations
             DebugPool[GameBool.ShowPlayerBounds] = false;
             DebugPool[GameBool.IsPaused] = false;
             DebugPool[GameBool.EnableParallax] = true;
-
+            DebugPool[GameBool.ExtendedZoom] = true;
             GameCamera = new Camera();
             input.Update(new GameTime(), GameCamera); // Initialize inputs
         }
@@ -372,26 +373,26 @@ namespace Pixel_Simulations
         }
         public void UpdateCameraInput(GameTime gameTime)
         {
-            float targetZoom = GameCamera.Zoom;
+            // Sync developer flag to camera
+            GameCamera.AllowExtendedZoom = DebugPool.TryGetValue(GameBool.ExtendedZoom, out bool allowExt) && allowExt;
 
-            // 1. Handle Zoom Steps via InputManager
-            if (input.IsKeyPressed(Keys.OemPlus) || input.GetScrollDelta() > 0)
+            // Zoom In: Numpad+, '=', or Scroll Wheel Up
+            if (input.IsKeyPressed(Keys.OemPlus) || input.IsKeyPressed(Keys.Add) || input.GetScrollDelta() > 0)
                 GameCamera.ChangeZoomStep(true);
 
-            if (input.IsKeyPressed(Keys.OemMinus) || input.GetScrollDelta() < 0)
+            // Zoom Out: Numpad-, '-', or Scroll Wheel Down
+            if (input.IsKeyPressed(Keys.OemMinus) || input.IsKeyPressed(Keys.Subtract) || input.GetScrollDelta() < 0)
                 GameCamera.ChangeZoomStep(false);
 
-            // 2. Focus Logic
             if (input.IsKeyDown(Keys.Space))
             {
-                // When Space is held, pull camera 70% toward the mouse
                 GameCamera.SetFocusPoint(input.MouseWorldPosition, 0.7f);
             }
             else
             {
-                // Release focus (smoothly slides back to player)
                 GameCamera.SetFocusPoint(Vector2.Zero, 0f);
             }
+
             GameCamera.Update(gameTime, Player.Position);
         }
         public RectangleF GetStreamingBounds(int nativeWidth, int nativeHeight)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Pixel_Simulations.Editor;
 using System.Collections.Generic;
 
 namespace Pixel_Simulations
@@ -275,113 +276,125 @@ namespace Pixel_Simulations
     {
         public readonly GraphicsDevice _graphicsDevice;
         public MicroRenderTargetPool MicroRTs { get; private set; }
-        private readonly int _nativeWidth;
-        private readonly int _nativeHeight;
-        private readonly int _simScale = 2; // 480 -> 960
+
+        // Master Buffer Allocations (Maximum possible resolution)
+        public const int MASTER_SIM_W = 1920;
+        public const int MASTER_SIM_H = 1080;
+        public const int MASTER_NAT_W = 960;
+        public const int MASTER_NAT_H = 540;
 
         private readonly Dictionary<RenderLayer, RenderTarget2D> _targets;
 
-        public Rectangle NativeRect { get; }      // 480x270
-        public Rectangle SimRect { get; }         // 960x540
-        public Rectangle FinalRect { get; }       // e.g. 1920x1080
+        public Rectangle NativeRect { get; } = new Rectangle(0, 0, 480, 270);
+        public Rectangle SimRect { get; } = new Rectangle(0, 0, 960, 540);
+        public Rectangle FinalRect { get; } = new Rectangle(0, 0, 1920, 1080);
 
         public RenderLayer _currentDebugView = RenderLayer.Composite;
         private KeyboardState _prevKeyboardState;
         private readonly List<RenderLayer> _debugCycleOrder;
-        public string currentRT = null;
-        public int DebugDepthChannel = 0; // 0 for Volume (Red), 1 for Draw Depth (Blue)
-        public RenderPipeline(GraphicsDevice graphicsDevice, int nativeWidth, int nativeHeight, int finalWidth, int finalHeight)
+
+        public RenderPipeline(GraphicsDevice graphicsDevice, int finalWidth, int finalHeight)
         {
             _graphicsDevice = graphicsDevice;
-            _nativeWidth = nativeWidth;
-            _nativeHeight = nativeHeight;
-
-            NativeRect = new Rectangle(0, 0, nativeWidth, nativeHeight);
-            SimRect = new Rectangle(0, 0, nativeWidth * _simScale, nativeHeight * _simScale);
             FinalRect = new Rectangle(0, 0, finalWidth, finalHeight);
 
             _targets = new Dictionary<RenderLayer, RenderTarget2D>();
             _debugCycleOrder = new List<RenderLayer>
-            {
-                RenderLayer.Composite,
-                //RenderLayer.PostProcess,
-                RenderLayer.Albedo,
-                RenderLayer.Dynamic,
-                RenderLayer.Simulation,
-                RenderLayer.Normal,
-                RenderLayer.YDepth,
-                RenderLayer.ZDepth,
-                RenderLayer.WaterData,
-                //RenderLayer.LightMask,
-                //RenderLayer.Shader,
-            };
+        {
+            RenderLayer.Composite,
+            RenderLayer.Albedo,
+            RenderLayer.Dynamic,
+            RenderLayer.Simulation,
+            RenderLayer.Normal,
+            RenderLayer.YDepth,
+            RenderLayer.ZDepth,
+            RenderLayer.WaterData
+        };
+
             MicroRTs = new MicroRenderTargetPool(graphicsDevice);
             InitializeTargets();
         }
 
-        public void SetWindowResolution(GraphicsDeviceManager graphicsManager)
-        {
-            graphicsManager.PreferredBackBufferWidth = FinalRect.Width;
-            graphicsManager.PreferredBackBufferHeight = FinalRect.Height;
-            graphicsManager.IsFullScreen = true;
-            graphicsManager.ApplyChanges();
-        }
-
         private void InitializeTargets()
         {
-            // 1. NATIVE LAYER (480x270)
-            _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height, false, 
+            // 1. MASTER NATIVE TARGETS (960x540)
+            _targets[RenderLayer.Albedo] = new RenderTarget2D(_graphicsDevice, MASTER_NAT_W, MASTER_NAT_H, false,
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            // 2. SIMULATION LAYER (960x540)
-            _targets[RenderLayer.YDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-
-            _targets[RenderLayer.ZDepth] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            // High-precision 16-bit per-channel floating-point map for mathematical fluid simulation
-            _targets[RenderLayer.WaterData] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None ,0, RenderTargetUsage.PreserveContents); // Shared DepthStencil memory
-            _targets[RenderLayer.Simulation] = new RenderTarget2D(_graphicsDevice, NativeRect.Width, NativeRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            // Normals: Used for deferred lighting
-            _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false, 
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            // LightMask: Using HalfVector4 for HDR (Floating point lighting values)
-            _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
-                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            
-            // This is our Master Shader target. All simulation draws share this buffer.
-            _targets[RenderLayer.Shader] = new RenderTarget2D(_graphicsDevice, SimRect.Width, SimRect.Height, false,
+            _targets[RenderLayer.Simulation] = new RenderTarget2D(_graphicsDevice, MASTER_NAT_W, MASTER_NAT_H, false,
                 SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
 
-            // 3. FINAL LAYER
-            _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-            _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            // 2. MASTER SIMULATION TARGETS (1920x1080)
+            _targets[RenderLayer.YDepth] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.ZDepth] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.WaterData] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.Dynamic] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.Normal] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.LightMask] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.Shader] = new RenderTarget2D(_graphicsDevice, MASTER_SIM_W, MASTER_SIM_H, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+
+            // 3. FINAL PRESENTATION TARGETS (1920x1080)
+            _targets[RenderLayer.Composite] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+            _targets[RenderLayer.PostProcess] = new RenderTarget2D(_graphicsDevice, FinalRect.Width, FinalRect.Height, false,
+                SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
         }
-        public void Begin(RenderLayer layer, Color? clearColor)
+        public void SetWindowResolution(GraphicsDeviceManager graphicsManager, bool isFullScreen = false, bool borderless = false)
+        {
+            graphicsManager.PreferredBackBufferWidth = FinalRect.Width;   // 1920
+            graphicsManager.PreferredBackBufferHeight = FinalRect.Height; // 1080
+            graphicsManager.IsFullScreen = isFullScreen;
+            graphicsManager.HardwareModeSwitch = !borderless; // False = Borderless Fullscreen (no resolution flicker)
+
+            // Ensure VSync is enabled for smooth panning
+            graphicsManager.SynchronizeWithVerticalRetrace = true;
+
+            graphicsManager.ApplyChanges();
+
+            System.Diagnostics.Debug.WriteLine($"[RenderPipeline] Window Resolution set to: {FinalRect.Width}x{FinalRect.Height} (FullScreen: {isFullScreen})");
+        }
+
+        /// <summary>
+        /// Optional helper to allow arbitrary output resolutions (e.g. 1440p, 4K, 720p).
+        /// </summary>
+        public void SetCustomResolution(GraphicsDeviceManager graphicsManager, int width, int height, bool isFullScreen = false)
+        {
+            graphicsManager.PreferredBackBufferWidth = width;
+            graphicsManager.PreferredBackBufferHeight = height;
+            graphicsManager.IsFullScreen = isFullScreen;
+            graphicsManager.ApplyChanges();
+        }
+        public void Begin(RenderLayer layer, Color? clearColor, Camera camera = null)
         {
             _graphicsDevice.SetRenderTarget(_targets[layer]);
 
+            // Dynamically assign active hardware viewport to match the (A x B) camera view
+            if (camera != null)
+            {
+                if (layer == RenderLayer.Albedo || layer == RenderLayer.Simulation)
+                {
+                    _graphicsDevice.Viewport = new Viewport(camera.NativeViewportRect);
+                }
+                else if (layer != RenderLayer.Composite && layer != RenderLayer.PostProcess)
+                {
+                    _graphicsDevice.Viewport = new Viewport(camera.SimViewportRect);
+                }
+            }
+
             if (clearColor.HasValue)
             {
-                if (_targets[layer].DepthStencilFormat != DepthFormat.None)
-                    _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil, clearColor.Value, 1.0f, 0);
-                else
-                    _graphicsDevice.Clear(clearColor.Value);
+                _graphicsDevice.Clear(clearColor.Value);
             }
         }
-        public void BeginMRT(RenderTarget2D[] targets, Color clearColor)
-        {
-            var bindings = new RenderTargetBinding[targets.Length];
-            for (int i = 0; i < targets.Length; i++) bindings[i] = new RenderTargetBinding(targets[i]);
 
-            _graphicsDevice.SetRenderTargets(bindings);
-            _graphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, clearColor, 1.0f, 0);
-        }
-        public RenderTargetBinding GetTarget(RenderLayer layer) => _targets[layer];
         public RenderTarget2D GetRenderTarget(RenderLayer layer) => _targets[layer];
+
         public void Update()
         {
             var kstate = Keyboard.GetState();
@@ -389,54 +402,34 @@ namespace Pixel_Simulations
             {
                 int currentIndex = _debugCycleOrder.IndexOf(_currentDebugView);
                 _currentDebugView = _debugCycleOrder[(currentIndex + 1) % _debugCycleOrder.Count];
-                currentRT = _targets[_currentDebugView].ToString();
             }
             _prevKeyboardState = kstate;
         }
 
-        /// <summary>
-        /// The Composite Engine. Combines 480p and 960p layers into the final user resolution.
-        /// </summary>
-        public void PresentFinal(SpriteBatch spriteBatch)
+        public void PresentFinal(SpriteBatch spriteBatch, Camera camera)
         {
-            // 1. COMPOSE TO INTERNAL BUFFER
             _graphicsDevice.SetRenderTarget(_targets[RenderLayer.Composite]);
+            _graphicsDevice.Viewport = new Viewport(FinalRect);
             _graphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
-
-            // Draw Albedo (480p Background) scaled to fit the FinalRect
-            spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, Color.White);
-            spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, Color.White);
-
-            // Draw Simulation Layer (960p Dynamic) scaled to fit FinalRect
-            spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, Color.White);
-
+            // Blit native tiles and simulation entities using their active viewport sub-rectangles
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+            spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, camera.NativeViewportRect, Color.White);
+            spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, camera.NativeViewportRect, Color.White);
+            spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, camera.SimViewportRect, Color.White);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
-            spriteBatch.Draw(_targets[RenderLayer.LightMask], FinalRect, Color.White);
-            spriteBatch.End();
-        }
-        /// <summary>
-        /// Takes the Composite image, applies full-screen post-processing effects, 
-        /// and draws the final result to the screen (BackBuffer).
-        /// </summary>
-        public void CompositeMicroRT(RenderLayer targetLayer, RenderTarget2D microRT, SpriteBatch spriteBatch, BlendState blendState)
-        {
-            _graphicsDevice.SetRenderTarget(_targets[targetLayer]);
-            spriteBatch.Begin(SpriteSortMode.Immediate, blendState, SamplerState.PointClamp);
-            spriteBatch.Draw(microRT, _targets[targetLayer].Bounds, Color.White);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+            spriteBatch.Draw(_targets[RenderLayer.LightMask], FinalRect, camera.SimViewportRect, Color.White);
             spriteBatch.End();
         }
 
-        public void PostFinal(SpriteBatch spriteBatch, params Effect[] postEffects)
+        public void PostFinal(SpriteBatch spriteBatch, Camera camera, params Effect[] postEffects)
         {
             RenderTarget2D currentSource = _targets[RenderLayer.Composite];
 
             if (postEffects != null && postEffects.Length > 0)
             {
-                // Ping-pong between Composite and PostProcess targets if we have multiple effects
                 RenderTarget2D[] pingPongTargets = { _targets[RenderLayer.PostProcess], _targets[RenderLayer.Composite] };
 
                 for (int i = 0; i < postEffects.Length; i++)
@@ -445,11 +438,10 @@ namespace Pixel_Simulations
                     if (effect == null) continue;
 
                     RenderTarget2D destination = pingPongTargets[i % 2];
-
                     _graphicsDevice.SetRenderTarget(destination);
+                    _graphicsDevice.Viewport = new Viewport(FinalRect);
                     _graphicsDevice.Clear(Color.Black);
 
-                    // Apply the effect. Use PointClamp to keep pixel art crisp during distortion.
                     spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, effect);
                     spriteBatch.Draw(currentSource, FinalRect, Color.White);
                     spriteBatch.End();
@@ -458,8 +450,9 @@ namespace Pixel_Simulations
                 }
             }
 
-            // --- OUTPUT TO SCREEN ---
+            // Output to BackBuffer
             _graphicsDevice.SetRenderTarget(null);
+            _graphicsDevice.Viewport = new Viewport(FinalRect);
             _graphicsDevice.Clear(Color.Black);
 
             if (_currentDebugView == RenderLayer.Composite || _currentDebugView == RenderLayer.PostProcess)
@@ -468,19 +461,15 @@ namespace Pixel_Simulations
                 spriteBatch.Draw(currentSource, FinalRect, Color.White);
                 spriteBatch.End();
             }
-            else if (_currentDebugView == RenderLayer.WaterData)// || _currentDebugView == RenderLayer.YDepth || _currentDebugView == RenderLayer.ZDepth)
-            {
-
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, null, null, null);
-                    spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
-                    spriteBatch.End();
-            }
-
             else
             {
-                // Standard debug draw for Albedo, Normal, etc.
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
-                spriteBatch.Draw(_targets[_currentDebugView], FinalRect, Color.White);
+                // Debug RT View: Extract active viewport
+                Rectangle srcRect = (_currentDebugView == RenderLayer.Albedo || _currentDebugView == RenderLayer.Simulation)
+                    ? camera.NativeViewportRect
+                    : camera.SimViewportRect;
+
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp);
+                spriteBatch.Draw(_targets[_currentDebugView], FinalRect, srcRect, Color.White);
                 spriteBatch.End();
             }
         }

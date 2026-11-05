@@ -176,29 +176,121 @@ namespace Pixel_Simulations.Editor
     {
         public string Name => "Eraser";
         public string IconName => Name;
-        public bool _isDrawing = false;
+
+        private bool _isAreaMode = false;
+        private Point _startCell;
+        private Point _lastErasedCell = new Point(int.MinValue, int.MinValue);
+
         public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
-            if (toolInput.CurrentMouse.LeftButton == ButtonState.Pressed)
+            if (toolInput.ActiveLayer is not TileLayer layer || layer.IsLocked) return;
+
+            bool shiftHeld = input.CurrentKeyboard.IsKeyDown(Keys.LeftShift) || input.CurrentKeyboard.IsKeyDown(Keys.RightShift);
+
+            // 1. Initial Click (Start Single Erase or Area Drag)
+            if (input.IsNewLeftClick)
             {
-                if (toolInput.ActiveLayer is TileLayer tileLayer && (toolInput.ActiveLayer.Type == LayerType.Tile) && toolInput.ActiveBrush != null)
+                _startCell = input.MouseGridCell;
+                _isAreaMode = shiftHeld;
+
+                if (!_isAreaMode)
                 {
-                    var cell = new Point((int)Math.Floor(toolInput.WorldPosition.X / 16), (int)Math.Floor(toolInput.WorldPosition.Y / 16));
-                    if (tileLayer.GetTileAt(cell) != null)
+                    if (layer.GetTileAt(_startCell) != null)
                     {
-                        var command = new EraseTileCommand(tileLayer, cell);
-                        eventBus.Publish(command);
+                        eventBus.Publish(new EraseTileCommand(layer, _startCell));
+                    }
+                    _lastErasedCell = _startCell;
+                }
+            }
+
+            // 2. Freehand Dragging (Continuous single-cell erase when not in area mode)
+            if (input.LeftHold && !_isAreaMode)
+            {
+                if (input.MouseGridCell != _lastErasedCell)
+                {
+                    _lastErasedCell = input.MouseGridCell;
+                    if (layer.GetTileAt(_lastErasedCell) != null)
+                    {
+                        eventBus.Publish(new EraseTileCommand(layer, _lastErasedCell));
                     }
                 }
+            }
+
+            // 3. Area Mode Finalize (Shift + Drag Released)
+            if (input.CurrentMouse.LeftButton == ButtonState.Released)
+            {
+                if (_isAreaMode)
+                {
+                    Point endCell = input.MouseGridCell;
+                    var tilesToErase = new Dictionary<Point, TileInfo>();
+
+                    int minX = Math.Min(_startCell.X, endCell.X);
+                    int maxX = Math.Max(_startCell.X, endCell.X);
+                    int minY = Math.Min(_startCell.Y, endCell.Y);
+                    int maxY = Math.Max(_startCell.Y, endCell.Y);
+
+                    for (int x = minX; x <= maxX; x++)
+                    {
+                        for (int y = minY; y <= maxY; y++)
+                        {
+                            var cell = new Point(x, y);
+                            var existingTile = layer.GetTileAt(cell);
+                            if (existingTile != null)
+                            {
+                                tilesToErase[cell] = existingTile;
+                            }
+                        }
+                    }
+
+                    if (tilesToErase.Count > 0)
+                    {
+                        eventBus.Publish(new EraseTileAreaCommand(layer, tilesToErase));
+                    }
+
+                    _isAreaMode = false;
+                }
+
+                _lastErasedCell = new Point(int.MinValue, int.MinValue);
             }
         }
 
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
-            // A brush might draw a semi-transparent preview of the tile under the cursor.
-            // For now, we'll leave it empty.
+            if (toolInput.ActiveLayer is not TileLayer layer || layer.IsLocked) return;
+
+            float lineThick = 1f / input.Zoom;
+
+            if (_isAreaMode && input.LeftHold)
+            {
+                // Draw Area Selection Box (Red highlight & border)
+                RectangleF areaRect = GetGridRect(_startCell, input.MouseGridCell);
+                sb.FillRectangle(areaRect, Color.Red * 0.2f);
+                sb.DrawRectangle(areaRect, Color.Red * 0.85f, lineThick * 2f);
+
+                // Draw status indicator
+                Vector2 textPos = new Vector2(areaRect.Right + 8, areaRect.Top);
+                sb.DrawString(UITheme.DefaultFont, "ERASE AREA", textPos + Vector2.One, Color.Black, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+                sb.DrawString(UITheme.DefaultFont, "ERASE AREA", textPos, Color.Red, 0f, Vector2.Zero, 1f / input.Zoom, SpriteEffects.None, 0f);
+            }
+            else
+            {
+                // Single-Cell Hover Preview (Red outline)
+                RectangleF cellRect = new RectangleF(input.MouseGridCell.X * 16, input.MouseGridCell.Y * 16, 16, 16);
+                sb.FillRectangle(cellRect, Color.Red * 0.15f);
+                sb.DrawRectangle(cellRect, Color.Red * 0.7f, lineThick);
+            }
         }
-        public string GetShortcutHints() => "";
+
+        private RectangleF GetGridRect(Point p1, Point p2)
+        {
+            int x = Math.Min(p1.X, p2.X) * 16;
+            int y = Math.Min(p1.Y, p2.Y) * 16;
+            int w = (Math.Abs(p1.X - p2.X) + 1) * 16;
+            int h = (Math.Abs(p1.Y - p2.Y) + 1) * 16;
+            return new RectangleF(x, y, w, h);
+        }
+
+        public string GetShortcutHints() => "SHIFT + Drag: Erase Area | Left Click/Drag: Erase Tile";
     }
     public class ObjectPlacerTool : ITool
     {

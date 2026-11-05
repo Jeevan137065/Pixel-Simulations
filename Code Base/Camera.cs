@@ -11,198 +11,174 @@ namespace Pixel_Simulations
 
     public class Camera
     {
-        // --- Current State ---
+        // --- State Properties ---
         public Vector2 Position { get; private set; }
-        public float Zoom { get; private set; } = 1f;
+        public float Zoom { get; private set; } = 1.0f;
 
-        // --- Multi-Target Logic ---
-        private float _targetZoom = 1f;
-        private Vector2 _primaryTarget;    // Usually Player
-        private Vector2 _secondaryTarget;  // Object or Mouse
-        private float _focusStrength = 0f; // 0 = 100% Player, 1 = 100% Object
+        private float _targetZoom = 1.0f;
+        private Vector2 _primaryTarget;
+        private Vector2 _secondaryTarget;
+        private float _focusStrength = 0f;
 
-        // --- Settings ---
-        //private readonly float[] _zoomLevels = { 0.25f, 0.5f, 1f, 2f, 4f };
-        private readonly float[] _zoomLevels = {0.5f, 1f, 2f};
+        // Standard zoom levels (Production)
+        private readonly float[] _standardZoomLevels = { 1.0f, 2.0f };
+        // Extended developer zoom levels (0.5x = 1080p canvas, 4.0x = extreme close-up)
+        private readonly float[] _developerZoomLevels = {0.1f,0.66f, 0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f };
+
+        public bool AllowExtendedZoom { get; set; } = false;
         public float MoveLerpSpeed { get; set; } = 15.0f;
-        public float ZoomLerpSpeed { get; set; } = 5.0f;
+        public float ZoomLerpSpeed { get; set; } = 8.0f;
 
-        // --- Matrices ---
-        public Matrix NativeTransform { get; private set; } // 480x270
-        public Matrix SimTransform { get; private set; }    // 960x540
-        public Matrix ScreenTransform { get; private set; } // 1920x1080 (Final Output)
+        // Base canvas dimensions at 1.0x
+        public const int BASE_SIM_WIDTH = 960;
+        public const int BASE_SIM_HEIGHT = 540;
+        public const int BASE_NATIVE_WIDTH = 480;
+        public const int BASE_NATIVE_HEIGHT = 270;
 
-        // --- Matrices for HLSL Custom Shaders (WVP) ---
+        // Dynamic (A x B) Viewports
+        public Rectangle SimViewportRect { get; private set; }
+        public Rectangle NativeViewportRect { get; private set; }
+        public Rectangle ScreenRect { get; private set; } = new Rectangle(0, 0, 1920, 1080);
+
+        // Transformation Matrices
+        public Matrix NativeTransform { get; private set; }
+        public Matrix SimTransform { get; private set; }
+        public Matrix ScreenTransform { get; private set; }
+
         public Matrix NativeWVP { get; private set; }
         public Matrix SimWVP { get; private set; }
         public Matrix ScreenWVP { get; private set; }
 
-        private Rectangle _nativeRect;
-        private Rectangle _simRect;
-        private Rectangle _screenRect; // NEW!
-
         public void Setcamera(Rectangle nativeRect, Rectangle simRect, Rectangle finalRect)
         {
-            _nativeRect = nativeRect;
-            _simRect = simRect;
-            _screenRect = finalRect;
+            ScreenRect = finalRect;
+            UpdateMatrices();
         }
+
         public void SetFocusPoint(Vector2 point, float strength)
         {
             _secondaryTarget = point;
-            _focusStrength = MathHelper.Clamp(strength, 0, 1);
+            _focusStrength = MathHelper.Clamp(strength, 0f, 1f);
         }
+
         public void Update(GameTime gameTime, Vector2 playerPos)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             _primaryTarget = playerPos;
 
-            // 1. Calculate the blended target position
-            // This pulls the camera between the player and the focus point
             Vector2 finalTarget = Vector2.Lerp(_primaryTarget, _secondaryTarget, _focusStrength);
 
-            // 2. Smoothly lerp actual camera position and zoom
             Position = Vector2.Lerp(Position, finalTarget, MoveLerpSpeed * dt);
             Zoom = MathHelper.Lerp(Zoom, _targetZoom, ZoomLerpSpeed * dt);
-            // 4. Snap logic: If we are extremely close to the target, just set it.
-            // This prevents floating point "creeping" (0.9999999)
+
             if (Math.Abs(Zoom - _targetZoom) < 0.001f) Zoom = _targetZoom;
             if (Vector2.Distance(Position, finalTarget) < 0.1f) Position = finalTarget;
+
             UpdateMatrices();
         }
-        private void UpdateMatrices()
-        {
-            // Round to prevent sub-pixel jitter
-            Vector2 roundedPos = new Vector2(
-                (float)System.Math.Round(Position.X),
-                (float)System.Math.Round(Position.Y)
-            );
 
-            // Base World Translation
-            Matrix translation = Matrix.CreateTranslation(-roundedPos.X, -roundedPos.Y, 0);
-
-            // --- 1. NATIVE MATRICES (480x270) ---
-            Matrix nativeScale = Matrix.CreateScale(Zoom, Zoom, 1);
-            Matrix nativeCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
-            NativeTransform = translation * nativeScale * nativeCenter;
-
-            Matrix nativeProjection = Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, -100, 100);
-            NativeWVP = NativeTransform * nativeProjection;
-
-            // --- 2. SIMULATION MATRICES (960x540) ---
-            float simFactor = (float)_simRect.Width / _nativeRect.Width;
-            Matrix simScale = Matrix.CreateScale(Zoom * simFactor, Zoom * simFactor, 1);
-            Matrix simCenter = Matrix.CreateTranslation(_simRect.Width / 2f, _simRect.Height / 2f, 0);
-            SimTransform = translation * simScale * simCenter;
-
-            Matrix simProjection = Matrix.CreateOrthographicOffCenter(0, _simRect.Width, _simRect.Height, 0, -100, 100);
-            SimWVP = SimTransform * simProjection;
-
-            // --- 3. SCREEN MATRICES (1920x1080 Final Output) ---
-            float screenFactor = (float)_screenRect.Width / _nativeRect.Width;
-            Matrix screenScale = Matrix.CreateScale(Zoom * screenFactor, Zoom * screenFactor, 1);
-            Matrix screenCenter = Matrix.CreateTranslation(_screenRect.Width / 2f, _screenRect.Height / 2f, 0);
-            ScreenTransform = translation * screenScale * screenCenter;
-
-            Matrix screenProjection = Matrix.CreateOrthographicOffCenter(0, _screenRect.Width, _screenRect.Height, 0, -100, 100);
-            ScreenWVP = ScreenTransform * screenProjection;
-
-        }
-        public Rectangle NativeViewBounds => new Rectangle(
-    (int)(Position.X - (_nativeRect.Width / (2f * Zoom))),
-    (int)(Position.Y - (_nativeRect.Height / (2f * Zoom))),
-    (int)(_nativeRect.Width / Zoom),
-    (int)(_nativeRect.Height / Zoom)
-);
-
-        // We use this for all Physics, Parallax, and Dynamic rendering!
-        public Rectangle SimViewBounds => new Rectangle(
-            (int)(Position.X - (_simRect.Width / (2f * Zoom))),
-            (int)(Position.Y - (_simRect.Height / (2f * Zoom))),
-            (int)(_simRect.Width / Zoom),
-            (int)(_simRect.Height / Zoom)
-        );
         public void ChangeZoomStep(bool increase)
         {
+            float[] levels = AllowExtendedZoom ? _developerZoomLevels : _standardZoomLevels;
+
             if (increase)
             {
-                // Find the first value in the array strictly greater than our current target
-                _targetZoom = _zoomLevels.FirstOrDefault(z => z > _targetZoom + 0.001f);
-                if (_targetZoom == 0) _targetZoom = _zoomLevels.Last(); // Fallback if at end
+                _targetZoom = levels.FirstOrDefault(z => z > _targetZoom + 0.01f);
+                if (_targetZoom == 0) _targetZoom = levels.Last();
             }
             else
             {
-                // Find the last value in the array strictly less than our current target
-                _targetZoom = _zoomLevels.LastOrDefault(z => z < _targetZoom - 0.001f);
-                if (_targetZoom == 0) _targetZoom = _zoomLevels.First(); // Fallback if at start
+                _targetZoom = levels.LastOrDefault(z => z < _targetZoom - 0.01f);
+                if (_targetZoom == 0) _targetZoom = levels.First();
             }
         }
 
         public void SnapTo(Vector2 target, float zoom)
         {
             Position = target;
+            _targetZoom = zoom;
             Zoom = zoom;
             UpdateMatrices();
         }
-        public void Follow(Vector2 target, float zoom, GameTime gt) => Update(gt, target);
-        public void Follow(Vector2 target, float scale)
+
+        private void UpdateMatrices()
         {
-            Position = target;
-            Zoom = scale;
+            // 1. Calculate Active Canvas Dimensions (A x B)
+            // Zoom 1.0 => Sim: 960x540, Native: 480x270
+            // Zoom 2.0 => Sim: 480x270, Native: 240x135
+            // Zoom 0.5 => Sim: 1920x1080, Native: 960x540
+            int simA = (int)Math.Round(BASE_SIM_WIDTH / Zoom);
+            int simB = (int)Math.Round(BASE_SIM_HEIGHT / Zoom);
 
-            // --- THE BASE VIEW ---
-            // Move world so target is at 0,0. (Rounded for pixel art)
-            Matrix view = Matrix.CreateTranslation(-MathF.Round(Position.X), -MathF.Round(Position.Y), 0);
+            // Keep dimensions even to avoid 0.5px texture misalignment
+            simA = Math.Clamp(simA + (simA % 2), 240, 1920);
+            simB = Math.Clamp(simB + (simB % 2), 135, 1080);
 
-            // --- A. NATIVE MATRICES (480x270) ---
-            // Background is drawn at 1x scale relative to world coords
-            Matrix nativeCenter = Matrix.CreateTranslation(_nativeRect.Width / 2f, _nativeRect.Height / 2f, 0);
-            NativeTransform = view * nativeCenter* Matrix.CreateOrthographicOffCenter(0, _nativeRect.Width, _nativeRect.Height, 0, 0, 1);
+            SimViewportRect = new Rectangle(0, 0, simA, simB);
+            NativeViewportRect = new Rectangle(0, 0, simA / 2, simB / 2);
 
-            // --- B. SIMULATION MATRICES (960x540) ---
-            // Grass/Player are drawn at 2x scale (SimScale) relative to 480p coords
-            // NOTE: We do NOT use 'scale' (User Zoom) here yet, as Simulation is fixed at 960p.
-            float simScaleFactor = 2.0f;
-            Matrix simZoom = Matrix.CreateScale(simScaleFactor);
-            Matrix simCenter = Matrix.CreateTranslation(_simRect.Width / 2f, _simRect.Height / 2f, 0);
+            // 2. Integer pixel translation prevents sub-pixel shimmer
+            Vector2 roundedPos = new Vector2(
+                MathF.Round(Position.X),
+                MathF.Round(Position.Y)
+            );
 
-            SimTransform = view * simZoom * simCenter * Matrix.CreateOrthographicOffCenter(0, _simRect.Width, _simRect.Height, 0, 0, 1);
+            Matrix translation = Matrix.CreateTranslation(-roundedPos.X, -roundedPos.Y, 0);
 
+            // --- NATIVE TRANSFORM (Albedo / Tiles: 1x world unit) ---
+            Matrix nativeCenter = Matrix.CreateTranslation(NativeViewportRect.Width / 2f, NativeViewportRect.Height / 2f, 0);
+            NativeTransform = translation * nativeCenter;
+            NativeWVP = NativeTransform * Matrix.CreateOrthographicOffCenter(0, NativeViewportRect.Width, NativeViewportRect.Height, 0, -100, 100);
+
+            // --- SIMULATION TRANSFORM (Entities / Normals / Depth: 2x world unit) ---
+            Matrix simScale = Matrix.CreateScale(2f, 2f, 1f);
+            Matrix simCenter = Matrix.CreateTranslation(SimViewportRect.Width / 2f, SimViewportRect.Height / 2f, 0);
+            SimTransform = translation * simScale * simCenter;
+            SimWVP = SimTransform * Matrix.CreateOrthographicOffCenter(0, SimViewportRect.Width, SimViewportRect.Height, 0, -100, 100);
+
+            // --- SCREEN TRANSFORM (1080p HUD & Debug overlay) ---
+            float screenScaleX = (float)ScreenRect.Width / NativeViewportRect.Width;
+            float screenScaleY = (float)ScreenRect.Height / NativeViewportRect.Height;
+            Matrix screenCenter = Matrix.CreateTranslation(ScreenRect.Width / 2f, ScreenRect.Height / 2f, 0);
+            ScreenTransform = translation * Matrix.CreateScale(screenScaleX, screenScaleY, 1f) * screenCenter;
+            ScreenWVP = ScreenTransform * Matrix.CreateOrthographicOffCenter(0, ScreenRect.Width, ScreenRect.Height, 0, -100, 100);
         }
-        public void Follow(Player player, float scale) => Follow(player._position, scale);
-        /// <summary>
-        /// Converts a screen coordinate (e.g., from the 960x540 Simulation RenderTarget) to a World coordinate.
-        /// </summary>
+
+        // Visible World Bounds
+        public Rectangle SimViewBounds => new Rectangle(
+            (int)(Position.X - (SimViewportRect.Width / 4f)),
+            (int)(Position.Y - (SimViewportRect.Height / 4f)),
+            SimViewportRect.Width / 2,
+            SimViewportRect.Height / 2
+        );
+
+        public Rectangle NativeViewBounds => SimViewBounds;
+
         public Vector2 ScreenToWorld(Vector2 screenPosition, Rectangle viewportRect)
         {
-            // 1. Find the offset from the center of the screen
-            Vector2 screenCenter = new Vector2(viewportRect.Width / 2f, viewportRect.Height / 2f);
-            Vector2 offsetFromCenter = screenPosition - screenCenter;
+            float normX = screenPosition.X / viewportRect.Width;
+            float normY = screenPosition.Y / viewportRect.Height;
 
-            // 2. Adjust for camera zoom
-            offsetFromCenter /= Zoom;
+            float canvasX = normX * SimViewportRect.Width;
+            float canvasY = normY * SimViewportRect.Height;
 
-            // 3. Add to the camera's world position
-            return Position + offsetFromCenter;
+            float worldX = Position.X + (canvasX - (SimViewportRect.Width / 2f)) / 2f;
+            float worldY = Position.Y + (canvasY - (SimViewportRect.Height / 2f)) / 2f;
+
+            return new Vector2(worldX, worldY);
         }
-        /// <summary>
-        /// Returns a highly accurate RectangleF of the exact world area currently visible on screen.
-        /// </summary>
+
         public RectangleF GetVisibleWorldBounds(Rectangle viewportBounds)
         {
-            // Calculate the actual world-space width and height based on the zoom level
-            float worldWidth = viewportBounds.Width / Zoom;
-            float worldHeight = viewportBounds.Height / Zoom;
-
-            // Because Camera.Position is the exact center of the screen, 
-            // the top-left corner is half the width/height up and to the left.
-            float worldX = Position.X - (worldWidth / 2f);
-            float worldY = Position.Y - (worldHeight / 2f);
-
-            return new RectangleF(worldX, worldY, worldWidth, worldHeight);
+            float worldWidth = SimViewportRect.Width / 2f;
+            float worldHeight = SimViewportRect.Height / 2f;
+            return new RectangleF(Position.X - (worldWidth / 2f), Position.Y - (worldHeight / 2f), worldWidth, worldHeight);
         }
-        //public void Follow(NewPlayer player, float scale) => Follow(player.Position, scale);
+
+        public void Follow(Vector2 target, float zoom, GameTime gt) => Update(gt, target);
+        public void Follow(NewPlayer player, float scale) => SnapTo(player.Position, scale);
     }
+
 
     public class EditorCamera
     {

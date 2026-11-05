@@ -47,7 +47,7 @@ namespace Pixel_Simulations
             _parallaxRenderer = new ParallaxRenderer(gd, _state.Shaders.Effects["ParallaxSprite"]);
             pt = new PixelTexture(gd, 1);
             _state.GameCamera.Setcamera(_pipeline.NativeRect, _pipeline.SimRect, _pipeline.FinalRect);
-            _state.GameCamera.Follow(_state.Player.Position, 1f);
+            
             var grassAreas = new List<RectangleF>();
             var grassEntities = _state._entityManager.GetByTag(100);
             _state._entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, gd);
@@ -61,6 +61,7 @@ namespace Pixel_Simulations
         {
             var keyboardState = Keyboard.GetState();
             var frame = _state._fKeyPressedLastFrame;
+            _state.GameCamera.Follow(_state.Player.Position, 1f, gameTime);
             // --- NEW: HUD TESTING INPUTS ---
             if (keyboardState.IsKeyDown(Keys.M) && !frame)
             {
@@ -230,59 +231,52 @@ namespace Pixel_Simulations
 
         private void GenerateDepthAndWaterDataBuffers(SpriteBatch spriteBatch, RectangleF streamBounds, float strength, bool useParallax)
         {
-            _pipeline.Begin(RenderLayer.WaterData, Color.Transparent);
+            Effect zShader = _state.Shaders.Effects["ZDepthShader"];
+
+            _pipeline.Begin(RenderLayer.WaterData, Color.Transparent, _state.GameCamera);
             _depthRenderer.DrawChunks(spriteBatch, _state.TerrainWaterChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
 
-            // Y-Depth (Volume/Altitude, Canopy shading, and Surface details)
-            _pipeline.Begin(RenderLayer.YDepth, Color.Transparent);
+            // Y-Depth: Pixel Altitude (Red)
+            _pipeline.Begin(RenderLayer.YDepth, Color.Transparent, _state.GameCamera);
             _depthRenderer.DrawChunks(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
-            _state._entityManager.DrawYDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, useParallax, strength, _state._entityManager._drawList);
-            _state._entityManager.DrawYDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, false, 0f, _state._entityManager._simulationSprites);
+            _state._entityManager.DrawYDepthPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
 
-            // Z-Depth (Sorting Planes)
-            _pipeline.Begin(RenderLayer.ZDepth, Color.Transparent);
-            _state._entityManager.DrawZDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, useParallax, strength, _state._entityManager._drawList);
-            _state._entityManager.DrawZDepthPass(_pipeline._graphicsDevice, _state.GameCamera, _depthRenderer._depthEffect, false, 0f, _state._entityManager._simulationSprites);
-
-
+            // Z-Depth: Sorting Plane
+            _pipeline.Begin(RenderLayer.ZDepth, Color.Transparent, _state.GameCamera);
+            _state._entityManager.DrawZDepthPass(_pipeline._graphicsDevice, _state.GameCamera, zShader, useParallax, strength, _state._entityManager._drawList);
         }
 
         private void RenderAlbedoGeometryAndNormalPasses(SpriteBatch spriteBatch, GameTime gameTime, RectangleF streamBounds, float strength, bool useParallax)
         {
-            // A. Under-Water Terrain/Riverbed Pass
-            _pipeline.Begin(RenderLayer.Albedo, Color.Transparent);
-            _pipeline.Begin(RenderLayer.Simulation, Color.Transparent);
+            // 1. Terrain Tiles (Native Viewport: A/2 x B/2)
+            _pipeline.Begin(RenderLayer.Albedo, Color.Transparent, _state.GameCamera);
+            _pipeline.Begin(RenderLayer.Simulation, Color.Transparent, _state.GameCamera);
 
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
             _mapRenderer.DrawLayerByName(spriteBatch, "Tilled_Dirt");
             spriteBatch.End();
 
-            _pipeline.Begin(RenderLayer.Albedo, Color.Transparent);
+            _pipeline.Begin(RenderLayer.Albedo, Color.Transparent, _state.GameCamera);
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
             _mapRenderer.Draw(spriteBatch, LayerType.Tile, "Tilled_Dirt");
             spriteBatch.End();
 
-            // B. Still Water Surface Overlay Pass (Blended directly on top of the Terrain/Riverbed)
-            _pipeline.Begin(RenderLayer.Albedo, null); // Overlay in-place (No clear!)
-            //_state.WaterSystem.DrawSimpleWater(_pipeline._graphicsDevice, _state.Shaders.Effects["StillWater"]);
-
-            // C. Terrain Normal Vector Pass
-            _pipeline.Begin(RenderLayer.Normal, new Color(128, 128, 255, 255));
+            // 2. Terrain Normals (Simulation Viewport: A x B)
+            _pipeline.Begin(RenderLayer.Normal, new Color(128, 128, 255, 255), _state.GameCamera);
             _depthRenderer.DrawChunks(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
 
-            // D. Dynamic Entity Pass (Z-Sorted on top of water)
-            _pipeline._graphicsDevice.SetRenderTarget(_pipeline.GetRenderTarget(RenderLayer.Dynamic));
-            _pipeline._graphicsDevice.Clear(Color.Transparent);
+            // 3. Dynamic Entities (Simulation Viewport: A x B)
+            // FIX: Use _pipeline.Begin instead of calling SetRenderTarget directly!
+            _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent, _state.GameCamera);
             _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
 
-            // E. Dynamic Entity Normal Pass
-            _pipeline._graphicsDevice.SetRenderTarget(_pipeline.GetRenderTarget(RenderLayer.Normal));
-            _pipeline._graphicsDevice.Clear(Color.Transparent);
+            // 4. Dynamic Normals (Simulation Viewport: A x B)
+            // FIX: Use _pipeline.Begin without clear
+            _pipeline.Begin(RenderLayer.Normal, null, _state.GameCamera);
             _state._entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength, _state._entityManager._drawList);
 
-            // F. Grass Pass (Depth-tested against the compiled Y-Depth map)
-            _pipeline._graphicsDevice.SetRenderTarget(_pipeline.GetRenderTarget(RenderLayer.Dynamic));
-            _pipeline._graphicsDevice.BlendState = BlendState.AlphaBlend;
+            // 5. Dynamic Grass (Simulation Viewport: A x B)
+            _pipeline.Begin(RenderLayer.Dynamic, null, _state.GameCamera);
             _state.Grass.Draw(_state.GameCamera.SimWVP, _pipeline.GetRenderTarget(RenderLayer.YDepth));
         }
 
@@ -295,24 +289,17 @@ namespace Pixel_Simulations
 
         private void CompositeAndPresentFinalFrame(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            // Combine composite targets
-            _pipeline.PresentFinal(spriteBatch);
-            _pipeline.PostFinal(spriteBatch,  _state.Shaders.GetActivePostProcessingEffects());
+            _pipeline.PresentFinal(spriteBatch, _state.GameCamera);
+            _pipeline.PostFinal(spriteBatch, _state.GameCamera, _state.Shaders.GetActivePostProcessingEffects());
 
-            // Render HUD (1080p Screen Space)
+            // HUD (1080p Screen Space)
             spriteBatch.Begin();
             HUD.Draw(spriteBatch);
             HUD.DrawInventory(spriteBatch, _state);
             spriteBatch.End();
 
-            // Render Debug Shapes & Diagnostic Text
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.ScreenTransform);
             HUD.DebugDraw(_state, spriteBatch);
-            //Debug_Draw(spriteBatch);
-
-            // Run real-time diagnostics if water fails to display
-           //_state.WaterSystem.DebugVerifyWaterPipeline(_state);
-
             spriteBatch.End();
         }
         public void Debug_Draw(SpriteBatch spriteBatch)

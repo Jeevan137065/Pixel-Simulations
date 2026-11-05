@@ -208,7 +208,7 @@ namespace Pixel_Simulations.Editor
             _layoutmanager = layoutManager;
             TilesetManager = new TilesetManager();
             PrefabManager = new PrefabManager();
-            WaterSystem = new WaterManager(_graphics, new RenderPipeline(_graphics, 480, 270, 1920, 1080)); // NEW
+            WaterSystem = new WaterManager(_graphics, new RenderPipeline(_graphics, 1920, 1080)); // NEW
             Layers.Layers = ActiveMap.Layers;
             if (Layers.Layers.Count > 0)
             {

@@ -476,9 +476,9 @@ namespace Pixel_Simulations.Data
                 obj.Properties[key] = new MapProperty(type, val);
             }
         }
+        // Inside Map.cs -> MapSerializer class
         public static void CaptureToImage(Map map, GraphicsDevice gd, Editor.EditorState state, string path)
         {
-            // 1. Calculate the exact bounding box of the entire map
             var bounds = CalculateMapBounds(map, state.PrefabManager);
             if (bounds.Width <= 0 || bounds.Height <= 0)
             {
@@ -486,73 +486,114 @@ namespace Pixel_Simulations.Data
                 return;
             }
 
-            // Add a tiny bit of padding (16 pixels) around the edges
             bounds.Inflate(16, 16);
 
-            // 2. Create the Render Target (WARNING: Max size is usually 4096 or 8192 depending on GPU)
-            int width = (int)System.Math.Min(bounds.Width, 10240);
-            int height = (int)System.Math.Min(bounds.Height, 10240);
+            int width = (int)Math.Min(bounds.Width, 10240);
+            int height = (int)Math.Min(bounds.Height, 10240);
 
             var prevTargets = gd.GetRenderTargets();
 
             using (var target = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
             {
                 gd.SetRenderTarget(target);
-                gd.Clear(Color.Transparent); // Keep background transparent so you can overlay it in Photoshop!
+                gd.Clear(Color.Transparent);
 
                 using (var sb = new SpriteBatch(gd))
                 {
-                    // 3. Create a camera matrix that shifts the map's top-left corner to (0,0)
                     var transform = Matrix.CreateTranslation(-bounds.X, -bounds.Y, 0);
 
+                    // 1. DRAW TILE LAYERS (Bottom to Top)
                     sb.Begin(transformMatrix: transform, samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
-                    for (int i = map.Layers.Count - 1; i >= 0; i--)
+                    for (int i = 0; i < map.Layers.Count; i++)
                     {
                         var layer = map.Layers[i];
-                        if (!layer.IsVisible) continue;
+                        if (!layer.IsVisible || !(layer is TileLayer tileLayer)) continue;
 
-                        if (layer is TileLayer tileLayer)
+                        foreach (var chunkKvp in tileLayer.Chunks)
                         {
-                            foreach (var chunkKvp in tileLayer.Chunks)
-                            {
-                                float cx = chunkKvp.Key.X * Chunk.CHUNK_SIZE * state.CELL_SIZE;
-                                float cy = chunkKvp.Key.Y * Chunk.CHUNK_SIZE * state.CELL_SIZE;
-                                Vector2 origin = new Vector2(8, 8);
+                            float cx = chunkKvp.Key.X * Chunk.CHUNK_SIZE * state.CELL_SIZE;
+                            float cy = chunkKvp.Key.Y * Chunk.CHUNK_SIZE * state.CELL_SIZE;
+                            Vector2 origin = new Vector2(8, 8);
 
-                                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                            {
+                                for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
                                 {
-                                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                                    var tile = chunkKvp.Value.Tiles[x, y];
+                                    if (tile != null)
                                     {
-                                        var tile = chunkKvp.Value.Tiles[x, y];
-                                        if (tile != null)
+                                        var tex = state.TilesetManager.GetTileTexture(tile);
+                                        if (tex != null)
                                         {
-                                            var tex = state.TilesetManager.GetTileTexture(tile);
-                                            if (tex != null)
-                                            {
-                                                Vector2 pos = new Vector2(cx + (x * state.CELL_SIZE) + 8, cy + (y * state.CELL_SIZE) + 8);
-                                                sb.Draw(tex, pos, null, Color.White, tile.Rotation * MathHelper.PiOver2, origin, 1f, SpriteEffects.None, 0f);
-                                            }
+                                            Vector2 pos = new Vector2(cx + (x * state.CELL_SIZE) + 8, cy + (y * state.CELL_SIZE) + 8);
+                                            sb.Draw(tex, pos, null, Color.White, tile.Rotation * MathHelper.PiOver2, origin, 1f, SpriteEffects.None, 0f);
                                         }
                                     }
                                 }
                             }
                         }
-                        else if (layer is ObjectLayer objLayer && layer.Type == LayerType.Object)
+                    }
+                    sb.End();
+
+                    // 2. COLLECT AND Y-SORT ALL OBJECTS ACROSS VISIBLE OBJECT LAYERS
+                    var captureSprites = new List<(PropObject Prop, ObjectPrefab Prefab, float FeetY)>();
+
+                    foreach (var layer in map.Layers)
+                    {
+                        if (!layer.IsVisible || !(layer is ObjectLayer objLayer) || layer.Type != LayerType.Object) continue;
+
+                        foreach (var obj in objLayer.Objects.OfType<PropObject>())
                         {
-                            foreach (var obj in objLayer.Objects)
+                         
+                            var prefab = state.PrefabManager.GetPrefab(obj.PrefabID);
+                            if (prefab != null && prefab.AlternateStates.Count > 0)
+                            { 
+                                float feetY = obj.Position.Y + (prefab.CanvasSize.Y - prefab.Pivot.Y) * obj.Scale.Y;
+                                captureSprites.Add((obj, prefab, feetY));
+                            }
+                        }
+                    }
+
+                    // Sort by feet Y so front objects cleanly overlap rear objects
+                    captureSprites.Sort((a, b) => a.FeetY.CompareTo(b.FeetY));
+
+                    // 3. DRAW COMPOSITE OBJECT LAYERS
+                    sb.Begin(transformMatrix: transform, samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
+
+                    foreach (var item in captureSprites)
+                    {
+                        var prop = item.Prop;
+                        var prefab = item.Prefab;
+                        Vector2 topLeft = prop.Position - (prefab.Pivot * prop.Scale);
+
+                        var layersToDraw = prefab.AlternateStates.Keys.ToList();
+                        layersToDraw.Sort((a, b) => prefab.AlternateStates[a].ZIndex.CompareTo(prefab.AlternateStates[b].ZIndex));
+
+                        foreach (var stateKey in layersToDraw)
+                        {
+                            // Skip interior layers for world captures
+                            if (stateKey.StartsWith("Interior")) continue;
+
+                            var sLayer = prefab.AlternateStates[stateKey];
+
+                            // Skip phantom dummy tile layers
+                            if (string.Equals(sLayer.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
+                                sLayer.SourceRect == new Rectangle(0, 0, 16, 16) && sLayer.Offset == Point.Zero)
                             {
-                                if (obj is PropObject prop)
-                                {
-                                    var prefab = state.PrefabManager.GetPrefab(prop.PrefabID);
-                                    if (prefab != null)
-                                    {
-                                        var tex = state.AssetLibrary.GetAtlas(prefab.AtlasName);
-                                        if (tex != null)
-                                        {
-                                            sb.Draw(tex, prop.Position, prefab.SourceRect, Color.White, prop.Rotation, prefab.Pivot, prop.Scale, SpriteEffects.None, 0f);
-                                        }
-                                    }
-                                }
+                                continue;
+                            }
+
+                            var tex = state.AssetLibrary.GetAtlas(sLayer.AtlasName);
+                            if (tex != null)
+                            {
+                                Vector2 drawPos = topLeft + (sLayer.Offset.ToVector2() * prop.Scale);
+                                Rectangle dest = new Rectangle(
+                                    (int)drawPos.X,
+                                    (int)drawPos.Y,
+                                    (int)(sLayer.SourceRect.Width * prop.Scale.X),
+                                    (int)(sLayer.SourceRect.Height * prop.Scale.Y));
+
+                                sb.Draw(tex, dest, sLayer.SourceRect, Color.White, prop.Rotation, Vector2.Zero, SpriteEffects.None, 0f);
                             }
                         }
                     }
@@ -562,16 +603,14 @@ namespace Pixel_Simulations.Data
 
                 gd.SetRenderTargets(prevTargets);
 
-                // 5. Save to Disk
-                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
-                using (var stream = System.IO.File.OpenWrite(path))
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                using (var stream = File.OpenWrite(path))
                 {
                     target.SaveAsPng(stream, width, height);
                 }
-                System.Diagnostics.Debug.WriteLine($"Map Captured successfully to: {path}");
+                System.Diagnostics.Debug.WriteLine($"[Capture] Map and composite objects captured successfully to: {path}");
             }
         }
-
         private static RectangleF CalculateMapBounds(Map map, PrefabManager prefabManager)
         {
             float minX = float.MaxValue, minY = float.MaxValue;

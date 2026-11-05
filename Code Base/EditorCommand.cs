@@ -329,6 +329,38 @@ namespace Pixel_Simulations.Data
             }
         }
     }
+
+    public class EraseTileAreaCommand : IUndoableCommand
+    {
+        private readonly TileLayer _layer;
+        private readonly Dictionary<Point, TileInfo> _erasedTiles;
+
+        public EraseTileAreaCommand(TileLayer layer, Dictionary<Point, TileInfo> erasedTiles)
+        {
+            _layer = layer;
+            _erasedTiles = erasedTiles;
+        }
+
+        public void Execute()
+        {
+            foreach (var cell in _erasedTiles.Keys)
+            {
+                _layer.RemoveTile(cell);
+            }
+        }
+
+        public void Undo()
+        {
+            foreach (var kvp in _erasedTiles)
+            {
+                if (kvp.Value != null)
+                {
+                    _layer.PlaceTile(kvp.Key, kvp.Value);
+                }
+            }
+        }
+    }
+
     public class SelectTileCommand : ICommand { public string TilesetName; public int TileID; }
     public class PlaceTileAreaCommand : IUndoableCommand
     {

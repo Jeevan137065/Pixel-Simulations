@@ -78,6 +78,9 @@ namespace Pixel_Simulations
             Effects["WindTrails"] = content.Load<Effect>("WindTrails");
             Effects["PaletteSwap"] = content.Load<Effect>("PaletteSwap");
             Effects["DebugChannel"] = content.Load<Effect>("DebugChannel");
+
+            Effects["cleanZoomEffect"] = content.Load<Effect>("CleanZoom");
+            Effects["ZDepthShader"] = content.Load<Effect>("ZDepth");
             // Assign your swirl/streak texture to it
             // Load all Textures
             // Assign static textures to effects immediately

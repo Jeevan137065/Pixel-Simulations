@@ -13,12 +13,12 @@ namespace Pixel_Simulations.UI
         private readonly GameState _state;
         private readonly UITheme _theme;
         private readonly RenderPipeline _pipeline;
-        // UI Framework Elements
-        private UIPanel _pauseRoot;
-        private UIStackPanel _contentArea;
-        private string _activeTab = "Debug";
 
-        // Input state required by UIFramework
+        private UIPanel _pauseRoot;
+        private UIStackPanel _tabStack;
+        private UIStackPanel _contentArea;
+        private string _activeTab = "Status";
+
         public EditorInputState UIInput { get; private set; }
         public UIElement FocusedElement { get; private set; }
 
@@ -31,184 +31,186 @@ namespace Pixel_Simulations.UI
 
             BuildPauseMenu();
         }
+
         private void BuildPauseMenu()
         {
-            int menuWidth = 600;
-            int menuHeight = 400;
+            int menuWidth = 820;
+            int menuHeight = 520;
+            Vector2 menuPos = new Vector2((_pipeline.FinalRect.Width - menuWidth) / 2f, (_pipeline.FinalRect.Height - menuHeight) / 2f);
+
             _pauseRoot = new UIPanel
             {
-                LocalPosition = new Vector2((_pipeline.FinalRect.Width - menuWidth) / 2, (_pipeline.FinalRect.Height - menuHeight) / 2),
+                LocalPosition = menuPos,
                 Size = new Vector2(menuWidth, menuHeight),
-                BackgroundColor = Color.Black * 0.9f,
-                BorderColor = Color.White
+                BackgroundColor = new Color(16, 18, 24, 240),
+                BorderColor = new Color(50, 60, 80)
+                
             };
 
-            // Top Navigation Tabs
-            var tabStack = new UIStackPanel
+            // 1. TOP HEADER BAR
+            var header = new UIStackPanel
             {
                 Direction = StackDirection.Horizontal,
-                LocalPosition = new Vector2(10, 10),
-                Spacing = 10f,
+                LocalPosition = new Vector2(16, 14),
+                Size = new Vector2(menuWidth - 32, 36),
+                AutoSize = false,
+                PanelBackground = Color.Transparent,
+                Spacing = 12f
+            };
+            header.AddChild(new UILabel { Text = "GAME PAUSED", TextColor = Color.Cyan });
+            header.AddChild(new UIPanel { Size = new Vector2(2, 24), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
+
+            _tabStack = new UIStackPanel
+            {
+                Direction = StackDirection.Horizontal,
+                Spacing = 6f,
                 PanelBackground = Color.Transparent
             };
 
-            string[] tabs = { "Map", "Player", "Debug", "Settings", "Resume" };
+            string[] tabs = { "Status", "Environment", "Map / Warp", "Graphics", "Item Spawner" };
             foreach (var tab in tabs)
             {
                 string tabName = tab;
                 var btn = new UIButton
                 {
-                    Size = new Vector2(100, 30),
+                    Size = new Vector2(110, 28),
                     Text = tabName,
-                    BackgroundColor = Color.DarkSlateGray
+                    BackgroundColor = Color.Black * 0.4f
                 };
-
                 btn.OnClick = () =>
                 {
-                    if (tabName == "Resume") _state.DebugPool[GameBool.IsPaused] = false; // Or however you toggle pause
-                    else
-                    {
-                        _activeTab = tabName;
-                        UpdateTabContent();
-                    }
+                    _activeTab = tabName;
+                    UpdateTabContent();
                 };
-                tabStack.AddChild(btn);
+                _tabStack.AddChild(btn);
             }
+            header.AddChild(_tabStack);
+            _pauseRoot.AddChild(header);
 
-            // Content Area (Now a StackPanel to hold multiple UI Elements cleanly!)
+            // 2. MAIN CONTENT AREA
             _contentArea = new UIStackPanel
             {
                 Direction = StackDirection.Vertical,
-                LocalPosition = new Vector2(10, 50),
-                Size = new Vector2(menuWidth - 20, menuHeight - 60),
-                PanelBackground = Color.Black * 0.5f,
-                BorderColor = Color.Gray,
-                Padding = 15f,
+                LocalPosition = new Vector2(16, 60),
+                Size = new Vector2(menuWidth - 32, menuHeight - 125),
+                PanelBackground = new Color(10, 12, 16, 200),
+                BorderColor = new Color(35, 45, 60),
+                Padding = 14f,
+                Spacing = 10f,
+                ClipToBounds = true,
+                AutoSize = false
+            };
+            _pauseRoot.AddChild(_contentArea);
+
+            // 3. FOOTER CONTROL BAR
+            var footer = new UIStackPanel
+            {
+                Direction = StackDirection.Horizontal,
+                LocalPosition = new Vector2(16, menuHeight - 52),
+                Size = new Vector2(menuWidth - 32, 40),
+                AutoSize = false,
+                PanelBackground = Color.Transparent,
                 Spacing = 10f
             };
 
-            _pauseRoot.AddChild(tabStack);
-            _pauseRoot.AddChild(_contentArea);
+            var btnResume = new UIButton
+            {
+                Size = new Vector2(160, 34),
+                Text = "Resume (ESC)",
+                BackgroundColor = new Color(30, 100, 60)
+            };
+            btnResume.OnClick = () => _state.DebugPool[GameBool.IsPaused] = false;
 
-            UpdateTabContent(); // Initial build
+            var btnSave = new UIButton
+            {
+                Size = new Vector2(140, 34),
+                Text = "Save Progress",
+                BackgroundColor = new Color(40, 80, 120)
+            };
+            btnSave.OnClick = () => {
+                _state.SaveGame();
+                UpdateTabContent();
+            };
+
+            footer.AddChild(btnResume);
+            footer.AddChild(btnSave);
+            _pauseRoot.AddChild(footer);
+
+            UpdateTabContent();
         }
 
         private void UpdateTabContent()
         {
-            _contentArea.ClearChildren(); // Remove old tab content
+            _contentArea.ClearChildren();
+            float contentW = _contentArea.Size.X - 28f;
 
-            if (_activeTab == "Map")
+            // Highlight active tab
+            for (int i = 0; i < _tabStack.Children.Count; i++)
             {
-                _contentArea.AddChild(new UILabel { Text = $"Current Map: {_state.CurrentMap?.Layers.Count ?? 0} Layers", TextColor = Color.White });
+                var tabBtn = (UIButton)_tabStack.Children[i];
+                bool isSelected = tabBtn.Text == _activeTab;
+                tabBtn.BackgroundColor = isSelected ? Color.DarkCyan : Color.Black * 0.4f;
+                tabBtn.BorderColor = isSelected ? Color.Cyan : Color.Gray * 0.5f;
             }
-            else if (_activeTab == "Player")
+
+            if (_activeTab == "Status")
             {
-                _contentArea.AddChild(new UILabel { Text = $"Player Position: {_state.Player.Position.X:F0}, {_state.Player.Position.Y:F0}", TextColor = Color.White });
+                _contentArea.AddChild(new UILabel { Text = "CHARACTER & WORLD METRICS", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
+
+                _contentArea.AddChild(new UILabel { Text = $"Position: {_state.Player.Position.X:F0}, {_state.Player.Position.Y:F0} (Facing: {_state.Player.FacingDirection})", TextColor = Color.White });
+                _contentArea.AddChild(new UILabel { Text = $"Date: Year {_state.Calendar.Year}, {_state.Calendar.CurrentSeason} (Day {_state.Calendar.Day}) - Phase: {_state.Calendar.GetCurrentPhase()}", TextColor = Color.LightGray });
+
+                int hrs = (int)_state.TimeSystem.TimeOfDay;
+                int mins = (int)((_state.TimeSystem.TimeOfDay - hrs) * 60);
+                _contentArea.AddChild(new UILabel { Text = $"Time: {hrs:D2}:{mins:D2} | Ambient Temp: {_state.Weather.CurrentClimate.TempC:F1} C", TextColor = Color.LightGray });
+                _contentArea.AddChild(new UILabel { Text = $"Live Weather: {_state.Weather.CurrentWeather} | Wind: {_state.Weather.CurrentClimate.WindKph:F0} km/h", TextColor = Color.LimeGreen });
+                _contentArea.AddChild(new UILabel { Text = $"Inventory Carry Weight: {_state.Player.Inventory.CurrentWeight:F1} / {_state.Player.Inventory.MaxWeight:F1} kg", TextColor = Color.Cyan });
             }
-
-            else if (_activeTab == "Debug")
+            else if (_activeTab == "Environment")
             {
-                _contentArea.AddChild(new UILabel { Text = "Environment Simulation", TextColor = Color.Yellow });
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UILabel { Text = "CALENDAR & CLIMATE CONTROL", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
 
-                // --- 1. CALENDAR CONTROLS ---
-                var calRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+                // Date stepper
+                var calRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Transparent };
+                var prevDayBtn = new UIButton { Size = new Vector2(36, 28), Text = "<", BackgroundColor = Color.DarkSlateGray };
+                prevDayBtn.OnClick = () => { _state.Calendar.DebugSetDate(_state.Calendar.CurrentSeason, _state.Calendar.Day - 1); UpdateTabContent(); };
 
-                var prevDayBtn = new UIButton { Size = new Vector2(40, 30), Text = "<", BackgroundColor = Color.DarkSlateGray };
-                prevDayBtn.OnClick = () => {
-                    _state.Calendar.DebugSetDate(_state.Calendar.CurrentSeason, _state.Calendar.Day - 1);
-                    UpdateTabContent();
-                };
-
-                var seasonBtn = new UIButton { Size = new Vector2(160, 30), Text = $"Season: {_state.Calendar.CurrentSeason}", BackgroundColor = Color.DarkSlateGray };
+                var seasonBtn = new UIButton { Size = new Vector2(170, 28), Text = $"Season: {_state.Calendar.CurrentSeason}", BackgroundColor = Color.DarkSlateGray };
                 seasonBtn.OnClick = () => {
                     int nextS = ((int)_state.Calendar.CurrentSeason + 1) % 6;
                     _state.Calendar.DebugSetDate((Season)nextS, 1);
                     UpdateTabContent();
                 };
 
-                var dayBtn = new UIButton { Size = new Vector2(160, 30), Text = $"Day: {_state.Calendar.Day} ({_state.Calendar.GetCurrentPhase()})", BackgroundColor = Color.DarkSlateGray };
+                var nextDayBtn = new UIButton { Size = new Vector2(36, 28), Text = ">", BackgroundColor = Color.DarkGreen };
+                nextDayBtn.OnClick = () => { _state.Calendar.AdvanceDay(); UpdateTabContent(); };
 
-                var nextDayBtn = new UIButton { Size = new Vector2(40, 30), Text = ">", BackgroundColor = Color.DarkGreen };
-                nextDayBtn.OnClick = () => {
-                    _state.Calendar.AdvanceDay(); // This also naturally advances the season if > 28
-                    UpdateTabContent();
-                };
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
-                _contentArea.AddChild(new UILabel { Text = "Map Navigation:", TextColor = Color.Magenta });
-
-                var teleportRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
-
-                var warpBtn = new UIButton { Size = new Vector2(180, 30), Text = "Warp to Random Spawn", BackgroundColor = Color.DarkMagenta };
-                warpBtn.OnClick = () => {
-                    // Retrieve all map entities tagged with ID '20' (the Spawners)
-                    var spawnEntities = _state._entityManager.AllEntities
-                        .Where(e => e.BaseData.Tags.Contains(20) || e.BaseData is PointObject pt && pt.Label == "Spawn Point")
-                        .ToList();
-
-                    if (spawnEntities.Count > 0)
-                    {
-                        // Pick a random spawn point
-                        Random rand = new Random();
-                        var selectedSpawn = spawnEntities[rand.Next(spawnEntities.Count)];
-                        Vector2 targetPos = selectedSpawn.Position;
-
-                        // Teleport the player
-                        _state.Player.Position = targetPos;
-                        _state.Player.TargetWalkPos = null;
-                        _state.Player.PendingInteraction = null;
-
-                        // Instantly snap the camera to avoid sluggish tracking pans across the entire map
-                        _state.GameCamera.SnapTo(targetPos, _state.GameCamera.Zoom);
-
-                        System.Diagnostics.Debug.WriteLine($"[Warp] Teleported player to spawn point: '{selectedSpawn.BaseData.Name}' at {targetPos.X}, {targetPos.Y}");
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("[Warp] Warning: No active spawn points found on the current map.");
-                    }
-                };
-
-                teleportRow.AddChild(warpBtn);
                 calRow.AddChild(prevDayBtn);
                 calRow.AddChild(seasonBtn);
-                calRow.AddChild(dayBtn);
+                calRow.AddChild(new UILabel { Text = $"Day {_state.Calendar.Day}", TextColor = Color.White });
                 calRow.AddChild(nextDayBtn);
                 _contentArea.AddChild(calRow);
-                _contentArea.AddChild(teleportRow);
 
-                // --- 2. TIME SCRUBBER ---
-                var timeRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 15f, PanelBackground = Color.Transparent, Padding = 10f };
-
-                int hrs = (int)_state.TimeSystem.TimeOfDay;
-                int mins = (int)((_state.TimeSystem.TimeOfDay - hrs) * 60);
-                var timeLabel = new UILabel { Text = $"Time: {hrs:D2}:{mins:D2}", TextColor = Color.White };
-
-                var timeSlider = new UISlider
-                {
-                    Size = new Vector2(300, 20),
-                    Min = 0f,
-                    Max = 23.99f,
-                    Value = _state.TimeSystem.TimeOfDay
-                };
-
+                // Time slider
+                var timeRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
+                int h = (int)_state.TimeSystem.TimeOfDay; int m = (int)((_state.TimeSystem.TimeOfDay - h) * 60);
+                var timeLabel = new UILabel { Text = $"Time: {h:D2}:{m:D2}", TextColor = Color.White };
+                var timeSlider = new UISlider { Size = new Vector2(280, 18), Min = 0f, Max = 23.99f, Value = _state.TimeSystem.TimeOfDay };
                 timeSlider.OnValueChanged = (val) => {
                     _state.TimeSystem.SetTime(val);
-                    int h = (int)val; int m = (int)((val - h) * 60);
-                    timeLabel.Text = $"Time: {h:D2}:{m:D2}";
+                    int curH = (int)val; int curM = (int)((val - curH) * 60);
+                    timeLabel.Text = $"Time: {curH:D2}:{curM:D2}";
                 };
-
                 timeRow.AddChild(timeSlider);
                 timeRow.AddChild(timeLabel);
                 _contentArea.AddChild(timeRow);
 
-                // --- 3. WEATHER OVERRIDES ---
-                var weatherRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
-
-                string wText = _state.Weather.ForcedWeather.HasValue ? _state.Weather.ForcedWeather.Value.ToString() : "Auto";
-                var toggleWeatherBtn = new UIButton { Size = new Vector2(250, 30), Text = $"Force Weather: {wText}", BackgroundColor = _state.Weather.ForcedWeather.HasValue ? Color.DarkCyan : Color.DarkSlateGray };
-
-                toggleWeatherBtn.OnClick = () => {
+                // Weather override button
+                string wText = _state.Weather.ForcedWeather.HasValue ? _state.Weather.ForcedWeather.Value.ToString() : "Dynamic (Forecast)";
+                var weatherBtn = new UIButton { Size = new Vector2(260, 28), Text = $"Weather: {wText}", BackgroundColor = _state.Weather.ForcedWeather.HasValue ? Color.DarkCyan : Color.DarkSlateGray };
+                weatherBtn.OnClick = () => {
                     if (!_state.Weather.ForcedWeather.HasValue) _state.Weather.ForcedWeather = (WeatherType)0;
                     else
                     {
@@ -218,109 +220,150 @@ namespace Pixel_Simulations.UI
                     }
                     UpdateTabContent();
                 };
-
-                // Live Readout Label
-                var wLiveLabel = new UILabel { Text = $"Live: {_state.Weather.CurrentWeather} ({_state.Weather.CurrentClimate.TempC:F0}C)", TextColor = Color.LimeGreen };
-
-                weatherRow.AddChild(toggleWeatherBtn);
-                weatherRow.AddChild(wLiveLabel);
-                _contentArea.AddChild(weatherRow);
-
-                // --- 4. DEBUG TOGGLES ---
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
-                _contentArea.AddChild(new UILabel { Text = "Visual Debug Toggles:", TextColor = Color.Cyan });
-
-                var toggleRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
-                var toggleColBtn = new UIButton { Size = new Vector2(150, 30), Text = $"Hitboxes: {_state.DebugPool[GameBool.ShowCollision]}", BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed };
-                toggleColBtn.OnClick = () => { _state.DebugPool[GameBool.ShowCollision] = !_state.DebugPool[GameBool.ShowCollision]; UpdateTabContent(); };
-                toggleRow.AddChild(toggleColBtn);
-
-                var toggleParaBtn = new UIButton { Size = new Vector2(150, 30), Text = $"Parallax: {_state.DebugPool[GameBool.EnableParallax]}", BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed };
-                toggleParaBtn.OnClick = () => { _state.DebugPool[GameBool.EnableParallax] = !_state.DebugPool[GameBool.EnableParallax]; UpdateTabContent(); };
-                toggleRow.AddChild(toggleParaBtn);
-
-                _contentArea.AddChild(toggleRow);
-
-                // --- 5. ITEM SPAWNER (NEW!) ---
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
-                _contentArea.AddChild(new UILabel { Text = "Item Spawner:", TextColor = Color.Yellow });
-
-                var spawnRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
-
-                var idInput = new UITextBox { Size = new Vector2(60, 30), Text = "1", Placeholder = "ID" };
-                // Ensure the text updates as we type
-                idInput.OnTextChanged = (t) => idInput.Text = t;
-
-                var amtInput = new UITextBox { Size = new Vector2(60, 30), Text = "1", Placeholder = "Amt" };
-                amtInput.OnTextChanged = (t) => amtInput.Text = t;
-
-                var spawnBtn = new UIButton { Size = new Vector2(120, 30), Text = "Give to Player", BackgroundColor = Color.DarkGreen };
-                spawnBtn.OnClick = () => {
-                    if (int.TryParse(idInput.Text, out int id) && int.TryParse(amtInput.Text, out int amt))
-                    {
-                        int left = _state.Player.Inventory.AddItem(id, amt, _state.ItemManager);
-                        if (left < amt) System.Diagnostics.Debug.WriteLine($"Spawned {amt - left}x of Item {id}");
-                        else System.Diagnostics.Debug.WriteLine("Inventory is full or Item ID does not exist!");
-                    }
-                };
-
-                spawnRow.AddChild(new UILabel { Text = "ID:", TextColor = Color.LightGray });
-                spawnRow.AddChild(idInput);
-                spawnRow.AddChild(new UILabel { Text = "Amt:", TextColor = Color.LightGray });
-                spawnRow.AddChild(amtInput);
-                spawnRow.AddChild(spawnBtn);
-
-                _contentArea.AddChild(spawnRow);
-
+                _contentArea.AddChild(weatherBtn);
             }
-            else if (_activeTab == "Settings")
+            else if (_activeTab == "Map / Warp")
             {
-                _contentArea.AddChild(new UILabel { Text = "Video Settings", TextColor = Color.Yellow });
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(500, 2), BackgroundColor = Color.Gray });
+                _contentArea.AddChild(new UILabel { Text = "FAST TRAVEL & WAYPOINTS", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
 
-                // 1. Toggle Parallax
-                var toggleParaBtn = new UIButton { Size = new Vector2(250, 35), Text = $"Enable Parallax: {_state.DebugPool[GameBool.EnableParallax]}", BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed };
-                toggleParaBtn.OnClick = () =>
+                // Gather all valid spawn anchors across the world
+                var spawnList = _state._entityManager.AllEntities
+                    .Where(e => e.BaseData.Tags.Contains(20) ||
+                               (e.BaseData is PointObject pt && pt.Label.IndexOf("Spawn", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                               (e.BaseData.Properties.ContainsKey("SpawnType")))
+                    .ToList();
+
+                if (spawnList.Count == 0)
                 {
+                    _contentArea.AddChild(new UILabel { Text = "No active spawn points found on current map.", TextColor = Color.Gray });
+                }
+                else
+                {
+                    _contentArea.AddChild(new UILabel { Text = $"Found {spawnList.Count} registered destination(s):", TextColor = Color.LightGray });
+
+                    for (int i = 0; i < spawnList.Count; i++)
+                    {
+                        var spawnEntity = spawnList[i];
+                        int index = i + 1;
+
+                        string spawnName = !string.IsNullOrEmpty(spawnEntity.BaseData.Name)
+                            ? spawnEntity.BaseData.Name
+                            : $"Waypoint #{index}";
+
+                        string spawnType = spawnEntity.GetProperty("SpawnType", "General");
+                        Vector2 targetPos = spawnEntity.Position;
+
+                        var row = new UIStackPanel
+                        {
+                            Direction = StackDirection.Horizontal,
+                            Spacing = 10f,
+                            PanelBackground = Color.Black * 0.3f,
+                            Padding = 4f
+                        };
+
+                        var warpBtn = new UIButton
+                        {
+                            Size = new Vector2(180, 26),
+                            Text = $"Teleport to #{index}",
+                            BackgroundColor = Color.DarkMagenta
+                        };
+
+                        warpBtn.OnClick = () => {
+                            _state.Player.Position = targetPos;
+                            _state.Player.TargetWalkPos = null;
+                            _state.Player.PendingInteraction = null;
+                            _state.GameCamera.SnapTo(targetPos, _state.GameCamera.Zoom);
+                            _state.DebugPool[GameBool.IsPaused] = false;
+                        };
+
+                        row.AddChild(warpBtn);
+                        row.AddChild(new UILabel { Text = $"{spawnName} [{spawnType}] at ({targetPos.X:F0}, {targetPos.Y:F0})", TextColor = Color.White });
+
+                        _contentArea.AddChild(row);
+                    }
+                }
+            }
+            else if (_activeTab == "Graphics")
+            {
+                _contentArea.AddChild(new UILabel { Text = "GRAPHICS & CAMERA SETTINGS", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
+
+                var toggleParaBtn = new UIButton
+                {
+                    Size = new Vector2(220, 28),
+                    Text = $"Parallax: {(_state.DebugPool[GameBool.EnableParallax] ? "ENABLED" : "DISABLED")}",
+                    BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed
+                };
+                toggleParaBtn.OnClick = () => {
                     _state.DebugPool[GameBool.EnableParallax] = !_state.DebugPool[GameBool.EnableParallax];
                     UpdateTabContent();
                 };
                 _contentArea.AddChild(toggleParaBtn);
 
-                // 2. Adjust Strength Slider (- / +)
-                var strengthRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 10f };
-                strengthRow.AddChild(new UILabel { Text = "Parallax Strength:", TextColor = Color.White });
-
-                var minusBtn = new UIButton { Size = new Vector2(40, 30), Text = "-", BackgroundColor = Color.DarkSlateGray };
-                // Clamps min to 0.0f
-                minusBtn.OnClick = () => { _state.ParallaxStrength = System.Math.Max(0.0f, _state.ParallaxStrength - 0.05f); UpdateTabContent(); };
-
-                var valueLbl = new UILabel { Text = $"{_state.ParallaxStrength:F2}", TextColor = Color.Cyan };
-
-                var plusBtn = new UIButton { Size = new Vector2(40, 30), Text = "+", BackgroundColor = Color.DarkSlateGray };
-                // Clamps max to 0.5f as requested!
-                plusBtn.OnClick = () => { _state.ParallaxStrength = System.Math.Min(0.5f, _state.ParallaxStrength + 0.05f); UpdateTabContent(); };
-
-                strengthRow.AddChild(minusBtn);
-                strengthRow.AddChild(valueLbl);
-                strengthRow.AddChild(plusBtn);
-
-                _contentArea.AddChild(strengthRow);
+                var toggleColBtn = new UIButton
+                {
+                    Size = new Vector2(220, 28),
+                    Text = $"Hitboxes: {(_state.DebugPool[GameBool.ShowCollision] ? "VISIBLE" : "HIDDEN")}",
+                    BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed
+                };
+                toggleColBtn.OnClick = () => {
+                    _state.DebugPool[GameBool.ShowCollision] = !_state.DebugPool[GameBool.ShowCollision];
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleColBtn);
+                var toggleZoomBtn = new UIButton
+                {
+                    Size = new Vector2(240, 28),
+                    Text = $"Dev Zoom Levels: {(_state.DebugPool[GameBool.ExtendedZoom] ? "ENABLED (0.5x-4x)" : "LOCKED (1x, 2x)")}",
+                    BackgroundColor = _state.DebugPool[GameBool.ExtendedZoom] ? Color.DarkCyan : Color.DarkSlateGray
+                };
+                toggleZoomBtn.OnClick = () => {
+                    _state.DebugPool[GameBool.ExtendedZoom] = !_state.DebugPool[GameBool.ExtendedZoom];
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleZoomBtn);
             }
+            else if (_activeTab == "Item Spawner")
+            {
+                _contentArea.AddChild(new UILabel { Text = "INVENTORY ITEM SPAWNER", TextColor = Color.Yellow });
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
+
+                var spawnRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Transparent };
+                var idInput = new UITextBox { Size = new Vector2(60, 28), Text = "1", Placeholder = "ID" };
+                idInput.OnTextChanged = (t) => idInput.Text = t;
+
+                var amtInput = new UITextBox { Size = new Vector2(60, 28), Text = "5", Placeholder = "Amt" };
+                amtInput.OnTextChanged = (t) => amtInput.Text = t;
+
+                var giveBtn = new UIButton { Size = new Vector2(130, 28), Text = "Add to Inventory", BackgroundColor = Color.DarkGreen };
+                giveBtn.OnClick = () => {
+                    if (int.TryParse(idInput.Text, out int id) && int.TryParse(amtInput.Text, out int amt))
+                    {
+                        _state.Player.Inventory.AddItem(id, amt, _state.ItemManager);
+                    }
+                };
+
+                spawnRow.AddChild(new UILabel { Text = "ID:", TextColor = Color.LightGray });
+                spawnRow.AddChild(idInput);
+                spawnRow.AddChild(new UILabel { Text = "Qty:", TextColor = Color.LightGray });
+                spawnRow.AddChild(amtInput);
+                spawnRow.AddChild(giveBtn);
+                _contentArea.AddChild(spawnRow);
+            }
+            _contentArea.UpdateLayout();
         }
+
         public void Update(GameTime gameTime)
         {
-            // Feed real-time input data into the UI framework input wrapper
             UIInput.CurrentMouse = Mouse.GetState();
             UIInput.CurrentKeyboard = Keyboard.GetState();
             UIInput.MouseWindowPosition = UIInput.CurrentMouse.Position.ToVector2();
-            UIInput.Update(gameTime); // Processes click timers
+            UIInput.Update(gameTime);
 
             if (_state.IsPaused)
             {
                 if (UIInput.IsNewLeftClick) CheckFocusClick(_pauseRoot, UIInput);
-                // Pass null for EditorUI and EventBus since we don't use them in the game side
                 _pauseRoot.Update(UIInput, null);
             }
 
@@ -330,82 +373,38 @@ namespace Pixel_Simulations.UI
 
         public void Draw(SpriteBatch sb)
         {
+            // Always ensure the default font is globally accessible to labels
+            if (UITheme.DefaultFont == null && _theme.Font != null)
+            {
+                UITheme.DefaultFont = _theme.Font;
+            }
+
             sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
-            // Draw HUD (Always visible)
-            DrawDebugInfo(sb);
-            //sb.DrawString(_theme.Font, $"Time: {_state.TimeSystem.TimeOfDay:F1} | Weather: {_state.Weather.CurrentWeather}", new Vector2(10, 10), Color.White);
-            //sb.DrawString(_theme.Font, "Press ESC to Pause", new Vector2(10, 35), Color.Yellow);
+            // 1. ALWAYS DRAW THE ON-SCREEN DEBUG READOUT (Left Screen Space)
+            if (_state.DebugPool.ContainsKey(GameBool.ShowShapes) && _state.DebugPool[GameBool.ShowShapes])
+            {
+                DrawDebugInfo(sb);
+            }
+            else
+            {
+                // Even if debug shapes are toggled off, keep the core diagnostic telemetry
+                DrawDebugInfo(sb);
+            }
 
-            // Draw Pause Menu (Only when paused)
+            // 2. DRAW PAUSE MENU MODAL (Only when paused)
             if (_state.IsPaused)
             {
-                // Darken the background screen
-                sb.FillRectangle(_pipeline.FinalRect, Color.Black * 0.5f);
+                // Darken the background viewport with frosted tint
+                sb.FillRectangle(_pipeline.FinalRect, Color.Black * 0.65f);
 
-                // Draw the UI Element hierarchy
-                _pauseRoot.Draw(sb, null, _theme);
+                // Render the Pause UI hierarchy
+                _pauseRoot.Draw(sb, this, _theme);
             }
 
             sb.End();
         }
-        private void DrawDebugInfo(SpriteBatch sb)
-        {
-            if (_theme.Font == null) return;
 
-            var cam = _state.GameCamera;
-            var player = _state.Player;
-            var heldStack = player.Inventory.GetSelectedItem();
-            string heldStr = heldStack != null ? $"ID: {heldStack.ItemID} (Qty: {heldStack.Count})" : "Empty Hands";
-
-            var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
-            string tilledStr = tilledLayer != null ? $"Exists ({tilledLayer.Chunks.Count} chunks)" : "Not Created Yet";
-            // Build the massive debug string
-            string debugText =
-                "--- PIPELINE STATE ---\n" +
-                $"Current Debug RT: {_pipeline._currentDebugView}\n" +
-                $"Native Rect: {_pipeline.NativeRect}\n" +
-                $"Sim Rect: {_pipeline.SimRect}\n" +
-                $"Final Rect: {_pipeline.FinalRect}\n\n" +
-
-                "--- CAMERA STATE ---\n" +
-                $"Pos: {cam.Position.X:F1}, {cam.Position.Y:F1}\n" +
-                $"Zoom: {cam.Zoom:F2}\n" +
-                $"Cull View: {cam.SimViewBounds}\n\n" +
-
-                "--- WEATHER ---\n" +
-                $"CurrentTime: {_state.TimeSystem.TimeOfDay:F3}, {_state.TimeSystem.GetDebugInfo()}\n" +
-                //$"Weather Data: {_state.Weather.CurrentSeason}, {_state.Weather.CurrentClimate}, {_state.Weather.CurrentWeather}\n" +
-                $"Shaders Loaded: {_state.Shaders.Effects.Count}\n" +
-                $"Weather info: {_state.Weather.GetDebugInfo(_state.TimeSystem.TimeOfDay)}\n\n" +
-                //"--- MATRICES ---\n" +
-                //$"Native M11(ScaleX): {cam.NativeTransform.M11:F3}\n" +
-                //$"Native M41(TransX): {cam.SimTransform.M41:F3}\n" +
-                //$"Sim M11(ScaleX): {cam.SimTransform.M11:F3}\n" +
-                //$"Sim M41(TransX): {cam.SimTransform.M41:F3}\n\n" +
-                "--- PLAYER ---\n" +
-                $"Pos: {player.Position.X:F1}, {player.Position.Y:F1}\n" +
-               $"Held Item: {heldStr}\n" +
-                $"Mouse in World: {_state.input.MouseWorldPosition}"+
-                "--- ITEMS ---\n" +
-                $"Items Loaded: {_state.ItemManager.Items.Count} , Physical Items : {_state.ItemManager.PhysicalItems.Count}\n" +
-                $"Grass Count {_state.Grass._bladeVertCount}"+
-                "--- INTERACTION ENGINE ---\n" +
-            $"Tilled Layer Status: {tilledStr}\n" +
-            $"Farmable Status: {_state.Debug_FarmableStatus}\n" +
-            $"Last Payload: \n  {_state.Debug_LastPayload.Replace("\n", "\n  ")}\n" +
-            $"Last Command: {_state.Debug_LastCommand}\n\n" +
-
-            "--- MAP ---\n" +
-                $"Loaded: {_state.CurrentMap != null}\n" +
-                $"Layers: {_state.CurrentMap?.Layers.Count ?? 0}\n" +
-                $"Composite Cache Size: {_state._entityManager._compositeCache.Count} textures\n" +
-                $"Mask Layer Chunks {_state.TerrainMaskChunks.Count}";
-
-            // Draw black shadow for readability
-            sb.DrawString(_theme.Font, debugText, new Vector2(11, 11), Color.Black);
-            sb.DrawString(_theme.Font, debugText, new Vector2(10, 10), Color.LimeGreen);
-        }
         public void SetFocus(UIElement element)
         {
             if (FocusedElement != null) FocusedElement.IsFocused = false;
@@ -419,6 +418,7 @@ namespace Pixel_Simulations.UI
             if (hit is UITextBox) SetFocus(hit);
             else if (hit == null || !(hit is UIButton)) SetFocus(null);
         }
+
         private UIElement FindElementAt(UIElement element, Vector2 mousePos)
         {
             if (!element.IsVisible || !element.AbsoluteBounds.Contains(mousePos)) return null;
@@ -429,6 +429,55 @@ namespace Pixel_Simulations.UI
             }
             return element;
         }
-        public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color) { } // Ignored for GameUI
+        private void DrawDebugInfo(SpriteBatch sb)
+        {
+            if (_theme.Font == null) return;
+
+            var cam = _state.GameCamera;
+            var player = _state.Player;
+            var heldStack = player?.Inventory?.GetSelectedItem();
+            string heldStr = heldStack != null ? $"ID: {heldStack.ItemID} (Qty: {heldStack.Count})" : "Empty Hands";
+
+            var tilledLayer = _state.CurrentMap?.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+            string tilledStr = tilledLayer != null ? $"Exists ({tilledLayer.Chunks.Count} chunks)" : "Not Created Yet";
+
+            int hrs = (int)_state.TimeSystem.TimeOfDay;
+            int mins = (int)((_state.TimeSystem.TimeOfDay - hrs) * 60);
+
+            string debugText =
+                "--- ENGINE PIPELINE ---\n" +
+                $"Active RT View: {_pipeline._currentDebugView}\n" +
+                $"Native Target: {_pipeline.NativeRect.Width}x{_pipeline.NativeRect.Height} (480p)\n" +
+                $"Simulation RT: {_pipeline.SimRect.Width}x{_pipeline.SimRect.Height} (960p)\n" +
+                $"Presentation : {_pipeline.FinalRect.Width}x{_pipeline.FinalRect.Height} (1080p)\n\n" +
+
+                "--- CAMERA STATE ---\n" +
+                $"Center World: {cam.Position.X:F1}, {cam.Position.Y:F1}\n" +
+                $"Zoom Level  : {cam.Zoom:F2}x\n" +
+                $"Sim Bounds  : {cam.SimViewBounds.X},{cam.SimViewBounds.Y} [{cam.SimViewBounds.Width}x{cam.SimViewBounds.Height}]\n\n" +
+
+                "--- ENVIRONMENT & CLIMATE ---\n" +
+                $"Time of Day : {hrs:D2}:{mins:D2} (Scale: {_state.TimeSystem.TimeScale:F3})\n" +
+                $"Season/Date : Year {_state.Calendar.Year}, {_state.Calendar.CurrentSeason} (Day {_state.Calendar.Day})\n" +
+                $"Weather Live: {_state.Weather.CurrentWeather} (Temp: {_state.Weather.CurrentClimate.TempC:F1}C)\n" +
+                $"Atmosphere  : Humid: {_state.Weather.CurrentClimate.Humidity:F0}% | Wind: {_state.Weather.CurrentClimate.WindKph:F0} kph\n\n" +
+
+                "--- PLAYER ENTITY ---\n" +
+                $"World Foot  : {player.Foot.X:F1}, {player.Foot.Y:F1}\n" +
+                $"Facing Dir  : {player.FacingDirection} | Moving: {player.IsMoving}\n" +
+                $"Held Item   : {heldStr}\n" +
+                $"Mouse World : {_state.input.MouseWorldPosition.X:F0}, {_state.input.MouseWorldPosition.Y:F0}\n\n" +
+
+                "--- WORLD BUFFERS ---\n" +
+                $"Map Layers  : {_state.CurrentMap?.Layers.Count ?? 0} | Tilled Soil: {tilledStr}\n" +
+                $"Mask Chunks : {_state.TerrainMaskChunks.Count} Loaded\n" +
+                $"Active Sprites: {_state._entityManager._drawList.Count}\n" +
+                $"Composite Cache: {_state._entityManager._compositeCache.Count} Textures";
+
+            // Drop shadow for legibility over bright backgrounds
+            sb.DrawString(_theme.Font, debugText, new Vector2(16, 16), Color.Black * 0.9f);
+            sb.DrawString(_theme.Font, debugText, new Vector2(15, 15), Color.LimeGreen);
+        }
+        public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color) { }
     }
 }
