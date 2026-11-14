@@ -1,0 +1,833 @@
+{
+  "Layers": [
+    {
+      "$type": "Mask",
+      "Name": "Mask",
+      "IsVisible": true,
+      "IsLocked": false,
+      "OffsetX": 0,
+      "OffsetY": 0
+    },
+    {
+      "$type": "Object",
+      "Name": "Object3",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Objects": [
+        {
+          "Type": 0,
+          "PrefabID": "Bamboo",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "18123fa4",
+          "Name": "Bamboo_1",
+          "Position": {
+            "X": 61.5,
+            "Y": 16.5
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        }
+      ]
+    },
+    {
+      "$type": "Control",
+      "Name": "Control2",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Rectangles": [],
+      "Shapes": [
+        {
+          "Type": 2,
+          "Shape": {
+            "Vertices": [
+              {
+                "X": 112.0,
+                "Y": 128.0
+              },
+              {
+                "X": 254.0,
+                "Y": 128.0
+              },
+              {
+                "X": 254.0,
+                "Y": 158.0
+              },
+              {
+                "X": 112.0,
+                "Y": 158.0
+              }
+            ]
+          },
+          "Size": {
+            "X": 142.0,
+            "Y": 30.0
+          },
+          "DebugColor": "255,0,0,255",
+          "SpineWaypoints": [],
+          "ID": "a7930e3b",
+          "Name": "Control2_Shape_1",
+          "Position": {
+            "X": 112.0,
+            "Y": 128.0
+          },
+          "Tags": [
+            2
+          ],
+          "Properties": {
+            "CollisionSide": {
+              "Type": 0,
+              "Value": "Bottom"
+            }
+          },
+          "Links": []
+        }
+      ],
+      "Points": [
+        {
+          "Type": 3,
+          "Radius": 8.0,
+          "Center": {
+            "X": 0.0,
+            "Y": 0.0
+          },
+          "Label": "Spawn Point",
+          "DebugColor": "255,0,255,255",
+          "ID": "4ca44c36",
+          "Name": "Enterance",
+          "Position": {
+            "X": 232.0,
+            "Y": 40.0
+          },
+          "Tags": [
+            20
+          ],
+          "Properties": {
+            "SpawnType": {
+              "Type": 0,
+              "Value": "Player"
+            }
+          },
+          "Links": []
+        }
+      ]
+    },
+    {
+      "$type": "Tile",
+      "Name": "Ground",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Chunks": [
+        {
+          "Key": {
+            "X": 1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 1,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 1,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 0,
+            "Y": 0
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 0
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 136,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": 0,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": 0,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "Wild",
+                  "TileID": 159,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

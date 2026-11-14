@@ -30,6 +30,7 @@ namespace Pixel_Simulations
             ColorSourceBlend = Blend.One,
             ColorDestinationBlend = Blend.Zero
         };
+        private BasicEffect _debugPolyEffect;
         public GameRenderer(GameState state,  RenderPipeline pipeline, int width, int height)
         {
             _state = state;
@@ -49,7 +50,7 @@ namespace Pixel_Simulations
             _state.GameCamera.Setcamera(_pipeline.NativeRect, _pipeline.SimRect, _pipeline.FinalRect);
             
             var grassAreas = new List<RectangleF>();
-            var grassEntities = _state._entityManager.GetByTag(100);
+            var grassEntities = _state._entityManager.GetByTag(SystemTags.VEGETATION);
             _state._entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, gd);
 
             _state.Assets.LoadAtlas("emotes", AtlasType.Universal);
@@ -98,7 +99,7 @@ namespace Pixel_Simulations
             _reflectionRegions.Clear();
 
             // Query the fast dictionary for exactly what we need!
-            var reflectionEntities = _state._entityManager.GetByTag(10);
+            var reflectionEntities = _state._entityManager.GetByTag(SystemTags.REFLECTION);
 
             foreach (var entity in reflectionEntities)
             {
@@ -215,6 +216,7 @@ namespace Pixel_Simulations
 
             // Step 5: Composition, Presentation, HUD & Debug UI
             CompositeAndPresentFinalFrame(gameTime, spriteBatch);
+
         }
 
         private void ExecutePreLogicAndSimulation(GameTime gameTime)
@@ -248,91 +250,357 @@ namespace Pixel_Simulations
 
         private void RenderAlbedoGeometryAndNormalPasses(SpriteBatch spriteBatch, GameTime gameTime, RectangleF streamBounds, float strength, bool useParallax)
         {
-            // 1. Terrain Tiles (Native Viewport: A/2 x B/2)
-            _pipeline.Begin(RenderLayer.Albedo, Color.Transparent, _state.GameCamera);
-            _pipeline.Begin(RenderLayer.Simulation, Color.Transparent, _state.GameCamera);
+            var celestial = ModularBuildingRenderer.GetCelestialState(_state.TimeSystem.TimeOfDay);
+            var modularBuildings = _state.CurrentMap?.Layers
+                .OfType<ObjectLayer>()
+                .SelectMany(l => l.Objects.OfType<ModularBuildingInstance>())
+                .ToList() ?? new List<ModularBuildingInstance>();
 
-            spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
-            _mapRenderer.DrawLayerByName(spriteBatch, "Tilled_Dirt");
-            spriteBatch.End();
+            if (!_state.IsInsideBuilding)
+            {
+                // ==============================================================
+                // OUTSIDE OVERWORLD RENDERING
+                // ==============================================================
+                // A. Terrain & Tilled Dirt (Native 480x270)
+                _pipeline.Begin(RenderLayer.Albedo, Color.Transparent, _state.GameCamera);
+                _pipeline.Begin(RenderLayer.Simulation, Color.Transparent, _state.GameCamera);
 
-            _pipeline.Begin(RenderLayer.Albedo, Color.Transparent, _state.GameCamera);
-            spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
-            _mapRenderer.Draw(spriteBatch, LayerType.Tile, "Tilled_Dirt");
-            spriteBatch.End();
+                spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
+                _mapRenderer.Draw(spriteBatch, LayerType.Tile);
 
-            // 2. Terrain Normals (Simulation Viewport: A x B)
-            _pipeline.Begin(RenderLayer.Normal, new Color(128, 128, 255, 255), _state.GameCamera);
-            _depthRenderer.DrawChunks(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
+                // Draw Building Floor Plates directly onto ground Albedo
+                foreach (var bldg in modularBuildings)
+                {
+                    ModularBuildingRenderer.DrawBuildingFloorPlates(spriteBatch, bldg, _state.Assets);
+                }
+                spriteBatch.End();
 
-            // 3. Dynamic Entities (Simulation Viewport: A x B)
-            // FIX: Use _pipeline.Begin instead of calling SetRenderTarget directly!
-            _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent, _state.GameCamera);
-            _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
+                // B. Normal Buffer (Terrain Normals + Dynamic Entity Normals + Modular Building Normals)
+                _pipeline.Begin(RenderLayer.Normal, new Color(128, 128, 255, 255), _state.GameCamera);
+                _depthRenderer.DrawChunks(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
 
-            // 4. Dynamic Normals (Simulation Viewport: A x B)
-            // FIX: Use _pipeline.Begin without clear
-            _pipeline.Begin(RenderLayer.Normal, null, _state.GameCamera);
-            _state._entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength, _state._entityManager._drawList);
+                _state._entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength, _state._entityManager._drawList);
 
-            // 5. Dynamic Grass (Simulation Viewport: A x B)
-            _pipeline.Begin(RenderLayer.Dynamic, null, _state.GameCamera);
-            _state.Grass.Draw(_state.GameCamera.SimWVP, _pipeline.GetRenderTarget(RenderLayer.YDepth));
+                spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.SimTransform);
+                foreach (var bldg in modularBuildings)
+                {
+                    ModularBuildingRenderer.DrawBuildingNormals(spriteBatch, bldg, _state.Assets);
+                }
+                spriteBatch.End();
+
+                // C. Dynamic Entities & Modular Buildings (Simulation 960x540)
+                _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent, _state.GameCamera);
+                _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
+
+                // Render Modular Buildings with Real-Time Celestial Shading
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.SimTransform);
+                foreach (var bldg in modularBuildings)
+                {
+                    ModularBuildingRenderer.DrawBuildingDynamicGame(spriteBatch, bldg, _state.Assets, celestial, _state.Player.Foot.Y);
+                }
+                spriteBatch.End();
+
+                // D. Procedural Wind-Blown Grass
+                _pipeline.Begin(RenderLayer.Dynamic, null, _state.GameCamera);
+                _state.Grass.Draw(_state.GameCamera.SimWVP, _pipeline.GetRenderTarget(RenderLayer.YDepth));
+            }
+            else
+            {
+                // ==============================================================
+                // INSIDE BUILDING INTERIOR ISOLATION
+                // ==============================================================
+                // 1. Clear Albedo to cozy dark void (Hides exterior terrain)
+                _pipeline.Begin(RenderLayer.Albedo, new Color(12, 14, 18), _state.GameCamera);
+                _pipeline.Begin(RenderLayer.Simulation, new Color(12, 14, 18), _state.GameCamera);
+
+                // Draw Floor Plates for the active interior building
+                spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
+                foreach (var bldg in modularBuildings.Where(b => b.IsPlayerInside))
+                {
+                    ModularBuildingRenderer.DrawBuildingFloorPlates(spriteBatch, bldg, _state.Assets);
+                }
+                spriteBatch.End();
+
+                // 2. Dynamic Layer: Interior Walls + Player + Indoor Props
+                _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent, _state.GameCamera);
+
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.SimTransform);
+                foreach (var bldg in modularBuildings.Where(b => b.IsPlayerInside))
+                {
+                    ModularBuildingRenderer.DrawBuildingDynamicGame(spriteBatch, bldg, _state.Assets, celestial, _state.Player.Foot.Y);
+                }
+                spriteBatch.End();
+
+                // Draw Player & Active Facade Interior
+                var interiorSprites = _state._entityManager._drawList.Where(s =>
+                    s.AtlasName == "Player" ||
+                    (_state.ActiveBuildingInterior != null && s.Position == _state.ActiveBuildingInterior.Position)
+                ).ToList();
+
+                _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, false, 0f, interiorSprites);
+            }
         }
 
         private void RenderLightMaskAndAtmosphericOverlays(GameTime gameTime, SpriteBatch spriteBatch)
         {
-            _pipeline.Begin(RenderLayer.Shader, Color.Transparent);
-            _state.Shaders.DrawWeatherOverlays(spriteBatch, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height), _state.Weather, _pipeline.GetRenderTarget(RenderLayer.YDepth));
-            _state.Shaders.DrawParticleWeather(spriteBatch, _state.Weather, _state.GameCamera.SimWVP, (float)gameTime.TotalGameTime.TotalSeconds);
-        }
+            var celestial = ModularBuildingRenderer.GetCelestialState(_state.TimeSystem.TimeOfDay);
 
+            // 1. Render Celestial Ambient Tint into LightMask
+            _pipeline.Begin(RenderLayer.LightMask, Color.Transparent, _state.GameCamera);
+            if (!celestial.IsDay || celestial.Ambient < 0.30f)
+            {
+                // Apply subtle dusk/night tint across the viewport
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+                Color nightOverlay = celestial.LightColor * (celestial.IsDay ? 0.12f : 0.35f);
+                spriteBatch.FillRectangle(_state.GameCamera.SimViewportRect, nightOverlay);
+                spriteBatch.End();
+            }
+
+            // 2. Render Atmospheric Weather & Particles (Outside only)
+            _pipeline.Begin(RenderLayer.Shader, Color.Transparent, _state.GameCamera);
+            if (!_state.IsInsideBuilding)
+            {
+                _state.Shaders.DrawWeatherOverlays(spriteBatch, _state.GameCamera.Position, new Vector2(_pipeline.SimRect.Width, _pipeline.SimRect.Height), _state.Weather, _pipeline.GetRenderTarget(RenderLayer.YDepth));
+                _state.Shaders.DrawParticleWeather(spriteBatch, _state.Weather, _state.GameCamera.SimWVP, (float)gameTime.TotalGameTime.TotalSeconds);
+            }
+        }
+        private void sbFillPolygon(SpriteBatch sb, Polygon poly, Color color)
+        {
+            if (poly == null || poly.Vertices == null || poly.Vertices.Count < 3) return;
+
+            var verts = poly.Vertices;
+            int triangleCount = verts.Count - 2;
+            var vertices = new VertexPositionColor[triangleCount * 3];
+
+            int vIdx = 0;
+            for (int i = 1; i < verts.Count - 1; i++)
+            {
+                vertices[vIdx++] = new VertexPositionColor(new Vector3(verts[0].X, verts[0].Y, 0), color);
+                vertices[vIdx++] = new VertexPositionColor(new Vector3(verts[i].X, verts[i].Y, 0), color);
+                vertices[vIdx++] = new VertexPositionColor(new Vector3(verts[i + 1].X, verts[i + 1].Y, 0), color);
+            }
+
+            // Temporarily flush the SpriteBatch to draw 2D colored primitives
+            sb.End();
+
+            if (_debugPolyEffect == null)
+            {
+                _debugPolyEffect = new BasicEffect(_gd)
+                {
+                    VertexColorEnabled = true,
+                    TextureEnabled = false
+                };
+            }
+
+            _debugPolyEffect.World = Matrix.Identity;
+            _debugPolyEffect.View = Matrix.Identity;
+            _debugPolyEffect.Projection = _state.GameCamera.ScreenWVP;
+
+            var prevRasterizer = _gd.RasterizerState;
+            var prevBlend = _gd.BlendState;
+
+            _gd.RasterizerState = RasterizerState.CullNone;
+            _gd.BlendState = BlendState.AlphaBlend;
+
+            foreach (var pass in _debugPolyEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                _gd.DrawUserPrimitives(PrimitiveType.TriangleList, vertices, 0, triangleCount);
+            }
+
+            _gd.RasterizerState = prevRasterizer;
+            _gd.BlendState = prevBlend;
+
+            // Resume SpriteBatch with the exact same camera matrix
+            sb.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.ScreenTransform);
+        }
         private void CompositeAndPresentFinalFrame(GameTime gameTime, SpriteBatch spriteBatch)
         {
+            // 1. PRESENT COMPOSITE WORLD & POST-PROCESSING TO BACKBUFFER
             _pipeline.PresentFinal(spriteBatch, _state.GameCamera);
             _pipeline.PostFinal(spriteBatch, _state.GameCamera, _state.Shaders.GetActivePostProcessingEffects());
 
-            // HUD (1080p Screen Space)
-            spriteBatch.Begin();
+            // 2. WORLD-SPACE DEBUG OVERLAYS (Collisions, Footprints, Spawners, Wireframes)
+            // Uses ScreenTransform to map World Coordinates -> 1080p Screen Coordinates
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.ScreenTransform);
+            Debug_Draw(spriteBatch);
+            spriteBatch.End();
+
+            // 3. SCREEN-SPACE HUD, INVENTORY & MOUSE TOOLTIPS (1080p Screen Space / Identity Matrix)
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             HUD.Draw(spriteBatch);
             HUD.DrawInventory(spriteBatch, _state);
+            HUD.DebugDraw(_state, spriteBatch); // Hover entity inspector tooltip
             spriteBatch.End();
 
-            spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.ScreenTransform);
-            HUD.DebugDraw(_state, spriteBatch);
-            spriteBatch.End();
+            // 4. MAP TRANSITION FADE OVERLAY
+            if (_state.WarpManager.IsWarping && _state.WarpManager.FadeAlpha > 0.0f)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+                spriteBatch.FillRectangle(_pipeline.FinalRect, Color.Black * _state.WarpManager.FadeAlpha);
+                spriteBatch.End();
+            }
         }
+        // Inside GameRenderer.cs
         public void Debug_Draw(SpriteBatch spriteBatch)
         {
-            if (!_state.IsInventoryOpen)
-            {
-                //spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.ScreenWVP);
-                _state.Player.DrawPlacementPreview(spriteBatch, _state, pt.GetPixelTexture(false));
-                _state.Player.DrawTargetCellDebug(spriteBatch, _state.GameCamera,_state.input.MouseWorldPosition);
-                //spriteBatch.End();
-            }
-            if (_state.DebugPool[GameBool.ShowCollision] || _state.DebugPool[GameBool.ShowLinks] || _state.DebugPool[GameBool.ShowShapes])
-            {
+            float lineThick = 1f / _state.GameCamera.Zoom;
 
-
-                if (_state.DebugPool[GameBool.ShowCollision])
+            // 1. PLAYER INTERACTION & PLACEMENT PREVIEW (When inventory is closed)
+            if (!_state.IsInventoryOpen && _state.Player != null)
+            {
+                var pixelTex = pt?.GetPixelTexture(false);
+                if (pixelTex != null)
                 {
-                    float lineThickness = 1f / _state.GameCamera.Zoom;
+                    _state.Player.DrawPlacementPreview(spriteBatch, _state, pixelTex);
+                }
+                _state.Player.DrawTargetCellDebug(spriteBatch, _state.GameCamera, _state.input.MouseWorldPosition);
+            }
 
-                    // 1. Draw Full Sprite Bounds (Cyan)
-                    RectangleF fullBoundsb = new RectangleF(_state.Player.Position.X, _state.Player.Position.Y, _state.Player.SourceRect.Width, _state.Player.SourceRect.Height);
-                    spriteBatch.DrawRectangle(_state.Player.CollisionBounds, Color.Azure, lineThickness);
+            // 2. PHYSICAL COLLISION BARRIERS (Red: Walls/Props, Gold: Vaulting Fences, Green: Player Foot)
+            if (_state.DebugPool.ContainsKey(GameBool.ShowCollision) && _state.DebugPool[GameBool.ShowCollision])
+            {
+                if (_state.CurrentMap != null)
+                {
+                    var font = _state.Assets?.customFont ?? UITheme.DefaultFont;
 
-                    // 2. Draw Foot Collision Box (Red)
-                    spriteBatch.DrawRectangle(_state.Player.FootBounds, Color.Red, lineThickness);
+                    // A. MODULAR BUILDING BOUNDS & DIAGNOSTICS
+                    foreach (var bldg in _state.CurrentMap.Layers.OfType<ObjectLayer>().SelectMany(l => l.Objects.OfType<ModularBuildingInstance>()))
+                    {
+                        var bp = bldg.BlueprintRef;
+                        if (bp != null)
+                        {
+                            RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bp);
+                            RectangleF worldBounds = new RectangleF(bldg.Position.X + tight.X, bldg.Position.Y + tight.Y, tight.Width, tight.Height);
 
-                    // 3. Draw Interaction Box (Yellow)
-                    spriteBatch.DrawRectangle(_state.Player.GetInteractionBox(), Color.Yellow, lineThickness);
+                            // Tight Architectural Bounds (Bright Cyan)
+                            spriteBatch.DrawRectangle(worldBounds, Color.Cyan, lineThick * 2f);
+
+                            // Full Canvas Footprint (Faint White)
+                            float gridPx = bp.gridDimension * 16f;
+                            spriteBatch.DrawRectangle(new RectangleF(bldg.Position.X, bldg.Position.Y, gridPx, gridPx), Color.White * 0.25f, lineThick);
+
+                            if (font != null)
+                            {
+                                string status = $"[MODULAR] {bldg.Name} ({bldg.BuildingId}) | Inside: {bldg.IsPlayerInside} | RoofAlpha: {bldg.RoofAlpha:F2}";
+                                spriteBatch.DrawString(font, status, new Vector2(worldBounds.X, worldBounds.Y - 14), Color.Cyan, 0f, Vector2.Zero, 0.7f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
+                            }
+                        }
+                        else
+                        {
+                            // Missing Blueprint Alert Box (Magenta)
+                            RectangleF errBox = new RectangleF(bldg.Position.X, bldg.Position.Y, 64, 64);
+                            spriteBatch.DrawRectangle(errBox, Color.Magenta, lineThick * 3f);
+                            if (font != null)
+                                spriteBatch.DrawString(font, $"MISSING BLUEPRINT: {bldg.BuildingId}", bldg.Position + new Vector2(0, -14), Color.Magenta, 0f, Vector2.Zero, 0.75f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
+                        }
+                    }
+
+                    // B. FACADE BUILDING BOUNDS (ObjectII Props)
+                    foreach (var entity in _state._entityManager.AllEntities)
+                    {
+                        if (entity.Prefab != null && entity.GetProperty("Type") == "Building")
+                        {
+                            RectangleF fBounds = new RectangleF(
+                                entity.Position.X - entity.Prefab.Pivot.X,
+                                entity.Position.Y - entity.Prefab.Pivot.Y,
+                                entity.Prefab.CanvasSize.X,
+                                entity.Prefab.CanvasSize.Y
+                            );
+                            spriteBatch.DrawRectangle(fBounds, Color.Orange, lineThick * 2f);
+                        }
+                    }
+                }
+                if (_state.Physics != null && _state.Physics._barriers != null)
+                {
+                    foreach (var barrier in _state.Physics._barriers)
+                    {
+                        if (barrier.IsOneWay)
+                        {
+                            // Vaulting Barrier (Gold with directional arrow)
+                            spriteBatch.FillRectangle(barrier.Bounds, Color.Gold * 0.35f);
+                            spriteBatch.DrawRectangle(barrier.Bounds, Color.Gold, lineThick * 2);
+
+                            Vector2 center = barrier.Bounds.Center;
+                            Vector2 arrowHead = center + (barrier.AllowedDirection * 12f);
+                            spriteBatch.DrawLine(center, arrowHead, Color.White, lineThick * 2);
+                        }
+                        else
+                        {
+                            // Standard Physical Barrier (Red)
+                            spriteBatch.FillRectangle(barrier.Bounds, Color.Red * 0.3f);
+                            spriteBatch.DrawRectangle(barrier.Bounds, Color.Red, lineThick);
+                        }
+                    }
                 }
 
-                // 2. Delegate map debug drawing to the EntityManager!
-                _state._entityManager.DrawDebugOverlays(spriteBatch, _state);
+                if (_state.Player != null)
+                {
+                    // Player foot contact box (Lime Green)
+                    spriteBatch.FillRectangle(_state.Player.FootBounds, Color.LimeGreen * 0.4f);
+                    spriteBatch.DrawRectangle(_state.Player.FootBounds, Color.LimeGreen, lineThick * 2);
 
+                    // Interaction target reach (Yellow)
+                    spriteBatch.DrawRectangle(_state.Player.GetInteractionBox(), Color.Yellow, lineThick);
+                }
+            }
+
+            // 3. CONTROL NODES, TRIGGERS & SPAWNERS (Magenta: Shapes, Cyan: Warps, HotPink: Spawners)
+            if (_state.DebugPool.ContainsKey(GameBool.ShowControlNodes) && _state.DebugPool[GameBool.ShowControlNodes])
+            {
+                if (_state.CurrentMap != null)
+                {
+                    var font = _state.Assets?.customFont ?? UITheme.DefaultFont;
+
+                    foreach (var ctrlLayer in _state.CurrentMap.Layers.OfType<ControlLayer>())
+                    {
+                        if (!ctrlLayer.IsVisible) continue;
+
+                        // A. Shapes (Water bodies, Farm soil zones)
+                        foreach (var shapeObj in ctrlLayer.Shapes)
+                        {
+                            Color shapeCol = shapeObj.HasTag(SystemTags.WATER) ? Color.DeepSkyBlue : Color.Magenta;
+                            sbFillPolygon(spriteBatch, shapeObj.Shape, shapeCol * 0.25f);
+
+                            var verts = shapeObj.Shape.Vertices;
+                            for (int i = 0; i < verts.Count; i++)
+                            {
+                                spriteBatch.DrawLine(verts[i], verts[(i + 1) % verts.Count], shapeCol, lineThick * 1.5f);
+                            }
+                        }
+
+                        // B. Rectangles (Doorways & Map Transitions)
+                        foreach (var rect in ctrlLayer.Rectangles)
+                        {
+                            Color rectCol = rect.HasTag(SystemTags.WARP_MAP) ? Color.DarkCyan :
+                                            (rect.HasTag(SystemTags.WARP_INTERIOR) ? Color.Magenta : Color.Orange);
+
+                            RectangleF rBounds = new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y);
+                            spriteBatch.FillRectangle(rBounds, rectCol * 0.25f);
+                            spriteBatch.DrawRectangle(rBounds, rectCol, lineThick * 2);
+
+                            if (font != null)
+                            {
+                                string label = rect.GetProperty("TriggerType", rect.Name);
+                                spriteBatch.DrawString(font, label, rect.Position + new Vector2(2, -14), rectCol, 0f, Vector2.Zero, 0.75f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
+                            }
+                        }
+
+                        // C. Spawners & Waypoints
+                        foreach (var pt in ctrlLayer.Points)
+                        {
+                            spriteBatch.DrawCircle(pt.Position, pt.Radius, 24, Color.HotPink, lineThick * 2);
+                            spriteBatch.DrawLine(pt.Position - new Vector2(4, 0), pt.Position + new Vector2(4, 0), Color.White, lineThick);
+                            spriteBatch.DrawLine(pt.Position - new Vector2(0, 4), pt.Position + new Vector2(0, 4), Color.White, lineThick);
+
+                            if (font != null)
+                            {
+                                string ptLabel = !string.IsNullOrEmpty(pt.Label) ? $"{pt.Name} ({pt.Label})" : pt.Name;
+                                spriteBatch.DrawString(font, ptLabel, pt.Position + new Vector2(pt.Radius + 4, -8), Color.HotPink, 0f, Vector2.Zero, 0.75f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
+                            }
+                        }
+                    }
+                }
             }
         }
 

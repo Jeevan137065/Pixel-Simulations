@@ -1,0 +1,300 @@
+{
+  "Version": "1.0",
+  "Catalog": {
+    "families": {
+      "walls": [
+        {
+          "id": "brick_standard",
+          "name": "Heritage Red Brick",
+          "isOpen": true,
+          "variants": [
+            {
+              "id": "default",
+              "name": "Default Finish",
+              "map": null,
+              "ramp": [
+                "#2d3436",
+                "#636e72",
+                "#b2bec3"
+              ]
+            }
+          ],
+          "items": [
+            {
+              "id": "wall_4x6_brick_standard",
+              "name": "Heritage Red Brick 4x6",
+              "widthUnits": 4,
+              "heightUnits": 6,
+              "isSlope": false,
+              "atlas": "walls",
+              "rect": {
+                "x": 0,
+                "y": 1072,
+                "w": 64,
+                "h": 96
+              },
+              "isBound": true
+            },
+            {
+              "id": "wall_3x6_brick_standard",
+              "name": "Heritage Red Brick 3x6",
+              "widthUnits": 3,
+              "heightUnits": 6,
+              "isSlope": false,
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "wall_2x6_brick_standard",
+              "name": "Heritage Red Brick 2x6",
+              "widthUnits": 2,
+              "heightUnits": 6,
+              "isSlope": false,
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "slope_1_1_brick_standard",
+              "name": "Heritage Red Brick Slope 1:1 (45.0°)",
+              "widthUnits": 2,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 1,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": {
+                "x": 192,
+                "y": 1056,
+                "w": 32,
+                "h": 128
+              },
+              "isBound": true
+            },
+            {
+              "id": "slope_2_1_brick_standard",
+              "name": "Heritage Red Brick Slope 2:1 (26.5°)",
+              "widthUnits": 2,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 0.5,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "slope_1_2_brick_standard",
+              "name": "Heritage Red Brick Slope 1:2 (63.4°)",
+              "widthUnits": 2,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 2,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "slope_3_1_brick_standard",
+              "name": "Heritage Red Brick Slope 3:1 (18.4°)",
+              "widthUnits": 3,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 0.3333,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "slope_1_3_brick_standard",
+              "name": "Heritage Red Brick Slope 1:3 (71.6°)",
+              "widthUnits": 1,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 3,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "slope_2_3_brick_standard",
+              "name": "Heritage Red Brick Slope 2:3 (56.3°)",
+              "widthUnits": 2,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 1.5,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            },
+            {
+              "id": "slope_3_2_brick_standard",
+              "name": "Heritage Red Brick Slope 3:2 (33.7°)",
+              "widthUnits": 3,
+              "heightUnits": 6,
+              "isSlope": true,
+              "slopeRatio": 0.6667,
+              "slopeDir": "up_right",
+              "atlas": "walls",
+              "rect": null,
+              "isBound": false
+            }
+          ]
+        }
+      ],
+      "doors": [],
+      "floors": [
+        {
+          "id": "floors",
+          "name": "Floors",
+          "isOpen": true,
+          "variants": [
+            {
+              "id": "default",
+              "name": "Default Finish",
+              "map": null,
+              "ramp": [
+                "#2d3436",
+                "#636e72",
+                "#b2bec3"
+              ]
+            }
+          ],
+          "items": [
+            {
+              "id": "floor_1794578694775",
+              "name": "Large A",
+              "type": "floor_slab",
+              "widthUnits": 1,
+              "heightUnits": 1,
+              "atlas": "walls",
+              "rect": {
+                "x": 1168,
+                "y": 288,
+                "w": 16,
+                "h": 16
+              },
+              "isBound": true
+            }
+          ]
+        }
+      ],
+      "aux": [
+        {
+          "id": "trims",
+          "name": "Trims",
+          "isOpen": true,
+          "variants": [
+            {
+              "id": "default",
+              "name": "Default Finish",
+              "map": null,
+              "ramp": [
+                "#2d3436",
+                "#636e72",
+                "#b2bec3"
+              ]
+            }
+          ],
+          "items": [
+            {
+              "id": "skirting_1794488901654",
+              "name": "skirt A",
+              "type": "skirting",
+              "widthUnits": 3,
+              "heightUnits": 1,
+              "atlas": "walls",
+              "rect": {
+                "x": 1264,
+                "y": 528,
+                "w": 16,
+                "h": 16
+              },
+              "isBound": true
+            },
+            {
+              "id": "skirting_1794488911867",
+              "name": "skirt B",
+              "type": "skirting",
+              "widthUnits": 3,
+              "heightUnits": 1,
+              "atlas": "walls",
+              "rect": {
+                "x": 1296,
+                "y": 528,
+                "w": 16,
+                "h": 16
+              },
+              "isBound": true
+            },
+            {
+              "id": "skirting_1794488923008",
+              "name": "skirt C",
+              "type": "skirting",
+              "widthUnits": 3,
+              "heightUnits": 1,
+              "atlas": "walls",
+              "rect": {
+                "x": 1280,
+                "y": 528,
+                "w": 16,
+                "h": 16
+              },
+              "isBound": true
+            },
+            {
+              "id": "wainscot_1794488943165",
+              "name": "wain A",
+              "type": "wainscot",
+              "widthUnits": 3,
+              "heightUnits": 2,
+              "atlas": "walls",
+              "rect": {
+                "x": 1296,
+                "y": 464,
+                "w": 16,
+                "h": 32
+              },
+              "isBound": true
+            },
+            {
+              "id": "wainscot_1794488956957",
+              "name": "wain B",
+              "type": "wainscot",
+              "widthUnits": 3,
+              "heightUnits": 2,
+              "atlas": "walls",
+              "rect": {
+                "x": 1312,
+                "y": 464,
+                "w": 16,
+                "h": 32
+              },
+              "isBound": true
+            },
+            {
+              "id": "pillar_1794489129962",
+              "name": "pillar A",
+              "type": "pillar",
+              "widthUnits": 1,
+              "heightUnits": 6,
+              "atlas": "walls",
+              "rect": {
+                "x": 1408,
+                "y": 192,
+                "w": 16,
+                "h": 96
+              },
+              "isBound": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

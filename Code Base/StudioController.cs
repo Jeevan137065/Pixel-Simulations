@@ -23,12 +23,12 @@ namespace Pixel_Simulations.Studio
             _bus = bus;
             History = new HistoryController(_bus, new HistoryState());
 
-            _bus.Subscribe<SaveStudioCommand>(cmd => _state.DataManager.SaveAll(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Animations")));
+            _bus.Subscribe<SaveStudioCommand>(cmd => _state.DataManager.SaveAll(System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Animations")));
 
             _bus.Subscribe<LoadStudioCommand>(cmd => {
                 _state.DataManager.LoadAll(
-                    System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Animations", "New_StateMachine.sm"),
-                    System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Animations", "Hero.char"));
+                    System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Animations", "New_StateMachine.sm"),
+                    System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Animations", "Hero.char"));
                 StudioUIBuilder.RebuildInspector(_state);
                 StudioUIBuilder.RebuildTimeline(_state);
             });

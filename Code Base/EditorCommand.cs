@@ -47,7 +47,7 @@ namespace Pixel_Simulations.Data
             RemoveFromLayer(_objectToRemove);
 
             // If it's a light, find the connected half and remove it too
-            if (_objectToRemove.Tags.Contains(10) || _objectToRemove.Tags.Contains(11))
+            if (_objectToRemove.HasTag(SystemTags.LIGHT_SOURCE) || _objectToRemove.HasTag(SystemTags.LIGHT_FALLOFF))
             {
                 _siblingRemoved = FindSibling();
                 if (_siblingRemoved != null) RemoveFromLayer(_siblingRemoved);
@@ -329,8 +329,65 @@ namespace Pixel_Simulations.Data
             }
         }
     }
+    public class MoveTileAreaCommand : IUndoableCommand
+    {
+        private readonly TileLayer _layer;
+        private readonly Dictionary<Point, TileInfo> _originalTiles;
+        private readonly Point _delta;
+        private readonly Dictionary<Point, TileInfo> _overwrittenTiles;
 
-    public class EraseTileAreaCommand : IUndoableCommand
+        public MoveTileAreaCommand(TileLayer layer, Dictionary<Point, TileInfo> originalTiles, Point delta)
+        {
+            _layer = layer;
+            _originalTiles = new Dictionary<Point, TileInfo>(originalTiles);
+            _delta = delta;
+            _overwrittenTiles = new Dictionary<Point, TileInfo>();
+
+            // Cache whatever tiles existed at the destination cells prior to moving
+            foreach (var kvp in _originalTiles)
+            {
+                Point newCell = new Point(kvp.Key.X + _delta.X, kvp.Key.Y + _delta.Y);
+                _overwrittenTiles[newCell] = _layer.GetTileAt(newCell);
+            }
+        }
+
+        public void Execute()
+        {
+            // 1. Remove from source cells
+            foreach (var coord in _originalTiles.Keys)
+                _layer.RemoveTile(coord);
+
+            // 2. Place at destination cells
+            foreach (var kvp in _originalTiles)
+            {
+                Point newCell = new Point(kvp.Key.X + _delta.X, kvp.Key.Y + _delta.Y);
+                _layer.PlaceTile(newCell, kvp.Value);
+            }
+        }
+
+        public void Undo()
+        {
+            // 1. Clear destination cells
+            foreach (var kvp in _originalTiles)
+            {
+                Point newCell = new Point(kvp.Key.X + _delta.X, kvp.Key.Y + _delta.Y);
+                _layer.RemoveTile(newCell);
+            }
+
+            // 2. Restore overwritten tiles at destination cells
+            foreach (var kvp in _overwrittenTiles)
+            {
+                if (kvp.Value != null) _layer.PlaceTile(kvp.Key, kvp.Value);
+            }
+
+            // 3. Restore tiles at source cells
+            foreach (var kvp in _originalTiles)
+            {
+                _layer.PlaceTile(kvp.Key, kvp.Value);
+            }
+        }
+    }
+        public class EraseTileAreaCommand : IUndoableCommand
     {
         private readonly TileLayer _layer;
         private readonly Dictionary<Point, TileInfo> _erasedTiles;

@@ -156,43 +156,66 @@ namespace Pixel_Simulations.Editor
             // 3. OBJECT / FACADE CATEGORY SELECTOR (Y: 30, Height: 32)
             _objectCategoryStack = new UIStackPanel
             {
-                Direction = StackDirection.Horizontal,
+                Direction = StackDirection.Vertical,
                 LocalPosition = new Vector2(0, 30),
-                Size = new Vector2(area.Width, 32),
+                Size = new Vector2(area.Width, 54),
                 AutoSize = false,
                 PanelBackground = Color.Black * 0.45f,
-                Spacing = 4f,
-                Padding = 4f
+                Spacing = 3f,
+                Padding = 3f
             };
 
-            string[] cats = { "All", "Props", "Trees", "Buildings" };
-            foreach (var cat in cats)
+            // Row 1: All, Props, Trees (3 buttons)
+            var row1 = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 4f, PanelBackground = Color.Transparent };
+            string[] row1Cats = { "All", "Props", "Trees" };
+            float row1BtnWidth = (area.Width - 16f) / 3f;
+
+            foreach (var cat in row1Cats)
             {
                 string c = cat;
-                var catBtn = new UIButton
-                {
-                    Size = new Vector2((area.Width - 28) / 4f, 24),
-                    Text = c,
-                    BackgroundColor = Color.DarkSlateGray
-                };
-                catBtn.OnClick = () => { ActiveObjectCategory = c; };
-                _objectCategoryStack.AddChild(catBtn);
+                var btn = new UIButton { Size = new Vector2(row1BtnWidth, 22), Text = c, BackgroundColor = Color.DarkSlateGray };
+                btn.OnClick = () => { ActiveObjectCategory = c; };
+                row1.AddChild(btn);
             }
 
-            // Divider Line under sub-bars (Y: 63)
+            // Row 2: Facades, Modular (2 large buttons)
+            var row2 = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 4f, PanelBackground = Color.Transparent };
+            string[] row2Cats = { "Facades", "Modular" };
+            float row2BtnWidth = (area.Width - 12f) / 2f;
+
+            foreach (var cat in row2Cats)
+            {
+                string c = cat;
+                var btn = new UIButton { Size = new Vector2(row2BtnWidth, 22), Text = c, BackgroundColor = Color.DarkSlateGray };
+                btn.OnClick = () => { ActiveObjectCategory = c; };
+                row2.AddChild(btn);
+            }
+
+            _objectCategoryStack.AddChild(row1);
+            _objectCategoryStack.AddChild(row2);
+
+            // Divider Line (Y: 86)
             _dividerLine = new UIPanel
             {
-                LocalPosition = new Vector2(0, 63),
+                LocalPosition = new Vector2(0, 86),
                 Size = new Vector2(area.Width, 2),
                 BackgroundColor = Color.DarkGray * 0.4f,
                 BorderColor = Color.Transparent
             };
 
-            // 4. SCROLLABLE CONTENT GRID (Starts cleanly at Y: 68)
+            // Content Grid (Y: 90)
+            _contentGrid = new UIGridView(_editorState, this)
+            {
+                LocalPosition = new Vector2(0, 90),
+                Size = new Vector2(area.Width, area.Height - 90 - 42),
+                ClipToBounds = true
+            };
+
+            // 4. SCROLLABLE CONTENT GRID (Starts cleanly at Y: 120?)
             _contentGrid = new UIGridView(_editorState, this)
             {
                 LocalPosition = new Vector2(0, 68),
-                Size = new Vector2(area.Width, area.Height - 68 - 42),
+                Size = new Vector2(area.Width, area.Height - 120 - 42),
                 ClipToBounds = true
             };
 
@@ -256,12 +279,20 @@ namespace Pixel_Simulations.Editor
             _headerSelectorStack.IsVisible = (_activeTab == Tab.Tiles);
             _objectCategoryStack.IsVisible = (_activeTab == Tab.Objects);
 
+            _contentGrid.LocalPosition = new Vector2(0, _activeTab == Tab.Tiles ? 64 : 90);
+            _contentGrid.Size = new Vector2(Area.Width, Area.Height - (_activeTab == Tab.Tiles ? 64 : 90) - 42);
+
             if (_activeTab == Tab.Objects)
             {
-                for (int i = 0; i < _objectCategoryStack.Children.Count; i++)
+                // Highlight active button across both rows
+                foreach (UIElement row in _objectCategoryStack.Children)
                 {
-                    var btn = (UIButton)_objectCategoryStack.Children[i];
-                    btn.IsSelected = (btn.Text == ActiveObjectCategory);
+                    foreach (UIButton btn in row.Children)
+                    {
+                        bool isSel = btn.Text == ActiveObjectCategory;
+                        btn.IsSelected = isSel;
+                        btn.BackgroundColor = isSel ? Color.DarkCyan : Color.DarkSlateGray;
+                    }
                 }
             }
 
@@ -287,43 +318,97 @@ namespace Pixel_Simulations.Editor
     public class ToolPanel : BasePanel
     {
         private readonly UIPanel _rootPanel;
+        private readonly UIPanel _scrollContainer;
         private readonly UIStackPanel _toolStack;
+        private readonly UIButton _btnScrollLeft;
+        private readonly UIButton _btnScrollRight;
         private readonly UILabel _hintLabel;
         private readonly UITheme _theme;
 
         private readonly Dictionary<ITool, UIButton> _toolButtons = new Dictionary<ITool, UIButton>();
+        private float _maxScrollX = 0f;
 
         public ToolPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
             : base(area, editorUI, editorState)
         {
             _theme = new UITheme { Font = editorUI.DebugFont };
-            _rootPanel = new UIFlowPanel
+            _rootPanel = new UIPanel
             {
-                LocalPosition = new Vector2(area.X + 10, area.Y + 10),
-                Size = new Vector2(area.Width - 20, area.Height - 20),
-                SpacingX = 6f, // Spacing between columns
-                SpacingY = 6f, // Spacing between wrapped rows
-                Padding = 0f,
-                BackgroundColor = Color.Transparent,
-                BorderColor = Color.Transparent
+                LocalPosition = area.Location.ToVector2(),
+                Size = new Vector2(area.Width, area.Height),
+                BackgroundColor = new Color(14, 16, 20),
+                BorderColor = new Color(35, 42, 54)
             };
-            // Tools (Left)
-            _toolStack = new UIStackPanel { Direction = StackDirection.Horizontal, LocalPosition = new Vector2(10, 10), Spacing = 5f, PanelBackground = Color.Transparent };
+
+            // Scroll Left Button
+            _btnScrollLeft = new UIButton
+            {
+                LocalPosition = new Vector2(6, (area.Height - 32) / 2f),
+                Size = new Vector2(20, 32),
+                Text = "<",
+                BackgroundColor = Color.DarkSlateGray
+            };
+            _btnScrollLeft.OnClick = () => ScrollTools(-100f);
+
+            // Scroll Container (Clipped Viewport)
+            float scrollAreaWidth = area.Width - 60f;
+            _scrollContainer = new UIPanel
+            {
+                LocalPosition = new Vector2(30, (area.Height - 36) / 2f),
+                Size = new Vector2(scrollAreaWidth, 36),
+                BackgroundColor = Color.Transparent,
+                BorderColor = Color.Transparent,
+                ClipToBounds = true
+            };
+
+            // Horizontal Stack of Tools
+            _toolStack = new UIStackPanel
+            {
+                Direction = StackDirection.Horizontal,
+                LocalPosition = Vector2.Zero,
+                Spacing = 4f,
+                Padding = 0f,
+                PanelBackground = Color.Transparent,
+                BorderColor = Color.Transparent,
+                AutoSize = true
+            };
+
             foreach (var tool in editorState.ToolState.Tools)
             {
-                var btn = new UIButton { Size = new Vector2(32, 32), IconName = tool.IconName, Command = new ChangeToolCommand { ToolName = tool.Name } };
+                var btn = new UIButton
+                {
+                    Size = new Vector2(32, 32),
+                    IconName = tool.IconName,
+                    Command = new ChangeToolCommand { ToolName = tool.Name }
+                };
                 _toolButtons.Add(tool, btn);
                 _toolStack.AddChild(btn);
             }
-            // Spacer between tools and hints
-            _toolStack.AddChild(new UIPanel { Size = new Vector2(20, 32), BackgroundColor = Color.Transparent, BorderColor = Color.Transparent });
-            // Hints (Bottom Left)
-            _hintLabel = new UILabel { LocalPosition = new Vector2(area.Width - 100, area.Height - 25), ColorOverride = Color.Yellow };
 
-            
-            _rootPanel.AddChild(_toolStack);
-            //_rootPanel.AddChild(_hintLabel);
+            _scrollContainer.AddChild(_toolStack);
+
+            // Scroll Right Button
+            _btnScrollRight = new UIButton
+            {
+                LocalPosition = new Vector2(area.Width - 26, (area.Height - 32) / 2f),
+                Size = new Vector2(20, 32),
+                Text = ">",
+                BackgroundColor = Color.DarkSlateGray
+            };
+            _btnScrollRight.OnClick = () => ScrollTools(100f);
+
+            _rootPanel.AddChild(_btnScrollLeft);
+            _rootPanel.AddChild(_scrollContainer);
+            _rootPanel.AddChild(_btnScrollRight);
         }
+
+        private void ScrollTools(float delta)
+        {
+            _maxScrollX = Math.Max(0f, _toolStack.Size.X - _scrollContainer.Size.X);
+            float newX = MathHelper.Clamp(_toolStack.ScrollOffset.X + delta, 0f, _maxScrollX);
+            _toolStack.ScrollOffset = new Vector2(newX, 0);
+        }
+
         public override void Update(EditorInputState input, EventBus bus)
         {
             var activeTool = _editorState.ToolState.ActiveTool;
@@ -332,70 +417,135 @@ namespace Pixel_Simulations.Editor
                 kvp.Value.IsSelected = (kvp.Key == activeTool);
                 kvp.Value.IconName = kvp.Key.IconName;
             }
-            if (activeTool != null) _hintLabel.Text = activeTool.GetShortcutHints();
 
+            // Horizontal Mouse Wheel Scrolling
             if (Area.Contains(input.MouseWindowPosition))
             {
+                int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
+                if (scrollDelta != 0)
+                {
+                    ScrollTools(-scrollDelta * 0.35f);
+                }
+
                 _editorUI.CheckFocusClick(_rootPanel, input);
                 _rootPanel.Update(input, bus);
             }
         }
 
-        public override void Draw(SpriteBatch sb)
-        {
-            _rootPanel.Draw(sb, (IUIContext)_editorUI, _theme);
-        }
-
-        public override string GetDebugInfo() => "";
+        public override void Draw(SpriteBatch sb) => _rootPanel.Draw(sb, (IUIContext)_editorUI, _theme);
+        public override string GetDebugInfo() => $"Tools: {_toolButtons.Count} | Scroll: {_toolStack.ScrollOffset.X:F0}";
     }
     public class InspectorPanel : BasePanel
     {
         private readonly UIPanel _rootPanel;
-        private readonly UIStackPanel _mainScroll;
-        private readonly UILabel _linkingNotice;
+        private readonly UIStackPanel _tabSidebar;
+        private readonly UIPanel _contentWrapper;
+        private readonly UIStackPanel _activeWorkspace;
+        private readonly UILabel _linkingNoticeBanner;
         private readonly UITheme _theme;
 
         private MapObject _cachedSelectedObject;
         private bool _needsInspectorRebuild = false;
-
-        // Accordion States
-        private bool _expandInfo = true;
-        private bool _expandLinks = true;
-        private bool _expandTags = true;
-        private bool _expandProps = true;
+        private string _activeTab = "Properties"; // "Info", "Properties", "Tags", "Links"
 
         // Property Temp State
         private string _newPropKey = "";
+        private string _newPropValue = "";
         private PropertyType _newPropType = PropertyType.String;
 
-        // Tag Picker Temp State
-        private bool _isTagPickerOpen = false;
+        // Tag Search State
         private string _tagSearchFilter = "";
 
-        // Linking State
+        // Linking Temp State
         private string _linkSourcePort = "Out";
         private string _linkTargetPort = "In";
 
-        public InspectorPanel(Rectangle area, EditorUI editorUI, EditorState editorState) : base(area, editorUI, editorState)
+        public InspectorPanel(Rectangle area, EditorUI editorUI, EditorState editorState)
+            : base(area, editorUI, editorState)
         {
-            _theme = new UITheme { Font = editorUI.DebugFont, PanelBackground = Color.Black * 0.85f, BorderColor = Color.DarkGray };
-            _rootPanel = new UIPanel { LocalPosition = area.Location.ToVector2(), Size = new Vector2(area.Width, area.Height), BackgroundColor = _theme.PanelBackground };
+            _theme = new UITheme
+            {
+                Font = editorUI.DebugFont,
+                PanelBackground = new Color(16, 18, 24),
+                BorderColor = new Color(45, 52, 68)
+            };
 
-            _mainScroll = new UIStackPanel
+            _rootPanel = new UIPanel
+            {
+                LocalPosition = area.Location.ToVector2(),
+                Size = new Vector2(area.Width, area.Height),
+                BackgroundColor = _theme.PanelBackground,
+                BorderColor = Color.Transparent
+            };
+
+            int sidebarWidth = 150;
+
+            // 1. LEFT VERTICAL TAB SIDEBAR (Spans full height of inspector)
+            _tabSidebar = new UIStackPanel
+            {
+                Direction = StackDirection.Vertical,
+                LocalPosition = new Vector2(8, 8),
+                Size = new Vector2(sidebarWidth, area.Height - 16),
+                AutoSize = false,
+                PanelBackground = new Color(12, 13, 18),
+                BorderColor = new Color(30, 36, 48),
+                Padding = 6f,
+                Spacing = 5f
+            };
+
+            string[] tabNames = { "Properties", "Info & Base", "Tags", "Links & Wiring" };
+            foreach (var name in tabNames)
+            {
+                string tName = name;
+                var btn = new UIButton
+                {
+                    Size = new Vector2(sidebarWidth - 12, 32),
+                    Text = tName,
+                    BackgroundColor = Color.Transparent,
+                    BorderColor = Color.Transparent
+                };
+                btn.OnClick = () => {
+                    _activeTab = tName;
+                    _needsInspectorRebuild = true;
+                };
+                _tabSidebar.AddChild(btn);
+            }
+
+            // 2. RIGHT WORKSPACE CONTAINER (Wide multi-column area)
+            _contentWrapper = new UIPanel
+            {
+                LocalPosition = new Vector2(sidebarWidth + 16, 8),
+                Size = new Vector2(area.Width - sidebarWidth - 24, area.Height - 16),
+                BackgroundColor = new Color(12, 13, 18),
+                BorderColor = new Color(30, 36, 48),
+                ClipToBounds = true
+            };
+
+            _activeWorkspace = new UIStackPanel
             {
                 Direction = StackDirection.Vertical,
                 LocalPosition = new Vector2(10, 10),
-                Size = new Vector2(area.Width - 20, area.Height - 20),
+                Size = new Vector2(_contentWrapper.Size.X - 20, _contentWrapper.Size.Y - 20),
+                AutoSize = false,
                 PanelBackground = Color.Transparent,
-                Spacing = 10f,
-                ClipToBounds = true,
-                AutoSize = false
+                BorderColor = Color.Transparent,
+                Spacing = 8f,
+                Padding = 4f
+            };
+            _contentWrapper.AddChild(_activeWorkspace);
+
+            // 3. INTERACTIVE LINKING BANNER
+            _linkingNoticeBanner = new UILabel
+            {
+                LocalPosition = new Vector2(sidebarWidth + 26, 12),
+                Text = "TARGET PICKER ACTIVE: Click any object/shape in the viewport (Press ESC to cancel)",
+                TextColor = Color.Yellow,
+                IsVisible = false
             };
 
-            _linkingNotice = new UILabel { LocalPosition = new Vector2(15, 10), Text = " LINKING MODE: Click target on map. (ESC to Cancel)", ColorOverride = Color.Cyan, IsVisible = false };
-
-            _rootPanel.AddChild(_mainScroll);
-            _rootPanel.AddChild(_linkingNotice);
+            _rootPanel.AddChild(_tabSidebar);
+            _rootPanel.AddChild(_contentWrapper);
+            _rootPanel.AddChild(_linkingNoticeBanner);
         }
 
         public override void Update(EditorInputState input, EventBus bus)
@@ -409,11 +559,11 @@ namespace Pixel_Simulations.Editor
 
             if (_needsInspectorRebuild)
             {
-                BuildInspector(selected, bus);
+                BuildWorkspace(selected, bus);
                 _needsInspectorRebuild = false;
             }
 
-            // Handle Linking Click Intercept
+            // Handle Viewport Target Picking for Links
             if (_editorState.UI.IsLinkingMode)
             {
                 if (input.IsNewRightClick || input.CurrentKeyboard.IsKeyDown(Keys.Escape))
@@ -445,62 +595,184 @@ namespace Pixel_Simulations.Editor
             }
         }
 
-        private void BuildInspector(MapObject obj, EventBus bus)
+        private void BuildWorkspace(MapObject obj, EventBus bus)
         {
-            _mainScroll.ClearChildren();
-            _linkingNotice.IsVisible = _editorState.UI.IsLinkingMode;
-            if (_editorState.UI.IsLinkingMode || obj == null) return;
+            _activeWorkspace.ClearChildren();
+            _linkingNoticeBanner.IsVisible = _editorState.UI.IsLinkingMode;
+
+            // Sync tab highlights
+            for (int i = 0; i < _tabSidebar.Children.Count; i++)
+            {
+                var btn = (UIButton)_tabSidebar.Children[i];
+                bool isSelected = btn.Text == _activeTab;
+                btn.BackgroundColor = isSelected ? Color.DarkCyan : Color.Black * 0.3f;
+                btn.BorderColor = isSelected ? Color.Cyan : Color.Transparent;
+            }
+
+            if (obj == null)
+            {
+                _activeWorkspace.AddChild(new UILabel { Text = "No object selected on map. Click an entity with Selection Tool (M).", TextColor = Color.Gray });
+                return;
+            }
 
             obj.Tags ??= new HashSet<int>();
             obj.Properties ??= new Dictionary<string, MapProperty>();
             obj.Links ??= new List<ObjectLink>();
 
-            float w = _mainScroll.Size.X - 10;
+            float w = _activeWorkspace.Size.X - 10;
 
-            // ==========================================
-            // 1. BASE INFO ACCORDION
-            // ==========================================
-            var infoHeader = CreateAccordionHeader($"Base Info ({obj.Name})", _expandInfo, () => { _expandInfo = !_expandInfo; _needsInspectorRebuild = true; }, w);
-            _mainScroll.AddChild(infoHeader);
-
-            if (_expandInfo)
+            // =========================================================================
+            // TAB 1: PROPERTIES (The Core Problem Solver)
+            // =========================================================================
+            if (_activeTab == "Properties")
             {
-                var infoPnl = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.3f, Spacing = 8f, Padding = 10f };
-                infoPnl.AddChild(new UILabel { Text = $"ID: {obj.ID}", TextColor = Color.LightGray });
-                infoPnl.AddChild(new UILabel { Text = $"Type: {obj.Type}", TextColor = Color.LightGray });
-                infoPnl.AddChild(new UILabel { Text = $"Pos: {obj.Position.X:F0}, {obj.Position.Y:F0}", TextColor = Color.Gray });
+                // 1. QUICK TEMPLATES BAR (Populated dynamically from TagManager + Doorway shortcut)
+                var presetsRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Transparent };
+                presetsRow.AddChild(new UILabel { Text = "Templates:", TextColor = Color.Yellow });
 
-                // --- NEW: Add extra Prefab Data ---
-                if (obj is PropObject pObj)
+                // One-click Doorway Preset
+                var btnInteriorDoor = new UIButton { Size = new Vector2(130, 24), Text = "+ Doorway Cutaway", BackgroundColor = Color.DarkMagenta };
+                btnInteriorDoor.OnClick = () => {
+                    obj.Properties["TriggerType"] = new MapProperty(PropertyType.String, "Doorway");
+                    obj.Properties["EntryDir"] = new MapProperty(PropertyType.String, "North");
+                    obj.Properties["ExitDir"] = new MapProperty(PropertyType.String, "South");
+                    obj.AddTag(SystemTags.WARP_INTERIOR);
+                    _needsInspectorRebuild = true;
+                };
+
+                var btnMapWarp = new UIButton { Size = new Vector2(130, 24), Text = "+ Map Transition", BackgroundColor = Color.DarkCyan };
+                btnMapWarp.OnClick = () => {
+                    obj.Properties["TargetMap"] = new MapProperty(PropertyType.String, "Town_Map");
+                    obj.Properties["TargetSpawn"] = new MapProperty(PropertyType.String, "Spawn_Entrance");
+                    obj.AddTag(SystemTags.WARP_MAP);
+                    _needsInspectorRebuild = true;
+                };
+
+                presetsRow.AddChild(btnInteriorDoor);
+                presetsRow.AddChild(btnMapWarp);
+
+                // Dynamic buttons from property_templates.json
+                foreach (var tpl in _editorState.TagManager.PropertyTemplates.Values)
                 {
-                    var pfab = _editorState.PrefabManager.GetPrefab(pObj.PrefabID);
-                    if (pfab != null)
+                    string tplId = tpl.ID;
+                    var tplBtn = new UIButton
                     {
-                        string pType = pfab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
-                        infoPnl.AddChild(new UILabel { Text = $"Category: {pType}", TextColor = Color.Yellow });
-                        infoPnl.AddChild(new UILabel { Text = $"Canvas: {pfab.CanvasSize.X}x{pfab.CanvasSize.Y}", TextColor = Color.LightGray });
-                        infoPnl.AddChild(new UILabel { Text = $"Pivot: {pfab.Pivot.X},{pfab.Pivot.Y}", TextColor = Color.LightGray });
-                        infoPnl.AddChild(new UILabel { Text = $"Sprite Layers: {pfab.AlternateStates.Count}", TextColor = Color.Cyan });
-
-                        if (pType == "Building")
-                        {
-                            bool isInside = obj.GetProperty("PlayerInside", "False") == "True";
-                            var toggleRoofBtn = new UIButton
-                            {
-                                Size = new Vector2(w - 20, 24),
-                                Text = isInside ? "Show Roof (Exterior)" : "Hide Roof (Preview Interior)",
-                                BackgroundColor = isInside ? Color.DarkCyan : Color.DarkSlateGray
-                            };
-                            toggleRoofBtn.OnClick = () => {
-                                obj.Properties["PlayerInside"] = new MapProperty(PropertyType.Boolean, (!isInside).ToString());
-                                _needsInspectorRebuild = true;
-                            };
-                            infoPnl.AddChild(toggleRoofBtn);
-                        }
-                    }
+                        Size = new Vector2(110, 24),
+                        Text = $"+ {tpl.Name}",
+                        BackgroundColor = Color.DarkSlateGray
+                    };
+                    tplBtn.OnClick = () => {
+                        _editorState.TagManager.ApplyTemplate(obj, tplId);
+                        _needsInspectorRebuild = true;
+                    };
+                    presetsRow.AddChild(tplBtn);
                 }
 
-                var delBtn = new UIButton { Size = new Vector2(w - 20, 24), Text = "Delete Object", BackgroundColor = Color.DarkRed };
+                var btnClearProps = new UIButton { Size = new Vector2(80, 24), Text = "Clear All", BackgroundColor = Color.DarkRed };
+                btnClearProps.OnClick = () => { obj.Properties.Clear(); _needsInspectorRebuild = true; };
+                presetsRow.AddChild(btnClearProps);
+
+                _activeWorkspace.AddChild(presetsRow);
+                _activeWorkspace.AddChild(new UIPanel { Size = new Vector2(w, 1), BackgroundColor = Color.DarkGray * 0.4f, BorderColor = Color.Transparent });
+
+
+                // 2. ADD PROPERTY CONTROLS (Spacious Row)
+                var addRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Black * 0.3f, Padding = 6f };
+                var keyInp = new UITextBox { Size = new Vector2(140, 24), Placeholder = "Property Key...", Text = _newPropKey };
+                keyInp.OnTextChanged = (t) => _newPropKey = t;
+
+                var typeBtn = new UIButton { Size = new Vector2(80, 24), Text = _newPropType.ToString(), BackgroundColor = Color.DarkSlateGray };
+                typeBtn.OnClick = () => {
+                    _newPropType = (PropertyType)(((int)_newPropType + 1) % 4);
+                    typeBtn.Text = _newPropType.ToString();
+                };
+
+                var valInp = new UITextBox { Size = new Vector2(180, 24), Placeholder = "Default Value...", Text = _newPropValue };
+                valInp.OnTextChanged = (t) => _newPropValue = t;
+
+                var addBtn = new UIButton { Size = new Vector2(90, 24), Text = "+ Add Prop", BackgroundColor = Color.DarkGreen };
+                addBtn.OnClick = () => {
+                    if (!string.IsNullOrWhiteSpace(_newPropKey))
+                    {
+                        string finalVal = _newPropValue;
+                        if (_newPropType == PropertyType.Boolean && string.IsNullOrWhiteSpace(finalVal)) finalVal = "False";
+                        obj.Properties[_newPropKey.Trim()] = new MapProperty(_newPropType, finalVal);
+                        _newPropKey = "";
+                        _newPropValue = "";
+                        _needsInspectorRebuild = true;
+                    }
+                };
+
+                addRow.AddChild(new UILabel { Text = "New:" });
+                addRow.AddChild(keyInp);
+                addRow.AddChild(typeBtn);
+                addRow.AddChild(valInp);
+                addRow.AddChild(addBtn);
+                _activeWorkspace.AddChild(addRow);
+
+                // 3. SCROLLABLE PROPERTIES TABLE
+                var propsScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(w, 130), AutoSize = false, ClipToBounds = true, PanelBackground = Color.Transparent, Spacing = 4f };
+                foreach (var kvp in obj.Properties.ToList())
+                {
+                    string safeKey = kvp.Key;
+                    var row = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Black * 0.25f, Padding = 4f };
+
+                    // Key Label
+                    row.AddChild(new UILabel { Text = safeKey, TextColor = Color.LightGray, Size = new Vector2(140, 20) });
+
+                    // Type Badge
+                    row.AddChild(new UILabel { Text = $"[{kvp.Value.Type}]", TextColor = Color.DarkGoldenrod, Size = new Vector2(65, 20) });
+
+                    // Value Control
+                    if (kvp.Value.Type == PropertyType.Boolean)
+                    {
+                        var boolBtn = new UIButton { Size = new Vector2(120, 22), Text = kvp.Value.Value, BackgroundColor = kvp.Value.Value == "True" ? Color.DarkGreen : Color.DarkRed };
+                        boolBtn.OnClick = () => {
+                            kvp.Value.Value = kvp.Value.Value == "True" ? "False" : "True";
+                            _needsInspectorRebuild = true;
+                        };
+                        row.AddChild(boolBtn);
+                    }
+                    else
+                    {
+                        var valBox = new UITextBox { Size = new Vector2(240, 22), Text = kvp.Value.Value };
+                        valBox.OnTextChanged = (t) => kvp.Value.Value = t;
+                        row.AddChild(valBox);
+                    }
+
+                    // Delete
+                    var delBtn = new UIButton { Size = new Vector2(24, 22), Text = "X", BackgroundColor = Color.DarkRed };
+                    delBtn.OnClick = () => { obj.Properties.Remove(safeKey); _needsInspectorRebuild = true; };
+                    row.AddChild(delBtn);
+
+                    propsScroll.AddChild(row);
+                }
+
+                if (obj.Properties.Count == 0) propsScroll.AddChild(new UILabel { Text = "No properties defined. Click a preset above or add one manually.", TextColor = Color.Gray });
+                _activeWorkspace.AddChild(propsScroll);
+            }
+
+            // =========================================================================
+            // TAB 2: INFO & BASE TRANSFORM
+            // =========================================================================
+            else if (_activeTab == "Info & Base")
+            {
+                var cols = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 25f, PanelBackground = Color.Transparent };
+
+                // Column 1: Identity & Naming
+                var col1 = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 6f, Size = new Vector2(280, 180), AutoSize = false };
+                col1.AddChild(new UILabel { Text = "OBJECT IDENTIFIERS", TextColor = Color.Cyan });
+                col1.AddChild(new UILabel { Text = $"ID: {obj.ID}", TextColor = Color.LightGray });
+                col1.AddChild(new UILabel { Text = $"Type: {obj.Type}", TextColor = Color.LightGray });
+
+                var nameRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 6f };
+                nameRow.AddChild(new UILabel { Text = "Name:" });
+                var nameBox = new UITextBox { Size = new Vector2(180, 24), Text = obj.Name ?? "" };
+                nameBox.OnTextChanged = (t) => obj.Name = t;
+                col1.AddChild(nameRow);
+                col1.AddChild(nameBox);
+
+                var delBtn = new UIButton { Size = new Vector2(200, 26), Text = "Delete Object (Del)", BackgroundColor = Color.DarkRed };
                 delBtn.OnClick = () => {
                     var layer = _editorState.ActiveMap.Layers.FirstOrDefault(l =>
                         (l is ObjectLayer ol && ol.Objects.Contains(obj)) ||
@@ -511,192 +783,259 @@ namespace Pixel_Simulations.Editor
                         _editorState.Selection.SelectedMapObject = null;
                     }
                 };
-                infoPnl.AddChild(delBtn);
-                _mainScroll.AddChild(infoPnl);
-            }
+                col1.AddChild(delBtn);
+                cols.AddChild(col1);
 
-            // ==========================================
-            // 2. LINKS ACCORDION
-            // ==========================================
-            var linkHeader = CreateAccordionHeader($"Links ({obj.Links.Count})", _expandLinks, () => { _expandLinks = !_expandLinks; _needsInspectorRebuild = true; }, w);
-            _mainScroll.AddChild(linkHeader);
+                // Column 2: Dimensions & Coordinates
+                var col2 = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 6f, Size = new Vector2(280, 180), AutoSize = false };
+                col2.AddChild(new UILabel { Text = "TRANSFORM & BOUNDS", TextColor = Color.Cyan });
+                col2.AddChild(new UILabel { Text = $"Pos: X:{obj.Position.X:F0}, Y:{obj.Position.Y:F0}", TextColor = Color.White });
 
-            if (_expandLinks)
-            {
-                var linkPnl = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.3f, Spacing = 8f, Padding = 10f };
-
-                // Create Link Interface
-                var createLinkRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 5f, PanelBackground = Color.Transparent };
-                var srcPortBox = new UITextBox { Size = new Vector2(80, 24), Text = _linkSourcePort }; srcPortBox.OnTextChanged = (t) => _linkSourcePort = t;
-                var tgtPortBox = new UITextBox { Size = new Vector2(80, 24), Text = _linkTargetPort }; tgtPortBox.OnTextChanged = (t) => _linkTargetPort = t;
-
-                var pickBtn = new UIButton { Size = new Vector2(90, 24), Text = "+ Target", BackgroundColor = Color.DarkCyan };
-                pickBtn.OnClick = () => { _editorState.UI.IsLinkingMode = true; _needsInspectorRebuild = true; };
-
-                createLinkRow.AddChild(new UILabel { Text = "Port:" }); createLinkRow.AddChild(srcPortBox);
-                createLinkRow.AddChild(new UILabel { Text = " -> " }); createLinkRow.AddChild(tgtPortBox);
-                createLinkRow.AddChild(pickBtn);
-                linkPnl.AddChild(createLinkRow);
-                linkPnl.AddChild(new UIPanel { Size = new Vector2(w - 20, 1), BackgroundColor = Color.Gray });
-
-                // List Links
-                foreach (var link in obj.Links.ToList()) // ToList protects against modification during iteration
+                if (obj is RectangleObject rectObj)
+                    col2.AddChild(new UILabel { Text = $"Size: {rectObj.Size.X:F0} x {rectObj.Size.Y:F0} px", TextColor = Color.LightGray });
+                else if (obj is ShapeObject shapeObj)
+                    col2.AddChild(new UILabel { Text = $"Poly Vertices: {shapeObj.Shape.Vertices.Count} pts", TextColor = Color.LightGray });
+                else if (obj is PointObject ptObj)
+                    col2.AddChild(new UILabel { Text = $"Radius: {ptObj.Radius:F0} px", TextColor = Color.LightGray });
+                else if (obj is PropObject propObj)
                 {
-                    var row = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 10f, PanelBackground = Color.Transparent };
-                    var delBtn = new UIButton { Size = new Vector2(30, 20), Text = "X", BackgroundColor = Color.DarkRed };
-                    delBtn.OnClick = () => { bus.Publish(new UnlinkObjectCommand(obj, link)); _needsInspectorRebuild = true; };
+                    var pfab = _editorState.PrefabManager.GetPrefab(propObj.PrefabID);
+                    if (pfab != null)
+                    {
+                        // Safe direct dictionary lookup for ObjectPrefab (no extension method required)
+                        string pType = pfab.Properties != null && pfab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
 
-                    row.AddChild(delBtn);
-                    row.AddChild(new UILabel { Text = $"[{link.SourcePort}] -> [{link.TargetID.Substring(0, 4)}] : {link.TargetPort}", TextColor = Color.LightGray });
-                    linkPnl.AddChild(row);
+                        col2.AddChild(new UILabel { Text = $"Category: {pType}", TextColor = Color.Yellow });
+                        col2.AddChild(new UILabel { Text = $"Canvas: {pfab.CanvasSize.X}x{pfab.CanvasSize.Y} (Pivot: {pfab.Pivot.X},{pfab.Pivot.Y})", TextColor = Color.LightGray });
+
+                        if (pType == "Building")
+                        {
+                            // Safe direct dictionary lookup for MapObject
+                            bool isInside = obj.Properties != null &&
+                                            obj.Properties.TryGetValue("PlayerInside", out var pi) &&
+                                            (pi.Value == "True" || pi.Value == "1");
+
+                            var toggleRoofBtn = new UIButton
+                            {
+                                Size = new Vector2(220, 24),
+                                Text = isInside ? "Show Roof (Exterior)" : "Hide Roof (Preview Interior)",
+                                BackgroundColor = isInside ? Color.DarkCyan : Color.DarkSlateGray
+                            };
+                            toggleRoofBtn.OnClick = () => {
+                                obj.Properties ??= new Dictionary<string, MapProperty>();
+                                obj.Properties["PlayerInside"] = new MapProperty(PropertyType.Boolean, (!isInside).ToString());
+                                _needsInspectorRebuild = true;
+                            };
+                            col2.AddChild(toggleRoofBtn);
+                        }
+                    }
                 }
-                if (obj.Links.Count == 0) linkPnl.AddChild(new UILabel { Text = "No links.", TextColor = Color.Gray });
-                _mainScroll.AddChild(linkPnl);
+                else if (obj is ModularBuildingInstance bldgInstance)
+                {
+                    var bldg = bldgInstance.BlueprintRef;
+                    col2.AddChild(new UILabel { Text = "MODULAR ARCHITECTURE", TextColor = Color.Cyan });
+
+                    if (bldg != null)
+                    {
+                        col2.AddChild(new UILabel { Text = $"Grid: {bldg.gridDimension}x{bldg.gridDimension} cells ({bldg.gridDimension * 16}px)", TextColor = Color.White });
+                        col2.AddChild(new UILabel { Text = $"Stories: {bldg.floors.Count} floor(s)", TextColor = Color.LightGray });
+
+                        // Story Stepper
+                        var storyRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 6f, PanelBackground = Color.Transparent };
+                        var prevStory = new UIButton { Size = new Vector2(30, 22), Text = "<" };
+                        prevStory.OnClick = () => {
+                            bldgInstance.ActiveStory = Math.Max(0, bldgInstance.ActiveStory - 1);
+                            _needsInspectorRebuild = true;
+                        };
+
+                        var nextStory = new UIButton { Size = new Vector2(30, 22), Text = ">" };
+                        nextStory.OnClick = () => {
+                            bldgInstance.ActiveStory = Math.Min(bldg.floors.Count - 1, bldgInstance.ActiveStory + 1);
+                            _needsInspectorRebuild = true;
+                        };
+
+                        storyRow.AddChild(prevStory);
+                        storyRow.AddChild(new UILabel { Text = $"Viewing: Story {bldgInstance.ActiveStory + 1}" });
+                        storyRow.AddChild(nextStory);
+                        col2.AddChild(storyRow);
+
+                        // Roof Visibility Toggle
+                        var toggleRoofBtn = new UIButton
+                        {
+                            Size = new Vector2(200, 24),
+                            Text = bldgInstance.ShowRoofInEditor ? "Roof: VISIBLE (Exterior)" : "Roof: CUTAWAY (Interior)",
+                            BackgroundColor = bldgInstance.ShowRoofInEditor ? Color.DarkCyan : Color.DarkMagenta
+                        };
+                        toggleRoofBtn.OnClick = () => {
+                            bldgInstance.ShowRoofInEditor = !bldgInstance.ShowRoofInEditor;
+                            _needsInspectorRebuild = true;
+                        };
+                        col2.AddChild(toggleRoofBtn);
+                    }
+                }
+                
+                cols.AddChild(col2);
+
+                _activeWorkspace.AddChild(cols);
             }
 
-            // ==========================================
-            // 3. TAGS ACCORDION (Cleaner, Flow-Based)
-            // ==========================================
-            var tagHeader = CreateAccordionHeader($"Tags ({obj.Tags.Count})", _expandTags, () => { _expandTags = !_expandTags; _needsInspectorRebuild = true; }, w);
-            _mainScroll.AddChild(tagHeader);
-
-            if (_expandTags)
+            // =========================================================================
+            // TAB 3: TAGS & CATEGORIZATION
+            // =========================================================================
+            else if (_activeTab == "Tags")
             {
-                var tagPnl = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.3f, Spacing = 8f, Padding = 10f };
+                var tagCols = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 20f, PanelBackground = Color.Transparent };
 
-                // A. Active Tags Flow (Wrapped horizontally)
-                var activeFlow = new UIFlowPanel { Size = new Vector2(w - 20, 10), BackgroundColor = Color.Transparent, SpacingX = 5f, SpacingY = 5f, Padding = 0f };
+                // Left: Active Attached Tags
+                var activeCol = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 6f, Size = new Vector2(360, 180), AutoSize = false };
+                activeCol.AddChild(new UILabel { Text = "ACTIVE ATTACHED TAGS", TextColor = Color.Yellow });
+
+                var activeFlow = new UIFlowPanel { Size = new Vector2(350, 140), BackgroundColor = Color.Black * 0.3f, SpacingX = 5f, SpacingY = 5f, Padding = 6f };
                 foreach (int iTag in obj.Tags)
                 {
                     int localTag = iTag;
                     var def = _editorState.TagManager.GetTag(iTag);
-                    string text = def != null ? def.Name : iTag.ToString();
+                    string text = def != null ? (!string.IsNullOrEmpty(def.CodeName) ? $"[{def.CodeName}] {def.Name}" : def.Name) : iTag.ToString();
                     Vector2 sz = UITheme.DefaultFont.MeasureString(text);
 
-                    // Draw Active Tags fully opaque
-                    var btn = new UIButton { Size = new Vector2(sz.X + 16, 24), Text = text, BackgroundColor = def?.TagColor ?? Color.Gray };
+                    var btn = new UIButton
+                    {
+                        Size = new Vector2(sz.X + 16, 24),
+                        Text = text + " X",
+                        BackgroundColor = def?.TagColor ?? Color.Gray,
+                        BorderColor = Color.White * 0.4f
+                    };
                     btn.OnClick = () => { obj.Tags.Remove(localTag); _needsInspectorRebuild = true; };
                     activeFlow.AddChild(btn);
                 }
-                if (obj.Tags.Count == 0) activeFlow.AddChild(new UILabel { Text = "No tags applied.", TextColor = Color.Gray });
+                if (obj.Tags.Count == 0) activeFlow.AddChild(new UILabel { Text = "No tags attached.", TextColor = Color.Gray });
+                activeCol.AddChild(activeFlow);
+                tagCols.AddChild(activeCol);
 
-                tagPnl.AddChild(activeFlow);
-                tagPnl.AddChild(new UIPanel { Size = new Vector2(w - 20, 1), BackgroundColor = Color.Gray }); // Separator
+                // Right: Tag Library Picker
+                var pickerCol = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 6f, Size = new Vector2(w - 380, 180), AutoSize = false };
+                pickerCol.AddChild(new UILabel { Text = "TAG LIBRARY (Click to Attach)", TextColor = Color.Cyan });
 
-                // B. Add Tag Toggle
-                var openPickerBtn = new UIButton { Size = new Vector2(w - 20, 24), Text = _isTagPickerOpen ? "[-] Hide Library" : "[+] Browse Tag Library", BackgroundColor = Color.Black * 0.5f, TextColor = Color.LightGray };
-                openPickerBtn.OnClick = () => { _isTagPickerOpen = !_isTagPickerOpen; _needsInspectorRebuild = true; };
-                tagPnl.AddChild(openPickerBtn);
+                var searchBox = new UITextBox { Size = new Vector2(260, 24), Placeholder = "Search library...", Text = _tagSearchFilter };
+                searchBox.OnTextChanged = (t) => { _tagSearchFilter = t.ToLower(); _needsInspectorRebuild = true; };
+                pickerCol.AddChild(searchBox);
 
-                // C. Tag Library Picker
-                if (_isTagPickerOpen)
+                var libraryFlow = new UIFlowPanel { Size = new Vector2(w - 380, 110), BackgroundColor = Color.Black * 0.3f, SpacingX = 5f, SpacingY = 5f, Padding = 6f };
+                var availableTags = _editorState.TagManager.Tags.Values
+                    .Where(t => !obj.Tags.Contains(t.ID))
+                    .Where(t => string.IsNullOrEmpty(_tagSearchFilter) || t.Name.ToLower().Contains(_tagSearchFilter) || (t.CodeName != null && t.CodeName.ToLower().Contains(_tagSearchFilter)))
+                    .ToList();
+
+                foreach (var tag in availableTags)
                 {
-                    // Search Box
-                    var searchBox = new UITextBox { Size = new Vector2(w - 20, 28), Text = _tagSearchFilter, Placeholder = "Search library..." };
-                    searchBox.OnTextChanged = (t) => { _tagSearchFilter = t.ToLower(); _needsInspectorRebuild = true; };
-                    tagPnl.AddChild(searchBox);
+                    int safeId = tag.ID;
+                    string label = !string.IsNullOrEmpty(tag.CodeName) ? $"+ [{tag.CodeName}] {tag.Name}" : $"+ {tag.Name}";
+                    Vector2 sz = UITheme.DefaultFont.MeasureString(label);
 
-                    // Group and Filter Tags
-                    var availableTags = _editorState.TagManager.Tags.Values.Where(t => !obj.Tags.Contains(t.ID)).ToList();
-                    if (!string.IsNullOrEmpty(_tagSearchFilter))
-                        availableTags = availableTags.Where(t => t.Name.ToLower().Contains(_tagSearchFilter) || t.Category.ToLower().Contains(_tagSearchFilter)).ToList();
-
-                    var groupedTags = availableTags.GroupBy(t => t.Category);
-
-                    foreach (var group in groupedTags)
+                    var tBtn = new UIButton
                     {
-                        // Clean, subtle header for categories
-                        var catHeader = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 5f, PanelBackground = Color.Transparent };
-                        catHeader.AddChild(new UILabel { Text = group.Key, TextColor = Color.Cyan });
-                        tagPnl.AddChild(catHeader);
-
-                        var groupFlow = new UIFlowPanel { Size = new Vector2(w - 20, 10), BackgroundColor = Color.Transparent, SpacingX = 5f, SpacingY = 5f, Padding = 0f };
-
-                        foreach (var tag in group)
-                        {
-                            int safeId = tag.ID;
-                            Vector2 sz = UITheme.DefaultFont.MeasureString(tag.Name);
-
-                            // Draw Available Tags slightly dimmed to differentiate from active tags
-                            var tBtn = new UIButton { Size = new Vector2(sz.X + 16, 24), Text = "+ " + tag.Name, BackgroundColor = tag.TagColor * 0.25f, BorderColor = tag.TagColor * 0.5f, TextColor = Color.LightGray };
-                            tBtn.OnClick = () => { obj.Tags.Add(safeId); _needsInspectorRebuild = true; };
-                            groupFlow.AddChild(tBtn);
-                        }
-                        tagPnl.AddChild(groupFlow);
-                    }
+                        Size = new Vector2(sz.X + 14, 22),
+                        Text = label,
+                        BackgroundColor = tag.TagColor * 0.25f,
+                        BorderColor = tag.TagColor * 0.6f,
+                        TextColor = Color.LightGray
+                    };
+                    tBtn.OnClick = () => { obj.Tags.Add(safeId); _needsInspectorRebuild = true; };
+                    libraryFlow.AddChild(tBtn);
                 }
-                _mainScroll.AddChild(tagPnl);
+                pickerCol.AddChild(libraryFlow);
+                tagCols.AddChild(pickerCol);
+
+                _activeWorkspace.AddChild(tagCols);
             }
 
-            // ==========================================
-            // 4. PROPERTIES ACCORDION
-            // ==========================================
-            var propHeader = CreateAccordionHeader($"Properties ({obj.Properties.Count})", _expandProps, () => { _expandProps = !_expandProps; _needsInspectorRebuild = true; }, w);
-            _mainScroll.AddChild(propHeader);
-
-            if (_expandProps)
+            // =========================================================================
+            // TAB 4: LINKS & WIRING (Redesigned System)
+            // =========================================================================
+            else if (_activeTab == "Links & Wiring")
             {
-                var propPnl = new UIStackPanel { Direction = StackDirection.Vertical, PanelBackground = Color.Black * 0.3f, Spacing = 8f, Padding = 10f };
+                var linkCols = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 20f, PanelBackground = Color.Transparent };
 
-                foreach (var kvp in obj.Properties)
+                // Left Column: Link Creator
+                var createCol = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 8f, Size = new Vector2(340, 180), AutoSize = false };
+                createCol.AddChild(new UILabel { Text = "CONNECT OBJECTS", TextColor = Color.Cyan });
+
+                var portRow = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 6f };
+                var srcBox = new UITextBox { Size = new Vector2(90, 24), Text = _linkSourcePort }; srcBox.OnTextChanged = (t) => _linkSourcePort = t;
+                var tgtBox = new UITextBox { Size = new Vector2(90, 24), Text = _linkTargetPort }; tgtBox.OnTextChanged = (t) => _linkTargetPort = t;
+
+                portRow.AddChild(new UILabel { Text = "Out:" }); portRow.AddChild(srcBox);
+                portRow.AddChild(new UILabel { Text = "In:" }); portRow.AddChild(tgtBox);
+                createCol.AddChild(portRow);
+
+                var pickBtn = new UIButton
                 {
-                    string safeKey = kvp.Key;
-                    var pRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 8f };
+                    Size = new Vector2(250, 28),
+                    Text = "Click Target on Viewport",
+                    BackgroundColor = Color.DarkCyan
+                };
+                pickBtn.OnClick = () => {
+                    _editorState.UI.IsLinkingMode = true;
+                    _needsInspectorRebuild = true;
+                };
+                createCol.AddChild(pickBtn);
 
-                    string typeIndicator = kvp.Value.Type.ToString().Substring(0, 3);
-                    pRow.AddChild(new UILabel { Text = $"[{typeIndicator}] {safeKey}:", TextColor = Color.LightGray });
+                createCol.AddChild(new UILabel { Text = "Common: Door -> Entrance | Light -> Mask", TextColor = Color.Gray });
+                linkCols.AddChild(createCol);
 
-                    if (kvp.Value.Type == PropertyType.Boolean)
-                    {
-                        var tBtn = new UIButton { Size = new Vector2(60, 24), Text = kvp.Value.Value, BackgroundColor = kvp.Value.Value == "True" ? Color.DarkGreen : Color.DarkRed };
-                        tBtn.OnClick = () => { kvp.Value.Value = kvp.Value.Value == "True" ? "False" : "True"; _needsInspectorRebuild = true; };
-                        pRow.AddChild(tBtn);
-                    }
-                    else
-                    {
-                        var valInp = new UITextBox { Size = new Vector2(100, 24), Text = kvp.Value.Value };
-                        valInp.OnTextChanged = (t) => kvp.Value.Value = t;
-                        valInp.OnSubmit = (t) => {
-                            kvp.Value.Value = t;
-                            _needsInspectorRebuild = true;
-                        };
-                        pRow.AddChild(valInp);
-                    }
+                // Right Column: Both Outbound AND Inbound Links
+                var listCol = new UIStackPanel { Direction = StackDirection.Vertical, Spacing = 6f, Size = new Vector2(w - 360, 180), AutoSize = false };
+                var inbounds = obj.GetInboundLinks(_editorState.ActiveMap);
+                listCol.AddChild(new UILabel { Text = $"CONNECTIONS (Out: {obj.Links.Count} | In: {inbounds.Count})", TextColor = Color.Yellow });
 
-                    var delBtn = new UIButton { Size = new Vector2(30, 24), Text = "X", BackgroundColor = Color.DarkRed };
-                    delBtn.OnClick = () => { obj.Properties.Remove(safeKey); _needsInspectorRebuild = true; };
-                    pRow.AddChild(delBtn);
-                    propPnl.AddChild(pRow);
+                var linksScroll = new UIStackPanel { Direction = StackDirection.Vertical, Size = new Vector2(w - 360, 140), AutoSize = false, ClipToBounds = true, Spacing = 4f };
+
+                // 1. OUTBOUND (Obj -> Target)
+                foreach (var link in obj.Links.ToList())
+                {
+                    var row = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Black * 0.35f, Padding = 3f };
+                    var targetObj = FindObjectByID(link.TargetID);
+                    string targetName = targetObj != null ? $"{targetObj.Name} [{targetObj.Type}]" : link.TargetID.Substring(0, 4);
+
+                    var delBtn = new UIButton { Size = new Vector2(24, 22), Text = "X", BackgroundColor = Color.DarkRed };
+                    delBtn.OnClick = () => { bus.Publish(new UnlinkObjectCommand(obj, link)); _needsInspectorRebuild = true; };
+
+                    var jumpBtn = new UIButton { Size = new Vector2(45, 22), Text = "Go ->", BackgroundColor = Color.DarkSlateGray };
+                    jumpBtn.OnClick = () => { if (targetObj != null) _editorState.Selection.SelectedMapObject = targetObj; };
+
+                    row.AddChild(delBtn);
+                    row.AddChild(jumpBtn);
+                    row.AddChild(new UILabel { Text = $"[Out: {link.SourcePort}] -> [{targetName}] : {link.TargetPort}", TextColor = Color.Cyan });
+                    linksScroll.AddChild(row);
                 }
 
-                var addRow = new UIStackPanel { Direction = StackDirection.Horizontal, PanelBackground = Color.Transparent, Spacing = 8f };
-                var newKeyInput = new UITextBox { Size = new Vector2(120, 24), Placeholder = "Key...", Text = _newPropKey };
-                newKeyInput.OnTextChanged = (t) => _newPropKey = t;
+                // 2. INBOUND (Source -> Obj)
+                foreach (var (srcObj, link) in inbounds)
+                {
+                    var row = new UIStackPanel { Direction = StackDirection.Horizontal, Spacing = 8f, PanelBackground = Color.Black * 0.2f, Padding = 3f };
+                    string srcName = $"{srcObj.Name} [{srcObj.Type}]";
 
-                var typeBtn = new UIButton { Size = new Vector2(50, 24), Text = _newPropType.ToString().Substring(0, 3), BackgroundColor = Color.DarkGoldenrod };
-                typeBtn.OnClick = () => { _newPropType = (PropertyType)(((int)_newPropType + 1) % 4); _needsInspectorRebuild = true; };
+                    var delBtn = new UIButton { Size = new Vector2(24, 22), Text = "X", BackgroundColor = Color.DarkRed };
+                    delBtn.OnClick = () => { bus.Publish(new UnlinkObjectCommand(srcObj, link)); _needsInspectorRebuild = true; };
 
-                var addPropBtn = new UIButton { Size = new Vector2(60, 24), Text = "Add", BackgroundColor = Color.DarkGreen };
-                addPropBtn.OnClick = () => {
-                    if (!string.IsNullOrWhiteSpace(_newPropKey) && !obj.Properties.ContainsKey(_newPropKey))
-                    {
-                        string defaultVal = _newPropType == PropertyType.Boolean ? "False" : (_newPropType == PropertyType.String ? "" : "0");
-                        obj.Properties.Add(_newPropKey.Trim(), new MapProperty(_newPropType, defaultVal));
-                        _newPropKey = ""; _needsInspectorRebuild = true;
-                    }
-                };
+                    var jumpBtn = new UIButton { Size = new Vector2(45, 22), Text = "Go ->", BackgroundColor = Color.DarkSlateGray };
+                    jumpBtn.OnClick = () => { _editorState.Selection.SelectedMapObject = srcObj; };
 
-                addRow.AddChild(newKeyInput); addRow.AddChild(typeBtn); addRow.AddChild(addPropBtn);
-                propPnl.AddChild(addRow);
-                _mainScroll.AddChild(propPnl);
+                    row.AddChild(delBtn);
+                    row.AddChild(jumpBtn);
+                    row.AddChild(new UILabel { Text = $"[Inbound] [{srcName}] ({link.SourcePort}) -> [{link.TargetPort}]", TextColor = Color.Yellow });
+                    linksScroll.AddChild(row);
+                }
+
+                if (obj.Links.Count == 0 && inbounds.Count == 0)
+                {
+                    linksScroll.AddChild(new UILabel { Text = "No connections. Use the button on the left to link objects.", TextColor = Color.Gray });
+                }
+
+                listCol.AddChild(linksScroll);
+                linkCols.AddChild(listCol);
+                _activeWorkspace.AddChild(linkCols);
             }
-        }
-
-        private UIButton CreateAccordionHeader(string title, bool isExpanded, Action onClick, float width)
-        {
-            var btn = new UIButton { Size = new Vector2(width, 30), Text = (isExpanded ? "[-] " : "[+] ") + title, BackgroundColor = Color.Black * 0.6f, TextColor = Color.Cyan };
-            btn.OnClick = onClick;
-            return btn;
         }
 
         private void ApplyGlobalScrolling(UIElement element, EditorInputState input)
@@ -704,12 +1043,11 @@ namespace Pixel_Simulations.Editor
             if (element is UIStackPanel stack && stack.ClipToBounds && stack.AbsoluteBounds.Contains(input.MouseWindowPosition))
             {
                 int scrollDelta = input.CurrentMouse.ScrollWheelValue - input.PreviousMouse.ScrollWheelValue;
-                if (scrollDelta != 0) stack.ScrollOffset = new Vector2(0, System.Math.Max(0, stack.ScrollOffset.Y - scrollDelta * 0.5f));
+                if (scrollDelta != 0) stack.ScrollOffset = new Vector2(0, Math.Max(0, stack.ScrollOffset.Y - scrollDelta * 0.5f));
             }
             foreach (var child in element.Children) ApplyGlobalScrolling(child, input);
         }
 
-        // Ensure FindTopObjectUnderMouse is implemented here based on your previous class logic!
         private MapObject FindTopObjectUnderMouse(Vector2 mouseWorld)
         {
             foreach (var layer in _editorState.ActiveMap.Layers.OfType<ControlLayer>().Reverse())
@@ -738,8 +1076,26 @@ namespace Pixel_Simulations.Editor
             return null;
         }
 
+        private MapObject FindObjectByID(string id)
+        {
+            foreach (var layer in _editorState.ActiveMap.Layers)
+            {
+                if (layer is ControlLayer cl)
+                {
+                    var match = cl.Rectangles.Cast<MapObject>().Concat(cl.Shapes).Concat(cl.Points).FirstOrDefault(o => o.ID == id);
+                    if (match != null) return match;
+                }
+                else if (layer is ObjectLayer ol && ol.Type == LayerType.Object)
+                {
+                    var match = ol.Objects.FirstOrDefault(o => o.ID == id);
+                    if (match != null) return match;
+                }
+            }
+            return null;
+        }
+
         public override void Draw(SpriteBatch sb) => _rootPanel.Draw(sb, (IUIContext)_editorUI, _theme);
-        public override string GetDebugInfo() => $"Linking Mode: {_editorState.UI.IsLinkingMode}";
+        public override string GetDebugInfo() => $"Inspector Tab: {_activeTab} | Linking: {_editorState.UI.IsLinkingMode}";
     }
     public class MaskEditorPanel : BasePanel
     {
@@ -888,7 +1244,7 @@ namespace Pixel_Simulations.Editor
                     if (!string.IsNullOrWhiteSpace(_newDataName))
                     {
                         dataList.Add(new MaskDataDef { Name = _newDataName, Value = MathHelper.Clamp(_newDataValue, 0, 255), Category = "None" });
-                        _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
+                        _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Data", "mask_data.json"));
                         _newDataName = ""; _newDataValue = 0;
                         _editorUI.SetFocus(null);
                         RebuildColumn2(activeChannel);
@@ -941,7 +1297,7 @@ namespace Pixel_Simulations.Editor
                         var delBtn = new UIButton { Size = new Vector2(30, 24), Text = "X", BackgroundColor = Color.DarkRed };
                         delBtn.OnClick = () => {
                             dataList.Remove(safeDef);
-                            _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json"));
+                            _editorState.MaskData.Save(System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Data", "mask_data.json"));
                             RebuildColumn2(activeChannel);
                         };
                         listRow.AddChild(delBtn);
@@ -1306,7 +1662,7 @@ namespace Pixel_Simulations.Editor
 
             var btnSaveBaked = new UIButton { Size = new Vector2(colWidth - 16, 24), Text = "Save Water Map", BackgroundColor = Color.DarkMagenta };
             btnSaveBaked.OnClick = () => {
-                string assetsPath = PathHelper.GetAssetsPath();
+                string assetsPath = PathHelper.GetReadMapsPath();
                 string mapName = string.IsNullOrWhiteSpace(_editorState.CurrentMapFile) ? "level1" : _editorState.CurrentMapFile;
                 mapName = mapName.Replace(".json", "").Replace(".map", "");
                 string savePath = Path.Combine(assetsPath, "Maps", $"{mapName}_water.png");
@@ -1524,7 +1880,7 @@ namespace Pixel_Simulations.Editor
                     _activeRule.RuleName = _ruleNameBox.Text;
                     _activeRule.TargetAtlas = _atlasNameBox.Text;
                     _editorState.AutoTileManager.Rules[_activeRule.RuleName] = _activeRule;
-                    _editorState.AutoTileManager.Save(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
+                    _editorState.AutoTileManager.Save(System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Data", "autotiles.json"));
                 }
             };
 

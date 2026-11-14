@@ -13,6 +13,7 @@ using System.Linq;
 
 namespace Pixel_Simulations.Data
 {
+    public enum WarpPhase { Idle, FadingOut, LoadingScene, FadingIn }
     public class Chunk
     {
         public const int CHUNK_SIZE = 8; // Each chunk is 16x16 tiles
@@ -160,7 +161,7 @@ namespace Pixel_Simulations.Data
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write("PMAP".ToCharArray());
-                writer.Write(2);      // Version number
+                writer.Write(3);      // Version number // Version 3 supports ModularBuildingInstance!
 
                 writer.Write(map.Layers.Count);
                 foreach (var layer in map.Layers)
@@ -283,6 +284,18 @@ namespace Pixel_Simulations.Data
                 writer.Write(prop.Scale.X); writer.Write(prop.Scale.Y);
                 writer.Write(prop.Rotation);
             }
+
+            // 2. Write ModularBuildingInstances
+            var buildings = layer.Objects.OfType<ModularBuildingInstance>().ToList();
+            writer.Write(buildings.Count);
+            foreach (var bldg in buildings)
+            {
+                WriteMapObjectBase(writer, bldg);
+                writer.Write(bldg.Position.X); writer.Write(bldg.Position.Y);
+                writer.Write(bldg.BuildingId ?? "");
+                writer.Write(bldg.ActiveStory);
+                writer.Write(bldg.ShowRoofInEditor);
+            }
         }
         private static void WriteControlLayer(BinaryWriter writer, ControlLayer layer)
         {
@@ -360,6 +373,20 @@ namespace Pixel_Simulations.Data
                 prop.Rotation = reader.ReadSingle();
                 layer.Objects.Add(prop);
             }
+            if (version >= 3)
+            {
+                int bCount = reader.ReadInt32();
+                for (int i = 0; i < bCount; i++)
+                {
+                    var bldg = new ModularBuildingInstance();
+                    ReadMapObjectBase(reader, bldg, version);
+                    bldg.Position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+                    bldg.BuildingId = reader.ReadString();
+                    bldg.ActiveStory = reader.ReadInt32();
+                    bldg.ShowRoofInEditor = reader.ReadBoolean();
+                    layer.Objects.Add(bldg);
+                }
+            }
             return layer;
         }
         private static ControlLayer ReadControlLayer(BinaryReader reader, string name, int version)
@@ -413,25 +440,28 @@ namespace Pixel_Simulations.Data
         #endregion
         private static void WriteMapObjectBase(BinaryWriter writer, MapObject obj)
         {
-            writer.Write(obj.ID);
+            writer.Write(obj.ID ?? Guid.NewGuid().ToString().Substring(0, 8));
             writer.Write(obj.Name ?? "");
 
-            // Write Links (Version 2 Format)
-            writer.Write(obj.Links.Count);
-            foreach (var link in obj.Links)
+            // Write Links (Version 2+ Format)
+            var links = obj.Links ?? new List<ObjectLink>();
+            writer.Write(links.Count);
+            foreach (var link in links)
             {
                 writer.Write(link.SourcePort ?? "Out");
-                writer.Write(link.TargetID);
+                writer.Write(link.TargetID ?? "");
                 writer.Write(link.TargetPort ?? "In");
             }
 
-            writer.Write(obj.Tags.Count);
-            foreach (var tag in obj.Tags) writer.Write(tag);
+            var tags = obj.Tags ?? new HashSet<int>();
+            writer.Write(tags.Count);
+            foreach (var tag in tags) writer.Write(tag);
 
-            writer.Write(obj.Properties.Count);
-            foreach (var kvp in obj.Properties)
+            var props = obj.Properties ?? new Dictionary<string, MapProperty>();
+            writer.Write(props.Count);
+            foreach (var kvp in props)
             {
-                writer.Write(kvp.Key);
+                writer.Write(kvp.Key ?? "");
                 writer.Write((int)kvp.Value.Type);
                 writer.Write(kvp.Value.Value ?? "");
             }
@@ -448,16 +478,16 @@ namespace Pixel_Simulations.Data
             {
                 if (version >= 2)
                 {
-                    //obj.Links.Add(new ObjectLink
-                    //{
-                    //    SourcePort = reader.ReadString(),
-                    //    TargetID = reader.ReadString(),
-                    //    TargetPort = reader.ReadString()
-                    //});
+                    // UNCOMMENTED: Prevents BinaryReader stream misalignment!
+                    obj.Links.Add(new ObjectLink
+                    {
+                        SourcePort = reader.ReadString(),
+                        TargetID = reader.ReadString(),
+                        TargetPort = reader.ReadString()
+                    });
                 }
                 else
                 {
-                    // Backwards Compatibility: Upgrade old V1 String Links to ObjectLinks automatically.
                     obj.Links.Add(new ObjectLink { SourcePort = "Out", TargetID = reader.ReadString(), TargetPort = "In" });
                 }
             }
@@ -477,6 +507,13 @@ namespace Pixel_Simulations.Data
             }
         }
         // Inside Map.cs -> MapSerializer class
+        private struct CaptureObjectEntry
+        {
+            public float SortY;
+            public PropObject Prop;
+            public ObjectPrefab Prefab;
+            public ModularBuildingInstance Building;
+        }
         public static void CaptureToImage(Map map, GraphicsDevice gd, Editor.EditorState state, string path)
         {
             var bounds = CalculateMapBounds(map, state.PrefabManager);
@@ -488,8 +525,8 @@ namespace Pixel_Simulations.Data
 
             bounds.Inflate(16, 16);
 
-            int width = (int)Math.Min(bounds.Width, 10240);
-            int height = (int)Math.Min(bounds.Height, 10240);
+            int width = (int)Math.Min(bounds.Width, 8192);
+            int height = (int)Math.Min(bounds.Height, 8192);
 
             var prevTargets = gd.GetRenderTargets();
 
@@ -501,10 +538,10 @@ namespace Pixel_Simulations.Data
                 using (var sb = new SpriteBatch(gd))
                 {
                     var transform = Matrix.CreateTranslation(-bounds.X, -bounds.Y, 0);
-
-                    // 1. DRAW TILE LAYERS (Bottom to Top)
                     sb.Begin(transformMatrix: transform, samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
-                    for (int i = 0; i < map.Layers.Count; i++)
+
+                    // 1. DRAW ALL TILE LAYERS (Bottom to Top)
+                    for (int i = map.Layers.Count - 1; i >= 0; i--)
                     {
                         var layer = map.Layers[i];
                         if (!layer.IsVisible || !(layer is TileLayer tileLayer)) continue;
@@ -533,68 +570,66 @@ namespace Pixel_Simulations.Data
                             }
                         }
                     }
-                    sb.End();
 
-                    // 2. COLLECT AND Y-SORT ALL OBJECTS ACROSS VISIBLE OBJECT LAYERS
-                    var captureSprites = new List<(PropObject Prop, ObjectPrefab Prefab, float FeetY)>();
+                    // 2. COLLECT ALL PROPS & MODULAR BUILDINGS INTO captureSprites QUEUE
+                    var captureSprites = new List<CaptureObjectEntry>();
 
-                    foreach (var layer in map.Layers)
+                    foreach (var objLayer in map.Layers.OfType<ObjectLayer>().Where(l => l.IsVisible && l.Type == LayerType.Object))
                     {
-                        if (!layer.IsVisible || !(layer is ObjectLayer objLayer) || layer.Type != LayerType.Object) continue;
-
-                        foreach (var obj in objLayer.Objects.OfType<PropObject>())
+                        foreach (var obj in objLayer.Objects)
                         {
-                         
-                            var prefab = state.PrefabManager.GetPrefab(obj.PrefabID);
-                            if (prefab != null && prefab.AlternateStates.Count > 0)
-                            { 
-                                float feetY = obj.Position.Y + (prefab.CanvasSize.Y - prefab.Pivot.Y) * obj.Scale.Y;
-                                captureSprites.Add((obj, prefab, feetY));
+                            if (obj is PropObject prop)
+                            {
+                                var prefab = state.PrefabManager.GetPrefab(prop.PrefabID);
+                                if (prefab != null)
+                                {
+                                    captureSprites.Add(new CaptureObjectEntry
+                                    {
+                                        SortY = prop.Position.Y,
+                                        Prop = prop,
+                                        Prefab = prefab
+                                    });
+                                }
+                            }
+                            else if (obj is ModularBuildingInstance bldg && bldg.BlueprintRef != null)
+                            {
+                                RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bldg.BlueprintRef);
+                                captureSprites.Add(new CaptureObjectEntry
+                                {
+                                    SortY = bldg.Position.Y + tight.Bottom, // Sort by building's physical front edge
+                                    Building = bldg
+                                });
                             }
                         }
                     }
 
-                    // Sort by feet Y so front objects cleanly overlap rear objects
-                    captureSprites.Sort((a, b) => a.FeetY.CompareTo(b.FeetY));
+                    // Sort strictly by feet Y-coordinate so trees/buildings overlap naturally
+                    captureSprites.Sort((a, b) => a.SortY.CompareTo(b.SortY));
 
-                    // 3. DRAW COMPOSITE OBJECT LAYERS
-                    sb.Begin(transformMatrix: transform, samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
-
-                    foreach (var item in captureSprites)
+                    // 3. DRAW SORTED OBJECTS & BUILDINGS
+                    foreach (var entry in captureSprites)
                     {
-                        var prop = item.Prop;
-                        var prefab = item.Prefab;
-                        Vector2 topLeft = prop.Position - (prefab.Pivot * prop.Scale);
-
-                        var layersToDraw = prefab.AlternateStates.Keys.ToList();
-                        layersToDraw.Sort((a, b) => prefab.AlternateStates[a].ZIndex.CompareTo(prefab.AlternateStates[b].ZIndex));
-
-                        foreach (var stateKey in layersToDraw)
+                        if (entry.Prop != null && entry.Prefab != null)
                         {
-                            // Skip interior layers for world captures
-                            if (stateKey.StartsWith("Interior")) continue;
+                            Vector2 topLeft = entry.Prop.Position - entry.Prefab.Pivot;
+                            var layersToDraw = entry.Prefab.AlternateStates.Keys
+                                .Where(k => !k.StartsWith("Interior")) // Exterior only
+                                .OrderBy(k => entry.Prefab.AlternateStates[k].ZIndex)
+                                .ToList();
 
-                            var sLayer = prefab.AlternateStates[stateKey];
-
-                            // Skip phantom dummy tile layers
-                            if (string.Equals(sLayer.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
-                                sLayer.SourceRect == new Rectangle(0, 0, 16, 16) && sLayer.Offset == Point.Zero)
+                            foreach (var key in layersToDraw)
                             {
-                                continue;
+                                var sLayer = entry.Prefab.AlternateStates[key];
+                                var tex = state.AssetLibrary.GetAtlas(sLayer.AtlasName);
+                                if (tex != null)
+                                {
+                                    sb.Draw(tex, topLeft + sLayer.Offset.ToVector2(), sLayer.SourceRect, Color.White);
+                                }
                             }
-
-                            var tex = state.AssetLibrary.GetAtlas(sLayer.AtlasName);
-                            if (tex != null)
-                            {
-                                Vector2 drawPos = topLeft + (sLayer.Offset.ToVector2() * prop.Scale);
-                                Rectangle dest = new Rectangle(
-                                    (int)drawPos.X,
-                                    (int)drawPos.Y,
-                                    (int)(sLayer.SourceRect.Width * prop.Scale.X),
-                                    (int)(sLayer.SourceRect.Height * prop.Scale.Y));
-
-                                sb.Draw(tex, dest, sLayer.SourceRect, Color.White, prop.Rotation, Vector2.Zero, SpriteEffects.None, 0f);
-                            }
+                        }
+                        else if (entry.Building != null)
+                        {
+                            ModularBuildingRenderer.DrawBuildingExterior(sb, entry.Building.BlueprintRef, entry.Building.Position, state.AssetLibrary, Color.White);
                         }
                     }
 
@@ -608,7 +643,7 @@ namespace Pixel_Simulations.Data
                 {
                     target.SaveAsPng(stream, width, height);
                 }
-                System.Diagnostics.Debug.WriteLine($"[Capture] Map and composite objects captured successfully to: {path}");
+                System.Diagnostics.Debug.WriteLine($"Map Captured successfully to: {path}");
             }
         }
         private static RectangleF CalculateMapBounds(Map map, PrefabManager prefabManager)
@@ -619,6 +654,8 @@ namespace Pixel_Simulations.Data
 
             foreach (var layer in map.Layers)
             {
+                if (!layer.IsVisible) continue;
+
                 if (layer is TileLayer tileLayer)
                 {
                     foreach (var chunk in tileLayer.Chunks.Keys)
@@ -627,10 +664,10 @@ namespace Pixel_Simulations.Data
                         float y = chunk.Y * Chunk.CHUNK_SIZE * 16;
                         float w = Chunk.CHUNK_SIZE * 16;
 
-                        minX = System.Math.Min(minX, x);
-                        minY = System.Math.Min(minY, y);
-                        maxX = System.Math.Max(maxX, x + w);
-                        maxY = System.Math.Max(maxY, y + w);
+                        minX = Math.Min(minX, x);
+                        minY = Math.Min(minY, y);
+                        maxX = Math.Max(maxX, x + w);
+                        maxY = Math.Max(maxY, y + w);
                         hasData = true;
                     }
                 }
@@ -645,15 +682,24 @@ namespace Pixel_Simulations.Data
                             {
                                 float x = prop.Position.X - prefab.Pivot.X;
                                 float y = prop.Position.Y - prefab.Pivot.Y;
-                                float w = prefab.SourceRect.Width * prop.Scale.X;
-                                float h = prefab.SourceRect.Height * prop.Scale.Y;
+                                float w = Math.Max(prefab.SourceRect.Width, prefab.CanvasSize.X) * prop.Scale.X;
+                                float h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y) * prop.Scale.Y;
 
-                                minX = System.Math.Min(minX, x);
-                                minY = System.Math.Min(minY, y);
-                                maxX = System.Math.Max(maxX, x + w);
-                                maxY = System.Math.Max(maxY, y + h);
+                                minX = Math.Min(minX, x);
+                                minY = Math.Min(minY, y);
+                                maxX = Math.Max(maxX, x + w);
+                                maxY = Math.Max(maxY, y + h);
                                 hasData = true;
                             }
+                        }
+                        else if (obj is ModularBuildingInstance bldg && bldg.BlueprintRef != null)
+                        {
+                            RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bldg.BlueprintRef);
+                            minX = Math.Min(minX, bldg.Position.X + tight.Left);
+                            minY = Math.Min(minY, bldg.Position.Y + tight.Top);
+                            maxX = Math.Max(maxX, bldg.Position.X + tight.Right);
+                            maxY = Math.Max(maxY, bldg.Position.Y + tight.Bottom);
+                            hasData = true;
                         }
                     }
                 }
@@ -892,7 +938,7 @@ namespace Pixel_Simulations.Data
 
             var waterShapes = map.Layers
                 .OfType<ControlLayer>()
-                .SelectMany(l => l.Shapes.Where(s => s.Tags.Contains(SystemTags.WATER)))
+                .SelectMany(l => l.Shapes.Where(s => s.HasTag(SystemTags.WATER)))
                 .ToList();
 
             for (int y = 0; y < height; y++)
@@ -1135,7 +1181,7 @@ namespace Pixel_Simulations.Data
 
             var waterShapes = map.Layers
                 .OfType<ControlLayer>()
-                .SelectMany(l => l.Shapes.Where(s => s.Tags.Contains(SystemTags.WATER)))
+                .SelectMany(l => l.Shapes.Where(s => s.HasTag(SystemTags.WATER)))
                 .ToList();
 
             for (int y = 0; y < height; y++)
@@ -1294,4 +1340,165 @@ namespace Pixel_Simulations.Data
         }
     }
 
+    public class MapWarpManager
+    {
+        private readonly GameState _state;
+
+        public WarpPhase Phase { get; private set; } = WarpPhase.Idle;
+        public float FadeAlpha { get; private set; } = 0.0f;
+        public float FadeSpeed { get; set; } = 2.5f; // Duration ~0.4s
+
+        private string _pendingMapName;
+        private string _pendingSpawnName;
+        private float _warpCooldown = 0f;
+
+        public bool IsWarping => Phase != WarpPhase.Idle;
+
+        public MapWarpManager(GameState state)
+        {
+            _state = state;
+        }
+
+        public void TriggerMapWarp(string targetMap, string targetSpawn = null)
+        {
+            if (IsWarping || _warpCooldown > 0f) return;
+
+            string cleanName = targetMap.Replace(".json", "").Replace(".map", "");
+            string parentDir = Directory.GetParent(_state.ContentRoot)?.FullName ?? _state.ContentRoot;
+            string expectedPath = Path.Combine(PathHelper.GetReadMapsPath(), $"{cleanName}.map");
+
+            // PRE-VALIDATION: Check if map file exists before initiating fade
+            if (!File.Exists(expectedPath))
+            {
+                string errorMsg = $"[Warp Error] Map '{cleanName}.map' does not exist!";
+                System.Diagnostics.Debug.WriteLine(errorMsg);
+
+                // Notify HUD on-screen
+                // HUD.AddMessage(errorMsg, duration: 4.0f);
+
+                // Nudge player backwards 16px away from trigger
+                Vector2 pushBack = -Vector2.Normalize(_state.Player.Velocity == Vector2.Zero ? new Vector2(0, 1) : _state.Player.Velocity) * 16f;
+                _state.Player.Position += pushBack;
+
+                // Set 3-second cooldown to avoid continuous re-triggers
+                _warpCooldown = 3.0f;
+                Phase = WarpPhase.Idle;
+                FadeAlpha = 0.0f;
+                return;
+            }
+
+            _pendingMapName = cleanName;
+            _pendingSpawnName = targetSpawn;
+            Phase = WarpPhase.FadingOut;
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (_warpCooldown > 0f)
+                _warpCooldown -= dt;
+
+            switch (Phase)
+            {
+                case WarpPhase.FadingOut:
+                    FadeAlpha = Math.Min(1.0f, FadeAlpha + (dt * FadeSpeed));
+                    if (FadeAlpha >= 1.0f)
+                    {
+                        Phase = WarpPhase.LoadingScene;
+                    }
+                    break;
+
+                case WarpPhase.LoadingScene:
+                    bool success = ExecuteSceneSwap();
+                    if (success)
+                    {
+                        Phase = WarpPhase.FadingIn;
+                    }
+                    else
+                    {
+                        // Abort cleanly if unexpected failure occurs
+                        Phase = WarpPhase.Idle;
+                        FadeAlpha = 0f;
+                        _warpCooldown = 3.0f;
+                    }
+                    break;
+
+                case WarpPhase.FadingIn:
+                    FadeAlpha = Math.Max(0.0f, FadeAlpha - (dt * FadeSpeed));
+                    if (FadeAlpha <= 0.0f)
+                    {
+                        Phase = WarpPhase.Idle;
+                        _warpCooldown = 1.0f; // Brief cooldown after spawning
+                    }
+                    break;
+            }
+        }
+
+        private bool ExecuteSceneSwap()
+        {
+            string mapsDir = PathHelper.GetReadMapsPath();
+            string newMapPath = Path.Combine(mapsDir, $"{_pendingMapName}.map");
+
+            if (!File.Exists(newMapPath)) return false;
+
+            try
+            {
+                // 1. Dispose old resources
+                _state.CurrentMap?.Dispose();
+                foreach (var tex in _state._entityManager._compositeCache.Values) tex.Dispose();
+                _state._entityManager._compositeCache.Clear();
+
+                // 2. Read new map binary
+                _state.CurrentMap = MapSerializer.Read(newMapPath);
+                _state.gameMapPath = newMapPath;
+
+                // 3. Load masks, normals, and water
+                var maskLayer = _state.CurrentMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                if (maskLayer != null)
+                {
+                    string maskPath = Path.Combine(mapsDir, $"{_pendingMapName}_mask.png");
+                    string normalPath = Path.Combine(mapsDir, $"{_pendingMapName}_normals.png");
+                    string waterPath = Path.Combine(mapsDir, $"{_pendingMapName}_water.png");
+
+                    _state.TerrainMaskChunks = MapSerializer.LoadGameChunks(maskPath, _state._gd, maskLayer.OffsetX, maskLayer.OffsetY);
+                    _state.TerrainNormalChunks = MapSerializer.LoadGameChunks(normalPath, _state._gd, maskLayer.OffsetX, maskLayer.OffsetY);
+                    _state.TerrainWaterChunks = MapSerializer.LoadGameChunks(waterPath, _state._gd, maskLayer.OffsetX, maskLayer.OffsetY);
+
+                    _state.WaterSystem.CacheTerrainElevationData(_state.TerrainMaskChunks);
+                    _state.WaterSystem.CacheWaterDepthData(_state.TerrainWaterChunks);
+                }
+
+                // 4. Reload Physics & Entities
+                _state.Physics.LoadMapData(_state.CurrentMap, _state.PrefabManager);
+                _state._entityManager.LoadFromMap(_state.CurrentMap, _state.PrefabManager, _state, _state._gd);
+
+                // 5. Spawn Player at destination
+                Vector2 spawnPos = new Vector2(200, 200);
+                if (!string.IsNullOrEmpty(_pendingSpawnName))
+                {
+                    var match = _state._entityManager.AllEntities.FirstOrDefault(e =>
+                        e.HasTag(SystemTags.SPAWN) && e.BaseData.Name.Equals(_pendingSpawnName, StringComparison.OrdinalIgnoreCase));
+                    if (match != null) spawnPos = match.Position;
+                }
+                else
+                {
+                    var def = _state._entityManager.AllEntities.FirstOrDefault(e => e.HasTag(SystemTags.SPAWN));
+                    if (def != null) spawnPos = def.Position;
+                }
+
+                _state.Player.Position = spawnPos;
+                _state.Player.TargetWalkPos = null;
+                _state.Player.PendingInteraction = null;
+                _state.GameCamera.SnapTo(spawnPos, _state.GameCamera.Zoom);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Warp] Exception swapping scene: {ex.Message}");
+                return false;
+            }
+        }
+    }
 }

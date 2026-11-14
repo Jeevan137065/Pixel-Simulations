@@ -113,11 +113,11 @@ namespace Pixel_Simulations.UI
             }
             if (_editorState.TaskProgress.IsActive)
             {
+                var sb = spriteBatch;
                 var task = _editorState.TaskProgress;
                 var vp = gd.Viewport;
 
-                // Dark background dim
-                spriteBatch.FillRectangle(new RectangleF(0, 0, vp.Width, vp.Height), Color.Black * 0.6f);
+                sb.FillRectangle(new RectangleF(0, 0, vp.Width, vp.Height), Color.Black * 0.65f);
 
                 int dialogW = 480;
                 int dialogH = 110;
@@ -125,32 +125,28 @@ namespace Pixel_Simulations.UI
                 int y = (vp.Height - dialogH) / 2;
                 Rectangle dialogRect = new Rectangle(x, y, dialogW, dialogH);
 
-                // Dialog Box
-                spriteBatch.FillRectangle(dialogRect, new Color(20, 24, 30));
-                spriteBatch.DrawRectangle(dialogRect, Color.Cyan * 0.8f, 2);
+                sb.FillRectangle(dialogRect, new Color(18, 22, 28));
+                sb.DrawRectangle(dialogRect, Color.Cyan * 0.8f, 2);
 
-                // Title & Status
-                spriteBatch.DrawString(DebugFont, task.Title, new Vector2(x + 16, y + 14), Color.Cyan);
-                spriteBatch.DrawString(DebugFont, task.Status, new Vector2(x + 16, y + 36), Color.LightGray);
+                sb.DrawString(DebugFont, task.Title, new Vector2(x + 16, y + 14), Color.Cyan);
+                sb.DrawString(DebugFont, task.Status, new Vector2(x + 16, y + 36), Color.LightGray);
 
-                // Progress Track
                 int barX = x + 16;
                 int barY = y + 64;
                 int barW = dialogW - 32;
                 int barH = 18;
 
-                spriteBatch.FillRectangle(new Rectangle(barX, barY, barW, barH), Color.Black * 0.7f);
-                spriteBatch.DrawRectangle(new Rectangle(barX, barY, barW, barH), Color.DarkGray, 1);
+                sb.FillRectangle(new Rectangle(barX, barY, barW, barH), Color.Black * 0.7f);
+                sb.DrawRectangle(new Rectangle(barX, barY, barW, barH), Color.DarkGray, 1);
 
-                // Progress Fill
-                int fillW = (int)(barW * task.Progress);
-                Color fillColor = task.Progress >= 1f ? Color.LimeGreen : Color.DeepSkyBlue;
-                spriteBatch.FillRectangle(new Rectangle(barX, barY, fillW, barH), fillColor);
+                // USE DisplayedProgress FOR SILKY SMOOTH ANIMATION
+                int fillW = (int)(barW * task.DisplayedProgress);
+                Color fillColor = task.DisplayedProgress >= 0.99f ? Color.LimeGreen : Color.DeepSkyBlue;
+                sb.FillRectangle(new Rectangle(barX, barY, fillW, barH), fillColor);
 
-                // Percentage Label
-                string pctText = $"{Math.Round(task.Progress * 100)}%";
+                string pctText = $"{Math.Round(task.DisplayedProgress * 100)}%";
                 Vector2 pctSize = DebugFont.MeasureString(pctText);
-                spriteBatch.DrawString(DebugFont, pctText, new Vector2(barX + (barW - pctSize.X) / 2, barY + (barH - pctSize.Y) / 2), Color.White);
+                sb.DrawString(DebugFont, pctText, new Vector2(barX + (barW - pctSize.X) / 2, barY + (barH - pctSize.Y) / 2), Color.White);
             }
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color)
@@ -256,13 +252,16 @@ namespace Pixel_Simulations.UI
         /// <returns>The name of the panel, or "None" if it's not over any defined panel.</returns>
         public string GetPanelAt(Point mousePosition)
         {
-            foreach (var panel in _panels)
-            {
-                if (panel.Value.Contains(mousePosition))
-                {
-                    return panel.Key;
-                }
-            }
+            // Check UI Panels FIRST so clicks never fall through to the Viewport
+            if (InspectorPanel.Contains(mousePosition)) return "Inspector";
+            if (TilesetPanel.Contains(mousePosition)) return "Tileset";
+            if (LayerPanel.Contains(mousePosition)) return "Layer";
+            if (TopPanel.Contains(mousePosition)) return "Top";
+            if (ToolPanel.Contains(mousePosition)) return "Tool";
+
+            // Viewport is evaluated ONLY if no UI panels were hit
+            if (ViewportPanel.Contains(mousePosition)) return "Viewport";
+
             return "None";
         }
 

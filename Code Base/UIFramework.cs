@@ -543,11 +543,33 @@ namespace Pixel_Simulations.UI
             int x = AbsoluteBounds.X + spacing;
             int y = AbsoluteBounds.Y + spacing - (int)ScrollOffset.Y;
 
+            // A. MODULAR BUILDINGS BROWSER
+            if (_parentPanel.ActiveObjectCategory == "Modular")
+            {
+                foreach (var bldg in _es.BuildingManager.Buildings.Values)
+                {
+                    Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
+                    if (slotRect.Contains(input.MouseWindowPosition))
+                    {
+                        _es.Selection.ActivePrefab = null;
+                        _es.Selection.ActiveBuildingBlueprint = bldg;
+                        bus.Publish(new ChangeToolCommand { ToolName = "ObjectPlacer" });
+                        return;
+                    }
+
+                    x += slotSize + spacing;
+                    if (x + slotSize > AbsoluteBounds.Right) { x = AbsoluteBounds.X + spacing; y += slotSize + spacing; }
+                }
+                return;
+            }
+
+            // B. STANDARD OBJECTS & FACADES BROWSER
             foreach (var prefab in GetFilteredPrefabs())
             {
                 Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
                 if (slotRect.Contains(input.MouseWindowPosition))
                 {
+                    _es.Selection.ActiveBuildingBlueprint = null;
                     bus.Publish(new SelectPrefabCommand { PrefabID = prefab.ID });
                     return;
                 }
@@ -619,6 +641,35 @@ namespace Pixel_Simulations.UI
             int x = AbsoluteBounds.X + spacing;
             int y = AbsoluteBounds.Y + spacing - (int)ScrollOffset.Y;
 
+            // A. DRAW MODULAR BLUEPRINT CARDS
+            if (_parentPanel.ActiveObjectCategory == "Modular")
+            {
+                foreach (var bldg in _es.BuildingManager.Buildings.Values)
+                {
+                    Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);
+                    bool isSelected = _es.Selection.ActiveBuildingBlueprint?.id == bldg.id;
+
+                    if (slotRect.Bottom > AbsoluteBounds.Top && slotRect.Top < AbsoluteBounds.Bottom)
+                    {
+                        sb.FillRectangle(slotRect, new Color(20, 24, 32));
+                        sb.DrawRectangle(slotRect, isSelected ? Color.Cyan : Color.DarkSlateBlue, isSelected ? 2 : 1);
+
+                        // House icon / grid tag
+                        sb.FillRectangle(new Rectangle(slotRect.X + 8, slotRect.Y + 8, slotSize - 16, slotSize - 24), Color.Black * 0.4f);
+
+                        string tag = $"{bldg.gridDimension}x{bldg.gridDimension}";
+                        Vector2 tagSz = theme.Font.MeasureString(tag) * 0.7f;
+                        sb.DrawString(theme.Font, tag, slotRect.Center.ToVector2() - (tagSz / 2) - new Vector2(0, 4), Color.Cyan, 0f, Vector2.Zero, 0.7f, SpriteEffects.None, 0f);
+
+                        string label = bldg.name.Length > 8 ? bldg.name.Substring(0, 8) : bldg.name;
+                        sb.DrawString(theme.Font, label, new Vector2(slotRect.X + 2, slotRect.Bottom - 12), Color.LightGray, 0f, Vector2.Zero, 0.7f, SpriteEffects.None, 0f);
+                    }
+
+                    x += slotSize + spacing;
+                    if (x + slotSize > AbsoluteBounds.Right) { x = AbsoluteBounds.X + spacing; y += slotSize + spacing; }
+                }
+                return;
+            }
             foreach (var prefab in GetFilteredPrefabs())
             {
                 Rectangle slotRect = new Rectangle(x, y, slotSize, slotSize);

@@ -278,7 +278,7 @@ namespace Pixel_Simulations
                 if (!layer.IsVisible || layer.IsLocked) continue;
                 foreach (var shape in layer.Shapes)
                 {
-                    if (shape.Tags.Contains(90) && shape.Shape.Contains(worldPos)) return true;
+                    if (shape.HasTag(SystemTags.FARMABLE) && shape.Shape.Contains(worldPos)) return true;
                 }
             }
             return false;

@@ -104,6 +104,18 @@ namespace Pixel_Simulations.Data
                         }
                     }
                 }
+                else if (obj is ModularBuildingInstance bldg)
+                {
+                    var blueprint = bldg.BlueprintRef;
+                    if (blueprint == null) continue;
+
+                    ModularBuildingRenderer.DrawBuildingExterior(sb, blueprint, bldg.Position, _editorState.AssetLibrary, Color.White);
+
+                    // Draw tight bounding box outline instead of huge 512x512 void grid
+                    RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(blueprint);
+                    RectangleF worldBox = new RectangleF(bldg.Position.X + tight.X, bldg.Position.Y + tight.Y, tight.Width, tight.Height);
+                    sb.DrawRectangle(worldBox, Color.Cyan * 0.4f, 1f / _editorState.camera.Zoom);
+                }
             }
         }
         private void DrawControlLayer(SpriteBatch sb, ControlLayer layer)
@@ -128,10 +140,9 @@ namespace Pixel_Simulations.Data
                 var bounds = shapeObj.Shape.GetBounds();
                 Color objColor = GetObjColor(shapeObj);
                 // --- GRADIENT Light Source PREVIEW ---
-                if (shapeObj.Tags.Contains(200))
+                if (shapeObj.HasTag(SystemTags.LIGHT_SOURCE))
                 {
-                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.Tags.Contains(200) && shapeObj.Links.Any(l => l.TargetID == s.ID));
-
+                    var falloffShape = layer.Shapes.FirstOrDefault(s => s.HasTag(SystemTags.LIGHT_FALLOFF) && shapeObj.Links.Any(l => l.TargetID == s.ID));
                     if (falloffShape != null && shapeObj.Shape.Vertices.Count == falloffShape.Shape.Vertices.Count)
                     {
                         // 2. Draw lines connecting the vertices (The "Light Shafts")
@@ -150,37 +161,32 @@ namespace Pixel_Simulations.Data
                         sb.DrawRectangle(bounds, Color.Yellow, lineThickness * 2);
                     }
                 }
-                else if (shapeObj.Tags.Contains(200))
-                {
-                    // We skip drawing the falloff explicitly, because the #light_source draws the connecting lines to it!
-                    // We just draw a faint outline so you can still click it to select it.
-                    sb.DrawRectangle(bounds, Color.Orange * 0.2f, lineThickness);
-                }
+                //else if (shapeObj.Tags.Contains(200))
+                //{
+                //    // We skip drawing the falloff explicitly, because the #light_source draws the connecting lines to it!
+                //    // We just draw a faint outline so you can still click it to select it.
+                //    sb.DrawRectangle(bounds, Color.Orange * 0.2f, lineThickness);
+                //}
                 // --- GRADIENT REFLECTION PREVIEW ---
-                if (shapeObj.Tags.Contains(201))
+                else if (shapeObj.HasTag(SystemTags.REFLECTION))
                 {
-                    bool isNegative = true; // Default to floor reflection
+                    bool isNegative = true;
                     if (shapeObj.Properties.TryGetValue("Direction", out var dirProp))
                         isNegative = (dirProp.Value == "True");
 
-                    // Draw Gradient (using horizontal slices for performance in editor)
                     int slices = 15;
                     float sliceHeight = bounds.Height / slices;
 
                     for (int i = 0; i < slices; i++)
                     {
                         float factor = (float)i / (slices - 1);
-
-                        // If Negative (Floor), fade to dark at the BOTTOM (factor increases downwards).
-                        // If Positive (Mirror), fade to dark at the TOP (factor decreases downwards).
                         float darkness = isNegative ? (1f - factor) : factor;
 
-                        Color sliceColor = objColor * (darkness * 0.5f); // Max 50% opacity
+                        Color sliceColor = objColor * (darkness * 0.5f);
                         RectangleF sliceRect = new RectangleF(bounds.X, bounds.Y + (i * sliceHeight), bounds.Width, sliceHeight);
                         sb.FillRectangle(sliceRect, sliceColor);
                     }
 
-                    // Draw Outer Bounds
                     sb.DrawRectangle(bounds, objColor, lineThickness * 2);
                 }
                 else
@@ -205,6 +211,22 @@ namespace Pixel_Simulations.Data
                 sb.DrawCircle(pointObj.Position, pointObj.Radius, 32, pointObj.DebugColor, lineThickness);
                 sb.DrawLine(pointObj.Position - new Vector2(4, 0), pointObj.Position + new Vector2(4, 0), objColor * 0.4f, lineThickness);
                 sb.DrawLine(pointObj.Position - new Vector2(0, 4), pointObj.Position + new Vector2(0, 4), objColor, lineThickness);
+
+                // RENDER POINTER NAME & LABEL IN EDITOR
+                string displayName = !string.IsNullOrEmpty(pointObj.Label)
+                    ? $"{pointObj.Name} ({pointObj.Label})"
+                    : (pointObj.Name ?? "Point");
+
+                if (_editorState.AssetLibrary.EditorFont != null || Pixel_Simulations.UI.UITheme.DefaultFont != null)
+                {
+                    var font = _editorState.AssetLibrary.EditorFont ?? Pixel_Simulations.UI.UITheme.DefaultFont;
+                    float textScale = 0.8f / _editorState.camera.Zoom;
+                    Vector2 textPos = pointObj.Position + new Vector2(pointObj.Radius + 4f, -pointObj.Radius);
+
+                    // Shadow & Foreground text
+                    sb.DrawString(font, displayName, textPos + (Vector2.One / _editorState.camera.Zoom), Color.Black * 0.9f, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+                    sb.DrawString(font, displayName, textPos, pointObj.DebugColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+                }
             }
         }
         private void DrawMaskLayer(SpriteBatch sb, MaskLayer layer)

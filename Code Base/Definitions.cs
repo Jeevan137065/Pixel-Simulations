@@ -18,19 +18,8 @@ using Clipper2Lib;
 namespace Pixel_Simulations
 {
     public enum GameStatus { Playing, InventoryOpen }
-    public static class SystemTags
-    {
-        // --- CONTROL/SHAPE TAGS ---
-        public const int SOLID = 2;      // Blocks physics movement
-        public const int NAV = 5;        // Navigation obstacle
-        public const int WARP = 6;       // Level transition trigger
-        public const int WATER = 70;      // Slows movement / splash effect
+   
 
-        // --- OBJECT/PROP TAGS ---
-        public const int VEG = 100; // Wind sway / Growth logic
-        public const int LIGHT = 10;      // Emits dynamic light
-
-    }
     public static class ListExtensions
     {
         private static Random _random = new Random();
@@ -48,37 +37,128 @@ namespace Pixel_Simulations
         }
     }
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
+
     public static class PathHelper
     {
-        private static string _solutionRoot;
+        private static string _runtimeAssetsPath;
+        private static string _sourceAssetsPath;
+        private static bool _loggedConfig = false;
 
-        public static string GetSolutionRoot()
+        // ==============================================================
+        // 1. RUNTIME ASSETS (READ PATH: bin/.../Assets/)
+        // ==============================================================
+        /// <summary>
+        /// Resolves the local build directory where compiled assets and maps are stored.
+        /// Both Game and Editor READ from this path.
+        /// </summary>
+        public static string GetRuntimeAssetsPath()
         {
-            if (!string.IsNullOrEmpty(_solutionRoot))
-                return _solutionRoot;
+            if (!string.IsNullOrEmpty(_runtimeAssetsPath) && Directory.Exists(_runtimeAssetsPath))
+                return _runtimeAssetsPath;
+
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+            // 1. Direct [bin/.../Assets]
+            string directAssets = Path.Combine(baseDir, "Assets");
+            if (Directory.Exists(directAssets))
+            {
+                _runtimeAssetsPath = directAssets;
+                return _runtimeAssetsPath;
+            }
+
+            // 2. Sibling of Content [bin/.../Content/ -> ../Assets]
+            string siblingAssets = Path.Combine(baseDir, "..", "Assets");
+            if (Directory.Exists(siblingAssets))
+            {
+                _runtimeAssetsPath = Path.GetFullPath(siblingAssets);
+                return _runtimeAssetsPath;
+            }
+
+            // Fallback: create local Assets folder in bin
+            Directory.CreateDirectory(directAssets);
+            _runtimeAssetsPath = directAssets;
+            return _runtimeAssetsPath;
+        }
+
+        // ==============================================================
+        // 2. SOURCE ASSETS (WRITE PATH: Folder A -> Pixel Simulations/Assets/)
+        // ==============================================================
+        /// <summary>
+        /// Traverses up from bin/ to find the source Project A folder ("Pixel Simulations/Assets").
+        /// The Editor WRITES (Saves/Exports/Captures) directly to this path.
+        /// </summary>
+        public static string GetSourceAssetsPath()
+        {
+            if (!string.IsNullOrEmpty(_sourceAssetsPath) && Directory.Exists(_sourceAssetsPath))
+                return _sourceAssetsPath;
 
             string currentDir = AppDomain.CurrentDomain.BaseDirectory;
-            // Go up from bin/Debug/net8.0 etc. until we find a .sln file or a specific folder
-            while (currentDir != null && !Directory.GetFiles(currentDir, "*.sln").Any() && !Directory.Exists(Path.Combine(currentDir, "Pixel Simulations")))
+
+            while (currentDir != null)
             {
+                // Check [Candidate]/Pixel Simulations/Assets/
+                string candidateFolderA = Path.Combine(currentDir, "Pixel Simulations", "Assets");
+                if (Directory.Exists(candidateFolderA))
+                {
+                    _sourceAssetsPath = Path.GetFullPath(candidateFolderA);
+                    return _sourceAssetsPath;
+                }
+
+                // Check [Candidate]/Assets/ (if solution root is named differently)
+                bool hasSln = Directory.GetFiles(currentDir, "*.sln*").Any();
+                if (hasSln)
+                {
+                    string slnAssets = Path.Combine(currentDir, "Pixel Simulations", "Assets");
+                    if (Directory.Exists(slnAssets))
+                    {
+                        _sourceAssetsPath = Path.GetFullPath(slnAssets);
+                        return _sourceAssetsPath;
+                    }
+                }
+
                 currentDir = Directory.GetParent(currentDir)?.FullName;
             }
 
-            _solutionRoot = currentDir;
-            return _solutionRoot;
+            // Fallback for standalone release builds with no source solution present
+            System.Diagnostics.Debug.WriteLine("[PathHelper WARNING] Solution Folder A not found. Falling back Write Path to Runtime bin Assets.");
+            _sourceAssetsPath = GetRuntimeAssetsPath();
+            return _sourceAssetsPath;
         }
 
-        /// <summary>
-        /// Gets the absolute path to the shared Assets folder.
-        /// </summary>
-        public static string GetAssetsPath()
-        {
-            string root = GetSolutionRoot();
-            if (string.IsNullOrEmpty(root))
-                return null; // Or throw an exception
+        // ==============================================================
+        // 3. READ CONVENIENCE SUB-PATHS (For Game & Editor Loading)
+        // ==============================================================
+        public static string GetReadMapsPath()      => GetSubPath(GetRuntimeAssetsPath(), "Maps");
+        public static string GetReadDataPath()      => GetSubPath(GetRuntimeAssetsPath(), "Data");
+        public static string GetReadBuildingsPath() => GetSubPath(GetRuntimeAssetsPath(), "Buildings");
 
-            // Your desired path
-            return Path.Combine(root, "Pixel Simulations", "Assets");
+        // ==============================================================
+        // 4. WRITE CONVENIENCE SUB-PATHS (For Editor Saving & Exporting)
+        // ==============================================================
+        public static string GetWriteMapsPath()      => GetSubPath(GetSourceAssetsPath(), "Maps");
+        public static string GetWriteDataPath()      => GetSubPath(GetSourceAssetsPath(), "Data");
+        public static string GetWriteBuildingsPath() => GetSubPath(GetSourceAssetsPath(), "Buildings");
+
+        private static string GetSubPath(string root, string folderName)
+        {
+            string path = Path.Combine(root, folderName);
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
+        // ==============================================================
+        // 5. DIAGNOSTIC STARTUP LOGGER
+        // ==============================================================
+        public static void LogConfiguration(string applicationName)
+        {
+            if (_loggedConfig) return;
+            _loggedConfig = true;
+
+            System.Diagnostics.Debug.WriteLine("=======================================================================");
+            System.Diagnostics.Debug.WriteLine($"[PATH CONFIGURATION] Initializing: {applicationName}");
+            System.Diagnostics.Debug.WriteLine($"[READ ROOT  (Runtime bin)] : {GetRuntimeAssetsPath()}");
+            System.Diagnostics.Debug.WriteLine($"[WRITE ROOT (Folder A src)]: {GetSourceAssetsPath()}");
+            System.Diagnostics.Debug.WriteLine("=======================================================================");
         }
     }
     public struct ParticleVertex : IVertexType
@@ -170,35 +250,41 @@ namespace Pixel_Simulations
     public class MapObjectConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType) => typeof(MapObject).IsAssignableFrom(objectType);
-        public override bool CanWrite => false; // We will let the default serializer write, as it's simpler.
+        public override bool CanWrite => false;
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             JObject jo = JObject.Load(reader);
-            string typeString = jo["Type"]?.Value<string>(); // Use the "Type" enum property
+            string typeString = jo["Type"]?.Value<string>();
 
             MapObject target = null;
-            if (Enum.TryParse(typeString, out ObjectType type))
+
+            // Failsafe: Check explicit BuildingId first in case Type enum shifted
+            if (jo["BuildingId"] != null)
+            {
+                target = new ModularBuildingInstance();
+            }
+            else if (Enum.TryParse(typeString, out ObjectType type))
             {
                 switch (type)
                 {
                     case ObjectType.Rectangle: target = new RectangleObject(); break;
                     case ObjectType.Point: target = new PointObject(); break;
-                    case ObjectType.Shape: target = new ShapeObject(); break; // ADDED THIS
-                    case ObjectType.Prop: target = new PropObject(); break;   // ADDED THIS
+                    case ObjectType.Shape: target = new ShapeObject(); break;
+                    case ObjectType.Prop: target = new PropObject(); break;
+                    case ObjectType.ModularBuilding: target = new ModularBuildingInstance(); break;
+                }
+            }
 
-                }
-                if (target != null)
-                {
-                    serializer.Populate(jo.CreateReader(), target);
-                }
+            if (target != null)
+            {
+                serializer.Populate(jo.CreateReader(), target);
             }
             return target;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            // Default serialization is fine, just ensure Type is written
             JObject jo = JObject.FromObject(value);
             jo.WriteTo(writer);
         }

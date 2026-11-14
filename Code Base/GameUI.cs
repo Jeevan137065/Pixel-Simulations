@@ -245,14 +245,12 @@ namespace Pixel_Simulations.UI
                     for (int i = 0; i < spawnList.Count; i++)
                     {
                         var spawnEntity = spawnList[i];
-                        int index = i + 1;
+                        string title = !string.IsNullOrEmpty(spawnEntity.BaseData.Name) ? spawnEntity.BaseData.Name : $"Point_{i + 1}";
+                        string subtitle = "";
 
-                        string spawnName = !string.IsNullOrEmpty(spawnEntity.BaseData.Name)
-                            ? spawnEntity.BaseData.Name
-                            : $"Waypoint #{index}";
+                        if (spawnEntity.BaseData is PointObject pt && !string.IsNullOrEmpty(pt.Label))
+                            subtitle = $" - \"{pt.Label}\"";
 
-                        string spawnType = spawnEntity.GetProperty("SpawnType", "General");
-                        Vector2 targetPos = spawnEntity.Position;
 
                         var row = new UIStackPanel
                         {
@@ -265,10 +263,11 @@ namespace Pixel_Simulations.UI
                         var warpBtn = new UIButton
                         {
                             Size = new Vector2(180, 26),
-                            Text = $"Teleport to #{index}",
+                            Text = $"Teleport to #{title}",
                             BackgroundColor = Color.DarkMagenta
                         };
 
+                        Vector2 targetPos = spawnEntity.Position;
                         warpBtn.OnClick = () => {
                             _state.Player.Position = targetPos;
                             _state.Player.TargetWalkPos = null;
@@ -278,21 +277,17 @@ namespace Pixel_Simulations.UI
                         };
 
                         row.AddChild(warpBtn);
-                        row.AddChild(new UILabel { Text = $"{spawnName} [{spawnType}] at ({targetPos.X:F0}, {targetPos.Y:F0})", TextColor = Color.White });
-
+                        row.AddChild(new UILabel { Text = $"{title}{subtitle} at ({targetPos.X:F0}, {targetPos.Y:F0})", TextColor = Color.White });
                         _contentArea.AddChild(row);
                     }
                 }
             }
             else if (_activeTab == "Graphics")
             {
-                _contentArea.AddChild(new UILabel { Text = "GRAPHICS & CAMERA SETTINGS", TextColor = Color.Yellow });
-                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray, BorderColor = Color.Transparent });
-
                 var toggleParaBtn = new UIButton
                 {
-                    Size = new Vector2(220, 28),
-                    Text = $"Parallax: {(_state.DebugPool[GameBool.EnableParallax] ? "ENABLED" : "DISABLED")}",
+                    Size = new Vector2(260, 28),
+                    Text = $"Parallax Effect: {(_state.DebugPool[GameBool.EnableParallax] ? "ENABLED" : "DISABLED")}",
                     BackgroundColor = _state.DebugPool[GameBool.EnableParallax] ? Color.DarkGreen : Color.DarkRed
                 };
                 toggleParaBtn.OnClick = () => {
@@ -301,10 +296,57 @@ namespace Pixel_Simulations.UI
                 };
                 _contentArea.AddChild(toggleParaBtn);
 
+                // Parallax Strength Stepper & Slider Row
+                var strengthRow = new UIStackPanel
+                {
+                    Direction = StackDirection.Horizontal,
+                    Spacing = 8f,
+                    PanelBackground = Color.Black * 0.35f,
+                    Padding = 6f
+                };
+                strengthRow.AddChild(new UILabel { Text = "Strength:", TextColor = Color.LightGray });
+
+                var lblStrength = new UILabel { Text = $"{_state.ParallaxStrength:F2}", TextColor = Color.Cyan, Size = new Vector2(40, 20) };
+
+                var sldParallax = new UISlider
+                {
+                    Size = new Vector2(160, 18),
+                    Min = 0.0f,
+                    Max = 0.5f,
+                    Value = _state.ParallaxStrength
+                };
+                sldParallax.OnValueChanged = (val) => {
+                    _state.ParallaxStrength = (float)Math.Round(val, 2);
+                    lblStrength.Text = $"{_state.ParallaxStrength:F2}";
+                };
+
+                var minusBtn = new UIButton { Size = new Vector2(26, 22), Text = "-", BackgroundColor = Color.DarkSlateGray };
+                minusBtn.OnClick = () => {
+                    _state.ParallaxStrength = Math.Max(0.0f, (float)Math.Round(_state.ParallaxStrength - 0.05f, 2));
+                    sldParallax.Value = _state.ParallaxStrength;
+                    lblStrength.Text = $"{_state.ParallaxStrength:F2}";
+                };
+
+                var plusBtn = new UIButton { Size = new Vector2(26, 22), Text = "+", BackgroundColor = Color.DarkSlateGray };
+                plusBtn.OnClick = () => {
+                    _state.ParallaxStrength = Math.Min(0.5f, (float)Math.Round(_state.ParallaxStrength + 0.05f, 2));
+                    sldParallax.Value = _state.ParallaxStrength;
+                    lblStrength.Text = $"{_state.ParallaxStrength:F2}";
+                };
+
+                strengthRow.AddChild(minusBtn);
+                strengthRow.AddChild(sldParallax);
+                strengthRow.AddChild(plusBtn);
+                strengthRow.AddChild(lblStrength);
+                _contentArea.AddChild(strengthRow);
+
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray * 0.3f, BorderColor = Color.Transparent });
+
+                // 2. DEBUG VISIBILITY TOGGLES
                 var toggleColBtn = new UIButton
                 {
-                    Size = new Vector2(220, 28),
-                    Text = $"Hitboxes: {(_state.DebugPool[GameBool.ShowCollision] ? "VISIBLE" : "HIDDEN")}",
+                    Size = new Vector2(260, 28),
+                    Text = $"Physical Collisions: {(_state.DebugPool[GameBool.ShowCollision] ? "SHOWN" : "HIDDEN")}",
                     BackgroundColor = _state.DebugPool[GameBool.ShowCollision] ? Color.DarkGreen : Color.DarkRed
                 };
                 toggleColBtn.OnClick = () => {
@@ -312,9 +354,23 @@ namespace Pixel_Simulations.UI
                     UpdateTabContent();
                 };
                 _contentArea.AddChild(toggleColBtn);
+
+                var toggleCtrlBtn = new UIButton
+                {
+                    Size = new Vector2(260, 28),
+                    Text = $"Control Triggers & Spawns: {(_state.DebugPool[GameBool.ShowControlNodes] ? "SHOWN" : "HIDDEN")}",
+                    BackgroundColor = _state.DebugPool[GameBool.ShowControlNodes] ? Color.DarkCyan : Color.DarkSlateGray
+                };
+                toggleCtrlBtn.OnClick = () => {
+                    _state.DebugPool[GameBool.ShowControlNodes] = !_state.DebugPool[GameBool.ShowControlNodes];
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleCtrlBtn);
+
+                // 3. EXTENDED DEVELOPER ZOOM TOGGLE
                 var toggleZoomBtn = new UIButton
                 {
-                    Size = new Vector2(240, 28),
+                    Size = new Vector2(260, 28),
                     Text = $"Dev Zoom Levels: {(_state.DebugPool[GameBool.ExtendedZoom] ? "ENABLED (0.5x-4x)" : "LOCKED (1x, 2x)")}",
                     BackgroundColor = _state.DebugPool[GameBool.ExtendedZoom] ? Color.DarkCyan : Color.DarkSlateGray
                 };

@@ -37,8 +37,8 @@ namespace Pixel_Simulations.Studio
             AssetLibrary.LoadAtlas("BodySheet", AtlasType.Universal);
 
             // Load or create safe defaults!
-            string smPath = System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Animations", "BasicHumanoid.sm");
-            string charPath = System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Animations", "Hero.char");
+            string smPath = System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Animations", "BasicHumanoid.sm");
+            string charPath = System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Animations", "Hero.char");
             DataManager.LoadAll(smPath, charPath);
 
             UI.LoadContent(content);

@@ -133,29 +133,18 @@ namespace Pixel_Simulations
             {
                 bool playerInside = entity.GetProperty("PlayerInside", "False") == "True";
 
-                // Base exterior walls are always present
-                if (entity.Prefab.AlternateStates.ContainsKey("Exterior")) activeLayers.Add("Exterior");
-
                 if (!playerInside)
                 {
-                    // Roof is active when outside
+                    // OUTSIDE: Exterior and Roof are visible
+                    if (entity.Prefab.AlternateStates.ContainsKey("Exterior")) activeLayers.Add("Exterior");
                     if (entity.Prefab.AlternateStates.ContainsKey("Roof")) activeLayers.Add("Roof");
                     if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
                 }
                 else
                 {
-                    // Player is inside: cut roof away and display interior elements
+                    // INSIDE: Roof & exterior disappear; interior wallpaper, floor, and counter appear
                     if (entity.Prefab.AlternateStates.ContainsKey("InteriorBG")) activeLayers.Add("InteriorBG");
                     if (entity.Prefab.AlternateStates.ContainsKey("InteriorFG")) activeLayers.Add("InteriorFG");
-                }
-
-                // Include any generic states authored in ObjectII.html
-                foreach (var kvp in entity.Prefab.AlternateStates)
-                {
-                    if (kvp.Key != "Exterior" && kvp.Key != "Roof" && kvp.Key != "InteriorBG" && kvp.Key != "InteriorFG" && kvp.Key != "Overlay_Snow")
-                    {
-                        if (entity.GetProperty(kvp.Key, "True") == "True") activeLayers.Add(kvp.Key);
-                    }
                 }
             }
             else // Standard Props
@@ -575,6 +564,16 @@ namespace Pixel_Simulations
         public GameEntity GetEntity(string id) => _entitiesById.TryGetValue(id, out var e) ? e : null;
         public IReadOnlyList<GameEntity> GetByTag(int tag) => _entitiesByTag.TryGetValue(tag, out var list) ? list : new List<GameEntity>();
 
+        // NEW: Type-safe CodeName tag query
+        public IReadOnlyList<GameEntity> GetByTag(string codeName)
+        {
+            int id = TagManager.Instance?.GetId(codeName) ?? -1;
+            if (id != -1 && _entitiesByTag.TryGetValue(id, out var list))
+            {
+                return list;
+            }
+            return new List<GameEntity>();
+        }
         public void Clear()
         {
             _allEntities.Clear();

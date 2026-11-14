@@ -302,22 +302,52 @@ namespace Pixel_Simulations.Editor
 
         public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
-            // 1. Get current selection from UI (To be implemented in TilesetPanel)
-            _activePrefab = editorState.Selection.ActivePrefab;
             _es = editorState;
+
+            // =========================================================================
+            // 1. MODULAR ARCHITECTURAL BUILDING PLACEMENT
+            // =========================================================================
+            if (_es.Selection.ActiveBuildingBlueprint != null)
+            {
+                var bldg = _es.Selection.ActiveBuildingBlueprint;
+
+                if (input.IsNewLeftClick && _es.UI.ActivePanelName == "Viewport")
+                {
+                    Vector2 snapPos = GridHelper.SnapCoordinate(toolInput.WorldPosition);
+
+                    if (toolInput.ActiveLayer.Type == LayerType.Object && toolInput.ActiveLayer is ObjectLayer objLayer)
+                    {
+                        var instance = new ModularBuildingInstance
+                        {
+                            BuildingId = bldg.id,
+                            Name = $"{bldg.name}_{objLayer.Objects.Count + 1}",
+                            Position = snapPos,
+                            ActiveStory = 0,
+                            ShowRoofInEditor = true
+                        };
+
+                        instance.AddTag(SystemTags.SOLID);
+
+                        eventBus.Publish(new AddObjectCommand(objLayer, instance));
+                        _es.Selection.SelectedMapObject = instance;
+                    }
+                }
+                return;
+            }
+
+            // =========================================================================
+            // 2. STANDARD PREFAB / FACADE PLACEMENT
+            // =========================================================================
+            _activePrefab = editorState.Selection.ActivePrefab;
             if (_activePrefab == null) return;
 
-            if (input.IsNewLeftClick)
+            if (input.IsNewLeftClick && _es.UI.ActivePanelName == "Viewport")
             {
                 Vector2 pos = toolInput.WorldPosition;
                 string type = _activePrefab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
-                // Handle Snapping if CapsLock is on
-                if (input.CurrentKeyboard.CapsLock)
+
+                if (input.CurrentKeyboard.CapsLock || type == "Building")
                 {
-                    //pos = new Vector2(
-                    //    (float)Math.Floor(pos.X / 16) * 16,
-                    //    (float)Math.Floor(pos.Y / 16) * 16
-                    //);
                     pos = GridHelper.SnapToSubCell(pos, _activePrefab.Pivot);
                 }
 
@@ -327,25 +357,22 @@ namespace Pixel_Simulations.Editor
                     {
                         PrefabID = _activePrefab.ID,
                         Position = pos,
-                        Name = GetUniqueName(objLayer, _activePrefab.ID) // Dynamic unique naming
+                        Name = GetUniqueName(objLayer, _activePrefab.ID)
                     };
-                    foreach (var tag in _activePrefab.Tags)
-                    {
-                        instance.Tags.Add(tag);
-                    }
+
+                    foreach (var tag in _activePrefab.Tags) instance.Tags.Add(tag);
                     foreach (var prop in _activePrefab.Properties)
-                    {
                         instance.Properties[prop.Key] = new MapProperty(prop.Value.Type, prop.Value.Value);
-                    }
-                    if (type == "Building" && !instance.Tags.Contains(SystemTags.SOLID))
+
+                    if (type == "Building" && !instance.Tags.Contains(_es.TagManager.GetId(SystemTags.SOLID)))
                     {
-                        instance.Tags.Add(SystemTags.SOLID);
+                        instance.AddTag(SystemTags.SOLID);
                     }
+
                     eventBus.Publish(new AddObjectCommand(objLayer, instance));
                     editorState.Selection.SelectedMapObject = instance;
                 }
             }
-
         }
         private int GetObjectCount(Layer ActiveLayer)
         {
@@ -369,6 +396,22 @@ namespace Pixel_Simulations.Editor
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (_activePrefab == null || _es == null) return;
+
+            float lineThick = 1f / input.Zoom;
+
+            // PREVIEW MODULAR BUILDING FOOTPRINT
+            if (_es.Selection.ActiveBuildingBlueprint != null)
+            {
+                var bldg = _es.Selection.ActiveBuildingBlueprint;
+                Vector2 snapPos = GridHelper.SnapCoordinate(input.MouseWorldPosition);
+
+                ModularBuildingRenderer.DrawBuildingExterior(sb, bldg, snapPos, _es.AssetLibrary, Color.White * 0.55f);
+
+                RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bldg);
+                RectangleF worldBox = new RectangleF(snapPos.X + tight.X, snapPos.Y + tight.Y, tight.Width, tight.Height);
+                sb.DrawRectangle(worldBox, Color.Cyan, lineThick * 2);
+                return;
+            }
 
             Vector2 pos = input.MouseWorldPosition;
             string type = _activePrefab.Properties.TryGetValue("Type", out var pt) ? pt.Value : "Prop";
@@ -668,16 +711,98 @@ namespace Pixel_Simulations.Editor
         private enum InteractionMode { None, Moving, Resizing }
         private InteractionMode _currentMode = InteractionMode.None;
         private int _activeHandle = -1; // 0-3: Corners, 4-7: Edges
+        public bool IsLockingCamera => _isMovingTileCluster || _isSelectingTileBox;
         private MapObject CurrentSelect { get; set; }
         private Vector2 _initialPos, _initialSize;
         private Vector2 _dragOffset;
         private EditorState _es;
         private bool _isSpineHandle = false;
+
+        private bool _isSelectingTileBox = false;
+        private Point _tileBoxStart;
+        private Point _tileBoxEnd;
+        private bool _isMovingTileCluster = false;
+        private Dictionary<Point, TileInfo> _selectedTiles = new Dictionary<Point, TileInfo>();
+        private Point _tileClusterOffset = Point.Zero;
+
         public void Update(ToolInput toolInput, EditorInputState input, EventBus eventBus, EditorState editorState)
         {
             _es = editorState;
             if (_es == null) return;
 
+            if (toolInput.ActiveLayer is TileLayer tileLayer)
+            {
+                Point mouseCell = input.MouseGridCell;
+
+                // Start drag selection box
+                if (input.IsNewLeftClick && _es.UI.ActivePanelName == "Viewport")
+                {
+                    if (_isMovingTileCluster)
+                    {
+                        // Click outside commits the move
+                        CommitTileMove(tileLayer, eventBus);
+                    }
+                    else
+                    {
+                        _isSelectingTileBox = true;
+                        _tileBoxStart = mouseCell;
+                        _tileBoxEnd = mouseCell;
+                    }
+                }
+
+                if (_isSelectingTileBox)
+                {
+                    _tileBoxEnd = mouseCell;
+
+                    // Box selection released: capture tiles
+                    if (input.CurrentMouse.LeftButton == ButtonState.Released)
+                    {
+                        _isSelectingTileBox = false;
+                        CaptureTilesInBox(tileLayer);
+                    }
+                }
+
+                // Keyboard translation of selected tiles
+                if (_isMovingTileCluster && !(_es.UI.FocusedElement is UITextBox))
+                {
+                    Point moveDelta = Point.Zero;
+                    var kbs = input.CurrentKeyboard;
+                    var prevKbs = input.PreviousKeyboard;
+
+                    if (kbs.IsKeyDown(Keys.Left) && prevKbs.IsKeyUp(Keys.Left)) moveDelta.X -= 1;
+                    if (kbs.IsKeyDown(Keys.Right) && prevKbs.IsKeyUp(Keys.Right)) moveDelta.X += 1;
+                    if (kbs.IsKeyDown(Keys.Up) && prevKbs.IsKeyUp(Keys.Up)) moveDelta.Y -= 1;
+                    if (kbs.IsKeyDown(Keys.Down) && prevKbs.IsKeyUp(Keys.Down)) moveDelta.Y += 1;
+
+                    if (moveDelta != Point.Zero)
+                    {
+                        _tileClusterOffset = new Point(_tileClusterOffset.X + moveDelta.X, _tileClusterOffset.Y + moveDelta.Y);
+                    }
+
+                    // Enter commits
+                    if (kbs.IsKeyDown(Keys.Enter) && prevKbs.IsKeyUp(Keys.Enter))
+                    {
+                        CommitTileMove(tileLayer, eventBus);
+                    }
+
+                    // Delete erases the captured cluster
+                    if (kbs.IsKeyDown(Keys.Delete) && prevKbs.IsKeyUp(Keys.Delete))
+                    {
+                        foreach (var coord in _selectedTiles.Keys)
+                            eventBus.Publish(new EraseTileCommand(tileLayer, coord));
+                        ClearTileSelection();
+                    }
+
+                    // Escape cancels
+                    if (kbs.IsKeyDown(Keys.Escape))
+                    {
+                        ClearTileSelection();
+                    }
+                }
+                return;
+            }
+
+            ClearTileSelection();
             if (!(editorState.UI.FocusedElement is UITextBox))
             {
                 if (input.CurrentKeyboard.IsKeyDown(Keys.Delete) && input.PreviousKeyboard.IsKeyUp(Keys.Delete))
@@ -702,13 +827,16 @@ namespace Pixel_Simulations.Editor
 
             if (input.IsNewLeftClick)
             {
+                // SAFETY GUARD: Never clear or change selection if clicking on UI panels
+                if (_es.UI.ActivePanelName != "Viewport") return;
+
                 // Check if clicking on an individual vertex handle of an already selected ShapeObject
                 if (_es.Selection.SelectedMapObject is ShapeObject poly)
                 {
                     _activeHandle = GetVertexHandleAt(poly, input.MouseWorldPosition, input.Zoom, out _isSpineHandle);
                     if (_activeHandle != -1)
                     {
-                        _currentMode = InteractionMode.Resizing; // Abuse resizing mode for vertex dragging
+                        _currentMode = InteractionMode.Resizing;
                         _initialPos = poly.Position;
                         _initialSize = GetObjectSize(poly);
                     }
@@ -718,6 +846,8 @@ namespace Pixel_Simulations.Editor
                 {
                     bool absoluteMode = input.CurrentKeyboard.IsKeyDown(Keys.LeftAlt);
                     var hit = FindTopObject(toolInput.ActiveLayer, input.MouseWorldPosition, absoluteMode);
+
+                    // Only modify selection if we clicked in the viewport
                     editorState.Selection.SelectedMapObject = hit;
 
                     if (hit != null)
@@ -948,25 +1078,105 @@ namespace Pixel_Simulations.Editor
 
             return -1;
         }
+
+        private void CaptureTilesInBox(TileLayer layer)
+        {
+            _selectedTiles.Clear();
+            int minX = Math.Min(_tileBoxStart.X, _tileBoxEnd.X);
+            int maxX = Math.Max(_tileBoxStart.X, _tileBoxEnd.X);
+            int minY = Math.Min(_tileBoxStart.Y, _tileBoxEnd.Y);
+            int maxY = Math.Max(_tileBoxStart.Y, _tileBoxEnd.Y);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    Point cell = new Point(x, y);
+                    var tile = layer.GetTileAt(cell);
+                    if (tile != null)
+                    {
+                        _selectedTiles[cell] = tile;
+                    }
+                }
+            }
+
+            if (_selectedTiles.Count > 0)
+            {
+                _isMovingTileCluster = true;
+                _tileClusterOffset = Point.Zero;
+            }
+        }
+
+        private void CommitTileMove(TileLayer layer, EventBus bus)
+        {
+            if (_selectedTiles.Count > 0 && _tileClusterOffset != Point.Zero)
+            {
+                bus.Publish(new MoveTileAreaCommand(layer, _selectedTiles, _tileClusterOffset));
+            }
+            ClearTileSelection();
+        }
+
+        private void ClearTileSelection()
+        {
+            _isSelectingTileBox = false;
+            _isMovingTileCluster = false;
+            _selectedTiles.Clear();
+            _tileClusterOffset = Point.Zero;
+        }
+
         public void DrawPreview(ToolInput toolInput, SpriteBatch sb, EditorInputState input)
         {
             if (_es == null) return;
+            float lineThick = 1f / input.Zoom;
+            if (toolInput.ActiveLayer is TileLayer)
+            {
+                if (_isSelectingTileBox)
+                {
+                    int minX = Math.Min(_tileBoxStart.X, _tileBoxEnd.X) * 16;
+                    int maxX = (Math.Max(_tileBoxStart.X, _tileBoxEnd.X) + 1) * 16;
+                    int minY = Math.Min(_tileBoxStart.Y, _tileBoxEnd.Y) * 16;
+                    int maxY = (Math.Max(_tileBoxStart.Y, _tileBoxEnd.Y) + 1) * 16;
+
+                    RectangleF boxRect = new RectangleF(minX, minY, maxX - minX, maxY - minY);
+                    sb.FillRectangle(boxRect, Color.Cyan * 0.2f);
+                    sb.DrawRectangle(boxRect, Color.Cyan, lineThick * 2);
+                }
+                else if (_isMovingTileCluster && _selectedTiles.Count > 0)
+                {
+                    // Draw ghost tiles at destination offset
+                    foreach (var kvp in _selectedTiles)
+                    {
+                        var tex = _es.TilesetManager.GetTileTexture(kvp.Value);
+                        if (tex != null)
+                        {
+                            Point destCell = new Point(kvp.Key.X + _tileClusterOffset.X, kvp.Key.Y + _tileClusterOffset.Y);
+                            Vector2 drawPos = new Vector2(destCell.X * 16 + 8, destCell.Y * 16 + 8);
+                            Vector2 origin = new Vector2(8, 8);
+                            float rot = kvp.Value.Rotation * MathHelper.PiOver2;
+
+                            sb.Draw(tex, drawPos, null, Color.White * 0.65f, rot, origin, 1f, SpriteEffects.None, 0f);
+                            sb.DrawRectangle(new RectangleF(destCell.X * 16, destCell.Y * 16, 16, 16), Color.LimeGreen * 0.8f, lineThick);
+                        }
+                    }
+                }
+                return;
+            }
+
             var selected = _es.Selection.SelectedMapObject;
             if (selected == null) return;
 
             RectangleF b = GetObjectBounds(selected);
             float hs = 6f / input.Zoom;
+
+            // 1. Draw Handles
             if (selected is ShapeObject selPoly)
             {
-                // Render boundary vertex nodes
                 for (int i = 0; i < selPoly.Shape.Vertices.Count; i++)
                 {
                     Vector2 v = selPoly.Shape.Vertices[i];
                     sb.FillRectangle(new RectangleF(v.X - hs / 2, v.Y - hs / 2, hs, hs), Color.White);
                     sb.DrawRectangle(new RectangleF(v.X - hs / 2, v.Y - hs / 2, hs, hs), Color.Teal, 1f / input.Zoom);
                 }
-
-                // Render spine waypoints nodes
                 if (selPoly.SpineWaypoints != null)
                 {
                     for (int i = 0; i < selPoly.SpineWaypoints.Count; i++)
@@ -979,53 +1189,67 @@ namespace Pixel_Simulations.Editor
             }
             else
             {
-                // Standard rectangle boxes selection preview...
                 sb.DrawRectangle(b, GetObjectColor(selected.Type) * 0.4f, 1 / input.Zoom, 0);
                 sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
                 sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Top - hs / 2, hs, hs), Color.White);
                 sb.FillRectangle(new RectangleF(b.Right - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
                 sb.FillRectangle(new RectangleF(b.Left - hs / 2, b.Bottom - hs / 2, hs, hs), Color.White);
+            }
 
-                if (selected.Links.Count > 0)
+            // 2. DRAW ALL LINKS (EXECUTED FOR BOTH SHAPES AND RECTANGLES/PROPS)
+            Vector2 myCenter = b.Center;
+
+            // A. Outbound Links (Cyan Bezier curves: Selected -> Target)
+            if (selected.Links != null)
+            {
+                foreach (var link in selected.Links)
                 {
-                    Vector2 startPos = b.Center;
-
-                    foreach (var link in selected.Links)
+                    var targetObj = FindObjectByID(link.TargetID);
+                    if (targetObj != null)
                     {
-                        var targetObj = FindObjectByID(link.TargetID);
-                        if (targetObj != null)
-                        {
-                            RectangleF targetBounds = GetObjectBounds(targetObj);
-                            Color linkColor = targetObj.Type switch
-                            {
-                                ObjectType.Prop => Color.LimeGreen,
-                                ObjectType.Rectangle => Color.DeepSkyBlue,
-                                ObjectType.Shape => Color.OrangeRed,
-                                ObjectType.Point => Color.Yellow,
-                                _ => Color.Cyan
-                            };
+                        RectangleF targetBounds = GetObjectBounds(targetObj);
+                        string label = $"{link.SourcePort} -> {link.TargetPort}";
 
-                            string label = $"{link.SourcePort} -> {link.TargetPort}";
-
-                            Pixel_Simulations.UI.UIDrawExtensions.DrawBezierCurve(
-                                sb,
-                                Pixel_Simulations.UI.UITheme.DefaultFont,
-                                startPos,
-                                targetBounds.Center,
-                                Pixel_Simulations.Studio.NodePort.Right,
-                                Pixel_Simulations.Studio.NodePort.Left,
-                                linkColor,
-                                2f / input.Zoom,
-                                Pixel_Simulations.Studio.LineStyle.Dashed,
-                                label
-                            );
-
-                            sb.DrawRectangle(targetBounds, linkColor * 0.8f, 2f / input.Zoom);
-                        }
+                        Pixel_Simulations.UI.UIDrawExtensions.DrawBezierCurve(
+                            sb,
+                            Pixel_Simulations.UI.UITheme.DefaultFont,
+                            myCenter,
+                            targetBounds.Center,
+                            Pixel_Simulations.Studio.NodePort.Right,
+                            Pixel_Simulations.Studio.NodePort.Left,
+                            Color.Cyan,
+                            2f / input.Zoom,
+                            Pixel_Simulations.Studio.LineStyle.Solid,
+                            label
+                        );
+                        sb.DrawRectangle(targetBounds, Color.Cyan * 0.8f, 2f / input.Zoom);
                     }
                 }
             }
+
+            // B. Inbound Links (Yellow Dashed curves: Source -> Selected)
+            var inbounds = selected.GetInboundLinks(_es.ActiveMap);
+            foreach (var (srcObj, link) in inbounds)
+            {
+                RectangleF srcBounds = GetObjectBounds(srcObj);
+                string label = $"{link.SourcePort} -> {link.TargetPort}";
+
+                Pixel_Simulations.UI.UIDrawExtensions.DrawBezierCurve(
+                    sb,
+                    Pixel_Simulations.UI.UITheme.DefaultFont,
+                    srcBounds.Center,
+                    myCenter,
+                    Pixel_Simulations.Studio.NodePort.Right,
+                    Pixel_Simulations.Studio.NodePort.Left,
+                    Color.Yellow,
+                    2f / input.Zoom,
+                    Pixel_Simulations.Studio.LineStyle.Dashed,
+                    label
+                );
+                sb.DrawRectangle(srcBounds, Color.Yellow * 0.6f, 1.5f / input.Zoom);
+            }
         }
+
 
         private Color GetObjectColor(ObjectType type)
         {
@@ -1052,6 +1276,11 @@ namespace Pixel_Simulations.Editor
                     return new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, w * prop.Scale.X, h * prop.Scale.Y);
                 }
             }
+            if (obj is ModularBuildingInstance bldg)
+            {
+                RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bldg.BlueprintRef);
+                return new RectangleF(bldg.Position.X + tight.X, bldg.Position.Y + tight.Y, tight.Width, tight.Height);
+            }
             return RectangleF.Empty;
         }
 
@@ -1069,6 +1298,11 @@ namespace Pixel_Simulations.Editor
                     int h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y);
                     return new Vector2(w, h);
                 }
+            }
+            if (obj is ModularBuildingInstance bldg)
+            {
+                RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bldg.BlueprintRef);
+                return new Vector2(tight.Width, tight.Height);
             }
             return Vector2.Zero;
         }
@@ -1093,10 +1327,14 @@ namespace Pixel_Simulations.Editor
                             {
                                 int w = Math.Max(prefab.SourceRect.Width, prefab.CanvasSize.X);
                                 int h = Math.Max(prefab.SourceRect.Height, prefab.CanvasSize.Y);
-
                                 RectangleF bounds = new RectangleF(prop.Position.X - prefab.Pivot.X, prop.Position.Y - prefab.Pivot.Y, w, h);
                                 if (bounds.Contains(mouseWorld)) return prop;
                             }
+                        }
+                        else if (obj is ModularBuildingInstance bldg)
+                        {
+                            RectangleF bounds = GetObjectBounds(bldg);
+                            if (bounds.Contains(mouseWorld)) return bldg;
                         }
                     }
                 }
@@ -1133,7 +1371,11 @@ namespace Pixel_Simulations.Editor
             }
             return null;
         }
-        public string GetShortcutHints() => "ALT: Pick Any Layer | DEL: Delete | CAPS: Grid Nudge";
+        public string GetShortcutHints()
+        {
+            if (_isMovingTileCluster) return "ARROWS: Nudge Tiles | ENTER: Commit Move | DEL: Erase | ESC: Cancel";
+            return "DRAG: Select Box / Translate | ARROWS: Nudge | DEL: Delete";
+        }
     }
     public class PointPlacerTool : ITool
     {
@@ -1846,16 +2088,16 @@ namespace Pixel_Simulations.Editor
                 Polygon sourcePoly = Polygon.FromRectangle(start, end);
                 Polygon falloffPoly = Polygon.FromRectangle(start + new Vector2(0, 64), end + new Vector2(0, 64));
 
-                sourceShape = CreateShape("LightSource_Rect", sourcePoly, 10);
-                falloffShape = CreateShape("LightFalloff_Rect", falloffPoly, 11);
+                sourceShape = CreateShape("LightSource_Rect", sourcePoly, SystemTags.LIGHT_SOURCE);
+                falloffShape = CreateShape("LightFalloff_Rect", falloffPoly,SystemTags.LIGHT_FALLOFF);
             }
             else
             {
                 Polygon sourcePoly = CreateCirclePolygon(start, radius, 16);
                 Polygon falloffPoly = CreateCirclePolygon(start, radius * 2.5f, 16);
 
-                sourceShape = CreateShape("LightSource_Circ", sourcePoly, 10);
-                falloffShape = CreateShape("LightFalloff_Circ", falloffPoly, 11);
+                sourceShape = CreateShape("LightSource_Circ", sourcePoly, SystemTags.LIGHT_SOURCE);
+                falloffShape = CreateShape("LightFalloff_Circ", falloffPoly, SystemTags.LIGHT_FALLOFF);
             }
 
             // --- THE FIX: LINK THEM USING THEIR UNIQUE IDs! ---
@@ -1870,7 +2112,7 @@ namespace Pixel_Simulations.Editor
             bus.Publish(new AddPolygonCommand(activeLayer, falloffShape));
         }
 
-        private ShapeObject CreateShape(string namePrefix, Polygon poly, int tag)
+        private ShapeObject CreateShape(string namePrefix, Polygon poly, string tag)
         {
             var shape = new ShapeObject
             {
@@ -1878,7 +2120,7 @@ namespace Pixel_Simulations.Editor
                 Shape = poly,
                 DebugColor = Color.Yellow * 0.4f
             };
-            shape.Tags.Add(tag);
+            shape.AddTag(tag);
             shape.UpdateBoundsFromVertices();
             return shape;
         }
@@ -1938,8 +2180,13 @@ namespace Pixel_Simulations.Editor
                 // Offset back up by half the cell so the visual center is exactly in the middle of the tile
                 snapPos.Y -= 8;
 
+                int count = controlLayer.Points.Count + 1;
+                string defaultName = $"Spawn_{count}";
+                string defaultLabel = count == 1 ? "Town Square" : $"Waypoint {count}";
+
                 var spawnPoint = new PointObject
                 {
+                    Name = defaultName,
                     Position = snapPos,
                     Radius = 8f, // Fixed, perfectly sized radius
                     Label = "Spawn Point",
@@ -1979,6 +2226,7 @@ namespace Pixel_Simulations.Editor
         public string GetShortcutHints() => "Click to place a fixed-size Spawn Point";
     }
 
+    //redundant as Selection tool can do this actions
     public class MoveTool : ITool
     {
         public string Name => "Move";
@@ -2321,7 +2569,7 @@ namespace Pixel_Simulations.Editor
                     SpineWaypoints = new List<Vector2>(_spineWaypoints) // Save spine centerline waypoints
                 };
 
-                waterShape.Tags.Add(SystemTags.WATER);
+                waterShape.AddTag(SystemTags.WATER);
 
                 // AUTO-POPULATE GEOLOGY DEFAULTS modeled after the HTML editor
                 waterShape.Properties.Add("ProjectionMode", new MapProperty(PropertyType.String, "spline"));

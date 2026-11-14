@@ -1,0 +1,5774 @@
+{
+  "id": "bldg_1",
+  "name": "Main Residence",
+  "gridDimension": 32,
+  "activeFloorIndex": 0,
+  "floors": [
+    {
+      "id": "floor_0",
+      "name": "Story 1 (Ground)",
+      "level": 0,
+      "grid": [
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ],
+        [
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          },
+          {
+            "roomType": "Void",
+            "stepElevation": 0,
+            "shape": "full"
+          }
+        ]
+      ],
+      "edgeStrips": [
+        {
+          "id": "comp_1794489427975",
+          "defId": "wall_4x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 4x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 0,
+            "y": 1072,
+            "w": 64,
+            "h": 96
+          },
+          "x": 4,
+          "y": 17,
+          "x2": 8,
+          "y2": 17,
+          "widthUnits": 4,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 0,
+          "isOuter": true,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489430054",
+          "defId": "wall_4x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 4x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 0,
+            "y": 1072,
+            "w": 64,
+            "h": 96
+          },
+          "x": 8,
+          "y": 17,
+          "x2": 12,
+          "y2": 17,
+          "widthUnits": 4,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 0,
+          "isOuter": true,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489439403",
+          "defId": "wall_4x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 4x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 0,
+            "y": 1072,
+            "w": 64,
+            "h": 96
+          },
+          "x": 15,
+          "y": 17,
+          "x2": 19,
+          "y2": 17,
+          "widthUnits": 4,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 0,
+          "isOuter": true,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489474074",
+          "defId": "wall_3x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 3x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 160,
+            "y": 528,
+            "w": 48,
+            "h": 112
+          },
+          "x": 4,
+          "y": 9,
+          "x2": 7,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489475203",
+          "defId": "wall_3x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 3x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 160,
+            "y": 528,
+            "w": 48,
+            "h": 112
+          },
+          "x": 7,
+          "y": 9,
+          "x2": 10,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489475948",
+          "defId": "wall_3x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 3x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 160,
+            "y": 528,
+            "w": 48,
+            "h": 112
+          },
+          "x": 10,
+          "y": 9,
+          "x2": 13,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489476884",
+          "defId": "wall_3x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 3x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 160,
+            "y": 528,
+            "w": 48,
+            "h": 112
+          },
+          "x": 13,
+          "y": 9,
+          "x2": 16,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489588491",
+          "defId": "wall_3x6_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "wall",
+          "name": "Heritage Red Brick 3x6",
+          "atlas": "walls",
+          "rect": {
+            "x": 160,
+            "y": 528,
+            "w": 48,
+            "h": 112
+          },
+          "x": 16,
+          "y": 9,
+          "x2": 19,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 6,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489593117",
+          "defId": "slope_1_1_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "slope",
+          "name": "Heritage Red Brick Slope 1:1 (45.0°)",
+          "atlas": "walls",
+          "rect": {
+            "x": 192,
+            "y": 1056,
+            "w": 32,
+            "h": 128
+          },
+          "x": 19,
+          "y": 17,
+          "x2": 21,
+          "y2": 15,
+          "widthUnits": 2,
+          "heightUnits": 6,
+          "isSlope": true,
+          "slopeRatio": 1,
+          "slopeDir": "up_right",
+          "isMirrored": false,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 0,
+          "isOuter": true,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        },
+        {
+          "id": "comp_1794489596235",
+          "defId": "slope_1_1_brick_standard",
+          "familyId": "brick_standard",
+          "variantId": "default",
+          "type": "slope",
+          "name": "Heritage Red Brick Slope 1:1 (45.0°)",
+          "atlas": "walls",
+          "rect": {
+            "x": 192,
+            "y": 1056,
+            "w": 32,
+            "h": 128
+          },
+          "x": 2,
+          "y": 15,
+          "x2": 4,
+          "y2": 17,
+          "widthUnits": 2,
+          "heightUnits": 6,
+          "isSlope": true,
+          "slopeRatio": 1,
+          "slopeDir": "up_left",
+          "isMirrored": true,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 0,
+          "isOuter": true,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": false
+        }
+      ],
+      "auxiliaries": [
+        {
+          "id": "comp_1794489911007",
+          "defId": "skirting_1794488911867",
+          "familyId": "trims",
+          "variantId": "default",
+          "type": "skirting",
+          "name": "skirt B",
+          "atlas": "walls",
+          "rect": {
+            "x": 1296,
+            "y": 528,
+            "w": 16,
+            "h": 16
+          },
+          "x": 3,
+          "y": 9,
+          "x2": 6,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 1,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_left",
+          "isMirrored": true,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": true
+        },
+        {
+          "id": "comp_1794489913255",
+          "defId": "skirting_1794488901654",
+          "familyId": "trims",
+          "variantId": "default",
+          "type": "skirting",
+          "name": "skirt A",
+          "atlas": "walls",
+          "rect": {
+            "x": 1264,
+            "y": 528,
+            "w": 16,
+            "h": 16
+          },
+          "x": 6,
+          "y": 9,
+          "x2": 9,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 1,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_left",
+          "isMirrored": true,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": true
+        },
+        {
+          "id": "comp_1794489916006",
+          "defId": "wainscot_1794488943165",
+          "familyId": "trims",
+          "variantId": "default",
+          "type": "wainscot",
+          "name": "wain A",
+          "atlas": "walls",
+          "rect": {
+            "x": 1296,
+            "y": 464,
+            "w": 16,
+            "h": 32
+          },
+          "x": 12,
+          "y": 9,
+          "x2": 15,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 2,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_left",
+          "isMirrored": true,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": true
+        },
+        {
+          "id": "comp_1794489918329",
+          "defId": "wainscot_1794488956957",
+          "familyId": "trims",
+          "variantId": "default",
+          "type": "wainscot",
+          "name": "wain B",
+          "atlas": "walls",
+          "rect": {
+            "x": 1312,
+            "y": 464,
+            "w": 16,
+            "h": 32
+          },
+          "x": 16,
+          "y": 9,
+          "x2": 19,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 2,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_left",
+          "isMirrored": true,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": true
+        },
+        {
+          "id": "comp_1794489921697",
+          "defId": "skirting_1794488923008",
+          "familyId": "trims",
+          "variantId": "default",
+          "type": "skirting",
+          "name": "skirt C",
+          "atlas": "walls",
+          "rect": {
+            "x": 1280,
+            "y": 528,
+            "w": 16,
+            "h": 16
+          },
+          "x": 9,
+          "y": 9,
+          "x2": 12,
+          "y2": 9,
+          "widthUnits": 3,
+          "heightUnits": 1,
+          "isSlope": false,
+          "slopeRatio": 1,
+          "slopeDir": "up_left",
+          "isMirrored": true,
+          "headerUnits": 0,
+          "sillElevation": 0,
+          "depthRank": 1,
+          "isOuter": false,
+          "PaletteMap": null,
+          "grimeIntensity": 0,
+          "isAux": true
+        }
+      ],
+      "floorPlates": [
+        {
+          "id": "floorPlate_1794578874485",
+          "name": "Large A (Area)",
+          "isFloorPlate": true,
+          "x": 11,
+          "y": 9,
+          "w": 8,
+          "h": 8,
+          "familyId": "floors",
+          "variantId": "default",
+          "pieceId": "floor_1794578694775",
+          "stepElevation": 0,
+          "depthRank": 1
+        }
+      ],
+      "roofs": [
+        {
+          "id": "roofA_1794489705657",
+          "name": "Roof A (West ◢)",
+          "roofType": "A",
+          "fillPattern": "staggered",
+          "x": 16,
+          "y": 9,
+          "w": 5,
+          "h": 8,
+          "roofY": 5,
+          "tiltEdge": "E",
+          "slopeRatio": "1:1",
+          "family": "slate",
+          "variant": 0
+        },
+        {
+          "id": "roofB_1794489734726",
+          "name": "Roof B (Poly 4pts)",
+          "roofType": "B",
+          "flatPieceId": "flat_tile_surface",
+          "points": [
+            {
+              "x": 7,
+              "y": 9
+            },
+            {
+              "x": 16,
+              "y": 9
+            },
+            {
+              "x": 16,
+              "y": 17
+            },
+            {
+              "x": 7,
+              "y": 17
+            }
+          ],
+          "roofY": 10,
+          "tiltEdge": "flat",
+          "slopeRatio": "flat",
+          "family": "slate",
+          "variant": 0
+        },
+        {
+          "id": "roofB_1794489773362",
+          "name": "Roof B (Poly 4pts)",
+          "roofType": "B",
+          "flatPieceId": "flat_surface_1",
+          "points": [
+            {
+              "x": 2,
+              "y": 19
+            },
+            {
+              "x": 7,
+              "y": 16.5
+            },
+            {
+              "x": 16,
+              "y": 16.5
+            },
+            {
+              "x": 21,
+              "y": 19
+            }
+          ],
+          "roofY": 7,
+          "tiltEdge": "S",
+          "slopeRatio": "1:1",
+          "family": "slate",
+          "variant": 0
+        }
+      ]
+    }
+  ]
+}

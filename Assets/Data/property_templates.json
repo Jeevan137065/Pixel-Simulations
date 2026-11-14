@@ -1,0 +1,58 @@
+[
+  {
+                "ID": "tpl_doorway",
+                "Name": "Doorway Trigger",
+                "Category": "Building",
+                "Description": "Attaches directional transition triggers to entrance cutouts",
+                "Properties": {
+                    "TriggerType": { "Type": 0, "Value": "Doorway" },
+                    "EntryDir":    { "Type": 0, "Value": "North" },
+                    "ExitDir":     { "Type": 0, "Value": "South" }
+                }
+            },
+            {
+                "ID": "tpl_building_facade",
+                "Name": "Facade Building",
+                "Category": "Building",
+                "Description": "Configures building facade roof culling and interior states",
+                "Properties": {
+                    "Type":         { "Type": 0, "Value": "Building" },
+                    "PlayerInside": { "Type": 3, "Value": "False" }
+                }
+            },
+            {
+                "ID": "tpl_foliage_tree",
+                "Name": "Tree / Foliage",
+                "Category": "Nature",
+                "Description": "Configures wind sway, seasonal foliage, and fruit yields",
+                "Properties": {
+                    "Type":     { "Type": 0, "Value": "Tree" },
+                    "Chopped":  { "Type": 3, "Value": "False" },
+                    "HasFruit": { "Type": 3, "Value": "False" },
+                    "HasMoss":  { "Type": 3, "Value": "False" }
+                }
+            },
+            {
+                "ID": "tpl_light_emitter",
+                "Name": "Dynamic Light Source",
+                "Category": "Lighting",
+                "Description": "Parameters for point or extruded spotlighting",
+                "Properties": {
+                    "Color":     { "Type": 0, "Value": "255,220,150,255" },
+                    "Intensity": { "Type": 2, "Value": "1.0" },
+                    "Flicker":   { "Type": 3, "Value": "False" }
+                }
+            },
+            {
+                "ID": "tpl_reflection_surface",
+                "Name": "Reflection Mirror / Water",
+                "Category": "Shading",
+                "Description": "Planar reflection parameters",
+                "Properties": {
+                    "Direction":   { "Type": 3, "Value": "True" },
+                    "Blur":        { "Type": 2, "Value": "1.5" },
+                    "RippleSpeed": { "Type": 2, "Value": "0.5" },
+                    "Tint":        { "Type": 0, "Value": "128,180,255,200" }
+                }
+            }
+]

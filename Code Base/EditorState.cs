@@ -30,7 +30,9 @@ namespace Pixel_Simulations.Editor
         public bool IsActive { get; set; } = false;
         public string Title { get; set; } = "";
         public string Status { get; set; } = "";
-        public float Progress { get; set; } = 0f; // 0.0 to 1.0
+
+        public float TargetProgress { get; private set; } = 0f;
+        public float DisplayedProgress { get; private set; } = 0f; // Smoothly lerped for rendering
         public float FadeTimer { get; set; } = 0f;
 
         public void Start(string title, string initialStatus)
@@ -38,32 +40,39 @@ namespace Pixel_Simulations.Editor
             IsActive = true;
             Title = title;
             Status = initialStatus;
-            Progress = 0.05f;
+            TargetProgress = 0.05f;
+            DisplayedProgress = 0.0f;
             FadeTimer = 0f;
         }
 
-        public void SetProgress(float value, string status)
+        public void SetProgress(float target, string status)
         {
-            Progress = MathHelper.Clamp(value, 0f, 1f);
+            TargetProgress = MathHelper.Clamp(target, 0f, 1f);
             Status = status;
         }
 
         public void Complete(string completionStatus = "Completed Successfully!")
         {
-            Progress = 1.0f;
+            TargetProgress = 1.0f;
             Status = completionStatus;
-            FadeTimer = 1.2f; // Keep visible for 1.2s before fading
+            FadeTimer = 1.2f;
         }
 
         public void Update(float dt)
         {
+            if (!IsActive) return;
+
+            // Smoothly lerp the visual progress bar towards the target
+            DisplayedProgress = MathHelper.Lerp(DisplayedProgress, TargetProgress, 14f * dt);
+
             if (FadeTimer > 0f)
             {
                 FadeTimer -= dt;
                 if (FadeTimer <= 0f)
                 {
                     IsActive = false;
-                    Progress = 0f;
+                    TargetProgress = 0f;
+                    DisplayedProgress = 0f;
                     Title = "";
                     Status = "";
                 }
@@ -91,11 +100,11 @@ namespace Pixel_Simulations.Editor
                 new FreeRectangleTool(),
                 new ShapeTool(),
                 new SelectionTool(),
-                new MoveTool(),
+                //new MoveTool(),
                 new PointPlacerTool(),
                 new SpawnPointerTool(),
-                //new LightShapeTool(),
-                //new ReflectionTool(),
+                new LightShapeTool(),
+                new ReflectionTool(),
                 new WaterShapeTool(),
                 // new RectangleTool(this) // Some tools might need a reference back to the state
             };
@@ -109,6 +118,7 @@ namespace Pixel_Simulations.Editor
         public TileInfo ActiveTileBrush { get; set; }
         public HandleType ActiveHandle { get; set; } = HandleType.None;
         public ObjectPrefab ActivePrefab { get; set; } // The currently selected blueprint
+        public BuildingData ActiveBuildingBlueprint { get; set; } // Current Modular Blueprint
         public MapObject SelectedMapObject { get; set; } // The currently selected instance on the map
     }
     public class HistoryState
@@ -175,6 +185,7 @@ namespace Pixel_Simulations.Editor
         public AutoTileManager AutoTileManager { get; } = new AutoTileManager();
         public EditorTaskProgress TaskProgress { get; } = new EditorTaskProgress();
 
+
         // --- NEW ASSET CORE ---
         [JsonIgnore] public TilesetManager TilesetManager { get; }
 
@@ -182,6 +193,7 @@ namespace Pixel_Simulations.Editor
         [JsonIgnore] public NoiseManager noiseManager = new NoiseManager();
         [JsonIgnore] public MaskDataManager MaskData { get; } = new MaskDataManager();
         [JsonIgnore] public PrefabManager PrefabManager { get; }
+        public BuildingManager BuildingManager { get; } = new BuildingManager();
         [JsonIgnore] public TagManager TagManager { get; } = new TagManager();
         // Flags for UI state
         [JsonIgnore] public string ActiveAtlasForCreator { get; set; }
@@ -220,27 +232,23 @@ namespace Pixel_Simulations.Editor
             noiseManager.LoadContent(content);
             AssetLibrary = new EditorLibrary(content);
             normalShader = content.Load<Effect>("HeightToNormal");
-            //AssetLibrary.LoadAtlas("Basic",AtlasType.Tile);
-            AssetLibrary.LoadAtlas("Base", AtlasType.Tile);
-            AssetLibrary.LoadAtlas("BaseWorld", AtlasType.Tile);
-            AssetLibrary.LoadAtlas("Wild", AtlasType.Tile);
-            AssetLibrary.LoadAtlas("Farm", AtlasType.Tile);
-            AssetLibrary.LoadAtlas("Trees", AtlasType.Object);
-            AssetLibrary.LoadAtlas("Building", AtlasType.Object); 
-            AssetLibrary.LoadAtlas("Prototype_Building", AtlasType.Object);
-            AssetLibrary.LoadAtlas("Trees_b", AtlasType.Object);
-            AssetLibrary.LoadAtlas("Trees_l", AtlasType.Object);
-            AssetLibrary.LoadAtlas("Trees_t", AtlasType.Object);
-            AssetLibrary.LoadAtlas("Trees_s", AtlasType.Object);
+            AssetLibrary.LoadCoreContent();
 
-            string prefabPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "objects.json");
-            PrefabManager.Load(prefabPath);
-            MoveTool.LinkPrefabManager(PrefabManager);
-            string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
-            TagManager.Load(tagsPath);
-            string maskDataPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "mask_data.json");
-            MaskData.Load(maskDataPath);
-            AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
+
+            PathHelper.LogConfiguration("Pixel Editor");
+
+            string readData = PathHelper.GetReadDataPath();
+            PrefabManager.Load(Path.Combine(readData, "objects.json"));
+            TagManager.Load(Path.Combine(readData, "tags.json"));
+            MaskData.Load(Path.Combine(readData, "mask_data.json"));
+            AutoTileManager.Load(Path.Combine(readData, "autotiles.json"));
+
+            // Load building blueprints from Runtime bin Assets/
+            BuildingManager.Load(PathHelper.GetRuntimeAssetsPath());
+            System.Diagnostics.Debug.WriteLine($"[EditorState] Loaded {BuildingManager.Buildings.Count} modular blueprints from: {PathHelper.GetRuntimeAssetsPath()}");
+
+
+            AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Data", "autotiles.json"));
             var maskLayer = ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
             if (maskLayer != null)
             {

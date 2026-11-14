@@ -6,11 +6,12 @@ using Pixel_Simulations.Editor;
 using Pixel_Simulations.UI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Pixel_Simulations.Data
 {
     public enum PropertyType { String, Integer, Float, Boolean }
-    public enum ObjectType { Prop, Rectangle, Shape, Point }
+    public enum ObjectType { Prop, Rectangle, Shape, Point, ModularBuilding }
     public enum SliceMode { RowFirst, ColumnFirst }
     public enum ShapeOperation { None, Union, Intersection, Difference }
     public enum HandleType { None, Body, TopLeft, TopRight, BottomLeft, BottomRight, Top, Bottom, Left, Right, Center }
@@ -48,17 +49,97 @@ namespace Pixel_Simulations.Data
     }
     public static class MapObjectExtensions
     {
-        /// <summary>
-        /// Safely retrieves a custom property value from a MapObject's property dictionary.
-        /// Returns the specified fallback string if the property is missing.
-        /// </summary>
+        // ==========================================
+        // 1. EXTENSIONS FOR MapObject
+        // ==========================================
         public static string GetProperty(this MapObject obj, string key, string fallback = "")
         {
-            if (obj != null && obj.Properties != null && obj.Properties.TryGetValue(key, out var prop))
-            {
+            if (obj?.Properties != null && obj.Properties.TryGetValue(key, out var prop))
                 return prop.Value;
-            }
             return fallback;
+        }
+
+        public static bool GetBool(this MapObject obj, string key, bool fallback = false)
+        {
+            string val = obj.GetProperty(key, null);
+            if (val == null) return fallback;
+            return val.Equals("True", StringComparison.OrdinalIgnoreCase) || val == "1";
+        }
+
+        public static float GetFloat(this MapObject obj, string key, float fallback = 0f)
+        {
+            string val = obj.GetProperty(key, null);
+            return (val != null && float.TryParse(val, out float res)) ? res : fallback;
+        }
+
+        public static int GetInt(this MapObject obj, string key, int fallback = 0)
+        {
+            string val = obj.GetProperty(key, null);
+            return (val != null && int.TryParse(val, out int res)) ? res : fallback;
+        }
+        public static List<(MapObject Source, ObjectLink Link)> GetInboundLinks(this MapObject target, Map map)
+        {
+            var inbounds = new List<(MapObject, ObjectLink)>();
+            if (target == null || map == null) return inbounds;
+
+            foreach (var layer in map.Layers)
+            {
+                if (layer is ControlLayer cl)
+                {
+                    var allControlObjs = cl.Rectangles.Cast<MapObject>()
+                        .Concat(cl.Shapes)
+                        .Concat(cl.Points);
+
+                    foreach (var o in allControlObjs)
+                    {
+                        if (o.ID != target.ID && o.Links != null)
+                        {
+                            foreach (var l in o.Links.Where(lnk => lnk.TargetID == target.ID))
+                                inbounds.Add((o, l));
+                        }
+                    }
+                }
+                else if (layer is ObjectLayer ol && ol.Type == LayerType.Object)
+                {
+                    foreach (var o in ol.Objects)
+                    {
+                        if (o.ID != target.ID && o.Links != null)
+                        {
+                            foreach (var l in o.Links.Where(lnk => lnk.TargetID == target.ID))
+                                inbounds.Add((o, l));
+                        }
+                    }
+                }
+            }
+            return inbounds;
+        }
+        // ==========================================
+        // 2. EXTENSIONS FOR ObjectPrefab
+        // ==========================================
+        public static string GetProperty(this ObjectPrefab prefab, string key, string fallback = "")
+        {
+            if (prefab?.Properties != null && prefab.Properties.TryGetValue(key, out var prop))
+                return prop.Value;
+            return fallback;
+        }
+
+        public static bool GetBool(this ObjectPrefab prefab, string key, bool fallback = false)
+        {
+            string val = prefab.GetProperty(key, null);
+            if (val == null) return fallback;
+            return val.Equals("True", StringComparison.OrdinalIgnoreCase) || val == "1";
+        }
+
+        public static float GetFloat(this ObjectPrefab prefab, string key, float fallback = 0f)
+        {
+            string val = prefab.GetProperty(key, null);
+            return (val != null && float.TryParse(val, out float res)) ? res : fallback;
+        }
+
+        public static int GetInt(this ObjectPrefab prefab, string key, int fallback = 0)
+        {
+            string val = prefab.GetProperty(key, null);
+            return (val != null && int.TryParse(val, out int res)) ? res : fallback;
         }
     }
     [JsonObject(MemberSerialization.OptIn)]

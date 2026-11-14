@@ -20,7 +20,8 @@ namespace Pixel_Simulations
     public enum GameBool
     {
         IsPaused,
-        ShowCollision,
+        ShowCollision,     // Physical blocking barriers & player foot collision
+        ShowControlNodes,  // Triggers, Spawners, Water shapes, Doorways, and Links
         ShowPlayerBounds,
         ShowLinks,
         ShowShapes,
@@ -30,7 +31,7 @@ namespace Pixel_Simulations
     public class GameState
     {
         // --- Core Data Objects ---
-        public Map CurrentMap { get; private set; }
+        public Map CurrentMap { get; set; }
         public EntityManager _entityManager;
         public GraphicsDevice _gd;
         public MapSaveData ActiveSave { get; private set; } = new MapSaveData();
@@ -41,9 +42,9 @@ namespace Pixel_Simulations
         public ItemManager ItemManager { get; }
         public bool IsInventoryOpen { get; set; } = false;
         public AssetLibrary Assets { get; }
-        public Dictionary<Point, Texture2D> TerrainMaskChunks { get; private set; } = new Dictionary<Point, Texture2D>();
-        public Dictionary<Point, Texture2D> TerrainNormalChunks { get; private set; } = new Dictionary<Point, Texture2D>();
-        public Dictionary<Point, Texture2D> TerrainWaterChunks { get; private set; } = new Dictionary<Point, Texture2D>();
+        public Dictionary<Point, Texture2D> TerrainMaskChunks { get;  set; } = new Dictionary<Point, Texture2D>();
+        public Dictionary<Point, Texture2D> TerrainNormalChunks { get;  set; } = new Dictionary<Point, Texture2D>();
+        public Dictionary<Point, Texture2D> TerrainWaterChunks { get;  set; } = new Dictionary<Point, Texture2D>();
         public TilesetManager TilesetManager { get; }
         public AutoTileManager AutoTileManager { get; } = new AutoTileManager();
         public PrefabManager PrefabManager { get; }
@@ -54,6 +55,7 @@ namespace Pixel_Simulations
         public DayTimeManager TimeSystem { get; private set; }
         public InteractionManager Interactions { get; }
         public TagManager tagManager { get; private set; }
+        public BuildingManager BuildingManager { get; } = new BuildingManager();
         public GrassSystem Grass { get; private set; }
         public NoiseManager ns { get; set; }
         //useful objects
@@ -69,6 +71,11 @@ namespace Pixel_Simulations
         public string Debug_LastPayload { get; set; } = "None";
         public string Debug_FarmableStatus { get; set; } = "Unknown";
         public string Debug_LastCommand { get; set; } = "None";
+        public MapWarpManager WarpManager { get; private set; }
+        public string ContentRoot { get; set; } = "Content";
+        public bool IsInsideBuilding { get; set; } = false;
+        public GameEntity ActiveBuildingInterior { get; set; } = null;
+        public float InteriorFadeAlpha { get; set; } = 0.0f; // 0.0 = Outdoors, 1.0 = Fully indoors
         //Debug Bool
         public Dictionary<GameBool, bool> DebugPool = new Dictionary<GameBool, bool>();
         public GameState(EntityManager entityManager, EventBus eventBus)
@@ -86,6 +93,7 @@ namespace Pixel_Simulations
             Physics = new PhysicsManager();
             tagManager = new TagManager();
             ItemManager = new ItemManager();
+            WarpManager = new MapWarpManager(this);
             Interactions = new InteractionManager();
             _entityManager = entityManager;
         }
@@ -111,6 +119,7 @@ namespace Pixel_Simulations
 
             // Core System flags
             DebugPool[GameBool.ShowCollision] = true;
+            DebugPool[GameBool.ShowControlNodes] = false;
             DebugPool[GameBool.ShowLinks] = false;
             DebugPool[GameBool.ShowShapes] = true;
             DebugPool[GameBool.ShowPlayerBounds] = false;
@@ -126,25 +135,20 @@ namespace Pixel_Simulations
             // Load asset registries
             Assets.LoadCoreContent(content);
             ns.LoadContent(content);
+            PathHelper.LogConfiguration("Pixel Game");
 
-            // Load data registries
-            var parentDir = Directory.GetParent(content.RootDirectory)?.FullName ?? content.RootDirectory;
-            string prefabPath = Path.Combine(parentDir, "Assets", "Data", "objects.json");
-            PrefabManager.Load(prefabPath);
-            System.Diagnostics.Debug.WriteLine($"[GameState] : Prefabs loaded. Prefab Count = {PrefabManager.Prefabs.Count}");
-            string tagsPath = Path.Combine(PathHelper.GetAssetsPath(), "Data", "tags.json");
-            tagManager.Load(tagsPath);
+            string readData = PathHelper.GetReadDataPath();
+            PrefabManager.Load(Path.Combine(readData, "objects.json"));
+            tagManager.Load(Path.Combine(readData, "tags.json"));
+            ItemManager.Load(Path.Combine(readData, "items.json"), Path.Combine(readData, "physical_items.json"));
+            Interactions.Load(Path.Combine(readData, "interactions.json"));
+            TimeSystem.LoadContent(Path.Combine(readData, "TimeOfDay.json"));
+
+            BuildingManager.Load(PathHelper.GetRuntimeAssetsPath());
+
             System.Diagnostics.Debug.WriteLine($"[GameState] : Tags loaded. Tags Count = { tagManager.Tags.Count}");
-            string itemPath = Path.Combine(parentDir, "Assets", "Data", "items.json");
-            string physicalPath = Path.Combine(parentDir, "Assets", "Data", "physical_items.json");
-            ItemManager.Load(itemPath, physicalPath);
             System.Diagnostics.Debug.WriteLine($"[GameState] : ITEM MANAGER loaded. Items Count = {ItemManager.Items.Count},{ItemManager.PhysicalItems.Count}");
-            string interactionsPath = Path.Combine(parentDir, "Assets", "Data", "interactions.json");
-            Interactions.Load(interactionsPath);
-
-            string timePath = Path.Combine(parentDir, "Assets", "Data", "TimeOfDay.json");
-            TimeSystem.LoadContent(timePath);
-
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Prefabs loaded. Prefab Count = {PrefabManager.Prefabs.Count}");
             // Load shader programs
             Shaders = new ShaderManager(_gd);
             Shaders.PipelineReference = Shaders.PipelineReference ?? pipeline;
@@ -156,10 +160,10 @@ namespace Pixel_Simulations
 
         private void LoadLevelAndEnvironmentAssets(ContentManager content)
         {
-            var parentDir = Directory.GetParent(content.RootDirectory)?.FullName ?? content.RootDirectory;
+            string mapsPath = PathHelper.GetReadMapsPath();
             //string mapName = "Level1";
             string mapName = "CoastTown";
-            gameMapPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}.map");
+            gameMapPath = Path.Combine(mapsPath, $"{mapName}.map");
 
             CurrentMap = MapSerializer.Read(gameMapPath);
             System.Diagnostics.Debug.WriteLine($"[Map] : Map is Read at {gameMapPath}");
@@ -168,9 +172,9 @@ namespace Pixel_Simulations
 
             if (maskLayer != null)
             {
-                string maskPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_mask.png");
-                string normalPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_normals.png");
-                string waterPath = Path.Combine(parentDir, "Assets", "Maps", $"{mapName}_water.png");
+                string maskPath = Path.Combine(mapsPath, $"{mapName}_mask.png");
+                string normalPath = Path.Combine(mapsPath, $"{mapName}_normals.png");
+                string waterPath = Path.Combine(mapsPath, $"{mapName}_water.png");
                 // Terrain texture segments
                 TerrainMaskChunks = MapSerializer.LoadGameChunks(maskPath, _gd, maskLayer.OffsetX, maskLayer.OffsetY);
                 TerrainNormalChunks = MapSerializer.LoadGameChunks(normalPath, _gd, maskLayer.OffsetX, maskLayer.OffsetY);
@@ -180,7 +184,7 @@ namespace Pixel_Simulations
                 WaterSystem.CacheTerrainElevationData(TerrainMaskChunks);
                 WaterSystem.CacheWaterDepthData(TerrainWaterChunks);
             }
-
+            Assets.LoadMapAssets(CurrentMap, PrefabManager, content);
             // Save Game Profile
             string savePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Saves", "CoastTown_Save.json");
             if (File.Exists(savePath))
@@ -205,27 +209,31 @@ namespace Pixel_Simulations
 
             // Standardize tiles
             InitializeTilesets(_gd);
-            AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Data", "autotiles.json"));
+            AutoTileManager.Load(System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Data", "autotiles.json"));
 
             // Grass & Wind Math
             Grass = new GrassSystem(_gd);
             var grassShapes = new List<RectangleF>();
             foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
             {
-                grassShapes.AddRange(layer.Shapes.Where(s => s.Tags.Contains(80)).Select(s => s.Shape.GetBounds()));
+                grassShapes.AddRange(layer.Shapes.Where(s => s.HasTag(SystemTags.GRASS)).Select(s => s.Shape.GetBounds()));
             }
             Grass.LoadContent(content, ns, grassShapes);
 
 
             // Physics Boundaries
             Physics.LoadMapData(CurrentMap, PrefabManager);
-
+            foreach (var bldg in CurrentMap.Layers.OfType<ObjectLayer>().SelectMany(l => l.Objects.OfType<ModularBuildingInstance>()))
+            {
+                Physics.LoadModularBuildingBarriers(bldg);
+            }
             // Dynamic Player entity
             Player = new NewPlayer("Hero", new Vector2(200, 200), _gd);
             Player.LoadContent(content, Physics);
         }
         private void InitializeTilesets(GraphicsDevice graphicsDevice)
         {
+            //needs update so, map loads atlas based on map instead of manually 
             // Clear any old tilesets first
             TilesetManager.Clear();
 
@@ -250,13 +258,53 @@ namespace Pixel_Simulations
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("CRITICAL WARNING: 'farm' atlas not loaded! Tilled dirt will be invisible!");
+                //System.Diagnostics.Debug.WriteLine("CRITICAL WARNING: 'farm' atlas not loaded! Tilled dirt will be invisible!");
             }
             // Add other tilesets here...
         }
 
         public void Update(GameTime gameTime)
         {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            ModularBuildingInstance activeModBldg = null;
+            Point playerWorldCell = GridHelper.GetTileCell(Player.Foot);
+
+            foreach (var bldg in CurrentMap.Layers.OfType<ObjectLayer>().SelectMany(l => l.Objects.OfType<ModularBuildingInstance>()))
+            {
+                var bp = bldg.BlueprintRef;
+                if (bp == null || bp.floors.Count == 0) continue;
+
+                // Convert player foot to building-local grid coordinates
+                int localX = (int)Math.Floor((Player.Foot.X - bldg.Position.X) / 16f);
+                int localY = (int)Math.Floor((Player.Foot.Y - bldg.Position.Y) / 16f);
+
+                var floor = bp.floors[Math.Clamp(bldg.ActiveStory, 0, bp.floors.Count - 1)];
+                bool inRoomCell = localX >= 0 && localX < bp.gridDimension &&
+                                  localY >= 0 && localY < bp.gridDimension &&
+                                  floor.grid != null && floor.grid[localX][localY].roomType != "Void";
+
+                bool inFloorPlate = floor.floorPlates.Any(fp =>
+                    localX >= fp.x && localX < fp.x + fp.w &&
+                    localY >= fp.y && localY < fp.y + fp.h);
+
+                if (inRoomCell || inFloorPlate)
+                {
+                    bldg.IsPlayerInside = true;
+                    bldg.RoofAlpha = MathHelper.Lerp(bldg.RoofAlpha, 0f, dt * 10f);
+                    activeModBldg = bldg;
+                }
+                else
+                {
+                    bldg.IsPlayerInside = false;
+                    bldg.RoofAlpha = MathHelper.Lerp(bldg.RoofAlpha, 1f, dt * 10f);
+                }
+            }
+
+            IsInsideBuilding = (activeModBldg != null) || (ActiveBuildingInterior != null);
+
+            WarpManager.Update(gameTime);
+            if (WarpManager.IsWarping) return;
+
             input.Update(gameTime,GameCamera);
             Player.Update(gameTime);
             UpdateCameraInput(gameTime);
@@ -433,7 +481,7 @@ namespace Pixel_Simulations
         public bool IsPaused => DebugPool[GameBool.IsPaused];
         public void SaveGame()
         {
-            string savePath = System.IO.Path.Combine(PathHelper.GetAssetsPath(), "Saves", "CoastTown_Save.json"); System.IO.Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+            string savePath = System.IO.Path.Combine(PathHelper.GetReadDataPath(), "Saves", "CoastTown_Save.json"); System.IO.Directory.CreateDirectory(Path.GetDirectoryName(savePath));
 
             string json = JsonConvert.SerializeObject(ActiveSave, Formatting.Indented);
             System.IO.File.WriteAllText(savePath, json);

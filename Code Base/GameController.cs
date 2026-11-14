@@ -34,7 +34,7 @@ namespace Pixel_Simulations
             _state.Update(gameTime);
             HandleInteractions();
             UpdateEntities(gameTime);
-
+            UpdateDoorwayTransitions();
             _interactionEngine.UpdateDebugState();
         }
 
@@ -211,36 +211,47 @@ namespace Pixel_Simulations
         }
         private void HandleInteractions()
         {
-            var kstate = Keyboard.GetState();
-
-            if (kstate.IsKeyDown(Keys.Escape) && !_fKeyPressedLastFrame) _state.DebugPool[GameBool.IsPaused] = !_state.DebugPool[GameBool.IsPaused];
-            if (kstate.IsKeyDown(Keys.F5) && !_fKeyPressedLastFrame) _state.SaveGame();
-            if (kstate.IsKeyDown(Keys.I) && !_iKeyPressedLastFrame) _state.IsInventoryOpen = !_state.IsInventoryOpen;
-
-            _fKeyPressedLastFrame = kstate.IsKeyDown(Keys.Escape);
-            _iKeyPressedLastFrame = kstate.IsKeyDown(Keys.I);
-
-            if (_state.DebugPool[GameBool.IsPaused]) return;
-
-            if (_state.input.NewLeftClick) 
+            if (_state.input.IsKeyPressed(Keys.Escape))
             {
-                if (_state.IsInventoryOpen) _state.Player.Inventory.HandleMouseInteraction(_state.input.MouseScreenPosition.ToPoint(), true, new Vector2(1920, 1080), _state.IsInventoryOpen);
-                else QueueOrExecuteInteraction(false); // Left Click Action
+                if (_state.IsInventoryOpen)
+                {
+                    _state.IsInventoryOpen = false;
+                }
+                else
+                {
+                    _state.DebugPool[GameBool.IsPaused] = !_state.DebugPool[GameBool.IsPaused];
+                }
             }
 
-            if (kstate.IsKeyDown(Keys.F) && !_fKeyPressedLastFrame) QueueOrExecuteInteraction(false); // F Key Action
-            _fKeyPressedLastFrame = kstate.IsKeyDown(Keys.F);
+            if (_state.input.IsKeyPressed(Keys.F5)) _state.SaveGame();
+            if (_state.input.IsKeyPressed(Keys.I)) _state.IsInventoryOpen = !_state.IsInventoryOpen;
 
-            if (_state.input.NewRightClick && !_state.IsInventoryOpen) QueueOrExecuteInteraction(true); // Right Click Action
+            // Freeze world interactions while paused
+            if (_state.DebugPool[GameBool.IsPaused]) return;
+            if (_state.input.NewLeftClick)
+            {
+                if (_state.IsInventoryOpen)
+                    _state.Player.Inventory.HandleMouseInteraction(_state.input.MouseScreenPosition.ToPoint(), true, new Vector2(1920, 1080), _state.IsInventoryOpen);
+                else
+                    QueueOrExecuteInteraction(false);
+            }
+            else if (_state.input.IsKeyPressed(Keys.F))
+            {
+                QueueOrExecuteInteraction(false);
+            }
 
-            _fKeyPressedLastFrame = kstate.IsKeyDown(Keys.F);
+            // Right Click Placement
+            if (_state.input.NewRightClick && !_state.IsInventoryOpen)
+            {
+                QueueOrExecuteInteraction(true);
+            }
 
+            // Hovered Entity Tracking for Debug Inspector
             _state.HoveredEntity = null;
-            if (_state.DebugPool[GameBool.ShowCollision] || _state.DebugPool[GameBool.ShowShapes] || _state.DebugPool[GameBool.ShowLinks])
+            if (_state.DebugPool.ContainsKey(GameBool.ShowControlNodes) && _state.DebugPool[GameBool.ShowControlNodes] ||
+                _state.DebugPool.ContainsKey(GameBool.ShowCollision) && _state.DebugPool[GameBool.ShowCollision])
             {
                 Vector2 mouseWorld = _state.input.MouseWorldPosition;
-
-                // Search backwards (top to bottom) to find the top-most entity
                 for (int i = _entityManager.AllEntities.Count - 1; i >= 0; i--)
                 {
                     var entity = _entityManager.AllEntities[i];
@@ -249,24 +260,14 @@ namespace Pixel_Simulations
                         RectangleF bounds = new RectangleF(
                             entity.Position.X - entity.Prefab.Pivot.X,
                             entity.Position.Y - entity.Prefab.Pivot.Y,
-                            entity.Prefab.SourceRect.Width,
-                            entity.Prefab.SourceRect.Height);
+                            entity.Prefab.CanvasSize.X,
+                            entity.Prefab.CanvasSize.Y);
 
                         if (bounds.Contains(mouseWorld))
                         {
                             _state.HoveredEntity = entity;
                             break;
                         }
-                    }
-                    else if (entity.BaseData is RectangleObject r && new RectangleF(r.Position, r.Size).Contains(mouseWorld))
-                    {
-                        _state.HoveredEntity = entity;
-                        break;
-                    }
-                    else if (entity.BaseData is ShapeObject s && s.Shape.GetBounds().Contains(mouseWorld))
-                    {
-                        _state.HoveredEntity = entity;
-                        break;
                     }
                 }
             }
@@ -340,6 +341,84 @@ namespace Pixel_Simulations
                 }
             }
         }
+        private void UpdateDoorwayTransitions()
+        {
+            var player = _state.Player;
+            RectangleF footBox = player.FootBounds;
+
+            foreach (var ctrlLayer in _state.CurrentMap.Layers.OfType<ControlLayer>())
+            {
+                if (!ctrlLayer.IsVisible) continue;
+
+                foreach (var rect in ctrlLayer.Rectangles)
+                {
+                    RectangleF triggerBounds = new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y);
+                    if (!triggerBounds.Intersects(footBox)) continue;
+
+                    // ==============================================================
+                    // 1. SCENE TRANSITION: WARP_MAP (Loads new .map file)
+                    // ==============================================================
+                    if (rect.HasTag(SystemTags.WARP_MAP))
+                    {
+                        string targetMap = rect.GetProperty("TargetMap", null);
+                        if (!string.IsNullOrEmpty(targetMap))
+                        {
+                            string targetSpawn = rect.GetProperty("TargetSpawn", null);
+                            _state.WarpManager.TriggerMapWarp(targetMap, targetSpawn);
+                            return;
+                        }
+                    }
+
+                    // ==============================================================
+                    // 2. SEAMLESS CUTAWAY: WARP_INTERIOR (Hides roof, reveals rooms)
+                    // ==============================================================
+                    if (rect.HasTag(SystemTags.WARP_INTERIOR) || rect.GetProperty("TriggerType") == "Doorway")
+                    {
+                        var building = FindAssociatedBuilding(triggerBounds);
+                        if (building == null) continue;
+
+                        string entryDir = rect.GetProperty("EntryDir", "North");
+                        string exitDir = rect.GetProperty("ExitDir", "South");
+
+                        // Walking INTO building (e.g. facing North)
+                        if (!_state.IsInsideBuilding && player.FacingDirection.ToString().Equals(entryDir, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _state.IsInsideBuilding = true;
+                            _state.ActiveBuildingInterior = building;
+                            building.BaseData.Properties["PlayerInside"] = new MapProperty(PropertyType.Boolean, "True");
+                            _entityManager.RefreshEntityVisuals(building.BaseData.ID, _state);
+                            player.Position += new Vector2(0, -12); // Nudge inside
+                            return;
+                        }
+                        // Walking OUT of building (e.g. facing South)
+                        else if (_state.IsInsideBuilding && player.FacingDirection.ToString().Equals(exitDir, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _state.IsInsideBuilding = false;
+                            building.BaseData.Properties["PlayerInside"] = new MapProperty(PropertyType.Boolean, "False");
+                            _entityManager.RefreshEntityVisuals(building.BaseData.ID, _state);
+                            _state.ActiveBuildingInterior = null;
+                            player.Position += new Vector2(0, 12); // Nudge outside
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        private GameEntity FindAssociatedBuilding(RectangleF doorBounds)
+        {
+            // 1. Look for explicit Link
+            var linkedEntity = _entityManager.AllEntities.FirstOrDefault(e =>
+                e.BaseData.Links.Any(l => l.TargetID == e.BaseData.ID || l.SourcePort == "Door"));
+            if (linkedEntity != null) return linkedEntity;
+
+            // 2. Proximity search: find building directly above or intersecting this doorway
+            return _entityManager.AllEntities.FirstOrDefault(e => {
+                if (e.Prefab == null || e.GetProperty("Type") != "Building") return false;
+                RectangleF bBounds = new RectangleF(e.Position.X - e.Prefab.Pivot.X, e.Position.Y - e.Prefab.Pivot.Y, e.Prefab.CanvasSize.X, e.Prefab.CanvasSize.Y);
+                return bBounds.Intersects(doorBounds) || (doorBounds.Center.X >= bBounds.Left && doorBounds.Center.X <= bBounds.Right && Math.Abs(doorBounds.Top - bBounds.Bottom) < 32);
+            });
+        }
 
         private void QueueOrExecuteInteraction(bool isRightClick)
         {
@@ -375,7 +454,7 @@ namespace Pixel_Simulations
             };
 
             if (physDef.HasCollision)
-                placedObj.Tags.Add(_state.tagManager.GetId("Solid"));
+                placedObj.AddTag(SystemTags.SOLID);
 
             // Add to Save Data
             _state.ActiveSave.PlacedItems.Add(placedObj);
@@ -507,7 +586,7 @@ namespace Pixel_Simulations
         private void UpdateEntities(GameTime gameTime)
         {
             // Example: Make things with #vegetation sway based on wind
-            var plants = _entityManager.GetByTag(SystemTags.VEG);
+            var plants = _entityManager.GetByTag(SystemTags.VEGETATION);
             float windSpeed = _state.Weather.Visuals.WindVector.X;
             SimulateMachines(gameTime);
         }
