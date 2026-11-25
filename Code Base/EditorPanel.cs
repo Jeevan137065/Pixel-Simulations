@@ -1458,11 +1458,13 @@ namespace Pixel_Simulations.Editor
                 LocalPosition = new Vector2(0, area.Height - 40),
                 Size = new Vector2(area.Width, 40),
                 AutoSize = false,
-                PanelBackground = Color.Black * 0.6f
+                PanelBackground = Color.Black * 0.6f,
+                Spacing = 4f,
+                Padding = 4f
             };
 
             _controlsStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "AddLayer", Command = new AddLayerCommand { Direction = true } });
-            _controlsStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "MoveLayer", Command = new MoveLayerCommand { Direction = false } });
+            _controlsStack.AddChild(new UIMoveLayerSplitButton(_editorState));
             _controlsStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "CycleLayerType", Command = new CycleNewLayerTypeCommand() });
             _controlsStack.AddChild(new UIButton { Size = new Vector2(32, 32), IconName = "Delete", Command = new DeleteActiveLayerCommand() });
 

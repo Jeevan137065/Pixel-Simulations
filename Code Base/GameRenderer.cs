@@ -61,37 +61,36 @@ namespace Pixel_Simulations
         public void update(GameTime gameTime)
         {
             var keyboardState = Keyboard.GetState();
+            bool isAlt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
             var frame = _state._fKeyPressedLastFrame;
             _state.GameCamera.Follow(_state.Player.Position, 1f, gameTime);
-            // --- NEW: HUD TESTING INPUTS ---
-            if (keyboardState.IsKeyDown(Keys.M) && !frame)
+
+            // Block HUD test triggers when holding Alt (so Alt+M / Alt+B don't collide)
+            if (!isAlt)
             {
-                // Rich Text test! Random colors and text.
-                string[] testMessages = {
-                    "System: Save <c:Green>Completed</c>.",
-                    "You picked up <c:Yellow>15x Gold</c>!",
-                    "Warning: <c:Red>Low Health!</c>",
-                    "Discovered a <c:Purple>Mysterious Artifact</c>."
-                };
-                string randomMsg = testMessages[new Random().Next(testMessages.Length)];
-                HUD.AddMessage(randomMsg, duration: 4f, scale: 1.0f);
-            }
-            if (keyboardState.IsKeyDown(Keys.B) && !frame)
-            {
-                // Spawn a random emote from a 4-column, 11-row spritesheet
-                Random rand = new Random();
-                HUD.SpawnEmote(column: rand.Next(4), row: rand.Next(11), scale: 2.0f);
-            }
-            if (keyboardState.IsKeyDown(Keys.N) && !frame)
-            {
-                // Title Drop Test
-                HUD.ShowTitleDrop("THE FORGOTTEN RUINS", "Danger Level: High", TitleMode.TopRight);
+                if (keyboardState.IsKeyDown(Keys.M) && !frame)
+                {
+                    string[] testMessages = {
+                        "System: Save <c:Green>Completed</c>.",
+                        "You picked up <c:Yellow>15x Gold</c>!",
+                        "Warning: <c:Red>Low Health!</c>",
+                        "Discovered a <c:Purple>Mysterious Artifact</c>."
+                    };
+                    string randomMsg = testMessages[new Random().Next(testMessages.Length)];
+                    HUD.AddMessage(randomMsg, duration: 4f, scale: 1.0f);
+                }
+                if (keyboardState.IsKeyDown(Keys.B) && !frame)
+                {
+                    Random rand = new Random();
+                    HUD.SpawnEmote(column: rand.Next(4), row: rand.Next(11), scale: 2.0f);
+                }
+                if (keyboardState.IsKeyDown(Keys.N) && !frame)
+                {
+                    HUD.ShowTitleDrop("THE FORGOTTEN RUINS", "Danger Level: High", TitleMode.TopRight);
+                }
             }
 
-            // Update debounce flag
             frame = keyboardState.IsKeyDown(Keys.M) || keyboardState.IsKeyDown(Keys.N) || keyboardState.IsKeyDown(Keys.B) || keyboardState.IsKeyDown(Keys.K);
-
-            // Update the HUD internal timers
             HUD.Update(gameTime);
         }
         private void BuildReflectionCache()
@@ -235,16 +234,19 @@ namespace Pixel_Simulations
         {
             Effect zShader = _state.Shaders.Effects["ZDepthShader"];
 
+            // 1. Water Surface / Wave Data
             _pipeline.Begin(RenderLayer.WaterData, Color.Transparent, _state.GameCamera);
             _depthRenderer.DrawChunks(spriteBatch, _state.TerrainWaterChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
 
-            // Y-Depth: Pixel Altitude (Red)
+            // 2. Y-DEPTH: R = Volume Height | G = 0 | B = Elevation Mask
+            // Note: Cleared to 0 (ground level altitude). TerrainMaskChunks is NOT drawn here to avoid corrupting Red with Biome IDs!
             _pipeline.Begin(RenderLayer.YDepth, Color.Transparent, _state.GameCamera);
-            _depthRenderer.DrawChunks(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
+            _depthRenderer.DrawMaskElevationToYDepth(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera);
             _state._entityManager.DrawYDepthPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
 
-            // Z-Depth: Sorting Plane
+            // 3. Z-DEPTH: R = Z Sorting Depth | G = Spawns | B = Biomes
             _pipeline.Begin(RenderLayer.ZDepth, Color.Transparent, _state.GameCamera);
+            _depthRenderer.DrawMaskSpawnsAndBiomesToZDepth(spriteBatch, _state.TerrainMaskChunks, streamBounds, _state.GameCamera);
             _state._entityManager.DrawZDepthPass(_pipeline._graphicsDevice, _state.GameCamera, zShader, useParallax, strength, _state._entityManager._drawList);
         }
 
@@ -258,27 +260,19 @@ namespace Pixel_Simulations
 
             if (!_state.IsInsideBuilding)
             {
-                // ==============================================================
-                // OUTSIDE OVERWORLD RENDERING
-                // ==============================================================
-                // A. Terrain & Tilled Dirt (Native 480x270)
                 _pipeline.Begin(RenderLayer.Albedo, Color.Transparent, _state.GameCamera);
-                _pipeline.Begin(RenderLayer.Simulation, Color.Transparent, _state.GameCamera);
 
                 spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
                 _mapRenderer.Draw(spriteBatch, LayerType.Tile);
 
-                // Draw Building Floor Plates directly onto ground Albedo
                 foreach (var bldg in modularBuildings)
                 {
                     ModularBuildingRenderer.DrawBuildingFloorPlates(spriteBatch, bldg, _state.Assets);
                 }
                 spriteBatch.End();
 
-                // B. Normal Buffer (Terrain Normals + Dynamic Entity Normals + Modular Building Normals)
                 _pipeline.Begin(RenderLayer.Normal, new Color(128, 128, 255, 255), _state.GameCamera);
                 _depthRenderer.DrawChunks(spriteBatch, _state.TerrainNormalChunks, streamBounds, _state.GameCamera, BlendState.Opaque, Color.White, _state.MaskOffset);
-
                 _state._entityManager.DrawNormalPass(_pipeline._graphicsDevice, _state.GameCamera, _state.Assets, useParallax, strength, _state._entityManager._drawList);
 
                 spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.SimTransform);
@@ -288,11 +282,10 @@ namespace Pixel_Simulations
                 }
                 spriteBatch.End();
 
-                // C. Dynamic Entities & Modular Buildings (Simulation 960x540)
+                // Dynamic Layer with multi-strip horizontal wind simulation
                 _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent, _state.GameCamera);
-                _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList);
+                _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, useParallax, strength, _state._entityManager._drawList, _state.Weather, gameTime);
 
-                // Render Modular Buildings with Real-Time Celestial Shading
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.SimTransform);
                 foreach (var bldg in modularBuildings)
                 {
@@ -300,20 +293,12 @@ namespace Pixel_Simulations
                 }
                 spriteBatch.End();
 
-                // D. Procedural Wind-Blown Grass
-                _pipeline.Begin(RenderLayer.Dynamic, null, _state.GameCamera);
-                _state.Grass.Draw(_state.GameCamera.SimWVP, _pipeline.GetRenderTarget(RenderLayer.YDepth));
+                _state.Grass.Draw(_state.GameCamera, _pipeline.GetRenderTarget(RenderLayer.ZDepth), _state.Weather);
             }
             else
             {
-                // ==============================================================
-                // INSIDE BUILDING INTERIOR ISOLATION
-                // ==============================================================
-                // 1. Clear Albedo to cozy dark void (Hides exterior terrain)
                 _pipeline.Begin(RenderLayer.Albedo, new Color(12, 14, 18), _state.GameCamera);
-                _pipeline.Begin(RenderLayer.Simulation, new Color(12, 14, 18), _state.GameCamera);
 
-                // Draw Floor Plates for the active interior building
                 spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.NativeTransform);
                 foreach (var bldg in modularBuildings.Where(b => b.IsPlayerInside))
                 {
@@ -321,7 +306,6 @@ namespace Pixel_Simulations
                 }
                 spriteBatch.End();
 
-                // 2. Dynamic Layer: Interior Walls + Player + Indoor Props
                 _pipeline.Begin(RenderLayer.Dynamic, Color.Transparent, _state.GameCamera);
 
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, _state.GameCamera.SimTransform);
@@ -331,16 +315,14 @@ namespace Pixel_Simulations
                 }
                 spriteBatch.End();
 
-                // Draw Player & Active Facade Interior
                 var interiorSprites = _state._entityManager._drawList.Where(s =>
                     s.AtlasName == "Player" ||
                     (_state.ActiveBuildingInterior != null && s.Position == _state.ActiveBuildingInterior.Position)
                 ).ToList();
 
-                _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, false, 0f, interiorSprites);
+                _state._entityManager.DrawAlbedoPass(_pipeline._graphicsDevice, _state.GameCamera, false, 0f, interiorSprites, _state.Weather, gameTime);
             }
         }
-
         private void RenderLightMaskAndAtmosphericOverlays(GameTime gameTime, SpriteBatch spriteBatch)
         {
             var celestial = ModularBuildingRenderer.GetCelestialState(_state.TimeSystem.TimeOfDay);
@@ -423,7 +405,7 @@ namespace Pixel_Simulations
             // 2. WORLD-SPACE DEBUG OVERLAYS (Collisions, Footprints, Spawners, Wireframes)
             // Uses ScreenTransform to map World Coordinates -> 1080p Screen Coordinates
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _state.GameCamera.ScreenTransform);
-            Debug_Draw(spriteBatch);
+            Debug_Draw(spriteBatch, gameTime);
             spriteBatch.End();
 
             // 3. SCREEN-SPACE HUD, INVENTORY & MOUSE TOOLTIPS (1080p Screen Space / Identity Matrix)
@@ -442,11 +424,11 @@ namespace Pixel_Simulations
             }
         }
         // Inside GameRenderer.cs
-        public void Debug_Draw(SpriteBatch spriteBatch)
+        public void Debug_Draw(SpriteBatch spriteBatch, GameTime gameTime = null)
         {
             float lineThick = 1f / _state.GameCamera.Zoom;
 
-            // 1. PLAYER INTERACTION & PLACEMENT PREVIEW (When inventory is closed)
+            // 1. PLAYER INTERACTION & PLACEMENT PREVIEW
             if (!_state.IsInventoryOpen && _state.Player != null)
             {
                 var pixelTex = pt?.GetPixelTexture(false);
@@ -457,14 +439,13 @@ namespace Pixel_Simulations
                 _state.Player.DrawTargetCellDebug(spriteBatch, _state.GameCamera, _state.input.MouseWorldPosition);
             }
 
-            // 2. PHYSICAL COLLISION BARRIERS (Red: Walls/Props, Gold: Vaulting Fences, Green: Player Foot)
+            // 2. PHYSICAL COLLISION BARRIERS
             if (_state.DebugPool.ContainsKey(GameBool.ShowCollision) && _state.DebugPool[GameBool.ShowCollision])
             {
                 if (_state.CurrentMap != null)
                 {
                     var font = _state.Assets?.customFont ?? UITheme.DefaultFont;
 
-                    // A. MODULAR BUILDING BOUNDS & DIAGNOSTICS
                     foreach (var bldg in _state.CurrentMap.Layers.OfType<ObjectLayer>().SelectMany(l => l.Objects.OfType<ModularBuildingInstance>()))
                     {
                         var bp = bldg.BlueprintRef;
@@ -472,31 +453,10 @@ namespace Pixel_Simulations
                         {
                             RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(bp);
                             RectangleF worldBounds = new RectangleF(bldg.Position.X + tight.X, bldg.Position.Y + tight.Y, tight.Width, tight.Height);
-
-                            // Tight Architectural Bounds (Bright Cyan)
                             spriteBatch.DrawRectangle(worldBounds, Color.Cyan, lineThick * 2f);
-
-                            // Full Canvas Footprint (Faint White)
-                            float gridPx = bp.gridDimension * 16f;
-                            spriteBatch.DrawRectangle(new RectangleF(bldg.Position.X, bldg.Position.Y, gridPx, gridPx), Color.White * 0.25f, lineThick);
-
-                            if (font != null)
-                            {
-                                string status = $"[MODULAR] {bldg.Name} ({bldg.BuildingId}) | Inside: {bldg.IsPlayerInside} | RoofAlpha: {bldg.RoofAlpha:F2}";
-                                spriteBatch.DrawString(font, status, new Vector2(worldBounds.X, worldBounds.Y - 14), Color.Cyan, 0f, Vector2.Zero, 0.7f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
-                            }
-                        }
-                        else
-                        {
-                            // Missing Blueprint Alert Box (Magenta)
-                            RectangleF errBox = new RectangleF(bldg.Position.X, bldg.Position.Y, 64, 64);
-                            spriteBatch.DrawRectangle(errBox, Color.Magenta, lineThick * 3f);
-                            if (font != null)
-                                spriteBatch.DrawString(font, $"MISSING BLUEPRINT: {bldg.BuildingId}", bldg.Position + new Vector2(0, -14), Color.Magenta, 0f, Vector2.Zero, 0.75f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
                         }
                     }
 
-                    // B. FACADE BUILDING BOUNDS (ObjectII Props)
                     foreach (var entity in _state._entityManager.AllEntities)
                     {
                         if (entity.Prefab != null && entity.GetProperty("Type") == "Building")
@@ -511,23 +471,18 @@ namespace Pixel_Simulations
                         }
                     }
                 }
+
                 if (_state.Physics != null && _state.Physics._barriers != null)
                 {
                     foreach (var barrier in _state.Physics._barriers)
                     {
                         if (barrier.IsOneWay)
                         {
-                            // Vaulting Barrier (Gold with directional arrow)
                             spriteBatch.FillRectangle(barrier.Bounds, Color.Gold * 0.35f);
                             spriteBatch.DrawRectangle(barrier.Bounds, Color.Gold, lineThick * 2);
-
-                            Vector2 center = barrier.Bounds.Center;
-                            Vector2 arrowHead = center + (barrier.AllowedDirection * 12f);
-                            spriteBatch.DrawLine(center, arrowHead, Color.White, lineThick * 2);
                         }
                         else
                         {
-                            // Standard Physical Barrier (Red)
                             spriteBatch.FillRectangle(barrier.Bounds, Color.Red * 0.3f);
                             spriteBatch.DrawRectangle(barrier.Bounds, Color.Red, lineThick);
                         }
@@ -536,32 +491,25 @@ namespace Pixel_Simulations
 
                 if (_state.Player != null)
                 {
-                    // Player foot contact box (Lime Green)
                     spriteBatch.FillRectangle(_state.Player.FootBounds, Color.LimeGreen * 0.4f);
                     spriteBatch.DrawRectangle(_state.Player.FootBounds, Color.LimeGreen, lineThick * 2);
-
-                    // Interaction target reach (Yellow)
                     spriteBatch.DrawRectangle(_state.Player.GetInteractionBox(), Color.Yellow, lineThick);
                 }
             }
 
-            // 3. CONTROL NODES, TRIGGERS & SPAWNERS (Magenta: Shapes, Cyan: Warps, HotPink: Spawners)
+            // 3. CONTROL NODES & TRIGGERS
             if (_state.DebugPool.ContainsKey(GameBool.ShowControlNodes) && _state.DebugPool[GameBool.ShowControlNodes])
             {
                 if (_state.CurrentMap != null)
                 {
-                    var font = _state.Assets?.customFont ?? UITheme.DefaultFont;
-
                     foreach (var ctrlLayer in _state.CurrentMap.Layers.OfType<ControlLayer>())
                     {
                         if (!ctrlLayer.IsVisible) continue;
 
-                        // A. Shapes (Water bodies, Farm soil zones)
                         foreach (var shapeObj in ctrlLayer.Shapes)
                         {
                             Color shapeCol = shapeObj.HasTag(SystemTags.WATER) ? Color.DeepSkyBlue : Color.Magenta;
                             sbFillPolygon(spriteBatch, shapeObj.Shape, shapeCol * 0.25f);
-
                             var verts = shapeObj.Shape.Vertices;
                             for (int i = 0; i < verts.Count; i++)
                             {
@@ -569,35 +517,56 @@ namespace Pixel_Simulations
                             }
                         }
 
-                        // B. Rectangles (Doorways & Map Transitions)
                         foreach (var rect in ctrlLayer.Rectangles)
                         {
-                            Color rectCol = rect.HasTag(SystemTags.WARP_MAP) ? Color.DarkCyan :
-                                            (rect.HasTag(SystemTags.WARP_INTERIOR) ? Color.Magenta : Color.Orange);
-
                             RectangleF rBounds = new RectangleF(rect.Position.X, rect.Position.Y, rect.Size.X, rect.Size.Y);
-                            spriteBatch.FillRectangle(rBounds, rectCol * 0.25f);
-                            spriteBatch.DrawRectangle(rBounds, rectCol, lineThick * 2);
-
-                            if (font != null)
-                            {
-                                string label = rect.GetProperty("TriggerType", rect.Name);
-                                spriteBatch.DrawString(font, label, rect.Position + new Vector2(2, -14), rectCol, 0f, Vector2.Zero, 0.75f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
-                            }
+                            spriteBatch.FillRectangle(rBounds, Color.DarkCyan * 0.25f);
+                            spriteBatch.DrawRectangle(rBounds, Color.DarkCyan, lineThick * 2);
                         }
 
-                        // C. Spawners & Waypoints
                         foreach (var pt in ctrlLayer.Points)
                         {
                             spriteBatch.DrawCircle(pt.Position, pt.Radius, 24, Color.HotPink, lineThick * 2);
-                            spriteBatch.DrawLine(pt.Position - new Vector2(4, 0), pt.Position + new Vector2(4, 0), Color.White, lineThick);
-                            spriteBatch.DrawLine(pt.Position - new Vector2(0, 4), pt.Position + new Vector2(0, 4), Color.White, lineThick);
+                        }
+                    }
+                }
+            }
 
-                            if (font != null)
-                            {
-                                string ptLabel = !string.IsNullOrEmpty(pt.Label) ? $"{pt.Name} ({pt.Label})" : pt.Name;
-                                spriteBatch.DrawString(font, ptLabel, pt.Position + new Vector2(pt.Radius + 4, -8), Color.HotPink, 0f, Vector2.Zero, 0.75f / _state.GameCamera.Zoom, SpriteEffects.None, 0f);
-                            }
+            // 4. ANIMATED MULTI-STRIP WIND SLICE BOUNDS DEBUG (ALT+G)
+            if (_state.IsDebug(GameBool.ShowGrassDebug) && gameTime != null)
+            {
+                float totalSec = (float)gameTime.TotalGameTime.TotalSeconds;
+                WindWaveSample wind = _state.Weather.SampleWindWave(totalSec, 12.0f);
+
+                foreach (var sprite in _state._entityManager._drawList)
+                {
+                    if (sprite.HasWindSway)
+                    {
+                        int stripH = Math.Max(1, sprite.StripHeight);
+                        int totalH = sprite.SourceRect.Height;
+                        float w = sprite.SourceRect.Width * sprite.Scale.X;
+                        float pivotY = sprite.Origin.Y * sprite.Scale.Y;
+
+                        for (int y = 0; y < totalH; y += stripH)
+                        {
+                            int currentStripH = Math.Min(stripH, totalH - y);
+                            float localY = y * sprite.Scale.Y;
+
+                            // Calculate exact animated horizontal displacement matching the vertex batcher
+                            float shift = EntityManager.CalculateStripDisplacement(
+                                sprite.Position, localY, pivotY,
+                                sprite.Stiffness, sprite.WaveLength, sprite.FlutterStr, wind);
+
+                            float top = sprite.Position.Y - (sprite.Origin.Y * sprite.Scale.Y) + localY;
+                            float left = sprite.Position.X - (sprite.Origin.X * sprite.Scale.X) + shift;
+
+                            RectangleF animatedSliceRect = new RectangleF(left, top, w, currentStripH * sprite.Scale.Y);
+
+                            // Alpha increases higher up the tree where displacement is greatest
+                            float flexRatio = Math.Min(1.0f, Math.Abs(shift) / 10.0f);
+                            Color sliceColor = Color.Lerp(Color.Cyan * 0.25f, Color.Gold * 0.85f, flexRatio);
+
+                            spriteBatch.DrawRectangle(animatedSliceRect, sliceColor, lineThick);
                         }
                     }
                 }

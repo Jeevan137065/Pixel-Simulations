@@ -22,6 +22,13 @@ namespace Pixel_Simulations.UI
         public EditorInputState UIInput { get; private set; }
         public UIElement FocusedElement { get; private set; }
 
+        // --- Performance Profiler Metrics ---
+        private float _fps = 0f;
+        private float _frameTimeMs = 0f;
+        private float _fpsTimer = 0f;
+        private int _frameCount = 0;
+        private long _processRamMb = 0;
+        private long _gcAllocMb = 0;
         public GameUI(GameState state, UITheme theme, RenderPipeline pipeline)
         {
             _state = state;
@@ -379,6 +386,95 @@ namespace Pixel_Simulations.UI
                     UpdateTabContent();
                 };
                 _contentArea.AddChild(toggleZoomBtn);
+
+                _contentArea.AddChild(new UILabel { Text = "PIXEL-ART GRASS STABILIZATION", TextColor = Color.Cyan });
+
+                // 1. Pixel Grid Snapping Toggle
+                var toggleSnapBtn = new UIButton
+                {
+                    Size = new Vector2(280, 28),
+                    Text = $"Pixel-Grid Snapping: {(_state.Grass.Settings.PixelSnap ? "LOCKED (480p Grid)" : "SMOOTH (Floating)")}",
+                    BackgroundColor = _state.Grass.Settings.PixelSnap ? Color.DarkGreen : Color.DarkSlateGray
+                };
+                toggleSnapBtn.OnClick = () => {
+                    _state.Grass.Settings.PixelSnap = !_state.Grass.Settings.PixelSnap;
+                    UpdateTabContent();
+                };
+                _contentArea.AddChild(toggleSnapBtn);
+
+                // 2. Cel Animation FPS Stepper
+                var fpsRow = new UIStackPanel
+                {
+                    Direction = StackDirection.Horizontal,
+                    Spacing = 8f,
+                    PanelBackground = Color.Black * 0.35f,
+                    Padding = 6f
+                };
+                fpsRow.AddChild(new UILabel { Text = "Animation Cel FPS:", TextColor = Color.LightGray });
+
+                var lblFPS = new UILabel { Text = $"{_state.Grass.Settings.AnimFPS:F0} FPS", TextColor = Color.Yellow, Size = new Vector2(60, 20) };
+
+                var sldFPS = new UISlider
+                {
+                    Size = new Vector2(160, 18),
+                    Min = 4.0f,
+                    Max = 60.0f,
+                    Value = _state.Grass.Settings.AnimFPS
+                };
+                sldFPS.OnValueChanged = (val) => {
+                    _state.Grass.Settings.AnimFPS = (float)Math.Round(val);
+                    lblFPS.Text = $"{_state.Grass.Settings.AnimFPS:F0} FPS";
+                };
+
+                var fpsMinus = new UIButton { Size = new Vector2(26, 22), Text = "-", BackgroundColor = Color.DarkSlateGray };
+                fpsMinus.OnClick = () => {
+                    _state.Grass.Settings.AnimFPS = Math.Max(4f, _state.Grass.Settings.AnimFPS - 2f);
+                    sldFPS.Value = _state.Grass.Settings.AnimFPS;
+                    lblFPS.Text = $"{_state.Grass.Settings.AnimFPS:F0} FPS";
+                };
+
+                var fpsPlus = new UIButton { Size = new Vector2(26, 22), Text = "+", BackgroundColor = Color.DarkSlateGray };
+                fpsPlus.OnClick = () => {
+                    _state.Grass.Settings.AnimFPS = Math.Min(60f, _state.Grass.Settings.AnimFPS + 2f);
+                    sldFPS.Value = _state.Grass.Settings.AnimFPS;
+                    lblFPS.Text = $"{_state.Grass.Settings.AnimFPS:F0} FPS";
+                };
+
+                fpsRow.AddChild(fpsMinus);
+                fpsRow.AddChild(sldFPS);
+                fpsRow.AddChild(fpsPlus);
+                fpsRow.AddChild(lblFPS);
+                _contentArea.AddChild(fpsRow);
+
+                // 3. Wind Wave Gust Intensity Slider
+                var gustRow = new UIStackPanel
+                {
+                    Direction = StackDirection.Horizontal,
+                    Spacing = 8f,
+                    PanelBackground = Color.Black * 0.35f,
+                    Padding = 6f
+                };
+                gustRow.AddChild(new UILabel { Text = "Wave Force:", TextColor = Color.LightGray });
+
+                var lblGust = new UILabel { Text = $"{_state.Grass.Settings.GustStrength:F2}", TextColor = Color.LimeGreen, Size = new Vector2(40, 20) };
+
+                var sldGust = new UISlider
+                {
+                    Size = new Vector2(160, 18),
+                    Min = 0.0f,
+                    Max = 1.5f,
+                    Value = _state.Grass.Settings.GustStrength
+                };
+                sldGust.OnValueChanged = (val) => {
+                    _state.Grass.Settings.GustStrength = (float)Math.Round(val, 2);
+                    lblGust.Text = $"{_state.Grass.Settings.GustStrength:F2}";
+                };
+
+                gustRow.AddChild(sldGust);
+                gustRow.AddChild(lblGust);
+                _contentArea.AddChild(gustRow);
+
+                _contentArea.AddChild(new UIPanel { Size = new Vector2(contentW, 1), BackgroundColor = Color.DarkGray * 0.3f, BorderColor = Color.Transparent });
             }
             else if (_activeTab == "Item Spawner")
             {
@@ -412,6 +508,26 @@ namespace Pixel_Simulations.UI
 
         public void Update(GameTime gameTime)
         {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            // Frame time and FPS calculations
+            _frameTimeMs = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            _fpsTimer += dt;
+            _frameCount++;
+            if (_fpsTimer >= 0.35f)
+            {
+                _fps = _frameCount / _fpsTimer;
+                _frameCount = 0;
+                _fpsTimer = 0f;
+
+                // Sample memory metrics periodically (avoids per-frame OS calls)
+                _gcAllocMb = GC.GetTotalMemory(false) / (1024 * 1024);
+                using (var proc = System.Diagnostics.Process.GetCurrentProcess())
+                {
+                    _processRamMb = proc.WorkingSet64 / (1024 * 1024);
+                }
+            }
+
             UIInput.CurrentMouse = Mouse.GetState();
             UIInput.CurrentKeyboard = Keyboard.GetState();
             UIInput.MouseWindowPosition = UIInput.CurrentMouse.Position.ToVector2();
@@ -438,13 +554,9 @@ namespace Pixel_Simulations.UI
             sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
             // 1. ALWAYS DRAW THE ON-SCREEN DEBUG READOUT (Left Screen Space)
-            if (_state.DebugPool.ContainsKey(GameBool.ShowShapes) && _state.DebugPool[GameBool.ShowShapes])
+            // 1. Master Toggle for Debug Readout ('L' key)
+            if (_state.IsDebug(GameBool.ShowDebugText))
             {
-                DrawDebugInfo(sb);
-            }
-            else
-            {
-                // Even if debug shapes are toggled off, keep the core diagnostic telemetry
                 DrawDebugInfo(sb);
             }
 
@@ -487,52 +599,190 @@ namespace Pixel_Simulations.UI
         }
         private void DrawDebugInfo(SpriteBatch sb)
         {
-            if (_theme.Font == null) return;
+            var font = _theme.Font ?? UITheme.DefaultFont;
+            if (font == null) return;
 
             var cam = _state.GameCamera;
             var player = _state.Player;
-            var heldStack = player?.Inventory?.GetSelectedItem();
-            string heldStr = heldStack != null ? $"ID: {heldStack.ItemID} (Qty: {heldStack.Count})" : "Empty Hands";
+            var mouseWorld = _state.input.MouseWorldPosition;
+            Point mouseCell = GridHelper.GetTileCell(mouseWorld);
 
+            // 1. SAMPLE MASKS BENEATH PLAYER & MOUSE
+            Color playerMask = _state.GetMaskColorAt(player.Foot);
+            Color mouseMask = _state.GetMaskColorAt(mouseWorld);
+
+            // Lookups
+            string pBiome = _state.MaskData.GetBiome(playerMask.R)?.Name ?? "Unassigned";
+            string pSpawn = _state.MaskData.GetSpawn(playerMask.G)?.Name ?? "None";
+            bool pFarmZone = _state.IsFarmZone(player.Foot);
+
+            string mBiome = _state.MaskData.GetBiome(mouseMask.R)?.Name ?? "Unassigned";
+            string mSpawn = _state.MaskData.GetSpawn(mouseMask.G)?.Name ?? "None";
+            bool mFarmZone = _state.IsFarmZone(mouseWorld);
+
+            // Inspect hovered soil / crop
             var tilledLayer = _state.CurrentMap?.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
-            string tilledStr = tilledLayer != null ? $"Exists ({tilledLayer.Chunks.Count} chunks)" : "Not Created Yet";
+            var soilTile = tilledLayer?.GetTileAt(mouseCell);
+            string soilStatus = soilTile == null ? "Untilled" : (soilTile.TileID == 3 ? "Watered Dirt (ID 3)" : "Dry Tilled Dirt (ID 2)");
+
+            var hoveredPlant = _state.ActiveSave.ActivePlants.FirstOrDefault(p => p.SoilCell == mouseCell);
+            string plantStatus = "None";
+            if (hoveredPlant != null)
+            {
+                var def = _state.plantManager.GetPlant(hoveredPlant.PlantID);
+                var st = (def != null && hoveredPlant.CurrentStageIndex < def.Stages.Count) ? def.Stages[hoveredPlant.CurrentStageIndex] : null;
+                plantStatus = $"{def?.Name ?? hoveredPlant.PlantID} [Stage {hoveredPlant.CurrentStageIndex}: {st?.Name}] (Watered: {hoveredPlant.IsWateredToday})";
+            }
+
+            var heldStack = player?.Inventory?.GetSelectedItem();
+            string heldStr = heldStack != null ? $"#{heldStack.ItemID} (Qty: {heldStack.Count})" : "Empty Hands";
 
             int hrs = (int)_state.TimeSystem.TimeOfDay;
             int mins = (int)((_state.TimeSystem.TimeOfDay - hrs) * 60);
 
-            string debugText =
-                "--- ENGINE PIPELINE ---\n" +
-                $"Active RT View: {_pipeline._currentDebugView}\n" +
-                $"Native Target: {_pipeline.NativeRect.Width}x{_pipeline.NativeRect.Height} (480p)\n" +
-                $"Simulation RT: {_pipeline.SimRect.Width}x{_pipeline.SimRect.Height} (960p)\n" +
-                $"Presentation : {_pipeline.FinalRect.Width}x{_pipeline.FinalRect.Height} (1080p)\n\n" +
+            var sbText = new System.Text.StringBuilder();
 
-                "--- CAMERA STATE ---\n" +
-                $"Center World: {cam.Position.X:F1}, {cam.Position.Y:F1}\n" +
-                $"Zoom Level  : {cam.Zoom:F2}x\n" +
-                $"Sim Bounds  : {cam.SimViewBounds.X},{cam.SimViewBounds.Y} [{cam.SimViewBounds.Width}x{cam.SimViewBounds.Height}]\n\n" +
+            // ==============================================================
+            // HEADER & HOTKEY TOGGLE STATUS BAR
+            // ==============================================================
+            sbText.AppendLine("=== SYSTEM TELEMETRY MONITOR ===");
+            sbText.Append($"[Alt+M] Mem: {(_state.IsDebug(GameBool.ShowMemoryDebug) ? "ON" : "OFF")} | ");
+            sbText.Append($"[Alt+G] Grass: {(_state.IsDebug(GameBool.ShowGrassDebug) ? "ON" : "OFF")} | ");
+            sbText.Append($"[Alt+W] Weather: {(_state.IsDebug(GameBool.ShowWeatherDebug) ? "ON" : "OFF")} | ");
+            sbText.Append($"[Alt+P] Phys: {(_state.IsDebug(GameBool.ShowPhysicsDebug) ? "ON" : "OFF")} | ");
+            sbText.AppendLine($"[Alt+E] Entities: {(_state.IsDebug(GameBool.ShowEntityDebug) ? "ON" : "OFF")}");
+            sbText.AppendLine($"[Alt+N] Mask Probe: {(_state.IsDebug(GameBool.ShowMaskDebug) ? "ON" : "OFF")} | [P] Cycle RT: {_pipeline._currentDebugView}");
+            sbText.AppendLine("--------------------------------------------------");
 
-                "--- ENVIRONMENT & CLIMATE ---\n" +
-                $"Time of Day : {hrs:D2}:{mins:D2} (Scale: {_state.TimeSystem.TimeScale:F3})\n" +
-                $"Season/Date : Year {_state.Calendar.Year}, {_state.Calendar.CurrentSeason} (Day {_state.Calendar.Day})\n" +
-                $"Weather Live: {_state.Weather.CurrentWeather} (Temp: {_state.Weather.CurrentClimate.TempC:F1}C)\n" +
-                $"Atmosphere  : Humid: {_state.Weather.CurrentClimate.Humidity:F0}% | Wind: {_state.Weather.CurrentClimate.WindKph:F0} kph\n\n" +
+            // ==============================================================
+            // CORE ENGINE, CAMERA & TARGET TELEMETRY
+            // ==============================================================
+            sbText.AppendLine($"FPS: {_fps:F0} ({_frameTimeMs:F1} ms) | Active RT: {_pipeline._currentDebugView}");
+            sbText.AppendLine($"Pipelines: Native={_pipeline.NativeRect.Width}x{_pipeline.NativeRect.Height} | Sim={_pipeline.SimRect.Width}x{_pipeline.SimRect.Height} | Screen={_pipeline.FinalRect.Width}x{_pipeline.FinalRect.Height}");
+            sbText.AppendLine($"Camera: Zoom={cam.Zoom:F2}x | Pos=({cam.Position.X:F0}, {cam.Position.Y:F0}) | Frustum=[{cam.SimViewBounds.X},{cam.SimViewBounds.Y} {cam.SimViewBounds.Width}x{cam.SimViewBounds.Height}]");
+            sbText.AppendLine($"Player: World=({player.Foot.X:F0}, {player.Foot.Y:F0}) | Facing={player.FacingDirection} | Moving={player.IsMoving} | Indoors={_state.IsInsideBuilding}");
+            sbText.AppendLine($"Held Item: {heldStr} | Inventory Weight: {_state.Player.Inventory.CurrentWeight:F1}/{_state.Player.Inventory.MaxWeight:F1} kg");
 
-                "--- PLAYER ENTITY ---\n" +
-                $"World Foot  : {player.Foot.X:F1}, {player.Foot.Y:F1}\n" +
-                $"Facing Dir  : {player.FacingDirection} | Moving: {player.IsMoving}\n" +
-                $"Held Item   : {heldStr}\n" +
-                $"Mouse World : {_state.input.MouseWorldPosition.X:F0}, {_state.input.MouseWorldPosition.Y:F0}\n\n" +
+            // ==============================================================
+            // [ALT+N] MASK, TERRAIN & BOTANICAL PROBE (FIXED!)
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowMaskDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+N: MASK PROBE & BOTANICALS] ---");
+                sbText.AppendLine($"[PLAYER PROBE] World: ({player.Foot.X:F0}, {player.Foot.Y:F0})");
+                sbText.AppendLine($"   Biome  (R) : [{playerMask.R}] {pBiome}");
+                sbText.AppendLine($"   Spawns (G) : [{playerMask.G}] {pSpawn}");
+                sbText.AppendLine($"   Elev   (B) : [{playerMask.B}] (Alt Offset: -{Math.Round(playerMask.B * (45f / 255f))}px)");
+                sbText.AppendLine($"   Farm Zone  : {(pFarmZone ? "YES (Permitted Soil)" : "NO (Protected)")}");
 
-                "--- WORLD BUFFERS ---\n" +
-                $"Map Layers  : {_state.CurrentMap?.Layers.Count ?? 0} | Tilled Soil: {tilledStr}\n" +
-                $"Mask Chunks : {_state.TerrainMaskChunks.Count} Loaded\n" +
-                $"Active Sprites: {_state._entityManager._drawList.Count}\n" +
-                $"Composite Cache: {_state._entityManager._compositeCache.Count} Textures";
+                sbText.AppendLine($"[MOUSE PROBE] World: ({mouseWorld.X:F0}, {mouseWorld.Y:F0}) | Cell: ({mouseCell.X}, {mouseCell.Y})");
+                sbText.AppendLine($"   Biome  (R) : [{mouseMask.R}] {mBiome}");
+                sbText.AppendLine($"   Spawns (G) : [{mouseMask.G}] {mSpawn}");
+                sbText.AppendLine($"   Elev   (B) : [{mouseMask.B}]");
+                sbText.AppendLine($"   Farm Zone  : {(mFarmZone ? "YES" : "NO")}");
+                sbText.AppendLine($"   Soil State : {soilStatus}");
+                sbText.AppendLine($"   Plant/Crop : {plantStatus}");
 
-            // Drop shadow for legibility over bright backgrounds
-            sb.DrawString(_theme.Font, debugText, new Vector2(16, 16), Color.Black * 0.9f);
-            sb.DrawString(_theme.Font, debugText, new Vector2(15, 15), Color.LimeGreen);
+                sbText.AppendLine($"[BOTANICAL POOL]");
+                sbText.AppendLine($"   Active World Plants : {_state.ActiveSave.ActivePlants.Count} instances");
+                sbText.AppendLine($"   Registered Plant Def: {_state.plantManager.Plants.Count} species");
+                sbText.AppendLine($"   Last Action Status  : {_state.Debug_LastCommand}");
+                sbText.AppendLine($"   [HOTKEY] Press 'K' to Force-Spawn forages across map");
+            }
+
+            // ==============================================================
+            // [ALT+M] MEMORY, GPU & PERFORMANCE
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowMemoryDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+M: MEMORY & GPU PERFORMANCE] ---");
+                sbText.AppendLine($"Process Working Set: {_processRamMb} MB");
+                sbText.AppendLine($"GC Managed Heap:     {_gcAllocMb} MB (Gen 0/1/2: {GC.CollectionCount(0)}/{GC.CollectionCount(1)}/{GC.CollectionCount(2)})");
+                sbText.AppendLine($"GPU Adapter:         {_state._gd.Adapter.Description}");
+                sbText.AppendLine($"Composite Textures:  {_state._entityManager._compositeCache.Count} active");
+            }
+
+            // ==============================================================
+            // [ALT+G] GRASS SYSTEM
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowGrassDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+G: PROCEDURAL GRASS] ---");
+                sbText.AppendLine($"Blade Vertices:  {_state.Grass._bladeVertCount:N0} (~{_state.Grass._bladeVertCount / 18:N0} blades)");
+                sbText.AppendLine($"Base Height:     {_state.Grass.Settings.BaseHeight:F1} | Width: {_state.Grass.Settings.BladeWidth:F1}");
+                sbText.AppendLine($"Wind Physics:    Gust={_state.Grass.Settings.GustStrength:F2} | WaveLen={_state.Grass.Settings.WaveLength:F0} | Spd={_state.Grass.Settings.WindSpeed:F1}");
+                sbText.AppendLine($"Cel Stepping:    FPS={_state.Grass.Settings.AnimFPS:F0} | PixelSnap={_state.Grass.Settings.PixelSnap}");
+                sbText.AppendLine($"Loaded Presets:  {_state.Grass.Presets.Count} biomes");
+            }
+
+            // ==============================================================
+            // [ALT+W] WEATHER & CLIMATE
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowWeatherDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+W: WEATHER & CLIMATE] ---");
+                sbText.AppendLine($"Time of Day:   {hrs:D2}:{mins:D2} (Scale: {_state.TimeSystem.TimeScale:F3})");
+                sbText.AppendLine($"Date/Season:   Year {_state.Calendar.Year}, {_state.Calendar.CurrentSeason} (Day {_state.Calendar.Day}, Phase: {_state.Calendar.GetCurrentPhase()})");
+                sbText.AppendLine($"Condition:     {_state.Weather.CurrentWeather} (Forced: {_state.Weather.ForcedWeather?.ToString() ?? "None"})");
+                sbText.AppendLine($"Climate:       {_state.Weather.CurrentClimate.TempC:F1} C | Humid: {_state.Weather.CurrentClimate.Humidity:F0}% | Pressure: {_state.Weather.CurrentClimate.PressureHpa:F0} hPa");
+                sbText.AppendLine($"Wind/Precip:   {_state.Weather.CurrentClimate.WindKph:F0} km/h | Rain: {_state.Weather.Visuals.RainIntensity:F2} | Cloud: {_state.Weather.Visuals.CloudCover:F2}");
+            }
+
+            // ==============================================================
+            // [ALT+P] PHYSICS & BARRIERS
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowPhysicsDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+P: PHYSICS & BARRIERS] ---");
+                sbText.AppendLine($"Total Barriers:   {_state.Physics._barriers.Count}");
+                sbText.AppendLine($"Vaulting Fences:  {_state.Physics._barriers.Count(b => b.IsOneWay)}");
+                sbText.AppendLine($"Static Blockers:  {_state.Physics._barriers.Count(b => !b.IsOneWay)}");
+                sbText.AppendLine($"Player Footbox:   [{player.FootBounds.X:F0}, {player.FootBounds.Y:F0}, {player.FootBounds.Width:F0}x{player.FootBounds.Height:F0}]");
+            }
+
+            // ==============================================================
+            // [ALT+E] ENTITIES & SCENE
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowEntityDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+E: ENTITIES & SCENE] ---");
+                sbText.AppendLine($"Total Registered: {_state._entityManager.AllEntities.Count}");
+                sbText.AppendLine($"Draw List Size:   {_state._entityManager._drawList.Count} ({_state._entityManager._staticSprites.Count} static, {_state._entityManager._simulationSprites.Count} sim)");
+                sbText.AppendLine($"Placed Items:     {_state.ActiveSave.PlacedItems.Count}");
+                sbText.AppendLine($"Destroyed Base:   {_state.ActiveSave.DestroyedBaseIDs.Count}");
+            }
+
+            // ==============================================================
+            // [ALT+B] MODULAR BUILDINGS
+            // ==============================================================
+            if (_state.IsDebug(GameBool.ShowBuildingDebug))
+            {
+                sbText.AppendLine("\n--- [ALT+B: MODULAR BUILDINGS] ---");
+                var buildings = _state.CurrentMap?.Layers.OfType<ObjectLayer>()
+                    .SelectMany(l => l.Objects.OfType<ModularBuildingInstance>())
+                    .ToList();
+
+                sbText.AppendLine($"Building Instances: {buildings?.Count ?? 0}");
+                if (buildings != null)
+                {
+                    foreach (var b in buildings)
+                    {
+                        sbText.AppendLine($" - {b.Name} ({b.BuildingId}): Inside={b.IsPlayerInside}, RoofAlpha={b.RoofAlpha:F2}");
+                    }
+                }
+            }
+
+            string fullText = sbText.ToString();
+            Vector2 textSize = font.MeasureString(fullText);
+
+            // Draw frosted dark plate
+            Rectangle bgBox = new Rectangle(12, 12, (int)textSize.X + 16, (int)textSize.Y + 16);
+            sb.FillRectangle(bgBox, Color.Black * 0.82f);
+            sb.DrawRectangle(bgBox, Color.DarkSlateGray * 0.8f, 1f);
+
+            // Render legible shadow and foreground text
+            sb.DrawString(font, fullText, new Vector2(21, 21), Color.Black * 0.95f);
+            sb.DrawString(font, fullText, new Vector2(20, 20), Color.LimeGreen);
         }
         public void DrawIcon(SpriteBatch sb, Rectangle destination, string iconName, Color color) { }
     }

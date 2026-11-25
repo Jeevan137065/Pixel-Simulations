@@ -63,6 +63,8 @@ namespace Pixel_Simulations
             LoadAtlas("Roofs_n", AtlasType.Normal);
             LoadAtlas("Walls", AtlasType.Object);
 
+            LoadAtlas("Plants", AtlasType.Object);
+
             LoadAtlas("Trees_b", AtlasType.Object);
             LoadAtlas("Trees_l", AtlasType.Object);
             LoadAtlas("Trees_t", AtlasType.Object);

@@ -1440,6 +1440,7 @@ namespace Pixel_Simulations.Editor
     public enum PaintChannel { R_Biome, G_SpawnType, B_Elevation, A_SpawnIndex }
     public enum BrushMode { Solid, DetailAdd, DetailSub }
     public enum DetailerBehavior { Overwrite, Additive }
+
     public class TerrainBrushTool : ITool
     {
         public string Name => "TerrainBrush";
@@ -1465,16 +1466,60 @@ namespace Pixel_Simulations.Editor
         private Point _lastDrawCell;
         private Vector2 _lastDrawPos;
 
-        // --- BLEND STATES ---
-        private static readonly BlendState SolidR = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Red };
-        private static readonly BlendState SolidG = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Green };
-        private static readonly BlendState SolidB = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Blue };
-        private static readonly BlendState SolidA = new BlendState { AlphaSourceBlend = Blend.One, AlphaDestinationBlend = Blend.One, AlphaBlendFunction = BlendFunction.Max, ColorWriteChannels = ColorWriteChannels.Alpha };
+        // ==============================================================
+        // 1. SOLID OVERWRITE BLEND STATES (Cleanly replaces target channel)
+        // ==============================================================
+        private static readonly BlendState SolidR = new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.Zero,
+            ColorBlendFunction = BlendFunction.Add,
+            ColorWriteChannels = ColorWriteChannels.Red
+        };
 
-        private static readonly BlendState DetailAddBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Blue };
-        private static readonly BlendState DetailSubBlue = new BlendState { ColorSourceBlend = Blend.One, ColorDestinationBlend = Blend.One, ColorBlendFunction = BlendFunction.ReverseSubtract, ColorWriteChannels = ColorWriteChannels.Blue };
+        private static readonly BlendState SolidG = new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.Zero,
+            ColorBlendFunction = BlendFunction.Add,
+            ColorWriteChannels = ColorWriteChannels.Green
+        };
 
-        // Overwrite BlendState: Selectively modifies ONLY the Blue Channel using SourceAlpha interpolation
+        private static readonly BlendState SolidB = new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.Zero,
+            ColorBlendFunction = BlendFunction.Add,
+            ColorWriteChannels = ColorWriteChannels.Blue
+        };
+
+        private static readonly BlendState SolidA = new BlendState
+        {
+            AlphaSourceBlend = Blend.One,
+            AlphaDestinationBlend = Blend.Zero,
+            AlphaBlendFunction = BlendFunction.Add,
+            ColorWriteChannels = ColorWriteChannels.Alpha
+        };
+
+        // ==============================================================
+        // 2. BLUE CHANNEL (ELEVATION) NOISE & DETAIL BLEND STATES
+        // ==============================================================
+        private static readonly BlendState DetailAddBlue = new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.One,
+            ColorBlendFunction = BlendFunction.Add,
+            ColorWriteChannels = ColorWriteChannels.Blue
+        };
+
+        private static readonly BlendState DetailSubBlue = new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.One,
+            ColorBlendFunction = BlendFunction.ReverseSubtract,
+            ColorWriteChannels = ColorWriteChannels.Blue
+        };
+
         private static readonly BlendState OverwriteElevation = new BlendState
         {
             ColorSourceBlend = Blend.SourceAlpha,
@@ -1483,6 +1528,9 @@ namespace Pixel_Simulations.Editor
             ColorWriteChannels = ColorWriteChannels.Blue
         };
 
+        // ==============================================================
+        // 3. CHANNEL ERASER BLEND STATES (Zeros out target channel)
+        // ==============================================================
         private static readonly BlendState EraseR = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Red };
         private static readonly BlendState EraseG = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Green };
         private static readonly BlendState EraseB = new BlendState { ColorSourceBlend = Blend.Zero, ColorDestinationBlend = Blend.Zero, ColorBlendFunction = BlendFunction.Add, ColorWriteChannels = ColorWriteChannels.Blue };
@@ -1497,19 +1545,19 @@ namespace Pixel_Simulations.Editor
             bool shift = kbs.IsKeyDown(Keys.LeftShift) || kbs.IsKeyDown(Keys.RightShift);
             bool isErasing = kbs.IsKeyDown(Keys.LeftControl) || kbs.IsKeyDown(Keys.RightControl);
 
-            // --- SAFELY TERMINATE STROKES OUTSIDE VIEWPORT ---
+            // Terminate stroke if cursor leaves viewport
             if (editorState.UI.ActivePanelName != "Viewport" && _isDrawing)
             {
                 TerminateStroke(maskLayer, eventBus, editorState._graphics);
                 return;
             }
 
-            // --- VALUE & SIZE ADJUSTMENTS ---
+            // Adjust values / brush sizes with [ and ]
             if (kbs.IsKeyDown(Keys.OemCloseBrackets) && prevKbs.IsKeyUp(Keys.OemCloseBrackets))
             {
                 if (shift)
                 {
-                    if (ActiveMode == BrushMode.Solid)
+                    if (ActiveMode == BrushMode.Solid || ActiveChannel != PaintChannel.B_Elevation)
                         BrushGridSize = MathHelper.Clamp(BrushGridSize + 2, 1, 31);
                     else
                         BrushRadius = MathHelper.Clamp(BrushRadius + 4f, 8f, 256f);
@@ -1525,7 +1573,7 @@ namespace Pixel_Simulations.Editor
             {
                 if (shift)
                 {
-                    if (ActiveMode == BrushMode.Solid)
+                    if (ActiveMode == BrushMode.Solid || ActiveChannel != PaintChannel.B_Elevation)
                         BrushGridSize = MathHelper.Clamp(BrushGridSize - 2, 1, 31);
                     else
                         BrushRadius = MathHelper.Clamp(BrushRadius - 4f, 8f, 256f);
@@ -1556,7 +1604,8 @@ namespace Pixel_Simulations.Editor
                 }
                 else
                 {
-                    if (ActiveMode == BrushMode.Solid)
+                    // R and G channels always use discrete grid cells
+                    if (ActiveMode == BrushMode.Solid || ActiveChannel != PaintChannel.B_Elevation)
                     {
                         if (input.MouseGridCell != _lastDrawCell)
                         {
@@ -1566,6 +1615,7 @@ namespace Pixel_Simulations.Editor
                     }
                     else
                     {
+                        // Blue channel noise detailer continuous spacing
                         float dist = Vector2.Distance(_lastDrawPos, input.MouseWorldPosition);
                         float spacing = Math.Max(2f, BrushRadius * 0.15f);
 
@@ -1576,7 +1626,6 @@ namespace Pixel_Simulations.Editor
 
                             for (int i = 1; i <= steps; i++)
                             {
-                                Vector2 stampPos = _lastDrawPos + dir * (spacing * i);
                                 PaintStamp(maskLayer, input.MouseGridCell, editorState, isErasing);
                             }
 
@@ -1620,26 +1669,23 @@ namespace Pixel_Simulations.Editor
                     .ToList();
 
                 if (sortedElevations == null || sortedElevations.Count == 0)
-                {
                     sortedElevations = new List<int> { 0, 15, 120, 128, 160, 192, 200, 240, 255 };
-                }
 
                 int currentIndex = 0;
-                int minDifference = int.MaxValue;
+                int minDiff = int.MaxValue;
                 for (int i = 0; i < sortedElevations.Count; i++)
                 {
                     int diff = Math.Abs(sortedElevations[i] - TargetValue);
-                    if (diff < minDifference)
+                    if (diff < minDiff)
                     {
-                        minDifference = diff;
+                        minDiff = diff;
                         currentIndex = i;
                     }
                 }
 
-                if (increase)
-                    currentIndex = Math.Min(currentIndex + 1, sortedElevations.Count - 1);
-                else
-                    currentIndex = Math.Max(currentIndex - 1, 0);
+                currentIndex = increase
+                    ? Math.Min(currentIndex + 1, sortedElevations.Count - 1)
+                    : Math.Max(currentIndex - 1, 0);
 
                 TargetValue = sortedElevations[currentIndex];
             }
@@ -1659,19 +1705,24 @@ namespace Pixel_Simulations.Editor
             return _solidPixelTexture;
         }
 
+        // ==============================================================
+        // ENFORCED CHANNEL ROUTING: Noise is strictly locked to Blue!
+        // ==============================================================
         private void PaintStamp(MaskLayer layer, Point centerCell, EditorState es, bool isErasing)
         {
-            if (ActiveMode == BrushMode.Solid)
+            // If painting R (Biome) or G (Spawn), FORCE Solid Grid mode. Never use noise!
+            if (ActiveMode == BrushMode.Solid || ActiveChannel != PaintChannel.B_Elevation)
             {
                 PaintGridStamp(layer, centerCell, es, isErasing);
             }
             else
             {
+                // Only Blue (Elevation) can execute the noise/detail stamp
                 PaintNoiseStamp(layer, es.Input.MouseWorldPosition, es, isErasing);
             }
         }
 
-        // --- GRID ALIGNED PAINTING ---
+        // --- GRID ALIGNED SOLID PAINTING (Used for R, G, and Solid B) ---
         private void PaintGridStamp(MaskLayer layer, Point centerCell, EditorState es, bool isErasing)
         {
             var gd = es._graphics;
@@ -1717,9 +1768,22 @@ namespace Pixel_Simulations.Editor
 
                     gd.SetRenderTarget(chunkRT);
 
+                    // Strictly select the channel-specific blend state
                     BlendState activeState = isErasing
-                        ? ActiveChannel switch { PaintChannel.R_Biome => EraseR, PaintChannel.G_SpawnType => EraseG, PaintChannel.A_SpawnIndex => EraseA, _ => EraseB }
-                        : ActiveChannel switch { PaintChannel.R_Biome => SolidR, PaintChannel.G_SpawnType => SolidG, PaintChannel.A_SpawnIndex => SolidA, _ => SolidB };
+                        ? ActiveChannel switch
+                        {
+                            PaintChannel.R_Biome => EraseR,
+                            PaintChannel.G_SpawnType => EraseG,
+                            PaintChannel.A_SpawnIndex => EraseA,
+                            _ => EraseB
+                        }
+                        : ActiveChannel switch
+                        {
+                            PaintChannel.R_Biome => SolidR,
+                            PaintChannel.G_SpawnType => SolidG,
+                            PaintChannel.A_SpawnIndex => SolidA,
+                            _ => SolidB
+                        };
 
                     sb.Begin(blendState: activeState, samplerState: SamplerState.PointClamp);
 
@@ -1761,7 +1825,7 @@ namespace Pixel_Simulations.Editor
             gd.SetRenderTargets(prevTargets);
         }
 
-        // --- ORGANIC NOISE & CIRCLE DETAIL PAINTING ---
+        // --- ORGANIC NOISE & DETAIL PAINTING (Restricted Exclusively to Blue Channel) ---
         private void PaintNoiseStamp(MaskLayer layer, Vector2 worldPos, EditorState es, bool isErasing)
         {
             var gd = es._graphics;
@@ -1799,29 +1863,12 @@ namespace Pixel_Simulations.Editor
 
                         gd.SetRenderTarget(chunkRT);
 
-                        // Select BlendState
-                        BlendState activeState = EraseR;
-                        if (isErasing)
-                        {
-                            activeState = ActiveChannel switch { PaintChannel.R_Biome => EraseR, PaintChannel.G_SpawnType => EraseG, PaintChannel.A_SpawnIndex => EraseA, _ => EraseB };
-                        }
-                        else
-                        {
-                            if (ActiveBehavior == DetailerBehavior.Overwrite)
-                                activeState = OverwriteElevation;
-                            else
-                                activeState = ActiveMode == BrushMode.DetailAdd ? DetailAddBlue : DetailSubBlue;
-                        }
+                        // Exclusively uses Blue Channel blend states
+                        BlendState activeState = isErasing ? EraseB : (ActiveBehavior == DetailerBehavior.Overwrite ? OverwriteElevation : (ActiveMode == BrushMode.DetailAdd ? DetailAddBlue : DetailSubBlue));
 
                         sb.Begin(blendState: activeState, samplerState: SamplerState.PointClamp);
 
-                        Color paintColor = isErasing ? new Color(0, 0, 0, 0) : Color.White;
-                        if (!isErasing && ActiveBehavior == DetailerBehavior.Overwrite)
-                        {
-                            // Overwrite mode pushes target value modulated into the alpha channel
-                            byte val = (byte)TargetValue;
-                            paintColor = new Color(0, 0, (int)val, 255);
-                        }
+                        Color paintColor = isErasing ? Color.Transparent : new Color(0, 0, (int)((byte)TargetValue), 255);
 
                         Vector2 origin = new Vector2(_brushTexture.Width / 2f, _brushTexture.Height / 2f);
                         sb.Draw(_brushTexture, localPos, null, paintColor, 0f, origin, 1f, SpriteEffects.None, 0f);
@@ -1874,20 +1921,10 @@ namespace Pixel_Simulations.Editor
                             noiseVal = noiseData[(x % noiseTex.Width) + (y % noiseTex.Height) * noiseTex.Width].R / 255f;
                         }
 
-                        // Circular radial edge falloff
                         float falloff = 1.0f - (dist / radius);
-
-                        int intensityValue = 255;
-                        if (ActiveBehavior == DetailerBehavior.Additive)
-                        {
-                            // Additive uses minor delta steps
-                            intensityValue = (int)(15.0f * falloff * noiseVal);
-                        }
-                        else
-                        {
-                            // Overwrite behaves as a smooth stamp
-                            intensityValue = (int)(255f * falloff * noiseVal);
-                        }
+                        int intensityValue = ActiveBehavior == DetailerBehavior.Additive
+                            ? (int)(15.0f * falloff * noiseVal)
+                            : (int)(255f * falloff * noiseVal);
 
                         data[x + y * diameter] = new Color(intensityValue, intensityValue, intensityValue, intensityValue);
                     }
@@ -1919,7 +1956,8 @@ namespace Pixel_Simulations.Editor
 
             float thickness = 2f / input.Zoom;
 
-            if (ActiveMode == BrushMode.Solid)
+            // R and G always show the exact cell grid box
+            if (ActiveMode == BrushMode.Solid || ActiveChannel != PaintChannel.B_Elevation)
             {
                 int halfSize = (BrushGridSize - 1) / 2;
                 Point centerCell = input.MouseGridCell;
@@ -1941,6 +1979,7 @@ namespace Pixel_Simulations.Editor
             }
             else
             {
+                // Only Blue channel in detail mode shows the circular noise brush
                 sb.DrawCircle(input.MouseWorldPosition, BrushRadius, 32, cursorColor, thickness);
 
                 Vector2 textPos = input.MouseWorldPosition + new Vector2(BrushRadius + 10, -10) / input.Zoom;

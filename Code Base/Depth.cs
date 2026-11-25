@@ -12,6 +12,7 @@ namespace Pixel_Simulations
     {
         private GraphicsDevice _graphicsDevice;
         public Effect _depthEffect;
+        private Effect _maskRouteEffect;
         private readonly BlendState WriteBlue = new BlendState
         {
             ColorWriteChannels = ColorWriteChannels.Blue,
@@ -30,7 +31,7 @@ namespace Pixel_Simulations
         {
             _graphicsDevice = graphicsDevice;
             _depthEffect = content.Load<Effect>("VolumeDepth");
-
+            _maskRouteEffect = content.Load<Effect>("MaskToZDepth");
             _depthEffect.Parameters["MaxAltitude"]?.SetValue(350f);
         }
 
@@ -58,6 +59,7 @@ namespace Pixel_Simulations
             spriteBatch.Draw(sprite.Texture, sprite.Position, sprite.SourceRect, Color.White, sprite.Rotation, sprite.Origin, sprite.Scale, SpriteEffects.None, 0f);
         }
         //use this same function to draw both mask and normal chunks..
+
         public void DrawChunks(SpriteBatch sb, Dictionary<Point, Texture2D> chunks, RectangleF streamBounds, Camera camera, BlendState blendState, Color tint, Vector2 offset)
         {
             if (chunks == null || chunks.Count == 0) return;
@@ -80,6 +82,7 @@ namespace Pixel_Simulations
             }
             sb.End();
         }
+        //Redunant function below
         public void DrawTerrainDepth(SpriteBatch spriteBatch, Dictionary<Point, Texture2D> maskChunks, RectangleF streamBounds, Camera camera)
         {
             if (maskChunks == null || maskChunks.Count == 0) 
@@ -107,6 +110,58 @@ namespace Pixel_Simulations
         public void EndPass(SpriteBatch spriteBatch)
         {
             spriteBatch.End();
+        }
+        // 1. Draws Elevation (Blue channel) into YDepth.B without touching Red
+        public void DrawMaskElevationToYDepth(SpriteBatch sb, Dictionary<Point, Texture2D> maskChunks, RectangleF streamBounds, Camera camera)
+        {
+            if (maskChunks == null || maskChunks.Count == 0) return;
+
+            // Writes strictly to Blue channel
+            sb.Begin(SpriteSortMode.Deferred, WriteBlue, SamplerState.PointClamp, null, null, null, camera.SimTransform);
+
+            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE; // 256
+            foreach (var kvp in maskChunks)
+            {
+                float worldX = kvp.Key.X * chunkSize;
+                float worldY = kvp.Key.Y * chunkSize;
+                RectangleF chunkBounds = new RectangleF(worldX, worldY, chunkSize, chunkSize);
+
+                if (streamBounds.Intersects(chunkBounds))
+                {
+                    sb.Draw(kvp.Value, new Vector2(worldX, worldY), Color.White);
+                }
+            }
+            sb.End();
+        }
+
+        // 2. Draws Spawns (Green) and Biomes (Blue) into ZDepth without touching Red
+        private static readonly BlendState WriteGreenBlue = new BlendState
+        {
+            ColorWriteChannels = ColorWriteChannels.Green | ColorWriteChannels.Blue,
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.Zero
+        };
+
+        public void DrawMaskSpawnsAndBiomesToZDepth(SpriteBatch sb, Dictionary<Point, Texture2D> maskChunks, RectangleF streamBounds, Camera camera)
+        {
+            if (maskChunks == null || maskChunks.Count == 0 || _maskRouteEffect == null) return;
+
+            // Writes to Green & Blue, leaving Red untouched for Z-Depth
+            sb.Begin(SpriteSortMode.Immediate, WriteGreenBlue, SamplerState.PointClamp, null, null, _maskRouteEffect, camera.SimTransform);
+
+            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE;
+            foreach (var kvp in maskChunks)
+            {
+                float worldX = kvp.Key.X * chunkSize;
+                float worldY = kvp.Key.Y * chunkSize;
+                RectangleF chunkBounds = new RectangleF(worldX, worldY, chunkSize, chunkSize);
+
+                if (streamBounds.Intersects(chunkBounds))
+                {
+                    sb.Draw(kvp.Value, new Vector2(worldX, worldY), Color.White);
+                }
+            }
+            sb.End();
         }
 
     }

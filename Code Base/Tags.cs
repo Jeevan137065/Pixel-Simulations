@@ -22,6 +22,8 @@ namespace Pixel_Simulations
         public const string GRASS = "GRASS";
         public const string FARMABLE = "FARMABLE";
         public const string VEGETATION = "VEGETATION";
+        public const string BIOME_FARM_ZONE = "BIOME_FARM_ZONE";
+        public const int BIOME_FARM_ZONE_VALUE = 90;
 
         // Fallbacks in case tags.json is temporarily absent or incomplete
         public static readonly Dictionary<string, int> Fallbacks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)

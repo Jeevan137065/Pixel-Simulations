@@ -4,6 +4,13 @@ using System.Collections.Generic;
 
 namespace Pixel_Simulations
 {
+    public struct WindWaveSample
+    {
+        public Vector2 Direction;
+        public float Velocity;
+        public float GustAmplitude;
+        public float TimeStepped;
+    }
 
     public class WeatherSimulator
     {
@@ -33,7 +40,29 @@ namespace Pixel_Simulations
             { Season.Fall, new SeasonalProfile { TempRange = new Vector2(5, 15), HumidityRange = new Vector2(40, 70), WindRange = new Vector2(15, 45), PressureRange = new Vector2(1000, 1015), StormProbability = 0.2f, FogProbability = 0.4f } },
             { Season.Winter, new SeasonalProfile { TempRange = new Vector2(-15, 5), HumidityRange = new Vector2(50, 85), WindRange = new Vector2(10, 35), PressureRange = new Vector2(990, 1025), StormProbability = 0.3f, FogProbability = 0.6f } }
         };
+        public WindWaveSample SampleWindWave(float totalSeconds, float animFPS = 12.0f)
+        {
+            Vector2 dir = Visuals.WindVector != Vector2.Zero
+                ? Vector2.Normalize(Visuals.WindVector)
+                : new Vector2(1f, 0f);
 
+            // Velocity in pixels/sec across the map (derived from weather speed)
+            float vel = (CurrentClimate.WindKph / 100f) * 3.5f + 1.2f;
+
+            // Gust amplitude based on current weather wind intensity
+            float gust = MathHelper.Clamp((CurrentClimate.WindKph / 60f) * 8.5f, 1.5f, 22.0f);
+
+            // Quantized time for pixel-art cel stepping
+            float tStepped = animFPS > 0f ? (MathF.Floor(totalSeconds * animFPS) / animFPS) : totalSeconds;
+
+            return new WindWaveSample
+            {
+                Direction = dir,
+                Velocity = vel,
+                GustAmplitude = gust,
+                TimeStepped = tStepped
+            };
+        }
         public void GenerateDailyForecast(int worldSeed, int year, Season season, int day)
         {
             CurrentSeason = season;

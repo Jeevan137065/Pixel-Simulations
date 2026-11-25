@@ -2,7 +2,1030 @@
   "Layers": [
     {
       "$type": "Object",
-      "Name": "Object84",
+      "Name": "Trees",
+      "IsVisible": true,
+      "IsLocked": false,
+      "Objects": [
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "e9714a90",
+          "Name": "Object_448_1",
+          "Position": {
+            "X": 3423.5635,
+            "Y": 2839.1836
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "8f69ce2d",
+          "Name": "Object_448_2",
+          "Position": {
+            "X": 3603.5635,
+            "Y": 3020.5168
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "ba9cb1ec",
+          "Name": "Object_448_3",
+          "Position": {
+            "X": 3332.8967,
+            "Y": 3546.741
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "93a39f68",
+          "Name": "Object_448_4",
+          "Position": {
+            "X": 3626.2302,
+            "Y": 3461.4075
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "e02d4a27",
+          "Name": "Object_448_5",
+          "Position": {
+            "X": 3184.0073,
+            "Y": 2641.8496
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "18e61770",
+          "Name": "Object_448_6",
+          "Position": {
+            "X": 3468.0073,
+            "Y": 3314.2954
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "24f612cb",
+          "Name": "Object_448_7",
+          "Position": {
+            "X": 2924.6477,
+            "Y": 3571.8774
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_448",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "4eeeb871",
+          "Name": "Object_448_8",
+          "Position": {
+            "X": 2547.7583,
+            "Y": 3530.5442
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "Chopped": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasFruit": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "HasMoss": {
+              "Type": 3,
+              "Value": "False"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "6"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "9c841a1d",
+          "Name": "Pine_1",
+          "Position": {
+            "X": 604.4188,
+            "Y": -2181.4727
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "99a063dd",
+          "Name": "Pine_2",
+          "Position": {
+            "X": 660.41876,
+            "Y": -2068.4043
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "ed875dcd",
+          "Name": "Pine_3",
+          "Position": {
+            "X": 728.18604,
+            "Y": -1944.3704
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "4fbffc5e",
+          "Name": "Pine_4",
+          "Position": {
+            "X": 906.7351,
+            "Y": -1937.2877
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "de54b2bb",
+          "Name": "Pine_5",
+          "Position": {
+            "X": 1048.8662,
+            "Y": -1841.557
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "b0cb5708",
+          "Name": "Pine_6",
+          "Position": {
+            "X": 1150.4662,
+            "Y": -1728.7571
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "de546e3c",
+          "Name": "Pine_7",
+          "Position": {
+            "X": 957.6662,
+            "Y": -1551.6891
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "eeee0cb2",
+          "Name": "Pine_8",
+          "Position": {
+            "X": 1127.2661,
+            "Y": -1610.889
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "0ce993cc",
+          "Name": "Pine_9",
+          "Position": {
+            "X": 729.56433,
+            "Y": -2244.06
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "9b0611b3",
+          "Name": "Pine_10",
+          "Position": {
+            "X": 821.56433,
+            "Y": -2053.3933
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Pine",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "62e6e55f",
+          "Name": "Pine_11",
+          "Position": {
+            "X": 986.89764,
+            "Y": -2092.06
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bush B",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "d07588bf",
+          "Name": "Bush B_1",
+          "Position": {
+            "X": -506.41605,
+            "Y": 189.36496
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bush C",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "f464fbd3",
+          "Name": "Bush C_1",
+          "Position": {
+            "X": -458.57605,
+            "Y": 190.48497
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bush A",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "5bf2269d",
+          "Name": "Bush A_1",
+          "Position": {
+            "X": -419.96274,
+            "Y": 186.82274
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Plantain Tall",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "e1a83b7b",
+          "Name": "Plantain Tall_1",
+          "Position": {
+            "X": -130.08405,
+            "Y": 189.72054
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Plantain",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "d1c3c2a8",
+          "Name": "Plantain_1",
+          "Position": {
+            "X": -196.30626,
+            "Y": 181.72054
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "False Solomon",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "d9dea020",
+          "Name": "False Solomon_1",
+          "Position": {
+            "X": -239.41737,
+            "Y": 186.16498
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bush C2",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "8241ccb2",
+          "Name": "Bush C2_1",
+          "Position": {
+            "X": -334.2563,
+            "Y": 182.96498
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bush C1",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "be4d589e",
+          "Name": "Bush C1_1",
+          "Position": {
+            "X": -377.61627,
+            "Y": 185.20497
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "TreeA",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "e41a87a7",
+          "Name": "TreeA_1",
+          "Position": {
+            "X": -99.61929,
+            "Y": 448.59525
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "3"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "TreeA",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "deb8814c",
+          "Name": "TreeA_2",
+          "Position": {
+            "X": -102.819305,
+            "Y": 608.06226
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            },
+            "StripHeight": {
+              "Type": 1,
+              "Value": "3"
+            },
+            "Stiffness": {
+              "Type": 2,
+              "Value": "0.45"
+            },
+            "WaveLength": {
+              "Type": 2,
+              "Value": "160"
+            },
+            "FlutterStr": {
+              "Type": 2,
+              "Value": "0.15"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bamboo",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "7cb3be1a",
+          "Name": "Bamboo_1",
+          "Position": {
+            "X": -694.5842,
+            "Y": -126.90313
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Bamboo",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "b07a58b2",
+          "Name": "Bamboo_2",
+          "Position": {
+            "X": -558.5842,
+            "Y": -122.10313
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_423",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "9c67e980",
+          "Name": "Object_423_1",
+          "Position": {
+            "X": -492.8678,
+            "Y": 580.3595
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        },
+        {
+          "Type": 0,
+          "PrefabID": "Object_521",
+          "Scale": {
+            "X": 1.0,
+            "Y": 1.0
+          },
+          "Rotation": 0.0,
+          "ID": "00410d0f",
+          "Name": "Object_521_1",
+          "Position": {
+            "X": -376.60117,
+            "Y": 504.89288
+          },
+          "Tags": [],
+          "Properties": {
+            "Type": {
+              "Type": 0,
+              "Value": "Tree"
+            }
+          },
+          "Links": []
+        }
+      ]
+    },
+    {
+      "$type": "Object",
+      "Name": "Modular",
       "IsVisible": true,
       "IsLocked": false,
       "Objects": [
@@ -6758,7 +7781,7 @@
     },
     {
       "$type": "Object",
-      "Name": "Object9",
+      "Name": "Building",
       "IsVisible": true,
       "IsLocked": false,
       "Objects": [
@@ -7070,572 +8093,6 @@
             "Type": {
               "Type": 0,
               "Value": "Building"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "c3d0238b",
-          "Name": "Pine_1",
-          "Position": {
-            "X": 736.0,
-            "Y": -2507.2004
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "df35f56d",
-          "Name": "Pine_2",
-          "Position": {
-            "X": 868.0,
-            "Y": -2368.0
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "e5330070",
-          "Name": "Pine_3",
-          "Position": {
-            "X": 632.0,
-            "Y": -2410.2263
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "21287a7e",
-          "Name": "Pine_4",
-          "Position": {
-            "X": 1144.0,
-            "Y": -1996.0
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "5d1ac62a",
-          "Name": "Pine_5",
-          "Position": {
-            "X": 956.0,
-            "Y": -2140.001
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "a64b5e84",
-          "Name": "Pine_6",
-          "Position": {
-            "X": 752.0,
-            "Y": -2189.335
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "TreeA",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "29183228",
-          "Name": "TreeA_1",
-          "Position": {
-            "X": 408.0,
-            "Y": 480.0
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "TreeA",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "5943c04a",
-          "Name": "TreeA_2",
-          "Position": {
-            "X": -114.666626,
-            "Y": 138.66748
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Bamboo",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "4dbebea5",
-          "Name": "Bamboo_1",
-          "Position": {
-            "X": -555.7715,
-            "Y": -111.31427
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "f210c6ba",
-          "Name": "Pine_7",
-          "Position": {
-            "X": 1233.1647,
-            "Y": -1805.7246
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "1fe6fb7b",
-          "Name": "Pine_8",
-          "Position": {
-            "X": 1139.8313,
-            "Y": -1673.2795
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "9ecb60c6",
-          "Name": "Pine_9",
-          "Position": {
-            "X": 811.8313,
-            "Y": -1669.2795
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "4b0b9c9a",
-          "Name": "Pine_10",
-          "Position": {
-            "X": 565.1646,
-            "Y": -1589.2795
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "7f5fb455",
-          "Name": "Pine_11",
-          "Position": {
-            "X": 577.99225,
-            "Y": -2700.8992
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "85d468bf",
-          "Name": "Pine_12",
-          "Position": {
-            "X": 877.99225,
-            "Y": -2706.2324
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Pine",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "521f6ae4",
-          "Name": "Pine_13",
-          "Position": {
-            "X": 1076.6589,
-            "Y": -2190.675
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Object_448",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "98909f70",
-          "Name": "Object_448_1",
-          "Position": {
-            "X": 3411.3164,
-            "Y": 2467.9897
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            },
-            "Chopped": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasFruit": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasMoss": {
-              "Type": 3,
-              "Value": "False"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Object_448",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "c36ee41a",
-          "Name": "Object_448_2",
-          "Position": {
-            "X": 3521.9832,
-            "Y": 2742.657
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            },
-            "Chopped": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasFruit": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasMoss": {
-              "Type": 3,
-              "Value": "False"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Object_448",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "04e57135",
-          "Name": "Object_448_3",
-          "Position": {
-            "X": 3593.9832,
-            "Y": 3261.7695
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            },
-            "Chopped": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasFruit": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasMoss": {
-              "Type": 3,
-              "Value": "False"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Object_448",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "3a5bddc9",
-          "Name": "Object_448_4",
-          "Position": {
-            "X": 3244.65,
-            "Y": 3389.7695
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            },
-            "Chopped": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasFruit": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasMoss": {
-              "Type": 3,
-              "Value": "False"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Object_448",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "44c1c95e",
-          "Name": "Object_448_5",
-          "Position": {
-            "X": 3451.813,
-            "Y": 3174.2842
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
-            },
-            "Chopped": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasFruit": {
-              "Type": 3,
-              "Value": "False"
-            },
-            "HasMoss": {
-              "Type": 3,
-              "Value": "False"
-            }
-          },
-          "Links": []
-        },
-        {
-          "Type": 0,
-          "PrefabID": "Bamboo",
-          "Scale": {
-            "X": 1.0,
-            "Y": 1.0
-          },
-          "Rotation": 0.0,
-          "ID": "7fb1fb1d",
-          "Name": "Bamboo_2",
-          "Position": {
-            "X": -689.24274,
-            "Y": -112.174416
-          },
-          "Tags": [],
-          "Properties": {
-            "Type": {
-              "Type": 0,
-              "Value": "Tree"
             }
           },
           "Links": []
@@ -66340,29 +66797,29 @@
           "Shape": {
             "Vertices": [
               {
-                "X": 465.46716,
-                "Y": -1939.9719
+                "X": 462.79974,
+                "Y": -1974.6385
               },
               {
-                "X": 540.6672,
-                "Y": -1561.0374
+                "X": 537.9997,
+                "Y": -1595.704
               },
               {
-                "X": 553.46716,
-                "Y": -1548.2373
+                "X": 550.79974,
+                "Y": -1582.9039
               },
               {
-                "X": 893.46716,
-                "Y": -1659.4375
+                "X": 890.80005,
+                "Y": -1694.1041
               },
               {
-                "X": 797.46716,
-                "Y": -1891.7053
+                "X": 794.7998,
+                "Y": -1926.372
               }
             ]
           },
           "Size": {
-            "X": 428.0,
+            "X": 428.0003,
             "Y": 391.73462
           },
           "DebugColor": "0,64,64,127",
@@ -66370,8 +66827,8 @@
           "ID": "e610769b",
           "Name": "WaterBody_0de3",
           "Position": {
-            "X": 465.46716,
-            "Y": -1939.9719
+            "X": 462.79974,
+            "Y": -1974.6385
           },
           "Tags": [
             70
@@ -152082,7 +152539,7 @@
       "IsVisible": true,
       "IsLocked": false,
       "OffsetX": -3,
-      "OffsetY": -3
+      "OffsetY": -2
     },
     {
       "$type": "Tile",
@@ -188087,6 +188544,5490 @@
                   "TileID": 138,
                   "Rotation": 0
                 },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 4
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 4
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -5,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -5,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -5,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -5,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -5,
+            "Y": 3
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -5,
+              "Y": 3
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -5,
+            "Y": 4
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -5,
+              "Y": 4
+            },
+            "Tiles": [
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -4,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -4,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -4,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -4,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -4,
+            "Y": 3
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -4,
+              "Y": 3
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -4,
+            "Y": 4
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -4,
+              "Y": 4
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -3,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -3,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -3,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -3,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -3,
+            "Y": 3
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -3,
+              "Y": 3
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -3,
+            "Y": 4
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -3,
+              "Y": 4
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 3
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 3
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -2,
+            "Y": 4
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -2,
+              "Y": 4
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 1
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 1
+            },
+            "Tiles": [
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 2
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 2
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "Key": {
+            "X": -1,
+            "Y": 3
+          },
+          "Value": {
+            "ChunkCoordinate": {
+              "X": -1,
+              "Y": 3
+            },
+            "Tiles": [
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                },
+                {
+                  "TilesetName": "BaseWorld",
+                  "TileID": 39,
+                  "Rotation": 0
+                }
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
               ],
               [

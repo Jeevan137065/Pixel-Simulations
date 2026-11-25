@@ -26,7 +26,18 @@ namespace Pixel_Simulations
         ShowLinks,
         ShowShapes,
         EnableParallax,
-        ExtendedZoom // Developer flag for arbitrary zoom levels
+        ExtendedZoom, // Developer flag for arbitrary zoom levels
+
+         ShowDebugText,     // Master on-screen debug toggle ('L')
+        ShowMemoryDebug,   // Alt + M (RAM, GPU, FPS, GC)
+        ShowGrassDebug,    // Alt + G (Field vertices, presets, wind)
+        ShowWeatherDebug,  // Alt + W (Climate matrices, cloud, rain)
+        ShowPhysicsDebug,  // Alt + P (Physical barriers, vault lines)
+        ShowEntityDebug,   // Alt + E (Dynamic/static draw counts, caches)
+        ShowBuildingDebug, // Alt + B (Modular floor data, cutaways)
+        ShowWaterDebug,     // Alt + T (Water level, flow vectors, grids)
+        ShowMaskDebug,
+
     }
     public class GameState
     {
@@ -55,7 +66,9 @@ namespace Pixel_Simulations
         public DayTimeManager TimeSystem { get; private set; }
         public InteractionManager Interactions { get; }
         public TagManager tagManager { get; private set; }
+        public MaskDataManager MaskData { get; } = new MaskDataManager();
         public BuildingManager BuildingManager { get; } = new BuildingManager();
+        public PlantManager plantManager;
         public GrassSystem Grass { get; private set; }
         public NoiseManager ns { get; set; }
         //useful objects
@@ -95,6 +108,7 @@ namespace Pixel_Simulations
             ItemManager = new ItemManager();
             WarpManager = new MapWarpManager(this);
             Interactions = new InteractionManager();
+            plantManager = new PlantManager();
             _entityManager = entityManager;
         }
 
@@ -118,7 +132,7 @@ namespace Pixel_Simulations
             _gd = graphicsDevice;
 
             // Core System flags
-            DebugPool[GameBool.ShowCollision] = true;
+            DebugPool[GameBool.ShowCollision] = false;
             DebugPool[GameBool.ShowControlNodes] = false;
             DebugPool[GameBool.ShowLinks] = false;
             DebugPool[GameBool.ShowShapes] = true;
@@ -126,6 +140,18 @@ namespace Pixel_Simulations
             DebugPool[GameBool.IsPaused] = false;
             DebugPool[GameBool.EnableParallax] = true;
             DebugPool[GameBool.ExtendedZoom] = true;
+
+            // Debug Telemetry defaults
+            DebugPool[GameBool.ShowDebugText] = true;    // Visible by default
+            DebugPool[GameBool.ShowMemoryDebug] = false;
+            DebugPool[GameBool.ShowGrassDebug] = false;
+            DebugPool[GameBool.ShowWeatherDebug] = false;
+            DebugPool[GameBool.ShowPhysicsDebug] = false;
+            DebugPool[GameBool.ShowEntityDebug] = false;
+            DebugPool[GameBool.ShowBuildingDebug] = false;
+            DebugPool[GameBool.ShowWaterDebug] = false;
+            DebugPool[GameBool.ShowMaskDebug] = false;
+
             GameCamera = new Camera();
             input.Update(new GameTime(), GameCamera); // Initialize inputs
         }
@@ -143,12 +169,30 @@ namespace Pixel_Simulations
             ItemManager.Load(Path.Combine(readData, "items.json"), Path.Combine(readData, "physical_items.json"));
             Interactions.Load(Path.Combine(readData, "interactions.json"));
             TimeSystem.LoadContent(Path.Combine(readData, "TimeOfDay.json"));
-
+            plantManager.Load(Path.Combine(readData, "plants.json"));
+            // 2. PRE-LOAD ALL ATLASES DEFINED IN plants.json
+            foreach (var p in plantManager.Plants.Values)
+            {
+                if (!string.IsNullOrWhiteSpace(p.AtlasName))
+                {
+                    Assets.LoadAtlas(p.AtlasName, AtlasType.Universal);
+                    System.Diagnostics.Debug.WriteLine($"[PlantManager] Preloaded Plant Atlas: {p.AtlasName}");
+                }
+            }
             BuildingManager.Load(PathHelper.GetRuntimeAssetsPath());
+            MaskData.Load(Path.Combine(readData, "mask_data.json"));
 
             System.Diagnostics.Debug.WriteLine($"[GameState] : Tags loaded. Tags Count = { tagManager.Tags.Count}");
             System.Diagnostics.Debug.WriteLine($"[GameState] : ITEM MANAGER loaded. Items Count = {ItemManager.Items.Count},{ItemManager.PhysicalItems.Count}");
             System.Diagnostics.Debug.WriteLine($"[GameState] : Prefabs loaded. Prefab Count = {PrefabManager.Prefabs.Count}");
+            
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Plant manager loaded. Plants count Count = {plantManager.Plants.Count}");
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Buildings loaded. Count = {BuildingManager.Buildings.Count},");
+            System.Diagnostics.Debug.WriteLine($"[GameState] : Mask Data loaded.Count RGB = {MaskData.Biomes.Count},{MaskData.Spawns.Count},{MaskData.Elevations.Count}");
+            //System.Diagnostics.Debug.WriteLine($"[GameState] : Tags loaded. Tags Count = {tagManager.Tags.Count}");
+            //System.Diagnostics.Debug.WriteLine($"[GameState] : ITEM MANAGER loaded. Items Count = {ItemManager.Items.Count},{ItemManager.PhysicalItems.Count}");
+            //System.Diagnostics.Debug.WriteLine($"[GameState] : Prefabs loaded. Prefab Count = {PrefabManager.Prefabs.Count}");
+
             // Load shader programs
             Shaders = new ShaderManager(_gd);
             Shaders.PipelineReference = Shaders.PipelineReference ?? pipeline;
@@ -213,12 +257,7 @@ namespace Pixel_Simulations
 
             // Grass & Wind Math
             Grass = new GrassSystem(_gd);
-            var grassShapes = new List<RectangleF>();
-            foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
-            {
-                grassShapes.AddRange(layer.Shapes.Where(s => s.HasTag(SystemTags.GRASS)).Select(s => s.Shape.GetBounds()));
-            }
-            Grass.LoadContent(content, ns, grassShapes);
+            Grass.LoadContent(content, ns, this);
 
 
             // Physics Boundaries
@@ -445,38 +484,16 @@ namespace Pixel_Simulations
         }
         public RectangleF GetStreamingBounds(int nativeWidth, int nativeHeight)
         {
-            // 1. Start with a box slightly larger than the screen, centered on the player.
-            // E.g., if screen is 480x270, maybe the base box is 600x400
-            float padX = 60f;
-            float padY = 60f;
-            float width = nativeWidth + padX * 2;
-            float height = nativeHeight + padY * 2;
+            // FIX B: Base the streaming bounds on the actual camera visible area, not fixed 480x270!
+            Rectangle simBounds = GameCamera.SimViewBounds;
 
-            Vector2 center = Player.Position;
-            RectangleF bounds = new RectangleF(center.X - width / 2, center.Y - height / 2, width, height);
+            float pad = 120f;
+            float x = simBounds.X - pad;
+            float y = simBounds.Y - pad;
+            float w = simBounds.Width + (pad * 2);
+            float h = simBounds.Height + (pad * 2);
 
-            // 2. "Look Ahead" Bias: Extend the box in the direction the player is facing
-            float biasAmount = 150f; // Look 150 pixels ahead
-
-            switch (Player.FacingDirection)
-            {
-                case Direction.North:
-                    bounds.Y -= biasAmount;
-                    bounds.Height += biasAmount;
-                    break;
-                case Direction.South:
-                    bounds.Height += biasAmount;
-                    break;
-                case Direction.West:
-                    bounds.X -= biasAmount;
-                    bounds.Width += biasAmount;
-                    break;
-                case Direction.East:
-                    bounds.Width += biasAmount;
-                    break;
-            }
-
-            return bounds;
+            return new RectangleF(x, y, w, h);
         }
         public bool IsPaused => DebugPool[GameBool.IsPaused];
         public void SaveGame()
@@ -556,5 +573,53 @@ namespace Pixel_Simulations
             if (visualChanged) System.Diagnostics.Debug.WriteLine("Daily Simulation Complete. Visuals Updated.");
         }
 
+        public bool IsDebug(GameBool flag) => DebugPool.TryGetValue(flag, out bool val) && val;
+
+        public void ToggleDebug(GameBool flag)
+        {
+            DebugPool[flag] = !IsDebug(flag);
+            System.Diagnostics.Debug.WriteLine($"[Debug] ShowMaskData toggled: {flag} = {IsDebug(flag)}");
+        }
+        public Color GetMaskColorAt(Vector2 worldPos)
+        {
+            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE; // 256
+            int chunkX = (int)Math.Floor(worldPos.X / (double)chunkSize);
+            int chunkY = (int)Math.Floor(worldPos.Y / (double)chunkSize);
+            Point chunkCoord = new Point(chunkX, chunkY);
+
+            if (TerrainMaskChunks != null && TerrainMaskChunks.TryGetValue(chunkCoord, out var maskTex))
+            {
+                int lx = Math.Clamp((int)(worldPos.X - chunkX * chunkSize), 0, chunkSize - 1);
+                int ly = Math.Clamp((int)(worldPos.Y - chunkY * chunkSize), 0, chunkSize - 1);
+
+                Color[] pixel = new Color[1];
+                maskTex.GetData(0, new Rectangle(lx, ly, 1, 1), pixel, 0, 1);
+                return pixel[0];
+            }
+            return Color.Transparent;
+        }
+        public bool IsFarmZone(Vector2 worldPos)
+        {
+            // 1. Check Mask Red Channel (Biome 90 = Farmable Soil)
+            Color maskCol = GetMaskColorAt(worldPos);
+            if (Math.Abs(maskCol.R - SystemTags.BIOME_FARM_ZONE_VALUE) <= 5)
+                return true;
+
+            // 2. Check ControlLayer shape tagged FARMABLE
+            if (CurrentMap != null)
+            {
+                foreach (var layer in CurrentMap.Layers.OfType<ControlLayer>())
+                {
+                    if (!layer.IsVisible) continue;
+                    foreach (var shape in layer.Shapes)
+                    {
+                        if (shape.HasTag(SystemTags.FARMABLE) && shape.Shape.Contains(worldPos))
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }

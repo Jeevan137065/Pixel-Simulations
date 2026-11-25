@@ -12,8 +12,9 @@ namespace Pixel_Simulations
         private readonly EntityManager _entityManager;
         private readonly EventBus _bus;
 
-        public const int TILLED_DIRT_ID = 16; // Change this to your exact ID
-        public const int WATERED_DIRT_ID = 17;
+        public const int TILE_TILLED_DIRT = 2;
+        public const int TILE_WATERED_DIRT = 3;
+
         public InteractionEngine(GameState state, EntityManager entityManager, EventBus bus)
         {
             _state = state;
@@ -23,264 +24,205 @@ namespace Pixel_Simulations
 
         public void SendPayload(GameEntity targetEntity, InteractionPayload payload)
         {
-            // ==========================================
-            // 1. NATIVE HARD TOOL LOGIC (Farming)
-            // ==========================================
-            if (payload.ActionType == "Use" && payload.Medium != null)
+            Vector2 cellCenter = new Vector2(payload.TargetCell.X * 16 + 8, payload.TargetCell.Y * 16 + 8);
+            var heldItem = payload.Medium;
+
+            // ==============================================================
+            // 1. FORAGE & CROP HARVESTING (Right-Click or Left-Click)
+            // ==============================================================
+            var hitPlant = _state.ActiveSave.ActivePlants.FirstOrDefault(p =>
+                p.SoilCell == payload.TargetCell || Vector2.Distance(p.Position, cellCenter) < 14f);
+
+            if (hitPlant != null)
             {
-                Vector2 cellCenter = new Vector2(payload.TargetCell.X * 16 + 8, payload.TargetCell.Y * 16 + 8);
-
-                if (payload.Medium.ItemTags.Contains("tilling") || payload.Medium.ItemTags.Contains("digging") || payload.Medium.ItemTags.Contains("watering"))
+                var plantDef = _state.plantManager.GetPlant(hitPlant.PlantID);
+                if (plantDef != null && hitPlant.CurrentStageIndex < plantDef.Stages.Count)
                 {
-                    var tilledLayer = GetOrCreateTilledLayer();
-                    var existingTile = tilledLayer.GetTileAt(payload.TargetCell);
-                    bool isFarmZone = IsFarmable(cellCenter);
-                    if (payload.Medium.ItemTags.Contains("tilling") && isFarmZone)
+                    var curStage = plantDef.Stages[hitPlant.CurrentStageIndex];
+
+                    if (curStage.IsHarvestable)
                     {
-                        if (existingTile != null && (existingTile.TileID == 2 || existingTile.TileID == 3)) return;
-                        _state.Debug_LastCommand = "PlaceTileCommand (Tilled Dirt ID 2)";
-                        // FIX: Capitalized "Farm"
-                        _bus.Publish(new PlaceTileCommand(tilledLayer, payload.TargetCell, new TileInfo("Farm", 2)));
-                        return;
-                    }
-                    else if (payload.Medium.ItemTags.Contains("digging") && IsFarmable(cellCenter))
-                    {
-                        var autoRule = _state.AutoTileManager.GetRuleForAtlas("Farm");
-                        if (existingTile != null && IsLogicalDirt(tilledLayer, payload.TargetCell.X, payload.TargetCell.Y, autoRule)) return;
-
-                        // Find the ID assigned to Mask 15 (Full Piece)
-                        int fullPieceId = autoRule != null && autoRule.BitmaskMap.ContainsKey(15) ? autoRule.BitmaskMap[15] : 0;
-
-                        tilledLayer.PlaceTile(payload.TargetCell, new TileInfo("Farm", fullPieceId));
-                        RefreshAutoTiling(tilledLayer, payload.TargetCell);
-                        return;
-                    }
-
-                    else if (payload.Medium.ItemTags.Contains("watering"))
-                    {
-                        if (existingTile != null && existingTile.TileID == 2)
-                        {
-                            _state.Debug_LastCommand = "PlaceTileCommand (Watered Dirt ID 3)";
-                            // FIX: Capitalized "Farm"
-                            _bus.Publish(new PlaceTileCommand(tilledLayer, payload.TargetCell, new TileInfo("Farm", 3)));
-                            return;
-                        }
-                    }
-
-                    _state.Debug_LastCommand = $"FAILED: FarmZone={isFarmZone}, Tags matched but logic rejected.";
-                }
-            }
-
-
-            // ==========================================
-            // 2. NATIVE ITEM LOGIC (Growth & Harvesting)
-            // ==========================================
-            if (targetEntity != null && targetEntity.BaseData is PlacedItemObject placedObj)
-            {
-                var physDef = _state.ItemManager.GetPhysicalDef(placedObj.ItemID);
-                if (physDef != null && placedObj.CurrentStageIndex < physDef.Stages.Count)
-                {
-                    var stage = physDef.Stages[placedObj.CurrentStageIndex];
-
-                    // --- TIME ADVANCEMENT PAYLOAD ---
-                    if (payload.ActionType == "DayTick")
-                    {
-                        if (physDef.Type == PlacementType.Crop)
-                        {
-                            // Nudge position up 1 pixel to guarantee we check the tile it is standing on
-                            Point cropCell = GridHelper.GetTileCell(new Vector2(placedObj.Position.X, placedObj.Position.Y - 1));
-                            var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
-                            var soilTile = tilledLayer?.GetTileAt(cropCell);
-
-                            // Only grow if the crop actually requires time AND the soil is watered (TileID 3)
-                            bool isWatered = soilTile != null && soilTile.TileID == 3;
-
-                            if (stage.ThresholdInt1 > 0 && isWatered)
-                            {
-                                placedObj.DaysInCurrentStage += payload.IntValue;
-                                if (placedObj.DaysInCurrentStage >= stage.ThresholdInt1)
-                                {
-                                    placedObj.DaysInCurrentStage = 0;
-                                    if (stage.NextStageIndex >= 0) placedObj.CurrentStageIndex = stage.NextStageIndex;
-                                    else if (placedObj.CurrentStageIndex < physDef.Stages.Count - 1) placedObj.CurrentStageIndex++;
-                                }
-                            }
-                        }
-                        else if (physDef.Type == PlacementType.Pile && stage.ThresholdBool)
-                        {
-                            placedObj.DaysInCurrentStage += payload.IntValue;
-                            if (placedObj.DaysInCurrentStage >= stage.ThresholdInt2)
-                            {
-                                placedObj.Amount /= 2;
-                                placedObj.DaysInCurrentStage = 0;
-
-                                while (placedObj.CurrentStageIndex > 1 && placedObj.Amount < physDef.Stages[placedObj.CurrentStageIndex].ThresholdInt1)
-                                    placedObj.CurrentStageIndex--;
-
-                                if (placedObj.Amount <= 0) DestroyEntity(targetEntity);
-                            }
-                        }
-                        return;
-                    }
-
-                    // --- PLAYER "USE" PAYLOAD (Harvesting) ---
-                    if (payload.ActionType == "Use")
-                    {
-                        if (physDef.Type == PlacementType.Crop && stage.ThresholdBool)
-                        {
-                            if (stage.ThresholdInt2 > 0)
-                            {
-                                int remaining = _state.Player.Inventory.AddItem(stage.ThresholdInt2, 1, _state.ItemManager);
-                                if (remaining == 0)
-                                {
-                                    if (physDef.IsMultiHarvest)
-                                    {
-                                        placedObj.CurrentStageIndex = physDef.FinalHarvestStage;
-                                        placedObj.DaysInCurrentStage = 0;
-                                        _entityManager.RebuildStaticSprites(_state);
-                                    }
-                                    else DestroyEntity(targetEntity);
-                                }
-                            }
-                            return;
-                        }
-
-                        if (physDef.Type == PlacementType.Machine && stage.ThresholdBool)
-                        {
-                            if (stage.ThresholdInt2 > 0)
-                            {
-                                int remaining = _state.Player.Inventory.AddItem(stage.ThresholdInt2, 1, _state.ItemManager);
-                                if (remaining == 0)
-                                {
-                                    if (stage.NextStageIndex >= 0) placedObj.CurrentStageIndex = stage.NextStageIndex;
-                                    else placedObj.CurrentStageIndex = 1;
-
-                                    placedObj.ProcessingTimer = 0f;
-                                    _entityManager.RebuildStaticSprites(_state);
-                                }
-                            }
-                            return;
-                        }
+                        HarvestPlant(hitPlant, plantDef, curStage);
+                        return; // Interaction successfully consumed!
                     }
                 }
             }
 
-            // ==========================================
-            // 3. DATA-DRIVEN LOGIC (JSON Rules)
-            // ==========================================
-            if (payload.ActionType == "Use")
+            // ==============================================================
+            // 2. SEED SOWING (Holding Seed -> Target Tilled/Watered Dirt)
+            // ==============================================================
+            if (payload.ActionType == "Use" && heldItem != null && (heldItem.Category == "Seed" || heldItem.ItemTags.Contains("seed")))
             {
-                var rule = _state.Interactions.Evaluate(targetEntity, payload.TargetTile, payload.Medium);
-                if (rule != null) ExecuteRuleEffects(rule, targetEntity, payload);
-            }
-        }
+                var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+                var soilTile = tilledLayer?.GetTileAt(payload.TargetCell);
 
-        private void ExecuteRuleEffects(InteractionRule rule, GameEntity targetEntity, InteractionPayload payload)
-        {
-            bool visualsNeedsRefresh = false;
-            TileLayer groundLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Ground");
-
-            foreach (var effect in rule.Effects)
-            {
-                switch (effect.Type)
+                // Seeds require Tilled (2) or Watered (3) soil
+                if (soilTile != null && (soilTile.TileID == TILE_TILLED_DIRT || soilTile.TileID == TILE_WATERED_DIRT))
                 {
-                    case EffectType.DropLoot:
-                        _state.Player.Inventory.AddItem(effect.IntValue, string.IsNullOrEmpty(effect.StringValue) ? 1 : int.Parse(effect.StringValue), _state.ItemManager);
-                        break;
-
-                    case EffectType.ConsumeHeldItem:
-                        if (payload.Medium != null)
+                    if (hitPlant == null && IsFarmZone(cellCenter))
+                    {
+                        var plantDef = _state.plantManager.FindPlantBySeed(heldItem);
+                        if (plantDef != null)
                         {
+                            SowSeed(payload.TargetCell, cellCenter, plantDef, soilTile.TileID == TILE_WATERED_DIRT);
+
+                            // Consume 1 seed from player inventory
                             var heldStack = _state.Player.Inventory.GetSelectedItem();
                             if (heldStack != null)
                             {
-                                heldStack.Count -= effect.IntValue;
-                                if (heldStack.Count <= 0) _state.Player.Inventory.Slots[_state.Player.Inventory.SelectedSlot] = null;
+                                heldStack.Count--;
+                                if (heldStack.Count <= 0)
+                                    _state.Player.Inventory.Slots[_state.Player.Inventory.SelectedSlot] = null;
                             }
+                            return;
                         }
-                        break;
-
-                    case EffectType.SetProperty:
-                        if (targetEntity != null)
-                        {
-                            targetEntity.BaseData.Properties[effect.StringValue] = new MapProperty(PropertyType.String, effect.SecondaryValue);
-                            visualsNeedsRefresh = true;
-                        }
-                        break;
-
-                    case EffectType.DestroyTarget:
-                        if (targetEntity != null) DestroyEntity(targetEntity);
-                        break;
-
-                    case EffectType.ChangeTile:
-                        if (groundLayer != null) groundLayer.PlaceTile(payload.TargetCell, new TileInfo(effect.StringValue, effect.IntValue));
-                        break;
-
-                    case EffectType.SpawnEntity:
-                        Vector2 fallbackPivot = new Vector2(8, 16);
-                        var spawnDef = _state.ItemManager.GetPhysicalDef(effect.IntValue);
-                        if (spawnDef != null) fallbackPivot = new Vector2((spawnDef.CellWidth * 16) / 2f, spawnDef.CellHeight * 16);
-
-                        Vector2 centerLookup = new Vector2(payload.TargetCell.X * 16 + 8, payload.TargetCell.Y * 16 + 8);
-                        Vector2 spawnPos = GridHelper.SnapToSubCell(centerLookup, fallbackPivot);
-
-                        var placedObj = new PlacedItemObject
-                        {
-                            ID = Guid.NewGuid().ToString().Substring(0, 8),
-                            Name = $"Placed_{effect.IntValue}",
-                            ItemID = effect.IntValue,
-                            Position = spawnPos,
-                            Amount = 1,
-                            DaysInCurrentStage = 0,
-                            CurrentStageIndex = 1
-                        };
-
-                        _state.ActiveSave.PlacedItems.Add(placedObj);
-                        _entityManager.AddDynamicEntity(placedObj, _state);
-                        break;
+                    }
                 }
             }
 
-            if (visualsNeedsRefresh && targetEntity != null) _entityManager.RefreshEntityVisuals(targetEntity.BaseData.ID,_state);
+            // ==============================================================
+            // 3. HARD TOOL LOGIC (Tilling, Digging, Watering)
+            // ==============================================================
+            if (payload.ActionType == "Use" && heldItem != null)
+            {
+                var tilledLayer = GetOrCreateTilledLayer();
+                var existingTile = tilledLayer.GetTileAt(payload.TargetCell);
+                bool inFarmZone = IsFarmZone(cellCenter);
+
+                // --- TILLING (Hoe) ---
+                if (heldItem.ItemTags.Contains("tilling") && inFarmZone)
+                {
+                    if (existingTile != null && (existingTile.TileID == TILE_TILLED_DIRT || existingTile.TileID == TILE_WATERED_DIRT)) return;
+
+                    _state.Debug_LastCommand = "Tilled Soil (ID 2)";
+                    _bus.Publish(new PlaceTileCommand(tilledLayer, payload.TargetCell, new TileInfo("Farm", TILE_TILLED_DIRT)));
+                    return;
+                }
+
+                // --- WATERING CAN ---
+                if (heldItem.ItemTags.Contains("watering"))
+                {
+                    if (existingTile != null && existingTile.TileID == TILE_TILLED_DIRT)
+                    {
+                        _state.Debug_LastCommand = "Watered Soil (ID 3)";
+                        _bus.Publish(new PlaceTileCommand(tilledLayer, payload.TargetCell, new TileInfo("Farm", TILE_WATERED_DIRT)));
+
+                        // Mark any crop on this soil as watered for the day
+                        if (hitPlant != null) hitPlant.IsWateredToday = true;
+                        return;
+                    }
+                }
+
+                // --- DIGGING (Shovel Auto-Tile Edge) ---
+                if (heldItem.ItemTags.Contains("digging") && inFarmZone)
+                {
+                    var autoRule = _state.AutoTileManager.GetRuleForAtlas("Farm");
+                    int fullPieceId = autoRule != null && autoRule.BitmaskMap.ContainsKey(15) ? autoRule.BitmaskMap[15] : 0;
+
+                    tilledLayer.PlaceTile(payload.TargetCell, new TileInfo("Farm", fullPieceId));
+                    RefreshAutoTiling(tilledLayer, payload.TargetCell);
+                    return;
+                }
+            }
         }
 
-        private void DestroyEntity(GameEntity entity)
+        // ==============================================================
+        // HARVESTING & FORAGING HANDLER
+        // ==============================================================
+        private void HarvestPlant(PlantInstance instance, PlantDefinition def, PlantStage stage)
         {
-            // FIX: Iterate through the ObjectLink struct and use TargetID
-            foreach (var link in entity.BaseData.Links)
+            Random rand = new Random();
+            int itemsAwarded = 0;
+
+            // 1. Roll Drops
+            foreach (var drop in stage.Drops)
             {
-                _entityManager.RemoveEntity(link.TargetID);
+                if (rand.NextDouble() <= drop.Chance)
+                {
+                    int count = rand.Next(drop.MinCount, drop.MaxCount + 1);
+                    int remaining = _state.Player.Inventory.AddItem(drop.ItemID, count, _state.ItemManager);
+                    itemsAwarded += (count - remaining);
+
+                    var itemDef = _state.ItemManager.GetItem(drop.ItemID);
+                    if (itemDef != null)
+                        System.Diagnostics.Debug.WriteLine($"[Harvest] Harvested {count}x {itemDef.Name}");
+                }
             }
 
-            if (entity.BaseData is PlacedItemObject placed)
-                _state.ActiveSave.PlacedItems.Remove(placed);
+            // 2. Lifecycle Transition
+            if (stage.HarvestRevertIndex >= 0 && def.HarvestBehavior == HarvestDynamic.RegrowToStage)
+            {
+                // Multi-Harvest Regrowth Loop (e.g. Berry bush / Vine)
+                instance.CurrentStageIndex = stage.HarvestRevertIndex;
+                instance.DaysInStage = 0;
+            }
             else
-                _state.ActiveSave.DestroyedBaseIDs.Add(entity.BaseData.ID);
+            {
+                // Single Harvest (Uproot root crop, plucking mushroom)
+                _state.ActiveSave.ActivePlants.Remove(instance);
+            }
 
-            _entityManager.RemoveEntity(entity.BaseData.ID);
+            _entityManager.RebuildStaticSprites(_state);
         }
 
-        public void UpdateDebugState()
+        // ==============================================================
+        // SOW SEED HANDLER
+        // ==============================================================
+        private void SowSeed(Point cell, Vector2 center, PlantDefinition def, bool isAlreadyWatered)
         {
-            Vector2 lookPos = _state.Player.GetInteractionBox().Center;
+            Vector2 snapPos = GridHelper.GetPlacementPosition(center, false);
 
-            bool isFarmable = IsFarmable(lookPos);
+            var instance = new PlantInstance
+            {
+                PlantID = def.ID,
+                Position = snapPos,
+                CurrentStageIndex = 0, // Starts at Seed/Spore
+                DaysInStage = 0,
+                IsWildForage = false,
+                IsWateredToday = isAlreadyWatered,
+                SoilCell = cell
+            };
 
-            if (isFarmable)
-                _state.Debug_FarmableStatus = $"TRUE (At {lookPos.X:F0}, {lookPos.Y:F0})";
-            else
-                _state.Debug_FarmableStatus = $"FALSE (At {lookPos.X:F0}, {lookPos.Y:F0})";
+            _state.ActiveSave.ActivePlants.Add(instance);
+            _entityManager.RebuildStaticSprites(_state);
+            System.Diagnostics.Debug.WriteLine($"[Sow] Planted {def.Name} at ({cell.X}, {cell.Y})");
         }
-        private bool IsFarmable(Vector2 worldPos)
+
+        // ==============================================================
+        // FARM ZONE DETECTOR (Red Channel = 90 or Farmable Shape)
+        // ==============================================================
+        public bool IsFarmZone(Vector2 worldPos)
         {
+            // 1. Check Mask Red Channel (Biome 90 = Farmable Soil)
+            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE;
+            int chunkX = (int)Math.Floor(worldPos.X / chunkSize);
+            int chunkY = (int)Math.Floor(worldPos.Y / chunkSize);
+            Point chunkCoord = new Point(chunkX, chunkY);
+
+            if (_state.TerrainMaskChunks.TryGetValue(chunkCoord, out var maskTex))
+            {
+                int lx = Math.Clamp((int)(worldPos.X - chunkX * chunkSize), 0, chunkSize - 1);
+                int ly = Math.Clamp((int)(worldPos.Y - chunkY * chunkSize), 0, chunkSize - 1);
+
+                Color[] singlePixel = new Color[1];
+                maskTex.GetData(0, new Rectangle(lx, ly, 1, 1), singlePixel, 0, 1);
+
+                // If within tolerance of Farm Zone (Value 90)
+                if (Math.Abs(singlePixel[0].R - SystemTags.BIOME_FARM_ZONE_VALUE) <= 5)
+                    return true;
+            }
+
+            // 2. Fallback to ControlLayer shape tagged FARMABLE
             foreach (var layer in _state.CurrentMap.Layers.OfType<ControlLayer>())
             {
-                if (!layer.IsVisible || layer.IsLocked) continue;
+                if (!layer.IsVisible) continue;
                 foreach (var shape in layer.Shapes)
                 {
-                    if (shape.HasTag(SystemTags.FARMABLE) && shape.Shape.Contains(worldPos)) return true;
+                    if (shape.HasTag(SystemTags.FARMABLE) && shape.Shape.Contains(worldPos))
+                        return true;
                 }
             }
+
             return false;
         }
 
@@ -300,10 +242,6 @@ namespace Pixel_Simulations
             var rule = _state.AutoTileManager.GetRuleForAtlas("Farm");
             if (rule == null) return;
 
-            var updates = new System.Collections.Generic.Dictionary<Point, TileInfo>();
-            var removals = new System.Collections.Generic.List<Point>();
-
-            // Update the clicked cell and its 8 neighbors
             for (int x = -1; x <= 1; x++)
             {
                 for (int y = -1; y <= 1; y++)
@@ -311,70 +249,38 @@ namespace Pixel_Simulations
                     Point targetCell = new Point(centerCell.X + x, centerCell.Y + y);
                     int bitmask = CalculateCornerBitmask(layer, targetCell, rule);
 
-                    if (bitmask > 0)
+                    if (bitmask > 0 && rule.BitmaskMap.TryGetValue(bitmask, out int newTileId))
                     {
-                        if (rule.BitmaskMap.TryGetValue(bitmask, out int newTileId))
-                        {
-                            var existing = layer.GetTileAt(targetCell);
-                            // Do not overwrite manual tilled/watered dirt
-                            if (existing == null || (existing.TileID != TILLED_DIRT_ID && existing.TileID != WATERED_DIRT_ID && existing.TileID != newTileId))
-                            {
-                                updates[targetCell] = new TileInfo(rule.TargetAtlas, newTileId);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Erase visual edges if they no longer connect to any logical dirt
                         var existing = layer.GetTileAt(targetCell);
-                        if (existing != null && existing.TilesetName == rule.TargetAtlas && existing.TileID != TILLED_DIRT_ID && existing.TileID != WATERED_DIRT_ID)
+                        if (existing == null || (existing.TileID != TILE_TILLED_DIRT && existing.TileID != TILE_WATERED_DIRT && existing.TileID != newTileId))
                         {
-                            removals.Add(targetCell);
+                            layer.PlaceTile(targetCell, new TileInfo(rule.TargetAtlas, newTileId));
                         }
                     }
                 }
             }
-
-            foreach (var kvp in updates) layer.PlaceTile(kvp.Key, kvp.Value);
-            foreach (var pt in removals) layer.RemoveTile(pt);
         }
 
         private int CalculateCornerBitmask(TileLayer layer, Point cell, AutoTileRule rule)
         {
-            int mask = 0; // TL=1, TR=2, BL=4, BR=8
-
-            if (IsLogicalDirt(layer, cell.X, cell.Y, rule) || IsLogicalDirt(layer, cell.X - 1, cell.Y, rule) || IsLogicalDirt(layer, cell.X, cell.Y - 1, rule) || IsLogicalDirt(layer, cell.X - 1, cell.Y - 1, rule))
-                mask += 1;
-
-            if (IsLogicalDirt(layer, cell.X, cell.Y, rule) || IsLogicalDirt(layer, cell.X + 1, cell.Y, rule) || IsLogicalDirt(layer, cell.X, cell.Y - 1, rule) || IsLogicalDirt(layer, cell.X + 1, cell.Y - 1, rule))
-                mask += 2;
-
-            if (IsLogicalDirt(layer, cell.X, cell.Y, rule) || IsLogicalDirt(layer, cell.X - 1, cell.Y, rule) || IsLogicalDirt(layer, cell.X, cell.Y + 1, rule) || IsLogicalDirt(layer, cell.X - 1, cell.Y + 1, rule))
-                mask += 4;
-
-            if (IsLogicalDirt(layer, cell.X, cell.Y, rule) || IsLogicalDirt(layer, cell.X + 1, cell.Y, rule) || IsLogicalDirt(layer, cell.X, cell.Y + 1, rule) || IsLogicalDirt(layer, cell.X + 1, cell.Y + 1, rule))
-                mask += 8;
-
+            int mask = 0;
+            if (IsDirt(layer, cell.X, cell.Y, rule) || IsDirt(layer, cell.X - 1, cell.Y, rule) || IsDirt(layer, cell.X, cell.Y - 1, rule) || IsDirt(layer, cell.X - 1, cell.Y - 1, rule)) mask += 1;
+            if (IsDirt(layer, cell.X, cell.Y, rule) || IsDirt(layer, cell.X + 1, cell.Y, rule) || IsDirt(layer, cell.X, cell.Y - 1, rule) || IsDirt(layer, cell.X + 1, cell.Y - 1, rule)) mask += 2;
+            if (IsDirt(layer, cell.X, cell.Y, rule) || IsDirt(layer, cell.X - 1, cell.Y, rule) || IsDirt(layer, cell.X, cell.Y + 1, rule) || IsDirt(layer, cell.X - 1, cell.Y + 1, rule)) mask += 4;
+            if (IsDirt(layer, cell.X, cell.Y, rule) || IsDirt(layer, cell.X + 1, cell.Y, rule) || IsDirt(layer, cell.X, cell.Y + 1, rule) || IsDirt(layer, cell.X + 1, cell.Y + 1, rule)) mask += 8;
             return mask;
         }
 
-
-        public bool IsLogicalDirt(TileLayer layer, int x, int y, AutoTileRule rule)
+        private bool IsDirt(TileLayer layer, int x, int y, AutoTileRule rule)
         {
-            var tile = layer.GetTileAt(new Point(x, y));
-            if (tile == null || tile.TilesetName != rule.TargetAtlas) return false;
-
-            // Tilled/Watered count as logic centers
-            if (tile.TileID == TILLED_DIRT_ID || tile.TileID == WATERED_DIRT_ID) return true;
-
-            // Mask 15 (Full piece) is the true logical center of Dug Dirt
-            if (rule.BitmaskMap.TryGetValue(15, out int fullTileId))
-            {
-                return tile.TileID == fullTileId;
-            }
-
-            return false;
+            var t = layer.GetTileAt(new Point(x, y));
+            return t != null && t.TilesetName == rule.TargetAtlas;
         }
 
+        public void UpdateDebugState()
+        {
+            Vector2 lookPos = _state.Player.GetInteractionBox().Center;
+            _state.Debug_FarmableStatus = IsFarmZone(lookPos) ? $"FARM ZONE: YES" : $"FARM ZONE: NO";
+        }
     }
 }

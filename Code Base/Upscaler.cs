@@ -9,8 +9,8 @@ namespace Pixel_Simulations
     public enum RenderLayer
     {
         Albedo,         // 480x270: Static background
-        YDepth,         // 960x540: R: Volume Depth (Altitude), G: Light/Shadow Vol, B: Surface Depth
-        ZDepth,         // 960x540: R: Z-Depth (Sorting), G: Light Depth (3D shadow), B: Shading/Material
+        YDepth,         // 960x540: R: Volume Depth (Altitude), G: , B: Surface Depth
+        ZDepth,         // 960x540: R: Z-Depth (Sorting), G: Spawns (3D shadow), B: Biomes
         WaterData,      // 960x540 [HalfVector4] R: SDF Shore, G: Flow X, B: Flow Y, A: Dynamic Wave/Ripples
         Dynamic,        // 960x540: Grass, Player, NPCs (G-Buffer Color)
         Simulation,     // 480p: For physical items
@@ -304,11 +304,11 @@ namespace Pixel_Simulations
             RenderLayer.Composite,
             RenderLayer.Albedo,
             RenderLayer.Dynamic,
-            RenderLayer.Simulation,
-            RenderLayer.Normal,
+            //RenderLayer.Normal,
             RenderLayer.YDepth,
             RenderLayer.ZDepth,
-            RenderLayer.WaterData
+            //RenderLayer.LightMask,
+            //RenderLayer.WaterData
         };
 
             MicroRTs = new MicroRenderTargetPool(graphicsDevice);
@@ -412,13 +412,17 @@ namespace Pixel_Simulations
             _graphicsDevice.Viewport = new Viewport(FinalRect);
             _graphicsDevice.Clear(Color.Black);
 
-            // Blit native tiles and simulation entities using their active viewport sub-rectangles
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+            // 1. Draw Albedo (480p Map Tiles & Floorplates)
             spriteBatch.Draw(_targets[RenderLayer.Albedo], FinalRect, camera.NativeViewportRect, Color.White);
-            spriteBatch.Draw(_targets[RenderLayer.Simulation], FinalRect, camera.NativeViewportRect, Color.White);
+
+            // 2. Draw Dynamic Layer (960p Dynamic: Entities, Buildings, and Grass)
             spriteBatch.Draw(_targets[RenderLayer.Dynamic], FinalRect, camera.SimViewportRect, Color.White);
+
             spriteBatch.End();
 
+            // 3. Draw Light Mask (960p Lighting Overlay)
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
             spriteBatch.Draw(_targets[RenderLayer.LightMask], FinalRect, camera.SimViewportRect, Color.White);
             spriteBatch.End();

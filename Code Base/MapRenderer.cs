@@ -91,16 +91,20 @@ namespace Pixel_Simulations.Data
                         if (!hideRoof && (key == "InteriorBG" || key == "InteriorFG")) continue;
 
                         var sLayer = prefab.AlternateStates[key];
+                        if (!sLayer.Visible) continue; // Respect layer visibility
+
                         if (string.Equals(sLayer.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
-                        sLayer.SourceRect == new Rectangle(0, 0, 16, 16) &&
-                        sLayer.Offset == Point.Zero)
+                            sLayer.SourceRect == new Rectangle(0, 0, 16, 16) &&
+                            sLayer.Offset == Point.Zero)
                         {
                             continue;
                         }
+
                         var tex = _editorState.AssetLibrary.GetAtlas(sLayer.AtlasName);
                         if (tex != null)
                         {
-                            sb.Draw(tex, topLeft + sLayer.Offset.ToVector2(), sLayer.SourceRect, Color.White);
+                            Vector2 drawPos = topLeft + sLayer.Offset.ToVector2() - sLayer.Pivot.ToVector2();
+                            sb.Draw(tex, drawPos, sLayer.SourceRect, Color.White);
                         }
                     }
                 }
@@ -111,7 +115,6 @@ namespace Pixel_Simulations.Data
 
                     ModularBuildingRenderer.DrawBuildingExterior(sb, blueprint, bldg.Position, _editorState.AssetLibrary, Color.White);
 
-                    // Draw tight bounding box outline instead of huge 512x512 void grid
                     RectangleF tight = ModularBuildingRenderer.GetBuildingTightBounds(blueprint);
                     RectangleF worldBox = new RectangleF(bldg.Position.X + tight.X, bldg.Position.Y + tight.Y, tight.Width, tight.Height);
                     sb.DrawRectangle(worldBox, Color.Cyan * 0.4f, 1f / _editorState.camera.Zoom);

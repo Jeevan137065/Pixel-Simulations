@@ -1,8 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using Pixel_Simulations.Data;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Pixel_Simulations
@@ -32,6 +33,7 @@ namespace Pixel_Simulations
         public void Update(GameTime gameTime)
         {
             _state.Update(gameTime);
+            HandleDebugHotkeys();
             HandleInteractions();
             UpdateEntities(gameTime);
             UpdateDoorwayTransitions();
@@ -45,7 +47,8 @@ namespace Pixel_Simulations
             Point targetGridCell = GridHelper.GetTileCell(lookPos);
 
             // 1. FIND TARGET ENTITY
-            GameEntity targetEntity = _entityManager.AllEntities.FirstOrDefault(e => {
+            GameEntity targetEntity = _entityManager.AllEntities.FirstOrDefault(e =>
+            {
                 if (e.Prefab != null)
                 {
                     RectangleF bounds = new RectangleF(e.Position.X - e.Prefab.Pivot.X, e.Position.Y - e.Prefab.Pivot.Y, e.Prefab.SourceRect.Width, e.Prefab.SourceRect.Height);
@@ -125,89 +128,182 @@ namespace Pixel_Simulations
             {
                 if (heldStack != null && heldStack.Count > 0)
                 {
-                    var physDef = _state.ItemManager.GetPhysicalDef(heldStack.ItemID);
-                    if (physDef != null && physDef.IsPlaceable && physDef.Stages.Count > 1)
+                    // ==============================================================
+                    // 1. SEED SOWING CHECK (Direct SeedItemID -> PlantDefinition)
+                    // ==============================================================
+                    var plantDef = _state.plantManager.GetPlantBySeedItem(heldStack.ItemID);
+
+                    // Fallback: check seed tag or name if SeedItemID was not set in editor
+                    if (plantDef == null)
                     {
-                        Vector2 snapPos = GridHelper.GetPlacementPosition(lookPos, physDef.PrecisionPlacement);
-                        GameEntity exactEntity = _entityManager.AllEntities.FirstOrDefault(e => e.BaseData is PlacedItemObject && Vector2.Distance(e.Position, snapPos) < 1f);
-                        bool itemPlaced = false;
-
-                        // Pile Logic
-                        if (physDef.Type == PlacementType.Pile)
+                        var heldItemDef = _state.ItemManager.GetItem(heldStack.ItemID);
+                        if (heldItemDef != null && (heldItemDef.Category == "Seed" || heldItemDef.ItemTags.Contains("seed")))
                         {
-                            if (exactEntity != null && exactEntity.BaseData is PlacedItemObject placedPile && placedPile.ItemID == heldStack.ItemID)
-                            {
-                                int maxCapacity = physDef.Stages[physDef.Stages.Count - 1].ThresholdInt1;
-                                if (placedPile.Amount < maxCapacity)
-                                {
-                                    placedPile.Amount++;
-                                    placedPile.DaysInCurrentStage = 0;
+                            plantDef = _state.plantManager.FindPlantBySeed(heldItemDef);
+                        }
+                    }
 
-                                    int nextStage = placedPile.CurrentStageIndex + 1;
-                                    if (nextStage < physDef.Stages.Count && placedPile.Amount >= physDef.Stages[nextStage].ThresholdInt1)
+                    if (plantDef != null)
+                    {
+                        var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+                        var soilTile = tilledLayer?.GetTileAt(targetGridCell);
+
+                        // Soil must be Tilled (2) or Watered (3)
+                        if (soilTile != null && (soilTile.TileID == 2 || soilTile.TileID == 3))
+                        {
+                            Vector2 cellCenter = new Vector2(targetGridCell.X * 16 + 8, targetGridCell.Y * 16 + 8);
+
+                            // Enforce Farm Zone (Red = 90 or #farmable shape)
+                            if (_interactionEngine.IsFarmZone(cellCenter))
+                            {
+                                bool plantAlreadyThere = _state.ActiveSave.ActivePlants.Any(p => p.SoilCell == targetGridCell);
+                                if (!plantAlreadyThere)
+                                {
+                                    // SOW SEED!
+                                    Vector2 snapPos = GridHelper.GetPlacementPosition(cellCenter, false);
+                                    var plantInstance = new PlantInstance
                                     {
-                                        placedPile.CurrentStageIndex = nextStage;
-                                        _entityManager.RebuildStaticSprites(_state);
+                                        PlantID = plantDef.ID,
+                                        Position = snapPos,
+                                        CurrentStageIndex = 0, // Starts at Seed stage
+                                        DaysInStage = 0,
+                                        IsWildForage = false,
+                                        IsWateredToday = soilTile.TileID == 3,
+                                        SoilCell = targetGridCell
+                                    };
+
+                                    _state.ActiveSave.ActivePlants.Add(plantInstance);
+                                    _entityManager.RebuildStaticSprites(_state);
+
+                                    // Deduct seed from inventory
+                                    heldStack.Count--;
+                                    if (heldStack.Count <= 0)
+                                        _state.Player.Inventory.Slots[_state.Player.Inventory.SelectedSlot] = null;
+
+                                    System.Diagnostics.Debug.WriteLine($"[Sow] Successfully planted {plantDef.Name} at ({targetGridCell.X}, {targetGridCell.Y})");
+                                    return; // Sowing successful!
+                                }
+                            }
+                        }
+                    }
+
+                    if (heldStack != null && heldStack.Count > 0)
+                    {
+                        var physDef = _state.ItemManager.GetPhysicalDef(heldStack.ItemID);
+                        if (physDef != null && physDef.IsPlaceable && physDef.Stages.Count > 1)
+                        {
+                            Vector2 snapPos = GridHelper.GetPlacementPosition(lookPos, physDef.PrecisionPlacement);
+                            GameEntity exactEntity = _entityManager.AllEntities.FirstOrDefault(e => e.BaseData is PlacedItemObject && Vector2.Distance(e.Position, snapPos) < 1f);
+                            bool itemPlaced = false;
+
+                            // Pile Logic
+                            if (physDef.Type == PlacementType.Pile)
+                            {
+                                if (exactEntity != null && exactEntity.BaseData is PlacedItemObject placedPile && placedPile.ItemID == heldStack.ItemID)
+                                {
+                                    int maxCapacity = physDef.Stages[physDef.Stages.Count - 1].ThresholdInt1;
+                                    if (placedPile.Amount < maxCapacity)
+                                    {
+                                        placedPile.Amount++;
+                                        placedPile.DaysInCurrentStage = 0;
+
+                                        int nextStage = placedPile.CurrentStageIndex + 1;
+                                        if (nextStage < physDef.Stages.Count && placedPile.Amount >= physDef.Stages[nextStage].ThresholdInt1)
+                                        {
+                                            placedPile.CurrentStageIndex = nextStage;
+                                            _entityManager.RebuildStaticSprites(_state);
+                                        }
+                                        itemPlaced = true;
                                     }
+                                }
+                                else if (exactEntity == null && targetEntity == null)
+                                {
+                                    PlaceNewItem(heldStack.ItemID, snapPos, physDef);
                                     itemPlaced = true;
                                 }
                             }
+                            // Standard Placement (Props/Crops/Machines)
                             else if (exactEntity == null && targetEntity == null)
                             {
+                                // FIX B: Enforce Tilled Dirt for Crops!
+                                if (physDef.Type == PlacementType.Crop)
+                                {
+                                    var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+                                    var soilTile = tilledLayer?.GetTileAt(targetGridCell);
+
+                                    // If tile is null, or not Tilled(2) or Watered(3), ABORT PLANTING!
+                                    if (soilTile == null || (soilTile.TileID != 2 && soilTile.TileID != 3))
+                                    {
+                                        return; // Exit out, action consumed but failed.
+                                    }
+                                }
+
                                 PlaceNewItem(heldStack.ItemID, snapPos, physDef);
                                 itemPlaced = true;
                             }
-                        }
-                        // Standard Placement (Props/Crops/Machines)
-                        else if (exactEntity == null && targetEntity == null)
-                        {
-                            // FIX B: Enforce Tilled Dirt for Crops!
-                            if (physDef.Type == PlacementType.Crop)
+
+                            if (itemPlaced)
                             {
-                                var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
-                                var soilTile = tilledLayer?.GetTileAt(targetGridCell);
-
-                                // If tile is null, or not Tilled(2) or Watered(3), ABORT PLANTING!
-                                if (soilTile == null || (soilTile.TileID != 2 && soilTile.TileID != 3))
-                                {
-                                    return; // Exit out, action consumed but failed.
-                                }
+                                heldStack.Count--;
+                                if (heldStack.Count <= 0) _state.Player.Inventory.Slots[_state.Player.Inventory.SelectedSlot] = null;
                             }
-
-                            PlaceNewItem(heldStack.ItemID, snapPos, physDef);
-                            itemPlaced = true;
-                        }
-
-                        if (itemPlaced)
-                        {
-                            heldStack.Count--;
-                            if (heldStack.Count <= 0) _state.Player.Inventory.Slots[_state.Player.Inventory.SelectedSlot] = null;
                         }
                     }
+                    return; // Stop here, Right Click consumed!
                 }
-                return; // Stop here, Right Click consumed!
+
+                // ==========================================
+                // C. LEFT CLICK / F: JSON RULES (Trees, Dirt, etc)
+                // ==========================================
+                TileLayer groundLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Ground");
+                TileInfo targetTile = groundLayer?.GetTileAt(targetGridCell);
+
+                var payload = new InteractionPayload
+                {
+                    ActionType = "Use",
+                    Medium = heldItem,
+                    TargetCell = targetGridCell,
+                    TargetTile = targetTile
+                };
+
+                // WRITE TO DEBUGGER:
+                string mediumStr = heldItem != null ? $"{heldItem.Name} (ID: {heldItem.ID})" : "Empty Hands";
+                string tagsStr = heldItem != null ? string.Join(", ", heldItem.ItemTags) : "None";
+                _state.Debug_LastPayload = $"Action: {payload.ActionType} | Medium: {mediumStr}\nTags: [{tagsStr}]\nTarget Cell: {targetGridCell.X}, {targetGridCell.Y}";
+
+                _interactionEngine.SendPayload(targetEntity, payload);
+            }
+        }
+
+        private void HandleDebugHotkeys()
+        {
+            bool isAlt = _state.input.IsKeyDown(Keys.LeftAlt) || _state.input.IsKeyDown(Keys.RightAlt);
+
+            // Master Toggle (Standalone 'L' key)
+            if (!isAlt && _state.input.IsKeyPressed(Keys.L))
+            {
+                _state.ToggleDebug(GameBool.ShowDebugText);
             }
 
-            // ==========================================
-            // C. LEFT CLICK / F: JSON RULES (Trees, Dirt, etc)
-            // ==========================================
-            TileLayer groundLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Ground");
-            TileInfo targetTile = groundLayer?.GetTileAt(targetGridCell);
-
-            var payload = new InteractionPayload
+            // Subsystem Toggles (Alt + Key)
+            if (isAlt)
             {
-                ActionType = "Use",
-                Medium = heldItem,
-                TargetCell = targetGridCell,
-                TargetTile = targetTile
-            };
-
-            // WRITE TO DEBUGGER:
-            string mediumStr = heldItem != null ? $"{heldItem.Name} (ID: {heldItem.ID})" : "Empty Hands";
-            string tagsStr = heldItem != null ? string.Join(", ", heldItem.ItemTags) : "None";
-            _state.Debug_LastPayload = $"Action: {payload.ActionType} | Medium: {mediumStr}\nTags: [{tagsStr}]\nTarget Cell: {targetGridCell.X}, {targetGridCell.Y}";
-
-            _interactionEngine.SendPayload(targetEntity, payload);
+                if (_state.input.IsKeyPressed(Keys.M)) _state.ToggleDebug(GameBool.ShowMemoryDebug);
+                if (_state.input.IsKeyPressed(Keys.G)) _state.ToggleDebug(GameBool.ShowGrassDebug);
+                if (_state.input.IsKeyPressed(Keys.W)) _state.ToggleDebug(GameBool.ShowWeatherDebug);
+                if (_state.input.IsKeyPressed(Keys.P)) _state.ToggleDebug(GameBool.ShowPhysicsDebug);
+                if (_state.input.IsKeyPressed(Keys.E)) _state.ToggleDebug(GameBool.ShowEntityDebug);
+                if (_state.input.IsKeyPressed(Keys.B)) _state.ToggleDebug(GameBool.ShowBuildingDebug);
+                if (_state.input.IsKeyPressed(Keys.T)) _state.ToggleDebug(GameBool.ShowWaterDebug);
+                if (_state.input.IsKeyPressed(Keys.C)) _state.ToggleDebug(GameBool.ShowCollision);
+                if (_state.input.IsKeyPressed(Keys.N)) _state.ToggleDebug(GameBool.ShowMaskDebug);
+            }
+            if (_state.input.IsKeyPressed(Keys.K))
+            {
+                int count = _state.plantManager.ForceSpawnForages(_state);
+                // Show on screen
+                _state.Debug_LastCommand = $"FORCE SPAWN: Generated {count} wild forages across map!";
+            }
         }
         private void HandleInteractions()
         {
@@ -507,20 +603,70 @@ namespace Pixel_Simulations
         }
         private void OnNewDay(DayAdvancedCommand cmd)
         {
-            var tickPayload = new InteractionPayload { ActionType = "DayTick", IntValue = cmd.DaysPassed };
-            foreach (var entity in _entityManager.AllEntities.ToList())
-                _interactionEngine.SendPayload(entity, tickPayload);
-
-            // --- GRADUAL SOIL DECAY VIA COMMANDS ---
+            string curSeason = _state.Calendar.CurrentSeason.ToString().ToLower();
             var tilledLayer = _state.CurrentMap.Layers.OfType<TileLayer>().FirstOrDefault(l => l.Name == "Tilled_Dirt");
+            List<PlantInstance> plantsToRemove = new List<PlantInstance>();
+
+            // ==============================================================
+            // 1. SIMULATE CROPS & BOTANICAL LIFE CYCLES
+            // ==============================================================
+            foreach (var plant in _state.ActiveSave.ActivePlants)
+            {
+                var def = _state.plantManager.GetPlant(plant.PlantID);
+                if (def == null || plant.CurrentStageIndex >= def.Stages.Count) continue;
+
+                var stage = def.Stages[plant.CurrentStageIndex];
+                bool inSeason = def.AllowedSeasons.Contains(curSeason);
+
+                // --- OUT OF SEASON CHECK ---
+                if (!inSeason)
+                {
+                    // Mature crops turn to their defined rotten stage!
+                    if (stage.IsMature && stage.RottenStageIndex >= 0)
+                    {
+                        plant.CurrentStageIndex = stage.RottenStageIndex;
+                        plant.DaysInStage = 0;
+                    }
+                    else
+                    {
+                        // Immature crops or dead forages wither and die
+                        plantsToRemove.Add(plant);
+                    }
+                    continue;
+                }
+
+                // --- DOMESTIC CROP WATER CHECK ---
+                if (def.Category == BotanicalClass.DomesticCrop && !plant.IsWateredToday)
+                {
+                    // Unwatered crops pause growth for the day
+                    continue;
+                }
+
+                // Advance growth days
+                if (stage.DaysToGrow > 0)
+                {
+                    plant.DaysInStage += cmd.DaysPassed;
+
+                    if (plant.DaysInStage >= stage.DaysToGrow)
+                    {
+                        if (stage.NextStageIndex >= 0 && stage.NextStageIndex < def.Stages.Count)
+                        {
+                            plant.CurrentStageIndex = stage.NextStageIndex;
+                            plant.DaysInStage = 0;
+                        }
+                    }
+                }
+            }
+
+            // Clean up withered plants
+            foreach (var dead in plantsToRemove)
+                _state.ActiveSave.ActivePlants.Remove(dead);
+
+            // ==============================================================
+            // 2. SOIL MOISTURE DECAY (Watered Dirt 3 -> Dry Dirt 2)
+            // ==============================================================
             if (tilledLayer != null)
             {
-                var changes = new System.Collections.Generic.List<IUndoableCommand>();
-                var refreshPoints = new System.Collections.Generic.List<Point>(); // Track what disappeared
-                Random rand = new Random();
-                int dugRemoved = 0;
-                int tilledRemoved = 0;
-
                 foreach (var chunkKvp in tilledLayer.Chunks)
                 {
                     var chunk = chunkKvp.Value;
@@ -529,55 +675,25 @@ namespace Pixel_Simulations
                         for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                         {
                             var tile = chunk.Tiles[x, y];
-                            if (tile != null && tile.TilesetName == "Farm")
+                            if (tile != null && tile.TilesetName == "Farm" && tile.TileID == InteractionEngine.TILE_WATERED_DIRT)
                             {
-                                Point globalCell = new Point(chunkKvp.Key.X * Chunk.CHUNK_SIZE + x, chunkKvp.Key.Y * Chunk.CHUNK_SIZE + y);
-
-                                bool isOccupied = _entityManager.AllEntities.Any(e =>
-                                    e.BaseData is PlacedItemObject && GridHelper.GetTileCell(e.Position) == globalCell);
-
-                                if (tile.TileID == 3) // Watered becomes Tilled
-                                {
-                                    changes.Add(new PlaceTileCommand(tilledLayer, globalCell, new TileInfo("Farm", 2)));
-                                }
-                                else if (!isOccupied && tile.TileID == 2) // Tilled Decay
-                                {
-                                    if (tilledRemoved < 3 && rand.NextDouble() < 0.10)
-                                    {
-                                        changes.Add(new EraseTileCommand(tilledLayer, globalCell));
-                                        refreshPoints.Add(globalCell); // Note for refresh
-                                        tilledRemoved++;
-                                    }
-                                }
-                                else if (!isOccupied && tile.TileID != 2 && tile.TileID != 3) // Dug Decay
-                                {
-                                    if (dugRemoved < 4 && rand.NextDouble() < 0.40)
-                                    {
-                                        changes.Add(new EraseTileCommand(tilledLayer, globalCell));
-                                        refreshPoints.Add(globalCell); // Note for refresh
-                                        dugRemoved++;
-                                    }
-                                }
+                                Point cell = new Point(chunkKvp.Key.X * Chunk.CHUNK_SIZE + x, chunkKvp.Key.Y * Chunk.CHUNK_SIZE + y);
+                                _bus.Publish(new PlaceTileCommand(tilledLayer, cell, new TileInfo("Farm", InteractionEngine.TILE_TILLED_DIRT)));
                             }
                         }
                     }
                 }
-
-                // Execute removals
-                foreach (var command in changes) _bus.Publish(command);
-
-                // FIX: Force surrounding tiles to recalculate their edges since holes appeared!
-                foreach (var point in refreshPoints)
-                {
-                    _interactionEngine.RefreshAutoTiling(tilledLayer, point);
-                }
             }
 
-            System.Diagnostics.Debug.WriteLine($"[GameController] Day Advanced! Rebuilding Entity Visuals to ensure Seasonal Overlays update.");
+            // Reset daily watering flags
+            foreach (var p in _state.ActiveSave.ActivePlants)
+                p.IsWateredToday = false;
 
-            // Clear the Composite Cache so old seasonal graphics are flushed!
-            foreach (var tex in _entityManager._compositeCache.Values) tex.Dispose();
-            _entityManager._compositeCache.Clear();
+            // Respawn seasonal wild forages on the first day of each season
+            if (_state.Calendar.Day == 1)
+            {
+                _state.plantManager.SpawnSeasonalWildForages(_state);
+            }
 
             _entityManager.RebuildStaticSprites(_state);
         }

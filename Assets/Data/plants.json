@@ -1,0 +1,313 @@
+[
+  {
+    "ID": "CORN_AMERICA",
+    "Name": "Corn",
+    "Category": "DomesticCrop",
+    "MaskSpawnValue": 0,
+    "AllowedSeasons": [
+      "fall",
+      "autumn",
+      "spring",
+      "summer"
+    ],
+    "SeasonOverlap": false,
+    "AtlasName": "CropC",
+    "CellWidth": 2,
+    "CellHeight": 3,
+    "Stages": [
+      {
+        "StageIndex": 0,
+        "Name": "Spore / Seed",
+        "SpriteX": 0,
+        "SpriteY": 0,
+        "DaysToGrow": 1,
+        "NextStageIndex": 1,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 1,
+        "Name": "sprout",
+        "SpriteX": 2,
+        "SpriteY": 0,
+        "DaysToGrow": 1,
+        "NextStageIndex": 2,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 2,
+        "Name": "New leaf",
+        "SpriteX": 4,
+        "SpriteY": 0,
+        "DaysToGrow": 1,
+        "NextStageIndex": 3,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 3,
+        "Name": "Plant",
+        "SpriteX": 6,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": 4,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 4,
+        "Name": "Young",
+        "SpriteX": 8,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": 5,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 5,
+        "Name": "Adult",
+        "SpriteX": 10,
+        "SpriteY": 0,
+        "DaysToGrow": 3,
+        "NextStageIndex": 6,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 6,
+        "Name": "Ripe",
+        "SpriteX": 12,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": -1,
+        "IsHarvestable": true,
+        "IsMature": true,
+        "HarvestRevertIndex": 7,
+        "RottenStageIndex": 8,
+        "Drops": []
+      },
+      {
+        "StageIndex": 7,
+        "Name": "Harvested",
+        "SpriteX": 14,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": 6,
+        "IsHarvestable": false,
+        "IsMature": true,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": 9,
+        "Drops": []
+      },
+      {
+        "StageIndex": 8,
+        "Name": "Rotten with crop",
+        "SpriteX": 16,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": -1,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 9,
+        "Name": "Rotten",
+        "SpriteX": 18,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": -1,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      }
+    ]
+  },
+  {
+    "ID": "plant_2586",
+    "Name": "Oyster Mushroom",
+    "Category": "Fungal",
+    "MaskSpawnValue": 20,
+    "AllowedSeasons": [
+      "summer"
+    ],
+    "SeasonOverlap": false,
+    "AtlasName": "Mushroom",
+    "CellWidth": 2,
+    "CellHeight": 2,
+    "Stages": [
+      {
+        "StageIndex": 0,
+        "Name": "Spore / Seed",
+        "SpriteX": 8,
+        "SpriteY": 0,
+        "DaysToGrow": 2,
+        "NextStageIndex": -1,
+        "IsHarvestable": true,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": [
+          {
+            "ItemID": 451,
+            "MinCount": 1,
+            "MaxCount": 2,
+            "Chance": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "ID": "CARROT_O",
+    "Name": "Orange Carrot ",
+    "Category": "DomesticCrop",
+    "MaskSpawnValue": 0,
+    "AllowedSeasons": [
+      "spring",
+      "summer"
+    ],
+    "SeasonOverlap": false,
+    "AtlasName": "CropA",
+    "CellWidth": 1,
+    "CellHeight": 2,
+    "Stages": [
+      {
+        "StageIndex": 0,
+        "Name": "Spore / Seed",
+        "SpriteX": 0,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": 1,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 1,
+        "Name": "Sprout",
+        "SpriteX": 1,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": 2,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 2,
+        "Name": "Baby",
+        "SpriteX": 2,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": 3,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      },
+      {
+        "StageIndex": 3,
+        "Name": "Teen",
+        "SpriteX": 3,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": 4,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": [
+          {
+            "ItemID": 1,
+            "MinCount": 1,
+            "MaxCount": 2,
+            "Chance": 1
+          }
+        ]
+      },
+      {
+        "StageIndex": 4,
+        "Name": "Adult",
+        "SpriteX": 4,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": 5,
+        "IsHarvestable": true,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": [
+          {
+            "ItemID": 317,
+            "MinCount": 1,
+            "MaxCount": 2,
+            "Chance": 1
+          }
+        ]
+      },
+      {
+        "StageIndex": 5,
+        "Name": "Mature",
+        "SpriteX": 5,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": -1,
+        "IsHarvestable": true,
+        "IsMature": true,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": 6,
+        "Drops": [
+          {
+            "ItemID": 305,
+            "MinCount": 1,
+            "MaxCount": 2,
+            "Chance": 1
+          }
+        ]
+      },
+      {
+        "StageIndex": 6,
+        "Name": "Rotten",
+        "SpriteX": 6,
+        "SpriteY": 2,
+        "DaysToGrow": 2,
+        "NextStageIndex": -1,
+        "IsHarvestable": false,
+        "IsMature": false,
+        "HarvestRevertIndex": -1,
+        "RottenStageIndex": -1,
+        "Drops": []
+      }
+    ]
+  }
+]

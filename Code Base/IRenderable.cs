@@ -37,6 +37,12 @@ namespace Pixel_Simulations
         // 1.0f = Affected by Parallax (Trees/Props)
         // 0.0f = Ignores Parallax (Player/NPCs)
         public float ParallaxMask;
+        // --- MULTI-STRIP WIND DATA ---
+        public bool HasWindSway;
+        public int StripHeight;
+        public float Stiffness;
+        public float WaveLength;
+        public float FlutterStr;
 
     }
 }

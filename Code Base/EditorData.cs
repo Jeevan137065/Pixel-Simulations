@@ -141,19 +141,15 @@ namespace Pixel_Simulations.Data
             string val = prefab.GetProperty(key, null);
             return (val != null && int.TryParse(val, out int res)) ? res : fallback;
         }
+        // ==========================================
+        // WIND PHYSICS ACCESSORS (Saved to objects.json)
+        // ==========================================
+        public static int GetStripHeight(this ObjectPrefab prefab) => prefab.GetInt("StripHeight", 4);
+        public static float GetStiffness(this ObjectPrefab prefab) => prefab.GetFloat("Stiffness", 0.45f);
+        public static float GetWaveLength(this ObjectPrefab prefab) => prefab.GetFloat("WaveLength", 160f);
+        public static float GetFlutterStr(this ObjectPrefab prefab) => prefab.GetFloat("FlutterStr", 0.15f);
     }
-    [JsonObject(MemberSerialization.OptIn)]
-    public class SpriteData
-    {
-        [JsonProperty] public string AtlasName { get; set; }
-        [JsonProperty] public Rectangle SourceRect { get; set; }
-        [JsonProperty] public Point Offset { get; set; }
-        [JsonProperty] public int ZIndex { get; set; } = 0;
-        [JsonProperty] public bool Sway { get; set; } = false;
 
-        // Maps Original Hex Color -> New Hex Color
-        [JsonProperty] public Dictionary<string, string> PaletteMap { get; set; }
-    }
     [JsonObject(MemberSerialization.OptIn)]
     public class ObjectPrefab
     {
@@ -276,4 +272,26 @@ namespace Pixel_Simulations.Data
         [JsonProperty] public float ProcessingTimer { get; set; } = 0f; // For Machines (In-Game Hours)
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
+    public class LayerVariantData
+    {
+        [JsonProperty] public Dictionary<string, string> PaletteMap { get; set; }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    public class SpriteData
+    {
+        [JsonProperty] public string AtlasName { get; set; }
+        [JsonProperty] public Rectangle SourceRect { get; set; }
+        [JsonProperty] public Point Offset { get; set; }
+        [JsonProperty] public Point Pivot { get; set; } = Point.Zero; // Per-layer local pivot
+        [JsonProperty] public int ZIndex { get; set; } = 0;
+        [JsonProperty] public bool Sway { get; set; } = false;
+        [JsonProperty] public bool Visible { get; set; } = true;
+        [JsonProperty] public string ActiveVariant { get; set; } = "Default";
+
+        // Maps Original Hex Color -> New Hex Color
+        [JsonProperty] public Dictionary<string, string> PaletteMap { get; set; }
+        [JsonProperty] public Dictionary<string, LayerVariantData> Variants { get; set; } = new Dictionary<string, LayerVariantData>(StringComparer.OrdinalIgnoreCase);
+    }
 }

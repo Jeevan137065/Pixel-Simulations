@@ -48,7 +48,7 @@ namespace Pixel_Simulations
         public readonly List<RenderableSprite> _staticSprites = new List<RenderableSprite>();
         public readonly List<RenderableSprite> _drawList = new List<RenderableSprite>();
         private bool _isFirstLoad = true;
-
+        public int builtCount = 0;
         private const int MAX_SPRITES = 4096;
         private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[MAX_SPRITES * 4];
         private short[] _indices = new short[MAX_SPRITES * 6];
@@ -120,13 +120,33 @@ namespace Pixel_Simulations
                 {
                     if (entity.Prefab.AlternateStates.ContainsKey("Trunk")) activeLayers.Add("Trunk");
 
+                    // 1. Seasonal Canopy with Single "Canopy" Reskinnable Fallback
                     string seasonCanopy = "Canopy_" + state.Calendar.CurrentSeason.ToString();
-                    if (entity.Prefab.AlternateStates.ContainsKey(seasonCanopy)) activeLayers.Add(seasonCanopy);
-                    else if (entity.Prefab.AlternateStates.ContainsKey("Canopy_Summer")) activeLayers.Add("Canopy_Summer");
+                    if (entity.Prefab.AlternateStates.ContainsKey(seasonCanopy))
+                    {
+                        activeLayers.Add(seasonCanopy);
+                    }
+                    else if (entity.Prefab.AlternateStates.ContainsKey("Canopy"))
+                    {
+                        activeLayers.Add("Canopy"); // Generic reskinnable canopy
+                    }
+                    else if (entity.Prefab.AlternateStates.ContainsKey("Canopy_Summer"))
+                    {
+                        activeLayers.Add("Canopy_Summer");
+                    }
 
-                    if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
-                    if (entity.GetProperty("HasFruit", "False") == "True" && entity.Prefab.AlternateStates.ContainsKey("Overlay_Fruits")) activeLayers.Add("Overlay_Fruits");
-                    if (entity.GetProperty("HasMoss", "False") == "True" && entity.Prefab.AlternateStates.ContainsKey("Overlay_Moss")) activeLayers.Add("Overlay_Moss");
+                    // 2. Overlays
+                    if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow"))
+                        activeLayers.Add("Overlay_Snow");
+
+                    if (entity.Prefab.AlternateStates.ContainsKey("Overlay_Moss") && entity.GetProperty("HasMoss", "True") == "True")
+                        activeLayers.Add("Overlay_Moss");
+
+                    if (entity.Prefab.AlternateStates.ContainsKey("Overlay_Fruits") && entity.GetProperty("HasFruit", "False") == "True")
+                        activeLayers.Add("Overlay_Fruits");
+
+                    if (entity.Prefab.AlternateStates.ContainsKey("Overlay_Flowers") && entity.GetProperty("HasFlowers", "False") == "True")
+                        activeLayers.Add("Overlay_Flowers");
                 }
             }
             else if (type == "Building")
@@ -135,14 +155,12 @@ namespace Pixel_Simulations
 
                 if (!playerInside)
                 {
-                    // OUTSIDE: Exterior and Roof are visible
                     if (entity.Prefab.AlternateStates.ContainsKey("Exterior")) activeLayers.Add("Exterior");
                     if (entity.Prefab.AlternateStates.ContainsKey("Roof")) activeLayers.Add("Roof");
                     if (state.Calendar.CurrentSeason == Season.Winter && entity.Prefab.AlternateStates.ContainsKey("Overlay_Snow")) activeLayers.Add("Overlay_Snow");
                 }
                 else
                 {
-                    // INSIDE: Roof & exterior disappear; interior wallpaper, floor, and counter appear
                     if (entity.Prefab.AlternateStates.ContainsKey("InteriorBG")) activeLayers.Add("InteriorBG");
                     if (entity.Prefab.AlternateStates.ContainsKey("InteriorFG")) activeLayers.Add("InteriorFG");
                 }
@@ -281,7 +299,6 @@ namespace Pixel_Simulations
             gd.SetRenderTarget(rt);
             gd.Clear(Color.Transparent);
 
-            // Track temporary CPU-swapped textures to safely dispose of them after rendering completes
             List<Texture2D> tempTextures = new List<Texture2D>();
 
             using (var sb = new SpriteBatch(gd))
@@ -292,7 +309,8 @@ namespace Pixel_Simulations
                 {
                     if (prefab.AlternateStates.TryGetValue(stateKey, out var layerData))
                     {
-                        // Skip dummy base tile layers
+                        if (!layerData.Visible) continue; // Respect layer visibility
+
                         if (string.Equals(layerData.AtlasName, "Base", StringComparison.OrdinalIgnoreCase) &&
                             layerData.SourceRect == new Rectangle(0, 0, 16, 16) &&
                             layerData.Offset == Point.Zero)
@@ -303,27 +321,34 @@ namespace Pixel_Simulations
                         var layerTex = state.Assets.GetAtlas(layerData.AtlasName);
                         if (layerTex != null)
                         {
-                            if (layerData.PaletteMap != null && layerData.PaletteMap.Count > 0)
+                            // Apply per-layer local pivot displacement
+                            Vector2 drawPos = layerData.Offset.ToVector2() - layerData.Pivot.ToVector2();
+
+                            // Resolve active variant palette map
+                            Dictionary<string, string> activePalette = layerData.PaletteMap;
+                            if (layerData.Variants != null && !string.IsNullOrEmpty(layerData.ActiveVariant) &&
+                                layerData.Variants.TryGetValue(layerData.ActiveVariant, out var vData) && vData.PaletteMap != null)
                             {
-                                Texture2D swappedTex = ApplyPaletteSwap(layerTex, layerData.SourceRect, layerData.PaletteMap, gd);
-                                sb.Draw(swappedTex, layerData.Offset.ToVector2(), Color.White);
+                                activePalette = vData.PaletteMap;
+                            }
+
+                            if (activePalette != null && activePalette.Count > 0)
+                            {
+                                Texture2D swappedTex = ApplyPaletteSwap(layerTex, layerData.SourceRect, activePalette, gd);
+                                sb.Draw(swappedTex, drawPos, Color.White);
                                 tempTextures.Add(swappedTex);
                             }
                             else
                             {
-                                sb.Draw(layerTex, layerData.Offset.ToVector2(), layerData.SourceRect, Color.White);
+                                sb.Draw(layerTex, drawPos, layerData.SourceRect, Color.White);
                             }
                         }
                     }
                 }
-                sb.End(); // Flushes all draw calls to the active RenderTarget (rt) on the GPU
+                sb.End();
             }
 
-            // Now that the GPU has finished utilizing the textures, safely release their memory
-            foreach (var tempTex in tempTextures)
-            {
-                tempTex.Dispose();
-            }
+            foreach (var tempTex in tempTextures) tempTex.Dispose();
 
             gd.SetRenderTargets(oldTargets);
             _compositeCache[cacheKey] = rt;
@@ -333,7 +358,6 @@ namespace Pixel_Simulations
         {
             _staticSprites.Clear();
             _simulationSprites.Clear();
-            int builtCount = 0;
 
             foreach (var entity in _allEntities)
             {
@@ -357,7 +381,6 @@ namespace Pixel_Simulations
                     }
                     if (hasSway) pMask += 0.5f;
 
-                    // Resolve representative atlas name for normal mapping
                     string atlasName = "Building";
                     if (type == "Tree") atlasName = "Trees";
                     else if (entity.Prefab.AlternateStates.Count > 0)
@@ -367,7 +390,6 @@ namespace Pixel_Simulations
                             atlasName = System.IO.Path.GetFileNameWithoutExtension(firstLayer.AtlasName);
                     }
 
-                    // Feet depth: Ground contact is aligned to the sprite's bottom
                     float feetY = entity.Position.Y + (finalTexture.Height - entity.Prefab.Pivot.Y) * prop.Scale.Y;
 
                     _staticSprites.Add(new RenderableSprite
@@ -381,7 +403,14 @@ namespace Pixel_Simulations
                         Rotation = prop.Rotation,
                         BaseWorldY = feetY,
                         DrawDepth = DepthUtil.Calculate(feetY),
-                        ParallaxMask = Math.Min(pMask, 1.0f)
+                        ParallaxMask = Math.Min(pMask, 1.0f),
+
+                        // Multi-strip physics configuration
+                        HasWindSway = hasSway,
+                        StripHeight = entity.Prefab.GetStripHeight(),
+                        Stiffness = entity.Prefab.GetStiffness(),
+                        WaveLength = entity.Prefab.GetWaveLength(),
+                        FlutterStr = entity.Prefab.GetFlutterStr()
                     });
                     builtCount++;
                 }
@@ -409,14 +438,51 @@ namespace Pixel_Simulations
                                 Rotation = 0f,
                                 BaseWorldY = entity.Position.Y,
                                 DrawDepth = DepthUtil.Calculate(entity.Position.Y),
-                                ParallaxMask = 0f
+                                ParallaxMask = 0f,
+                                HasWindSway = false
                             });
                             builtCount++;
                         }
                     }
                 }
             }
+            // 2. GENERATE SPRITES FOR ACTIVE WORLD PLANTS & WILD FORAGES
+            foreach (var plant in state.ActiveSave.ActivePlants)
+            {
+                var def = state.plantManager.GetPlant(plant.PlantID);
+                if (def == null || plant.CurrentStageIndex >= def.Stages.Count) continue;
 
+                var stage = def.Stages[plant.CurrentStageIndex];
+                var tex = state.Assets.GetAtlas(def.AtlasName);
+
+                if (tex == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EntityManager WARNING] Missing Atlas '{def.AtlasName}' for plant '{def.Name}'.");
+                    continue;
+                }
+
+                int w = def.CellWidth * 16;
+                int h = def.CellHeight * 16;
+                Rectangle srcRect = new Rectangle(stage.SpriteX * 16, stage.SpriteY * 16, w, h);
+                Vector2 pivot = new Vector2(w / 2f, h);
+
+                _staticSprites.Add(new RenderableSprite
+                {
+                    AtlasName = def.AtlasName,
+                    Texture = tex,
+                    Position = plant.Position,
+                    SourceRect = srcRect,
+                    Origin = pivot,
+                    Scale = Vector2.One,
+                    Rotation = 0f,
+                    BaseWorldY = plant.Position.Y,
+                    DrawDepth = DepthUtil.Calculate(plant.Position.Y),
+                    ParallaxMask = 0f
+                });
+                builtCount++;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[EntityManager] Total renderable static sprites built: {_staticSprites.Count}");
             _isFirstLoad = true;
         }
 
@@ -672,39 +738,95 @@ namespace Pixel_Simulations
         // ==========================================
         // DEDICATED ALBEDO PASS
         // ==========================================
-        public void DrawAlbedoPass(GraphicsDevice gd, Camera camera, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
+        public void DrawAlbedoPass(GraphicsDevice gd, Camera camera, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList, WeatherSimulator weather = null, GameTime gameTime = null)
         {
             if (renderList.Count == 0) return;
             SetupRenderState(gd, camera);
+
+            float totalSec = gameTime != null ? (float)gameTime.TotalGameTime.TotalSeconds : 0f;
+            WindWaveSample wind = weather != null
+                ? weather.SampleWindWave(totalSec, 12.0f)
+                : new WindWaveSample { Direction = new Vector2(1, 0), Velocity = 2.5f, GustAmplitude = 6f, TimeStepped = totalSec };
 
             int spriteCount = 0;
             Texture2D currentTexture = null;
 
             foreach (var sprite in renderList)
             {
-                if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
+                if (sprite.HasWindSway && sprite.Rotation == 0f)
                 {
-                    FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
-                    spriteCount = 0;
+                    int stripH = Math.Max(1, sprite.StripHeight);
+                    int totalH = sprite.SourceRect.Height;
+                    float pivotY = sprite.Origin.Y * sprite.Scale.Y;
+
+                    for (int y = 0; y < totalH; y += stripH)
+                    {
+                        if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
+                        {
+                            FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
+                            spriteCount = 0;
+                        }
+                        currentTexture = sprite.Texture;
+
+                        int currentStripH = Math.Min(stripH, totalH - y);
+                        float localY = y * sprite.Scale.Y;
+
+                        // Calculate displacement with map-wide propagation and decorrelation
+                        float horizontalShift = CalculateStripDisplacement(
+                            sprite.Position, localY, pivotY,
+                            sprite.Stiffness, sprite.WaveLength, sprite.FlutterStr, wind);
+
+                        // Strip quad corner positions
+                        float left = -sprite.Origin.X * sprite.Scale.X + horizontalShift;
+                        float right = (sprite.SourceRect.Width - sprite.Origin.X) * sprite.Scale.X + horizontalShift;
+                        float top = -sprite.Origin.Y * sprite.Scale.Y + localY;
+                        float bottom = top + (currentStripH * sprite.Scale.Y);
+
+                        Vector2 tl = new Vector2(sprite.Position.X + left, sprite.Position.Y + top);
+                        Vector2 tr = new Vector2(sprite.Position.X + right, sprite.Position.Y + top);
+                        Vector2 bl = new Vector2(sprite.Position.X + left, sprite.Position.Y + bottom);
+                        Vector2 br = new Vector2(sprite.Position.X + right, sprite.Position.Y + bottom);
+
+                        float texW = 1f / currentTexture.Width;
+                        float texH = 1f / currentTexture.Height;
+                        float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW);
+                        float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW);
+                        float v0 = ((sprite.SourceRect.Y + y) * texH) + (0.1f * texH);
+                        float v1 = ((sprite.SourceRect.Y + y + currentStripH) * texH) - (0.1f * texH);
+
+                        int vIdx = spriteCount * 4;
+                        _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), Color.White, new Vector2(u0, v0));
+                        _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0), Color.White, new Vector2(u1, v0));
+                        _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0), Color.White, new Vector2(u0, v1));
+                        _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0), Color.White, new Vector2(u1, v1));
+                        spriteCount++;
+                    }
                 }
-                currentTexture = sprite.Texture;
+                else
+                {
+                    if (spriteCount >= MAX_SPRITES || (currentTexture != null && currentTexture != sprite.Texture))
+                    {
+                        FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
+                        spriteCount = 0;
+                    }
+                    currentTexture = sprite.Texture;
 
-                CalculateSpriteGeometry(sprite, camera, enableParallax, parallaxStrength, out Vector2 tl, out Vector2 tr, out Vector2 bl, out Vector2 br);
+                    CalculateSpriteGeometry(sprite, camera, enableParallax, parallaxStrength, out Vector2 tl, out Vector2 tr, out Vector2 bl, out Vector2 br);
 
-                float texW = 1f / currentTexture.Width; float texH = 1f / currentTexture.Height;
-                float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW); float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
-                float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW); float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
+                    float texW = 1f / currentTexture.Width; float texH = 1f / currentTexture.Height;
+                    float u0 = (sprite.SourceRect.X * texW) + (0.1f * texW); float v0 = (sprite.SourceRect.Y * texH) + (0.1f * texH);
+                    float u1 = ((sprite.SourceRect.Right) * texW) - (0.1f * texW); float v1 = ((sprite.SourceRect.Bottom) * texH) - (0.1f * texH);
 
-                int vIdx = spriteCount * 4;
-                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), Color.White, new Vector2(u0, v0));
-                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0), Color.White, new Vector2(u1, v0));
-                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0), Color.White, new Vector2(u0, v1));
-                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0), Color.White, new Vector2(u1, v1));
-                spriteCount++;
+                    int vIdx = spriteCount * 4;
+                    _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), Color.White, new Vector2(u0, v0));
+                    _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0), Color.White, new Vector2(u1, v0));
+                    _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0), Color.White, new Vector2(u0, v1));
+                    _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0), Color.White, new Vector2(u1, v1));
+                    spriteCount++;
+                }
             }
             if (spriteCount > 0) FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
         }
-
         // ==========================================
         // DEDICATED NORMAL PASS
         // ==========================================
@@ -751,7 +873,7 @@ namespace Pixel_Simulations
         {
             if (renderList.Count == 0) return;
 
-            // Write Red (Altitude) and Alpha (Opaque mask so it can be sampled and viewed)
+            // Write strictly to Red channel (Height) and Alpha
             gd.BlendState = new BlendState
             {
                 ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Alpha,
@@ -764,10 +886,9 @@ namespace Pixel_Simulations
             gd.RasterizerState = RasterizerState.CullNone;
             gd.SamplerStates[0] = SamplerState.PointClamp;
 
-            // Use BasicEffect with Vertex Colors enabled for uncorrupted interpolation
             SetupRenderState(gd, camera);
 
-            const float MAX_WORLD_ALTITUDE = 350f; // Matches VolumeDepth shader baseline
+            const float MAX_WORLD_ALTITUDE = 350f; // Baseline altitude range for fog
             int spriteCount = 0;
             Texture2D currentTexture = null;
 
@@ -792,12 +913,12 @@ namespace Pixel_Simulations
                 // Height in world pixels
                 float physicalHeight = sprite.SourceRect.Height * sprite.Scale.Y;
 
-                // Top vertices = Maximum altitude of this sprite (Red: 0 to 255)
+                // Top vertices = Maximum altitude of this sprite above ground
                 byte topRed = (byte)MathHelper.Clamp((physicalHeight / MAX_WORLD_ALTITUDE) * 255f, 0f, 255f);
 
-                // Green and Blue are set to 0 to prevent Green/Yellow contamination!
+                // Red = Altitude, Green/Blue = 0 (reserved for future use)
                 Color topColor = new Color(topRed, (byte)0, (byte)0, (byte)255);
-                Color botColor = new Color((byte)0, (byte)0, (byte)0, (byte)255); // Feet contact = 0
+                Color botColor = new Color((byte)0, (byte)0, (byte)0, (byte)255); // Ground contact = 0 altitude
 
                 int vIdx = spriteCount * 4;
                 _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0), topColor, new Vector2(u0, v0));
@@ -808,17 +929,26 @@ namespace Pixel_Simulations
             }
             if (spriteCount > 0) FlushBatch(gd, _basicEffect, currentTexture, spriteCount);
         }
+
         public void DrawZDepthPass(GraphicsDevice gd, Camera camera, Effect zDepthShader, bool enableParallax, float parallaxStrength, List<RenderableSprite> renderList)
         {
             if (renderList.Count == 0 || zDepthShader == null) return;
 
-            // Fully overwrite color and alpha without blending artifacts
-            gd.BlendState = BlendState.Opaque;
+            // Write strictly to Red channel (Screen depth) and Alpha
+            gd.BlendState = new BlendState
+            {
+                ColorWriteChannels = ColorWriteChannels.Red | ColorWriteChannels.Alpha,
+                ColorSourceBlend = Blend.One,
+                ColorDestinationBlend = Blend.Zero
+            };
             gd.DepthStencilState = DepthStencilState.None;
             gd.RasterizerState = RasterizerState.CullNone;
             gd.SamplerStates[0] = SamplerState.PointClamp;
 
             zDepthShader.Parameters["MatrixTransform"]?.SetValue(camera.ScreenWVP);
+
+            float camTop = camera.SimViewBounds.Top;
+            float camHeight = camera.SimViewBounds.Height;
 
             int spriteCount = 0;
             Texture2D currentTexture = null;
@@ -841,19 +971,18 @@ namespace Pixel_Simulations
                 float u1 = (sprite.SourceRect.Right * texW) - (0.1f * texW);
                 float v1 = (sprite.SourceRect.Bottom * texH) - (0.1f * texH);
 
-                // Uniform scalar depth for the ENTIRE object:
-                // 0.0 = Background (Top of map)
-                // 1.0 = Foreground (Bottom of map, closest to camera)
-                float normalizedDepth = DepthUtil.Calculate(sprite.BaseWorldY);
-                byte depthByte = (byte)(normalizedDepth * 255f);
+                // Screen-space sorting depth: 0.001 (top of screen) to 1.0 (bottom of screen)
+                float screenDepth = DepthUtil.CalculateScreenDepth(sprite.BaseWorldY, camTop, camHeight);
+                byte depthByte = (byte)(screenDepth * 255f);
 
-                Color uniformColor = new Color(depthByte, depthByte, depthByte, (byte)255);
+                // Red = Sorting depth, Green/Blue = 0 (reserved for future use)
+                Color depthColor = new Color(depthByte, (byte)0, (byte)0, (byte)255);
 
                 int vIdx = spriteCount * 4;
-                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0f), uniformColor, new Vector2(u0, v0));
-                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0f), uniformColor, new Vector2(u1, v0));
-                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0f), uniformColor, new Vector2(u0, v1));
-                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0f), uniformColor, new Vector2(u1, v1));
+                _vertices[vIdx + 0] = new VertexPositionColorTexture(new Vector3(tl, 0f), depthColor, new Vector2(u0, v0));
+                _vertices[vIdx + 1] = new VertexPositionColorTexture(new Vector3(tr, 0f), depthColor, new Vector2(u1, v0));
+                _vertices[vIdx + 2] = new VertexPositionColorTexture(new Vector3(bl, 0f), depthColor, new Vector2(u0, v1));
+                _vertices[vIdx + 3] = new VertexPositionColorTexture(new Vector3(br, 0f), depthColor, new Vector2(u1, v1));
                 spriteCount++;
             }
 
@@ -871,6 +1000,48 @@ namespace Pixel_Simulations
                 pass.Apply();
                 gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertices, 0, spriteCount * 4, _indices, 0, spriteCount * 2);
             }
+        }
+
+        public static float CalculateStripDisplacement(
+           Vector2 worldPos,
+           float localY,
+           float pivotY,
+           float stiffness,
+           float waveLength,
+           float flutterStr,
+           WindWaveSample wind)
+        {
+            // Slices at or below the ground contact pivot remain anchored (0 displacement)
+            if (localY >= pivotY) return 0f;
+
+            float normHeight = (pivotY - localY) / Math.Max(1f, pivotY);
+            float flex = MathF.Pow(normHeight, 1.6f) * (1.0f - stiffness * 0.75f);
+
+            // 1. MAP-WIDE WAVE PROPAGATION:
+            // Project the object's world position along the wind direction vector.
+            // As the wind wave washes across the map, trees upwind bend before trees downwind.
+            float spatialCoord = Vector2.Dot(worldPos, wind.Direction);
+
+            // 2. Wave phase calculation
+            float wavePhase = ((spatialCoord + (localY * 0.35f)) / Math.Max(waveLength, 1.0f)) - (wind.TimeStepped * wind.Velocity);
+
+            // 3. PER-OBJECT DESYNCHRONIZATION (Jitter Hash):
+            // Prevents adjacent trees from oscillating in mechanical synchrony.
+            float objHash = Hash(worldPos.X, worldPos.Y);
+            float phaseJitter = (objHash - 0.5f) * 1.5f;
+
+            // 4. Harmonic components: Gust wave + High-frequency leaf tremor
+            float gust = MathF.Sin(wavePhase + phaseJitter) * wind.GustAmplitude;
+            float microFlutter = MathF.Sin(wind.TimeStepped * 7.5f + (localY * 0.15f) + (objHash * 6.283f)) * flutterStr * 4.0f;
+
+            // Discrete integer pixel grid snapping for rock-solid pixel art
+            return MathF.Round((gust + microFlutter) * flex);
+        }
+
+        private static float Hash(float x, float y)
+        {
+            float n = MathF.Sin(x * 12.9898f + y * 78.233f) * 43758.5453f;
+            return n - MathF.Floor(n);
         }
     }
 }

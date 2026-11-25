@@ -152,7 +152,7 @@ namespace Pixel_Simulations
         public static void LogConfiguration(string applicationName)
         {
             if (_loggedConfig) return;
-            _loggedConfig = true;
+            _loggedConfig = true; 
 
             System.Diagnostics.Debug.WriteLine("=======================================================================");
             System.Diagnostics.Debug.WriteLine($"[PATH CONFIGURATION] Initializing: {applicationName}");
@@ -529,6 +529,14 @@ namespace Pixel_Simulations
             // Clamp just to be safe from floating point errors
             return MathHelper.Clamp(depth, 0f, 1f);
             //return 1;
+        }
+        // Screen-relative depth for ZDepth Sorting buffer
+        // Maps [Camera.Top .. Camera.Bottom] -> [0.001 .. 1.0] across current visible screen
+        public static float CalculateScreenDepth(float worldBottomY, float camTopY, float camHeight)
+        {
+            if (camHeight <= 0f) return 0.001f;
+            float depth = (worldBottomY - camTopY) / camHeight;
+            return MathHelper.Clamp(depth, 0.001f, 1.0f);
         }
     }
     public static class SpriteSorter

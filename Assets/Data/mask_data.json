@@ -2,97 +2,117 @@
   "Biomes": [
     {
       "Value": 0,
-      "Name": "Void",
-      "Category": "None"
+      "Name": "Barren / Void",
+      "Category": "Terrain"
     },
     {
-      "Value": 50,
-      "Name": "Oak Forest",
-      "Category": "Forest"
+      "Value": 10,
+      "Name": "Wildflower Meadow (Grass)",
+      "Category": "Foliage"
     },
     {
-      "Value": 100,
-      "Name": "Farmable Dirt",
+      "Value": 25,
+      "Name": "Highland Wheat (Grass)",
+      "Category": "Foliage"
+    },
+    {
+      "Value": 40,
+      "Name": "Forest Lawn (Grass)",
+      "Category": "Foliage"
+    },
+    {
+      "Value": 55,
+      "Name": "Alpine Tundra (Grass)",
+      "Category": "Foliage"
+    },
+    {
+      "Value": 70,
+      "Name": "Swamp Reeds (Grass)",
+      "Category": "Foliage"
+    },
+    {
+      "Value": 80,
+      "Name": "River Grass",
+      "Category": "Foliage"
+    },
+    {
+      "Value": 90,
+      "Name": "Farm Zone",
       "Category": "Farm"
     },
     {
-      "Value": 150,
-      "Name": "Riverbank",
-      "Category": "Water"
+      "Value": 120,
+      "Name": "Sand / Shoreline",
+      "Category": "Beach"
     }
   ],
   "Spawns": [
     {
       "Value": 0,
-      "Name": "Empty",
+      "Name": "No Spawns",
       "Category": "None"
     },
     {
-      "Value": 50,
-      "Name": "Wild Dandelion",
+      "Value": 20,
+      "Name": "oyster mushrooms",
       "Category": "Forage"
-    },
-    {
-      "Value": 100,
-      "Name": "Berry Bush",
-      "Category": "Forage"
-    },
-    {
-      "Value": 150,
-      "Name": "Copper Node",
-      "Category": "Ore"
-    },
-    {
-      "Value": 200,
-      "Name": "Trout Spawn",
-      "Category": "Fish"
     }
   ],
   "Elevations": [
     {
       "Value": 0,
-      "Name": "Absolute Bottom",
-      "Category": "None"
+      "Name": "Abyss / Deep Void",
+      "Category": "Submerged"
     },
     {
       "Value": 15,
-      "Name": "Sea Floor",
+      "Name": "Deep Waterbed Basin",
       "Category": "Submerged"
+    },
+    {
+      "Value": 40,
+      "Name": "Swimming Water Zone",
+      "Category": "Submerged"
+    },
+    {
+      "Value": 80,
+      "Name": "Wading Shoreline Edge",
+      "Category": "Surface"
     },
     {
       "Value": 120,
-      "Name": "Shoreline",
-      "Category": "Submerged"
+      "Name": "Lowland Ground",
+      "Category": "Surface"
     },
     {
       "Value": 128,
-      "Name": "Water Level",
+      "Name": "Surface Baseline (0u)",
       "Category": "Surface"
     },
     {
       "Value": 160,
-      "Name": "Ground I",
-      "Category": "Surface"
+      "Name": "Terrace Step 1 (+1u)",
+      "Category": "Terrace"
     },
     {
       "Value": 192,
-      "Name": "Ground II",
-      "Category": "Elevation"
+      "Name": "Plateau Step 2 (+2u)",
+      "Category": "Terrace"
     },
     {
       "Value": 200,
-      "Name": "Ground III",
-      "Category": "Elevation"
+      "Name": "High Cliff Ridge (+3u)",
+      "Category": "Terrace"
     },
     {
       "Value": 240,
-      "Name": "Absolute Peak",
-      "Category": "Sky"
+      "Name": "Mountain Grade (+4u)",
+      "Category": "Peak"
     },
     {
       "Value": 255,
-      "Name": "New Entry",
-      "Category": "None"
+      "Name": "Impassable Peak (+5u)",
+      "Category": "Peak"
     }
   ]
 }

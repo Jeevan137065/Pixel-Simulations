@@ -20,14 +20,30 @@
       "Y": 160
     },
     "Pivot": {
-      "X": 16,
-      "Y": 32
+      "X": 24,
+      "Y": 160
     },
     "Tags": [],
     "Properties": {
       "Type": {
         "Type": 0,
         "Value": "Tree"
+      },
+      "StripHeight": {
+        "Type": 1,
+        "Value": "3"
+      },
+      "Stiffness": {
+        "Type": 2,
+        "Value": "0.45"
+      },
+      "WaveLength": {
+        "Type": 2,
+        "Value": "160"
+      },
+      "FlutterStr": {
+        "Type": 2,
+        "Value": "0.15"
       }
     },
     "AlternateStates": {
@@ -44,7 +60,17 @@
           "Y": 0
         },
         "ZIndex": 5,
-        "Sway": true
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Trunk": {
         "AtlasName": "Trees_t",
@@ -59,156 +85,16 @@
           "Y": 0
         },
         "ZIndex": 3,
-        "Sway": false
-      },
-      "Canopy_Summer": {
-        "AtlasName": "Trees_l",
-        "SourceRect": {
-          "X": 64,
-          "Y": 0,
-          "Width": 48,
-          "Height": 112
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
         },
-        "Offset": {
+        "ActiveVariant": "Default",
+        "Pivot": {
           "X": 0,
           "Y": 0
-        },
-        "ZIndex": 5,
-        "Sway": true,
-        "PaletteMap": {
-          "#005900": "#005900",
-          "#046800": "#036300",
-          "#026d00": "#046500",
-          "#046d00": "#046600",
-          "#0f680f": "#046800",
-          "#13770b": "#077100",
-          "#13770f": "#077200",
-          "#16770d": "#077200",
-          "#117c08": "#087300",
-          "#137c07": "#087400",
-          "#117c0f": "#087400",
-          "#137c0f": "#087400",
-          "#187c0f": "#097600",
-          "#22861a": "#0b8000",
-          "#25861c": "#0c8100",
-          "#208b17": "#0c8200",
-          "#228b16": "#0c8200",
-          "#268a1f": "#0d8400",
-          "#278a1e": "#0d8400",
-          "#268b1f": "#0d8500",
-          "#278b1e": "#0d8500",
-          "#319529": "#119004",
-          "#2f9a26": "#129205",
-          "#319a25": "#129205",
-          "#359a2e": "#139506",
-          "#369a2d": "#139506",
-          "#3ea935": "#18a20b",
-          "#40a934": "#18a20b",
-          "#44a93d": "#19a50c",
-          "#45a93c": "#19a50c",
-          "#45b23c": "#1bab0e",
-          "#53b84c": "#1fb512",
-          "#54b84b": "#1fb512"
-        }
-      },
-      "Canopy_Monsoon": {
-        "AtlasName": "Trees_l",
-        "SourceRect": {
-          "X": 64,
-          "Y": 0,
-          "Width": 48,
-          "Height": 112
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        },
-        "ZIndex": 5,
-        "Sway": true,
-        "PaletteMap": {
-          "#005900": "#005716",
-          "#046800": "#006123",
-          "#026d00": "#006427",
-          "#046d00": "#006427",
-          "#0f680f": "#00662a",
-          "#13770b": "#007037",
-          "#13770f": "#007138",
-          "#16770d": "#007138",
-          "#117c08": "#00723a",
-          "#137c07": "#00733a",
-          "#117c0f": "#00733b",
-          "#137c0f": "#00743b",
-          "#187c0f": "#00753d",
-          "#22861a": "#00804b",
-          "#25861c": "#00814d",
-          "#208b17": "#00824e",
-          "#228b16": "#00824e",
-          "#268a1f": "#008451",
-          "#278a1e": "#008451",
-          "#268b1f": "#008551",
-          "#278b1e": "#008552",
-          "#319529": "#008d50",
-          "#2f9a26": "#008e50",
-          "#319a25": "#008f50",
-          "#359a2e": "#00904f",
-          "#369a2d": "#00914f",
-          "#3ea935": "#009a4d",
-          "#40a934": "#009a4d",
-          "#44a93d": "#009c4c",
-          "#45a93c": "#009c4c",
-          "#45b23c": "#00a04b",
-          "#53b84c": "#00a849",
-          "#54b84b": "#00a849"
-        }
-      },
-      "Canopy_Autumn": {
-        "AtlasName": "Trees_l",
-        "SourceRect": {
-          "X": 64,
-          "Y": 0,
-          "Width": 48,
-          "Height": 112
-        },
-        "Offset": {
-          "X": 0,
-          "Y": 0
-        },
-        "ZIndex": 5,
-        "Sway": true,
-        "PaletteMap": {
-          "#005900": "#574b00",
-          "#046800": "#5b5a05",
-          "#026d00": "#5b5d06",
-          "#046d00": "#5c5e06",
-          "#0f680f": "#5c6107",
-          "#13770b": "#606f0c",
-          "#13770f": "#60700c",
-          "#16770d": "#60710d",
-          "#117c08": "#60720d",
-          "#137c07": "#61730d",
-          "#117c0f": "#61730d",
-          "#137c0f": "#61740e",
-          "#187c0f": "#62760e",
-          "#22861a": "#658513",
-          "#25861c": "#668714",
-          "#208b17": "#668814",
-          "#228b16": "#668915",
-          "#268a1f": "#678b15",
-          "#278a1e": "#678c16",
-          "#268b1f": "#678c16",
-          "#278b1e": "#678d16",
-          "#319529": "#659622",
-          "#2f9a26": "#659824",
-          "#319a25": "#659925",
-          "#359a2e": "#649b28",
-          "#369a2d": "#649b28",
-          "#3ea935": "#62a736",
-          "#40a934": "#62a737",
-          "#44a93d": "#61a93a",
-          "#45a93c": "#61aa3a",
-          "#45b23c": "#60af40",
-          "#53b84c": "#5eb84c",
-          "#54b84b": "#5eb84c"
         }
       }
     }
@@ -220,8 +106,8 @@
       "Y": 96
     },
     "Pivot": {
-      "X": 16,
-      "Y": 32
+      "X": 24,
+      "Y": 96
     },
     "Tags": [],
     "Properties": {
@@ -244,7 +130,17 @@
           "Y": 0
         },
         "ZIndex": 3,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Canopy_Spring": {
         "AtlasName": "Trees_l",
@@ -259,7 +155,17 @@
           "Y": 0
         },
         "ZIndex": 5,
-        "Sway": true
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -270,8 +176,8 @@
       "Y": 352
     },
     "Pivot": {
-      "X": 16,
-      "Y": 32
+      "X": 56,
+      "Y": 176
     },
     "Tags": [],
     "Properties": {
@@ -290,6 +196,22 @@
       "HasMoss": {
         "Type": 3,
         "Value": "False"
+      },
+      "StripHeight": {
+        "Type": 1,
+        "Value": "6"
+      },
+      "Stiffness": {
+        "Type": 2,
+        "Value": "0.45"
+      },
+      "WaveLength": {
+        "Type": 2,
+        "Value": "160"
+      },
+      "FlutterStr": {
+        "Type": 2,
+        "Value": "0.15"
       }
     },
     "AlternateStates": {
@@ -306,7 +228,17 @@
           "Y": 0
         },
         "ZIndex": 3,
-        "Sway": false
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -341,7 +273,17 @@
           "Y": 0
         },
         "ZIndex": 5,
-        "Sway": true
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Canopy_Autumn": {
         "AtlasName": "Trees_t",
@@ -369,6 +311,28 @@
           "#25ab19": "#83a02d",
           "#16c108": "#8ba733",
           "#4fc646": "#abc748"
+        },
+        "Variants": {
+          "Default": {
+            "PaletteMap": {
+              "#065e00": "#3f5c00",
+              "#246320": "#516e0c",
+              "#266322": "#526f0d",
+              "#197d13": "#5e7b15",
+              "#0c8800": "#5e7b15",
+              "#297d23": "#66821a",
+              "#2a7d22": "#66831a",
+              "#359a2e": "#809c2b",
+              "#25ab19": "#83a02d",
+              "#16c108": "#8ba733",
+              "#4fc646": "#abc748"
+            }
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
         }
       },
       "Canopy_Summer": {
@@ -397,6 +361,28 @@
           "#25ab19": "#43c23f",
           "#16c108": "#4ac943",
           "#4fc646": "#6ae651"
+        },
+        "Variants": {
+          "Default": {
+            "PaletteMap": {
+              "#065e00": "#008521",
+              "#246320": "#129629",
+              "#266322": "#13962a",
+              "#197d13": "#1ea12f",
+              "#0c8800": "#1fa12f",
+              "#297d23": "#26a832",
+              "#2a7d22": "#26a832",
+              "#359a2e": "#40bf3e",
+              "#25ab19": "#43c23f",
+              "#16c108": "#4ac943",
+              "#4fc646": "#6ae651"
+            }
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
         }
       }
     }
@@ -408,8 +394,8 @@
       "Y": 240
     },
     "Pivot": {
-      "X": 16,
-      "Y": 32
+      "X": 40,
+      "Y": 240
     },
     "Tags": [],
     "Properties": {
@@ -432,7 +418,17 @@
           "Y": 0
         },
         "ZIndex": 3,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Canopy_Spring": {
         "AtlasName": "Trees_l",
@@ -447,7 +443,17 @@
           "Y": 0
         },
         "ZIndex": 5,
-        "Sway": true
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -458,8 +464,8 @@
       "Y": 256
     },
     "Pivot": {
-      "X": 16,
-      "Y": 32
+      "X": 40,
+      "Y": 272
     },
     "Tags": [],
     "Properties": {
@@ -482,7 +488,17 @@
           "Y": 0
         },
         "ZIndex": 3,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Canopy_Spring": {
         "AtlasName": "Trees_l",
@@ -497,7 +513,17 @@
           "Y": 0
         },
         "ZIndex": 5,
-        "Sway": true
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Overlay_Snow": {
         "AtlasName": "Trees_s",
@@ -509,10 +535,20 @@
         },
         "Offset": {
           "X": 0,
-          "Y": -16
+          "Y": -8
         },
         "ZIndex": 10,
-        "Sway": false
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -523,8 +559,8 @@
       "Y": 320
     },
     "Pivot": {
-      "X": 16,
-      "Y": 32
+      "X": 56,
+      "Y": 320
     },
     "Tags": [],
     "Properties": {
@@ -547,7 +583,17 @@
           "Y": 0
         },
         "ZIndex": 3,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Canopy_Spring": {
         "AtlasName": "Trees_l",
@@ -562,7 +608,17 @@
           "Y": 0
         },
         "ZIndex": 5,
-        "Sway": true
+        "Sway": true,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Canopy_Winter": {
         "AtlasName": "Trees_l",
@@ -582,6 +638,20 @@
           "#16770d": "#51804d",
           "#228b16": "#95b193",
           "#359a2e": "#ffffff"
+        },
+        "Variants": {
+          "Default": {
+            "PaletteMap": {
+              "#16770d": "#51804d",
+              "#228b16": "#95b193",
+              "#359a2e": "#ffffff"
+            }
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
         }
       }
     }
@@ -617,7 +687,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -658,7 +738,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "InteriorBG": {
         "AtlasName": "Prototype_Building_i",
@@ -673,7 +763,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Roof": {
         "AtlasName": "Prototype_Building_r",
@@ -688,7 +788,17 @@
           "Y": 0
         },
         "ZIndex": 9,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -729,7 +839,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "InteriorBG": {
         "AtlasName": "Prototype_Building_i",
@@ -744,7 +864,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       },
       "Roof": {
         "AtlasName": "Prototype_Building_r",
@@ -759,7 +889,17 @@
           "Y": 0
         },
         "ZIndex": 9,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -800,7 +940,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -1180,7 +1330,17 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   },
@@ -1215,7 +1375,431 @@
           "Y": 0
         },
         "ZIndex": 2,
-        "Sway": false
+        "Sway": false,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Bush A",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 32
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 32,
+          "Y": 144,
+          "Width": 32,
+          "Height": 32
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Bush B",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 32
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 96,
+          "Y": 144,
+          "Width": 32,
+          "Height": 32
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Bush C",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 32
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 128,
+          "Y": 144,
+          "Width": 32,
+          "Height": 32
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Bush C1",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 32
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 0,
+          "Y": 112,
+          "Width": 32,
+          "Height": 32
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Bush C2",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 32
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 32,
+          "Y": 112,
+          "Width": 32,
+          "Height": 32
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "False Solomon",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 48
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 48
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 160,
+          "Y": 64,
+          "Width": 32,
+          "Height": 48
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Plantain",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 32
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 32
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 256,
+          "Y": 224,
+          "Width": 32,
+          "Height": 32
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Plantain Tall",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 48
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 48
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 288,
+          "Y": 208,
+          "Width": 32,
+          "Height": 48
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
+      }
+    }
+  },
+  {
+    "ID": "Rando Bush",
+    "CanvasSize": {
+      "X": 32,
+      "Y": 48
+    },
+    "Pivot": {
+      "X": 16,
+      "Y": 24
+    },
+    "Tags": [],
+    "Properties": {
+      "Type": {
+        "Type": 0,
+        "Value": "Tree"
+      }
+    },
+    "AlternateStates": {
+      "Canopy_Spring": {
+        "AtlasName": "Plants",
+        "SourceRect": {
+          "X": 64,
+          "Y": 176,
+          "Width": 32,
+          "Height": 48
+        },
+        "Offset": {
+          "X": 0,
+          "Y": 0
+        },
+        "ZIndex": 2,
+        "Sway": true,
+        "PaletteMap": null,
+        "Variants": {
+          "Default": {
+            "PaletteMap": null
+          }
+        },
+        "ActiveVariant": "Default",
+        "Pivot": {
+          "X": 0,
+          "Y": 0
+        }
       }
     }
   }

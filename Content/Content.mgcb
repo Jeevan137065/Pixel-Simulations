@@ -139,6 +139,12 @@
 /processorParam:DebugMode=Auto
 /build:LightShader.fx
 
+#begin MaskToZDepth.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:MaskToZDepth.fx
+
 #begin Noise/Cracks/Cracks01.png
 /importer:TextureImporter
 /processor:TextureProcessor

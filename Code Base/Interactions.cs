@@ -62,7 +62,11 @@ namespace Pixel_Simulations
                 catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Interaction Load Error: {ex.Message}"); }
             }
         }
-
+        //Redunant. Game state has this method now.
+        public bool IsFarmZone(Vector2 Farmpoint)
+        {
+            return false;
+        }
         // We now pass in the Tile under the cursor/player, along with the entity
         public InteractionRule Evaluate(GameEntity targetEntity, TileInfo targetTile, ItemDefinition heldItem)
         {

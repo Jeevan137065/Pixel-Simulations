@@ -121,6 +121,8 @@ namespace Pixel_Simulations.Data
 
         // 2. Tracks everything the player has placed on the ground
         [JsonProperty] public List<PlacedItemObject> PlacedItems { get; set; } = new List<PlacedItemObject>();
+
+        [JsonProperty] public List<PlantInstance> ActivePlants { get; set; } = new List<PlantInstance>(); // NEW
     }
 
     public static class MapSerializer
@@ -711,8 +713,44 @@ namespace Pixel_Simulations.Data
         public static void SaveMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd, EditorState state)
         {
             if (maskLayer == null || maskLayer.Chunks.Count == 0) return;
+            // ==============================================================
+            // 1. PRUNE EMPTY / UNPAINTED GHOST CHUNKS BEFORE SAVING
+            // ==============================================================
+            var emptyKeys = new List<Point>();
+            foreach (var kvp in maskLayer.Chunks)
+            {
+                Color[] pixels = new Color[MaskLayer.CHUNK_PIXEL_SIZE * MaskLayer.CHUNK_PIXEL_SIZE];
+                kvp.Value.GetData(pixels);
 
-            // Calculate Bounds
+                bool hasData = false;
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    // If any RGB channel has been painted
+                    if (pixels[i].R > 0 || pixels[i].G > 0 || (pixels[i].B > 0 && pixels[i].B != 128))
+                    {
+                        hasData = true;
+                        break;
+                    }
+                }
+
+                if (!hasData)
+                {
+                    emptyKeys.Add(kvp.Key);
+                }
+            }
+
+            // Dispose and delete empty ghost chunks so they never expand the mask
+            foreach (var key in emptyKeys)
+            {
+                maskLayer.Chunks[key]?.Dispose();
+                maskLayer.Chunks.Remove(key);
+            }
+
+            if (maskLayer.Chunks.Count == 0) return;
+
+            // ==============================================================
+            // 2. RECALCULATE TIGHT BOUNDS ONLY FROM ACTIVE DATA CHUNKS
+            // ==============================================================
             maskLayer.OffsetX = maskLayer.Chunks.Keys.Min(p => p.X);
             maskLayer.OffsetY = maskLayer.Chunks.Keys.Min(p => p.Y);
 
@@ -724,11 +762,11 @@ namespace Pixel_Simulations.Data
 
             var prevRt = gd.GetRenderTargets();
 
-            // 1. STITCH RAW MASK
+            // 3. STITCH ONLY ACTIVE CHUNKS TO PNG
             using (var masterRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
             {
                 gd.SetRenderTarget(masterRt);
-                gd.Clear(new Color(0, 0, 0, 255)); // Clear to Opaque Black
+                gd.Clear(new Color(0, 0, 0, 255)); // Default opaque black
 
                 using (var sb = new SpriteBatch(gd))
                 {
@@ -743,14 +781,13 @@ namespace Pixel_Simulations.Data
                     sb.End();
                 }
 
-                // Save Raw Mask to Assets
-                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(imagePath));
-                using (var stream = System.IO.File.OpenWrite(imagePath))
+                Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
+                using (var stream = File.Create(imagePath))
                 {
                     masterRt.SaveAsPng(stream, width, height);
                 }
 
-                // 2. GENERATE HEIGHT-TO-NORMAL MAP
+                // 4. GENERATE NORMAL MAP (If shader is loaded)
                 string normalPath = imagePath.Replace("_mask.png", "_normals.png");
                 var normalShader = state.normalShader;
 
@@ -759,18 +796,17 @@ namespace Pixel_Simulations.Data
                     using (var normalRt = new RenderTarget2D(gd, width, height, false, SurfaceFormat.Color, DepthFormat.None))
                     {
                         gd.SetRenderTarget(normalRt);
-                        gd.Clear(Color.Transparent);
+                        gd.Clear(new Color(128, 128, 255, 255));
 
                         normalShader.Parameters["MaskTexture"]?.SetValue(masterRt);
                         normalShader.Parameters["TextureSize"]?.SetValue(new Vector2(width, height));
-                        normalShader.Parameters["HeightScale"]?.SetValue(15.0f); // Adjusts terrain slope steepness
+                        normalShader.Parameters["HeightScale"]?.SetValue(15.0f);
 
                         gd.BlendState = BlendState.Opaque;
                         gd.DepthStencilState = DepthStencilState.None;
                         gd.RasterizerState = RasterizerState.CullNone;
                         gd.SamplerStates[0] = SamplerState.PointClamp;
 
-                        // Create a Full-Screen Quad
                         VertexPositionTexture[] quadVerts = new VertexPositionTexture[4];
                         quadVerts[0] = new VertexPositionTexture(new Vector3(-1, 1, 0), new Vector2(0, 0));
                         quadVerts[1] = new VertexPositionTexture(new Vector3(1, 1, 0), new Vector2(1, 0));
@@ -785,25 +821,31 @@ namespace Pixel_Simulations.Data
                             gd.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, quadVerts, 0, 4, quadIndices, 0, 2);
                         }
 
-                        // Save Normal Map to Assets
-                        using (var stream = File.OpenWrite(normalPath))
+                        using (var stream = File.Create(normalPath))
                         {
                             normalRt.SaveAsPng(stream, width, height);
                         }
                     }
                 }
+
                 gd.SetRenderTargets(prevRt);
             }
         }
         public static void LoadMaskLayer(MaskLayer maskLayer, string imagePath, GraphicsDevice gd)
         {
-            if (!System.IO.File.Exists(imagePath)) return;
+            if (!File.Exists(imagePath)) return;
+
+            // Clean existing chunks to prevent overlay leaks
+            maskLayer.Dispose();
 
             using (var stream = File.OpenRead(imagePath))
             using (var masterTex = Texture2D.FromStream(gd, stream))
             {
                 int chunksX = masterTex.Width / MaskLayer.CHUNK_PIXEL_SIZE;
                 int chunksY = masterTex.Height / MaskLayer.CHUNK_PIXEL_SIZE;
+
+                Color[] masterPixels = new Color[masterTex.Width * masterTex.Height];
+                masterTex.GetData(masterPixels);
 
                 var prevRt = gd.GetRenderTargets();
                 using (var sb = new SpriteBatch(gd))
@@ -812,16 +854,34 @@ namespace Pixel_Simulations.Data
                     {
                         for (int x = 0; x < chunksX; x++)
                         {
-                            // FIX B: Use the Offset saved inside the MaskLayer JSON!
-                            Point chunkCoord = new Point(x + maskLayer.OffsetX, y + maskLayer.OffsetY);
-                            var rt = maskLayer.GetOrCreateChunk(chunkCoord, gd);
+                            // Check if this sub-chunk actually has data before creating a GPU RenderTarget
+                            bool chunkHasData = false;
+                            for (int cy = 0; cy < MaskLayer.CHUNK_PIXEL_SIZE && !chunkHasData; cy++)
+                            {
+                                for (int cx = 0; cx < MaskLayer.CHUNK_PIXEL_SIZE; cx++)
+                                {
+                                    int pIdx = (y * MaskLayer.CHUNK_PIXEL_SIZE + cy) * masterTex.Width + (x * MaskLayer.CHUNK_PIXEL_SIZE + cx);
+                                    if (masterPixels[pIdx].R > 0 || masterPixels[pIdx].G > 0 || (masterPixels[pIdx].B > 0 && masterPixels[pIdx].B != 128))
+                                    {
+                                        chunkHasData = true;
+                                        break;
+                                    }
+                                }
+                            }
 
-                            Rectangle sourceRect = new Rectangle(x * MaskLayer.CHUNK_PIXEL_SIZE, y * MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE);
+                            // Only instantiate chunks that actually contain painted data
+                            if (chunkHasData)
+                            {
+                                Point chunkCoord = new Point(x + maskLayer.OffsetX, y + maskLayer.OffsetY);
+                                var rt = maskLayer.GetOrCreateChunk(chunkCoord, gd);
 
-                            gd.SetRenderTarget(rt);
-                            sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
-                            sb.Draw(masterTex, Vector2.Zero, sourceRect, Color.White);
-                            sb.End();
+                                Rectangle sourceRect = new Rectangle(x * MaskLayer.CHUNK_PIXEL_SIZE, y * MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE, MaskLayer.CHUNK_PIXEL_SIZE);
+
+                                gd.SetRenderTarget(rt);
+                                sb.Begin(blendState: BlendState.Opaque, samplerState: SamplerState.PointClamp);
+                                sb.Draw(masterTex, Vector2.Zero, sourceRect, Color.White);
+                                sb.End();
+                            }
                         }
                     }
                 }
@@ -924,8 +984,17 @@ namespace Pixel_Simulations.Data
         {
             if (terrainMask == null || terrainMask.Chunks.Count == 0) return terrainMask;
 
-            int minX = terrainMask.OffsetX * MaskLayer.CHUNK_PIXEL_SIZE;
-            int minY = terrainMask.OffsetY * MaskLayer.CHUNK_PIXEL_SIZE;
+            var waterShapes = map.Layers
+                .OfType<ControlLayer>()
+                .SelectMany(l => l.Shapes.Where(s => s.HasTag(SystemTags.WATER)))
+                .ToList();
+
+            // FIX 1: If there are no water shapes, DO NOT touch or extract the mask!
+            if (waterShapes.Count == 0) return terrainMask;
+
+            // FIX 2: Recalculate offsets IMMEDIATELY from current chunks to prevent coordinate drift
+            terrainMask.OffsetX = terrainMask.Chunks.Keys.Min(p => p.X);
+            terrainMask.OffsetY = terrainMask.Chunks.Keys.Min(p => p.Y);
 
             int maxChunkX = terrainMask.Chunks.Keys.Max(p => p.X);
             int maxChunkY = terrainMask.Chunks.Keys.Max(p => p.Y);
@@ -933,13 +1002,12 @@ namespace Pixel_Simulations.Data
             int width = (maxChunkX - terrainMask.OffsetX + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
             int height = (maxChunkY - terrainMask.OffsetY + 1) * MaskLayer.CHUNK_PIXEL_SIZE;
 
+            int minX = terrainMask.OffsetX * MaskLayer.CHUNK_PIXEL_SIZE;
+            int minY = terrainMask.OffsetY * MaskLayer.CHUNK_PIXEL_SIZE;
+
+
             Color[] bakedTerrainMask = new Color[width * height];
             ExtractContinuousTerrainHeightMap(gd, terrainMask, bakedTerrainMask, width, height, map);
-
-            var waterShapes = map.Layers
-                .OfType<ControlLayer>()
-                .SelectMany(l => l.Shapes.Where(s => s.HasTag(SystemTags.WATER)))
-                .ToList();
 
             for (int y = 0; y < height; y++)
             {
@@ -1338,9 +1406,89 @@ namespace Pixel_Simulations.Data
                 }
             }
         }
+
+        /// <summary>
+        /// Scans all tile layers, object bounds, and water shapes to guarantee
+        /// the MaskLayer has instantiated chunks covering the entire map extent.
+        /// </summary>
+        public static void EnsureMaskCoversMap(Map map, MaskLayer maskLayer, GraphicsDevice gd)
+        {
+            if (map == null || maskLayer == null || gd == null) return;
+
+            // 1. Calculate actual map bounds in world pixels across tiles and props
+            float minX = float.MaxValue, minY = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue;
+            bool hasContent = false;
+
+            foreach (var layer in map.Layers)
+            {
+                if (!layer.IsVisible) continue;
+
+                if (layer is TileLayer tl)
+                {
+                    foreach (var chunk in tl.Chunks.Values)
+                    {
+                        float cx = chunk.ChunkCoordinate.X * Chunk.CHUNK_SIZE * 16f;
+                        float cy = chunk.ChunkCoordinate.Y * Chunk.CHUNK_SIZE * 16f;
+                        float cw = Chunk.CHUNK_SIZE * 16f;
+
+                        minX = Math.Min(minX, cx);
+                        minY = Math.Min(minY, cy);
+                        maxX = Math.Max(maxX, cx + cw);
+                        maxY = Math.Max(maxY, cy + cw);
+                        hasContent = true;
+                    }
+                }
+                else if (layer is ObjectLayer ol && layer.Type == LayerType.Object)
+                {
+                    foreach (var obj in ol.Objects)
+                    {
+                        minX = Math.Min(minX, obj.Position.X - 16f);
+                        minY = Math.Min(minY, obj.Position.Y - 16f);
+                        maxX = Math.Max(maxX, obj.Position.X + 16f);
+                        maxY = Math.Max(maxY, obj.Position.Y + 16f);
+                        hasContent = true;
+                    }
+                }
+            }
+
+            if (!hasContent) return;
+
+            // 2. Convert world pixels to mask chunk coordinates using mathematically safe floor division
+            int chunkSize = MaskLayer.CHUNK_PIXEL_SIZE; // 256
+            int minChunkX = (int)Math.Floor(minX / (double)chunkSize);
+            int maxChunkX = (int)Math.Floor(maxX / (double)chunkSize);
+            int minChunkY = (int)Math.Floor(minY / (double)chunkSize);
+            int maxChunkY = (int)Math.Floor(maxY / (double)chunkSize);
+
+            // Clamp bounds to prevent runaway out-of-bounds generation
+            minChunkX = Math.Clamp(minChunkX, -64, 64);
+            maxChunkX = Math.Clamp(maxChunkX, -64, 64);
+            minChunkY = Math.Clamp(minChunkY, -64, 64);
+            maxChunkY = Math.Clamp(maxChunkY, -64, 64);
+
+            // 3. Ensure chunks exist WITHOUT writing default blue elevation into them
+            for (int cy = minChunkY; cy <= maxChunkY; cy++)
+            {
+                for (int cx = minChunkX; cx <= maxChunkX; cx++)
+                {
+                    Point pt = new Point(cx, cy);
+                    // GetOrCreateChunk initializes newly created chunks to pure neutral black: Color(0, 0, 0, 255)
+                    // It will NEVER inject default blue elevation into empty borders!
+                    maskLayer.GetOrCreateChunk(pt, gd);
+                }
+            }
+
+            // 4. Immediately synchronize OffsetX and OffsetY so subsequent passes use exact coordinates
+            if (maskLayer.Chunks.Count > 0)
+            {
+                maskLayer.OffsetX = maskLayer.Chunks.Keys.Min(p => p.X);
+                maskLayer.OffsetY = maskLayer.Chunks.Keys.Min(p => p.Y);
+            }
+        }
     }
 
-    public class MapWarpManager
+        public class MapWarpManager
     {
         private readonly GameState _state;
 
@@ -1491,7 +1639,7 @@ namespace Pixel_Simulations.Data
                 _state.Player.TargetWalkPos = null;
                 _state.Player.PendingInteraction = null;
                 _state.GameCamera.SnapTo(spawnPos, _state.GameCamera.Zoom);
-
+                _state.Grass.RebuildFieldFromMap(_state);
                 return true;
             }
             catch (Exception ex)

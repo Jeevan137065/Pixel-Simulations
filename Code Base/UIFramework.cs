@@ -921,7 +921,85 @@ namespace Pixel_Simulations.UI
     }
 
 
+    public class UIMoveLayerSplitButton : UIElement
+    {
+        private readonly EditorState _editorState;
+        private bool _isTopHovered = false;
+        private bool _isBottomHovered = false;
 
+        public UIMoveLayerSplitButton(EditorState editorState)
+        {
+            _editorState = editorState;
+            Size = new Vector2(32, 32);
+        }
+
+        public override bool Update(EditorInputState input, EventBus bus)
+        {
+            if (!IsVisible) return false;
+
+            int halfH = (int)(Size.Y / 2);
+            Rectangle topHalf = new Rectangle(AbsoluteBounds.X, AbsoluteBounds.Y, (int)Size.X, halfH);
+            Rectangle bottomHalf = new Rectangle(AbsoluteBounds.X, AbsoluteBounds.Y + halfH, (int)Size.X, halfH);
+
+            _isTopHovered = topHalf.Contains(input.MouseWindowPosition);
+            _isBottomHovered = bottomHalf.Contains(input.MouseWindowPosition);
+
+            if (input.IsNewLeftClick)
+            {
+                int activeIdx = _editorState.Layers.ActiveLayerIndex;
+                if (activeIdx >= 0 && activeIdx < _editorState.Layers.Layers.Count)
+                {
+                    if (_isTopHovered)
+                    {
+                        // Move Active Layer UP (Direction: true)
+                        bus.Publish(new MoveLayerCommand { LayerIndex = activeIdx, Direction = true });
+                        return true;
+                    }
+                    if (_isBottomHovered)
+                    {
+                        // Move Active Layer DOWN (Direction: false)
+                        bus.Publish(new MoveLayerCommand { LayerIndex = activeIdx, Direction = false });
+                        return true;
+                    }
+                }
+            }
+
+            return _isTopHovered || _isBottomHovered;
+        }
+
+        public override void Draw(SpriteBatch sb, IUIContext ui, UITheme theme)
+        {
+            if (!IsVisible) return;
+
+            int halfH = (int)(Size.Y / 2);
+            Rectangle topHalf = new Rectangle(AbsoluteBounds.X, AbsoluteBounds.Y, (int)Size.X, halfH);
+            Rectangle bottomHalf = new Rectangle(AbsoluteBounds.X, AbsoluteBounds.Y + halfH, (int)Size.X, halfH);
+
+            // --- TOP HALF (MOVE UP) ---
+            Color topBg = _isTopHovered ? Color.DarkCyan : Color.Black * 0.5f;
+            sb.FillRectangle(topHalf, topBg);
+            sb.DrawRectangle(topHalf, _isTopHovered ? Color.Cyan : Color.Gray * 0.4f, 1);
+
+            // --- BOTTOM HALF (MOVE DOWN) ---
+            Color botBg = _isBottomHovered ? Color.DarkCyan : Color.Black * 0.5f;
+            sb.FillRectangle(bottomHalf, botBg);
+            sb.DrawRectangle(bottomHalf, _isBottomHovered ? Color.Cyan : Color.Gray * 0.4f, 1);
+
+            // --- RENDER ARROWS ---
+            var font = theme.Font ?? UITheme.DefaultFont;
+            if (font != null)
+            {
+                Vector2 upSz = font.MeasureString("^") * 0.55f;
+                Vector2 downSz = font.MeasureString("v") * 0.55f;
+
+                Vector2 upPos = topHalf.Center.ToVector2() - (upSz / 2f);
+                Vector2 downPos = bottomHalf.Center.ToVector2() - (downSz / 2f);
+
+                sb.DrawString(font, "^", upPos, _isTopHovered ? Color.White : Color.LightGray, 0f, Vector2.Zero, 0.55f, SpriteEffects.None, 0f);
+                sb.DrawString(font, "v", downPos, _isBottomHovered ? Color.White : Color.LightGray, 0f, Vector2.Zero, 0.55f, SpriteEffects.None, 0f);
+            }
+        }
+    }
 
 
 

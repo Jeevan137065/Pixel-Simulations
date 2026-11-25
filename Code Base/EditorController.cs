@@ -572,31 +572,38 @@ namespace Pixel_Simulations.Editor
 
         private void HandleMenuAction(MenuActionCommand cmd)
         {
+            // Block new operations if one is already actively running
+            if (_operationPhase >= 0) return;
+
             string rawName = string.IsNullOrWhiteSpace(_editorState.CurrentMapFile) ? "level1" : _editorState.CurrentMapFile;
             string mapName = Path.GetFileNameWithoutExtension(rawName);
             _editorState.CurrentMapFile = mapName;
 
             string readMapsDir = PathHelper.GetReadMapsPath();
             string writeMapsDir = PathHelper.GetWriteMapsPath();
+
+            jsonPath = Path.Combine(writeMapsDir, $"{mapName}.json");
+            gameMapPath = Path.Combine(writeMapsDir, $"{mapName}.map");
+            maskPath = Path.Combine(writeMapsDir, $"{mapName}_mask.png");
+            waterPath = Path.Combine(writeMapsDir, $"{mapName}_water.png");
+            capturePath = Path.Combine(writeMapsDir, $"{mapName}_capture.png");
+
             switch (cmd.ActionName)
             {
                 case "Load":
                     string loadJsonPath = Path.Combine(readMapsDir, $"{mapName}.json");
                     string loadMaskPath = Path.Combine(readMapsDir, $"{mapName}_mask.png");
 
-                    // Fallback check: if bin copy doesn't exist yet, check source Folder A
                     if (!File.Exists(loadJsonPath))
                     {
                         string fallbackSrc = Path.Combine(writeMapsDir, $"{mapName}.json");
                         if (File.Exists(fallbackSrc))
                         {
-                            System.Diagnostics.Debug.WriteLine($"[MapController] Note: Bin map not found, reading from Source Folder A: {fallbackSrc}");
                             loadJsonPath = fallbackSrc;
                             loadMaskPath = Path.Combine(writeMapsDir, $"{mapName}_mask.png");
                         }
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"[MapController] LOADING map from: {loadJsonPath}");
                     var loadedMap = MapSerializer.Load(loadJsonPath);
                     if (loadedMap != null)
                     {
@@ -607,76 +614,29 @@ namespace Pixel_Simulations.Editor
                     }
                     break;
 
-                // ==========================================================
-                // SAVE: Writes to Source Folder A (Persistent Source)
-                // ==========================================================
                 case "Save":
-                    string saveJsonSrc = Path.Combine(writeMapsDir, $"{mapName}.json");
-                    string saveMaskSrc = Path.Combine(writeMapsDir, $"{mapName}_mask.png");
-
-                    System.Diagnostics.Debug.WriteLine($"[MapController] SAVING source map to Folder A: {saveJsonSrc}");
-
-                    var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                    if (maskToSave != null)
-                        MapSerializer.SaveMaskLayer(maskToSave, saveMaskSrc, _editorState._graphics, _editorState);
-
-                    MapSerializer.Save(_editorState.ActiveMap, saveJsonSrc);
-
-                    // Mirror to bin so immediate reloads or tests without building pick it up
-                    MirrorFile(saveJsonSrc, Path.Combine(readMapsDir, $"{mapName}.json"));
-                    if (File.Exists(saveMaskSrc)) MirrorFile(saveMaskSrc, Path.Combine(readMapsDir, $"{mapName}_mask.png"));
+                    _activeOperation = "Save";
+                    _operationPhase = 0;
+                    _frameDelay = 0;
+                    _editorState.TaskProgress.Start("Saving Map", "Initializing save process...");
                     break;
 
-                // ==========================================================
-                // EXPORT: Compiles .map & baked masks to Source Folder A
-                // ==========================================================
                 case "Export":
-                    string exportMapSrc = Path.Combine(writeMapsDir, $"{mapName}.map");
-                    string exportMaskSrc = Path.Combine(writeMapsDir, $"{mapName}_mask.png");
-                    string exportWaterSrc = Path.Combine(writeMapsDir, $"{mapName}_water.png");
-
-                    System.Diagnostics.Debug.WriteLine($"[MapController] EXPORTING game map to Folder A: {exportMapSrc}");
-
-                    var exportMask = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                    if (exportMask != null)
-                    {
-                        var bakedMaskL = MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, exportMask);
-
-                        using (var bakedWaterTex = MapExporter.BakeWaterSurfaceData(_editorState._graphics, _editorState.ActiveMap, exportMask))
-                        {
-                            using (var stream = File.Create(exportWaterSrc))
-                            {
-                                bakedWaterTex.SaveAsPng(stream, bakedWaterTex.Width, bakedWaterTex.Height);
-                            }
-                        }
-
-                        MapSerializer.SaveMaskLayer(bakedMaskL, exportMaskSrc, _editorState._graphics, _editorState);
-                    }
-
-                    MapSerializer.Export(_editorState.ActiveMap, exportMapSrc);
-
-                    // Mirror binaries to bin directory
-                    MirrorFile(exportMapSrc, Path.Combine(readMapsDir, $"{mapName}.map"));
-                    if (File.Exists(exportWaterSrc)) MirrorFile(exportWaterSrc, Path.Combine(readMapsDir, $"{mapName}_water.png"));
-                    if (File.Exists(exportMaskSrc)) MirrorFile(exportMaskSrc, Path.Combine(readMapsDir, $"{mapName}_mask.png"));
-
-                    System.Diagnostics.Debug.WriteLine($"[MapController] Export complete! Mirrored to bin runtime folder.");
+                    _activeOperation = "Export";
+                    _operationPhase = 0;
+                    _frameDelay = 0;
+                    _editorState.TaskProgress.Start("Exporting Map", "Analyzing map extents and mask coverage...");
                     break;
 
-                // ==========================================================
-                // CAPTURE: Saves high-res composite PNG to Source Folder A
-                // ==========================================================
                 case "Capture":
-                    string capturePath = Path.Combine(writeMapsDir, $"{mapName}_capture.png");
-                    System.Diagnostics.Debug.WriteLine($"[MapController] CAPTURING PNG to: {capturePath}");
-                    MapSerializer.CaptureToImage(_editorState.ActiveMap, _editorState._graphics, _editorState, capturePath);
+                    _activeOperation = "Capture";
+                    _operationPhase = 0;
+                    _frameDelay = 0;
+                    _editorState.TaskProgress.Start("Capturing Map Image", "Preparing composite view...");
                     break;
             }
         }
-        private void MirrorFile(string source, string dest)
-        {
-            try { File.Copy(source, dest, true); } catch { }
-        }
+
         public void Update(GameTime gameTime)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -684,41 +644,59 @@ namespace Pixel_Simulations.Editor
 
             if (_operationPhase < 0) return;
 
-            // Yield frames so the progress bar renders smoothly without freezing
+            // Yield 2 frames between heavy operations so the UI updates and animates smoothly
             _frameDelay++;
             if (_frameDelay < 2) return;
             _frameDelay = 0;
 
+            string readMapsDir = PathHelper.GetReadMapsPath();
+            string writeMapsDir = PathHelper.GetWriteMapsPath();
+
             // =====================================================================
-            // OPERATION: SAVE MAP
+            // ASYNCHRONOUS PIPELINE: SAVE MAP
             // =====================================================================
             if (_activeOperation == "Save")
             {
                 switch (_operationPhase)
                 {
                     case 0:
-                        _editorState.TaskProgress.SetProgress(0.35f, "Writing terrain mask chunks to disk...");
-                        var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
-                        if (maskToSave != null)
-                            MapSerializer.SaveMaskLayer(maskToSave, maskPath, _editorState._graphics, _editorState);
+                        _editorState.TaskProgress.SetProgress(0.20f, "Aligning mask chunks to map boundaries...");
+                        var maskLayer = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                        if (maskLayer != null)
+                        {
+                            //MapExporter.EnsureMaskCoversMap(_editorState.ActiveMap, maskLayer, _editorState._graphics);
+                        }
                         _operationPhase = 1;
                         break;
 
                     case 1:
-                        _editorState.TaskProgress.SetProgress(0.75f, "Serializing JSON structure...");
-                        MapSerializer.Save(_editorState.ActiveMap, jsonPath);
+                        _editorState.TaskProgress.SetProgress(0.50f, "Encoding mask texture to disk...");
+                        var maskToSave = _editorState.ActiveMap.Layers.FirstOrDefault(l => l.Type == LayerType.Mask) as MaskLayer;
+                        if (maskToSave != null)
+                        {
+                            MapSerializer.SaveMaskLayer(maskToSave, maskPath, _editorState._graphics, _editorState);
+                            MirrorFile(maskPath, Path.Combine(readMapsDir, Path.GetFileName(maskPath)));
+                        }
                         _operationPhase = 2;
                         break;
 
                     case 2:
+                        _editorState.TaskProgress.SetProgress(0.85f, "Writing JSON map data...");
+                        MapSerializer.Save(_editorState.ActiveMap, jsonPath);
+                        MirrorFile(jsonPath, Path.Combine(readMapsDir, Path.GetFileName(jsonPath)));
+                        _operationPhase = 3;
+                        break;
+
+                    case 3:
                         _editorState.TaskProgress.Complete("Map Saved Successfully!");
                         _operationPhase = -1;
+                        _activeOperation = "";
                         break;
                 }
             }
 
             // =====================================================================
-            // OPERATION: EXPORT MAP
+            // ASYNCHRONOUS PIPELINE: EXPORT MAP
             // =====================================================================
             else if (_activeOperation == "Export")
             {
@@ -727,59 +705,84 @@ namespace Pixel_Simulations.Editor
                 switch (_operationPhase)
                 {
                     case 0:
-                        _editorState.TaskProgress.SetProgress(0.25f, "Carving riverbed into elevation mask...");
-                        _bakedMaskRef = MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, exportMask);
+                        _editorState.TaskProgress.SetProgress(0.15f, "Expanding mask chunks to fit full map area...");
+                        if (exportMask != null)
+                        {
+                            //MapExporter.EnsureMaskCoversMap(_editorState.ActiveMap, exportMask, _editorState._graphics);
+                        }
                         _operationPhase = 1;
                         break;
 
                     case 1:
-                        _editorState.TaskProgress.SetProgress(0.50f, "Baking water surface data (Flow & Foam)...");
-                        using (var bakedWaterTex = MapExporter.BakeWaterSurfaceData(_editorState._graphics, _editorState.ActiveMap, exportMask))
+                        _editorState.TaskProgress.SetProgress(0.35f, "Carving riverbed into elevation mask...");
+                        if (exportMask != null)
                         {
-                            using (var stream = File.OpenWrite(waterPath))
-                            {
-                                bakedWaterTex.SaveAsPng(stream, bakedWaterTex.Width, bakedWaterTex.Height);
-                            }
+                            _bakedMaskRef = MapExporter.BakeWaterBedIntoMask(_editorState._graphics, _editorState.ActiveMap, exportMask);
                         }
                         _operationPhase = 2;
                         break;
 
                     case 2:
-                        _editorState.TaskProgress.SetProgress(0.75f, "Compiling terrain mask & normals...");
-                        if (_bakedMaskRef != null)
+                        _editorState.TaskProgress.SetProgress(0.60f, "Baking water surface maps (flow & foam)...");
+                        if (exportMask != null)
                         {
-                            MapSerializer.SaveMaskLayer(_bakedMaskRef, maskPath, _editorState._graphics, _editorState);
+                            using (var bakedWaterTex = MapExporter.BakeWaterSurfaceData(_editorState._graphics, _editorState.ActiveMap, exportMask))
+                            {
+                                using (var stream = File.Create(waterPath))
+                                {
+                                    bakedWaterTex.SaveAsPng(stream, bakedWaterTex.Width, bakedWaterTex.Height);
+                                }
+                            }
+                            MirrorFile(waterPath, Path.Combine(readMapsDir, Path.GetFileName(waterPath)));
                         }
                         _operationPhase = 3;
                         break;
 
                     case 3:
-                        _editorState.TaskProgress.SetProgress(0.90f, "Writing binary .map file...");
-                        MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
+                        _editorState.TaskProgress.SetProgress(0.80f, "Compiling terrain mask & normals...");
+                        if (_bakedMaskRef != null)
+                        {
+                            MapSerializer.SaveMaskLayer(_bakedMaskRef, maskPath, _editorState._graphics, _editorState);
+                            MirrorFile(maskPath, Path.Combine(readMapsDir, Path.GetFileName(maskPath)));
+
+                            string normSrc = maskPath.Replace("_mask.png", "_normals.png");
+                            if (File.Exists(normSrc))
+                            {
+                                MirrorFile(normSrc, Path.Combine(readMapsDir, Path.GetFileName(normSrc)));
+                            }
+                        }
                         _operationPhase = 4;
                         break;
 
                     case 4:
+                        _editorState.TaskProgress.SetProgress(0.95f, "Serializing binary .map file...");
+                        MapSerializer.Export(_editorState.ActiveMap, gameMapPath);
+                        MirrorFile(gameMapPath, Path.Combine(readMapsDir, Path.GetFileName(gameMapPath)));
+                        _operationPhase = 5;
+                        break;
+
+                    case 5:
                         _editorState.TaskProgress.Complete("Export Complete!");
                         _operationPhase = -1;
+                        _activeOperation = "";
                         break;
                 }
             }
 
             // =====================================================================
-            // OPERATION: CAPTURE MAP
+            // ASYNCHRONOUS PIPELINE: CAPTURE MAP
             // =====================================================================
             else if (_activeOperation == "Capture")
             {
                 switch (_operationPhase)
                 {
                     case 0:
-                        _editorState.TaskProgress.SetProgress(0.50f, "Rendering composite layers...");
+                        _editorState.TaskProgress.SetProgress(0.40f, "Rendering composite layers...");
                         _operationPhase = 1;
                         break;
 
                     case 1:
-                        _editorState.TaskProgress.SetProgress(0.85f, "Encoding PNG to disk...");
+                        _editorState.TaskProgress.SetProgress(0.85f, "Encoding high-res PNG to disk...");
                         MapSerializer.CaptureToImage(_editorState.ActiveMap, _editorState._graphics, _editorState, capturePath);
                         _operationPhase = 2;
                         break;
@@ -787,9 +790,14 @@ namespace Pixel_Simulations.Editor
                     case 2:
                         _editorState.TaskProgress.Complete("Capture Saved to Maps Folder!");
                         _operationPhase = -1;
+                        _activeOperation = "";
                         break;
                 }
             }
+        }
+        private void MirrorFile(string source, string dest)
+        {
+            try { File.Copy(source, dest, true); } catch { }
         }
 
         private void LoadNewMap(Map newMap, string mapName)
